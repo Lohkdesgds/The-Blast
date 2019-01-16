@@ -11,6 +11,7 @@ namespace LSW {
 			enum _text_opt_db  {POSX,POSY,UPDATETIME};
 			enum _text_opt_int {MODE, LAYER};
 			enum _text_opt_color {COLOR};
+			enum _text_opt_sprite {SPRITE};
 
 			enum mode_int{ALIGN_LEFT = ALLEGRO_ALIGN_LEFT,ALIGN_CENTER = ALLEGRO_ALIGN_CENTER,ALIGN_RIGHT = ALLEGRO_ALIGN_RIGHT};
 			// 2
@@ -79,6 +80,7 @@ namespace LSW {
 				void get(const _text_opt_db, double&);
 				void get(const _text_opt_color, ALLEGRO_COLOR&);
 				void get(const _text_opt_int, int&);
+				void get(const _text_opt_sprite, Sprite::sprite*&);
 
 
 				void setID(const Safer::safe_string);

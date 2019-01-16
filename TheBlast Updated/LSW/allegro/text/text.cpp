@@ -238,7 +238,7 @@ namespace LSW {
 				if (!local_paint)
 				{
 					ALLEGRO_BITMAP* d = al_get_target_bitmap();
-					assert(d);
+					if (!d) return;
 
 					d_sprite_database spr_data;
 					d_images_database img_data;
@@ -432,6 +432,14 @@ namespace LSW {
 					if (local_paint) {
 						local_paint->set(Sprite::LAYER, layer);
 					}
+					break;
+				}
+			}
+			void text::get(const _text_opt_sprite o, Sprite::sprite *& e)
+			{
+				switch (o) {
+				case SPRITE:
+					if (usebuf && this->local_paint) e = local_paint;
 					break;
 				}
 			}
