@@ -14,11 +14,20 @@ namespace local {
 		int mode = Defaults::default_display_settings;
 		bool changed = false;
 		bool fixmem = false;
+		bool skipdown = false;
 	};
 }
 
 int sub_main(const int, Display::display&);
-void temp_thr_load(float*, bool*, Display::display*);
+void temp_thr_load(float*, bool*, Display::display*, bool);
+void temp_xtract(Stacker::extractor* xtract, Safer::safe_string interp, Safer::safe_string saveon)
+{
+	if (xtract) {
+		xtract->interpret(interp.g());
+		xtract->extractAll(saveon.g());
+	}
+	else throw "NULL POINTER AT TEMP_XTRACT!";
+}
 void killall();
 
 int main(int argc, char* argv[])
@@ -59,6 +68,11 @@ int main(int argc, char* argv[])
 			if (wrk == "-fixedmemory")
 			{
 				strt.fixmem = true;
+				strt.changed = true;
+			}
+			if (wrk == "-skipdownload")
+			{
+				strt.skipdown = true;
 				strt.changed = true;
 			}
 		}
@@ -123,7 +137,8 @@ int main(int argc, char* argv[])
 		Text::text* wt2 = nullptr;
 
 		txt_data.create(wt2);
-		wt2->loadFromDatabase();
+		wt2->unload(); // if any loaded
+		wt2->load(Defaults::font_altern_name_full,true);
 		wt2->set(Text::SETSTRING, "Please don't close the game until full load!");
 		wt2->set(Text::USEBUFOPT, true);
 		wt2->set(Text::POSX, 0.0);
@@ -148,7 +163,7 @@ int main(int argc, char* argv[])
 
 		disp.checkUpImages();
 
-		std::thread thr(temp_thr_load, &perc, &isdone, &disp);
+		std::thread thr(temp_thr_load, &perc, &isdone, &disp, strt.skipdown);
 
 		disp.capFPS(60);
 		cam.apply(-2);
@@ -175,6 +190,8 @@ int main(int argc, char* argv[])
 			}
 		}
 
+		wt->unload();
+		wt->load(Defaults::font_default_name);
 		wt->set(Text::SETSTRING, "Loaded!");
 
 		for (double d = al_get_time(); (al_get_time() - d < 3.0) && !hasbeenkilledwhile;) {
@@ -195,14 +212,14 @@ int main(int argc, char* argv[])
 		//wt = nullptr;
 
 		thr.join();
-
+		
 		disp.checkUpImages();
 
 		txt_data.remove("LOADING_1");
 
 		if (hasbeenkilledwhile) {
 			killall();
-			return -2;
+			exit(EXIT_FAILURE);
 		}
 
 
@@ -214,7 +231,7 @@ int main(int argc, char* argv[])
 
 		wt->set(Text::SETSTRING, "Checking...");
 		wt->set(Text::USEBUFOPT, true);
-		wt->set(Text::POSX, 0.98);
+		wt->set(Text::POSX, 0.95);
 		wt->set(Text::POSY, 0.87);
 		wt->set(Text::MODE, Text::ALIGN_RIGHT);
 		wt->set(Text::COLOR, al_map_rgba_f(0.5,0.5,0.5,0.5));
@@ -223,6 +240,7 @@ int main(int argc, char* argv[])
 
 
 		img_data.work().lock();
+		size_t nnow = 0, sizz = img_data.work().getMax();
 		for (auto& i : img_data.work().work())
 		{
 			if (disp.flip(false)) {
@@ -232,7 +250,8 @@ int main(int argc, char* argv[])
 
 			i->reload();
 
-			wt->set(Text::SETSTRING, "Checking: " + i->whoAmI().g());
+			wt->set(Text::SETSTRING, std::string("Checking [") + std::to_string(nnow) + "/" + std::to_string(sizz) + "]: " + i->whoAmI().g());
+			nnow++;
 		}
 		img_data.work().unlock();
 
@@ -292,7 +311,7 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-void temp_thr_load(float* f, bool* b, Display::display* disp)
+void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 {
 	if (!f || !b || !disp) throw "Wasn't supposed to work this way! Error on Line 1 temp_thr_load";
 
@@ -311,14 +330,20 @@ void temp_thr_load(float* f, bool* b, Display::display* disp)
 	Text::text*       wt = nullptr;
 	Sound::track*	  wm = nullptr;
 
+	Log::gfile logg;
+
+	logg << Log::TIMEF << "[THR_load] Loading resources from the internet..." << Log::ENDL;
+	logg.flush();
+
+
 	/* DOWNLOADING TEXTURES */
 	//Tools::saveFromCloud("https://www.dropbox.com/s/y3vgmzb6qhyqf5i/mouse.png?dl=1", "mouse.png");
 
 
 	/* LOADING TEXTURES...? */
-	float o = 0.0;
+	float o = 0.01;
 
-	std::thread thr1(Image::multipleCloudLoad, "DEFAULT", "pause/pause_", 29, 2, ".png", nullptr, &o);
+	/*std::thread thr1(Image::multipleCloudLoad, "DEFAULT", "pause/pause_", 29, 2, ".png", nullptr, &o);
 	while (o != 1.0) {
 		*f = o * 0.48;
 	}
@@ -331,25 +356,75 @@ void temp_thr_load(float* f, bool* b, Display::display* disp)
 		*f = 0.48 + o * 0.48;
 	}
 
+	thr2.join();*/
+
+	if (!skipdownload){
+
+		Safer::safe_string path_d = Defaults::default_onefile_path;
+		Tools::interpret_path(path_d);
+
+		logg << "[THR_load] Downloading..." << Log::ENDL;
+
+		std::thread thr0(Downloader::easyDownload, Defaults::call_url_file.g().c_str(), path_d.g().c_str(), &o);
+
+		while (o != 1.0) {
+			*f = o * 0.20;
+		}
+
+		o = 0.0;
+		thr0.join();
+
+		logg << "[THR_load] Extracting..." << Log::ENDL;
+
+		Stacker::extractor ext;
+		std::thread thr3(temp_xtract,&ext, path_d, Defaults::default_root_path);
+
+		while ((o = ext.getPerc()) != 1.0) {
+			*f = o * 0.40 + 0.20;
+		}
+		thr3.join();
+
+		std::experimental::filesystem::remove(path_d.g());
+	}
+	else {
+		logg << "[THR_load] SkipDownload flag skipped auto download." << Log::ENDL;
+	}
+
+	logg << "[THR_load] Loading..." << Log::ENDL;
+	
+	std::thread thr1(Image::multipleLoad, "DEFAULT", "pause/pause_", 29, 2, ".png", &o);
+	while (o != 1.0) {
+		*f = 0.60 + o * 0.10;
+	}
+
+	o = 0.0;
+	thr1.join();
+
+	std::thread thr2(Image::multipleLoad,"INTRO", "logo/frame", 115, 2, ".png", &o);
+	while (o != 1.0){
+		*f = 0.70 + o * 0.10;
+	}
+
 	thr2.join();
 
 	img_data.create(wi);
 	wi->load("mouse.png");
-	wi->loadFromDatabase(/*"https://www.dropbox.com/s/y3vgmzb6qhyqf5i/mouse.png?dl=1",*/ "mouse.png");
+	//wi->loadFromDatabase(/*"https://www.dropbox.com/s/y3vgmzb6qhyqf5i/mouse.png?dl=1",*/ "mouse.png");
 	wi->setID("MOUSE");
 	wi = nullptr;
 
-	*f = 0.96;
+	*f = 0.81;
 
 	/* CREATING MUSICS...? */
 
 	msk_data.create(wm);
-	wm->loadFromDatabase("musics/music_01.wav");
+	//wm->loadFromDatabase("musics/music_01.wav");
+	wm->load("musics/music_01.wav");
 	wm->set(Sound::ID, "MUSIC_0");
-	//wm->set(Sound::PLAYING, true);
+	wm->set(Sound::PLAYING, true);
 	wm->set(Sound::PLAYMODE, Sound::LOOP);
 
-	*f = 0.965;
+	*f = 0.83;
 
 	/* CREATING SPRITES...? */
 
@@ -367,7 +442,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp)
 	//ws->set(Sprite::AFFECTED_BY_CAM, false);
 	ws = nullptr;
 
-	*f = 0.97;
+	*f = 0.85;
 
 	spr_data.create(ws);
 	ws->add("DEFAULT", 29); // adds texture called DEFAULT
@@ -383,7 +458,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp)
 	//ws->set(Sprite::AFFECTED_BY_CAM, false);
 	ws = nullptr;
 
-	*f = 0.975;
+	*f = 0.88;
 
 	spr_data.create(ws);
 	ws->add("DEFAULT", 29); // adds texture called DEFAULT
@@ -399,7 +474,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp)
 	//ws->set(Sprite::AFFECTED_BY_CAM, false);
 	ws = nullptr;
 
-	*f = 0.98;
+	*f = 0.90;
 
 	spr_data.create(ws);
 	ws->add("INTRO", 115); // adds texture called DEFAULT
@@ -414,7 +489,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp)
 	ws->set(Sprite::USE_TINTED_DRAWING, true);
 	ws = nullptr;
 
-	*f = 0.985;
+	*f = 0.92;
 
 	spr_data.create(ws);
 	ws->add("MOUSE");
@@ -427,7 +502,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp)
 	ws->set(Sprite::COLLIDE, true);
 	ws = nullptr;
 
-	*f = 0.99;
+	*f = 0.94;
 
 
 	/* CREATING A TEXT...? */
@@ -441,10 +516,10 @@ void temp_thr_load(float* f, bool* b, Display::display* disp)
 	//wt->set(Text::USEBUFOPT, true);
 	wt = nullptr;
 
-	*f = 0.993;
+	*f = 0.96;
 
 	txt_data.create(wt);
-	wt->loadFromDatabase();
+	//wt->load();
 	wt->set(Text::SETSTRING, "1 [%pos_x% %pos_y%] at XY %sprite_speed_x% : %sprite_speed_y%");
 	wt->set(Text::MODE, Text::ALIGN_CENTER);
 	wt->set(Text::SETFOLLOW, "DEFAULT2");
@@ -452,10 +527,10 @@ void temp_thr_load(float* f, bool* b, Display::display* disp)
 	//wt->set(Text::USEBUFOPT, true);
 	wt = nullptr;
 
-	*f = 0.996;
+	*f = 0.97;
 
 	txt_data.create(wt);
-	wt->loadFromDatabase();
+	//wt->load();
 	wt->set(Text::SETSTRING, "2 [%pos_x% %pos_y%] at XY %sprite_speed_x% : %sprite_speed_y%");
 	wt->set(Text::MODE, Text::ALIGN_CENTER);
 	wt->set(Text::SETFOLLOW, "DEFAULT3");
@@ -463,7 +538,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp)
 	//wt->set(Text::USEBUFOPT, true);
 	wt = nullptr;
 
-	*f = 0.999;
+	*f = 0.99;
 
 	txt_data.create(wt);
 	wt->set(Text::SETSTRING, "%fps%/%tps% | CAM: %cam_x% : %cam_y% @ %cam_zoom% | %curr_string% | %mouse_x%x%mouse_y%");
@@ -479,6 +554,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp)
 
 	*f = 1.0;
 	*b = true;
+	logg << Log::TIMEF << "[THR_load] Done." << Log::ENDL;
 }
 
 

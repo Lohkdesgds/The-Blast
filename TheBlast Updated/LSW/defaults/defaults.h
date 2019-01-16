@@ -1,17 +1,23 @@
 #pragma once
 
-//#include "..\all\enable_all.h"
+#include "..\safer\safer.h"
+#include <allegro5/allegro.h>
 
 namespace LSW {
 	namespace v2 {
 		namespace Defaults {
 
+			const Safer::safe_string default_root_path = "%appdata%/Lohk's Studios/TheBlast/";
 			const Safer::safe_string default_global_path = "%appdata%/Lohk's Studios/TheBlast/logs/latest.log";
 			const Safer::safe_string default_data_path = "%appdata%/Lohk's Studios/TheBlast/data/";
+			const Safer::safe_string default_onefile_path = "%appdata%/Lohk's Studios/TheBlast/down.lohkf";
 
-			const Safer::safe_string initial_call_url = "https://tutoriais-de-prog.000webhostapp.com/files_apps/"; // change later?
+			//const Safer::safe_string initial_call_url = "https://tutoriais-de-prog.000webhostapp.com/files_apps/"; // change later?
+			const Safer::safe_string call_url_file = "https://tutoriais-de-prog.000webhostapp.com/files_apps/package.lohkf";
 
 			const size_t max_lines_stored_by_memlog = 20;
+
+			const size_t possible_download_size = 69594142;
 
 			const int default_resolution_base[2] = { 1920,1080 };
 			const double timeout_image_unload = 3.0;
@@ -53,6 +59,7 @@ namespace LSW {
 			const double fx_blur_timing = 1.0/32;
 
 			const Safer::safe_string font_default_name = "font.ttf";
+			const Safer::safe_string font_altern_name_full = "C:\\Windows\\Fonts\\calibri.ttf";
 
 			const int default_display_settings = 516;//ALLEGRO_FULLSCREEN_WINDOW | ALLEGRO_OPENGL;
 

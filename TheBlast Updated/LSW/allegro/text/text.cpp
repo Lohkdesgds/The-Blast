@@ -266,18 +266,20 @@ namespace LSW {
 					unload();
 				}
 				if (!default_font) {
-					if (path.g().length() == 0) path = Defaults::font_default_name;
+					if (path.g().length() == 0) path = Defaults::font_altern_name_full;
 					load(path);
 				}
 				loadInternalBMP();
 			}
 
-			const bool text::load(const Safer::safe_string p)
+			const bool text::load(const Safer::safe_string p, const bool raw)
 			{
 				if (!default_font) {
 					//Camera::camera_g cam;
 
-					Safer::safe_string s = (Defaults::default_data_path.g() + p.g());
+					Safer::safe_string s;
+					if (raw) s = (p.g());
+					else s = (Defaults::default_data_path.g() + p.g());
 					Tools::interpret_path(s);
 
 					path = s;
@@ -287,7 +289,7 @@ namespace LSW {
 				return true;
 			}
 
-			const bool text::loadFromDatabase(const Safer::safe_string newname)
+			/*const bool text::loadFromDatabase(const Safer::safe_string newname)
 			{
 				Safer::safe_string s = Defaults::initial_call_url.g() + newname.g();
 				Tools::clearPath(s, true);
@@ -299,7 +301,7 @@ namespace LSW {
 				if (!load(s_o)) assert(Tools::saveFromCloud(url, s_o));
 				else return true;
 				return load(s_o);
-			}
+			}*/
 
 			void text::unload()
 			{

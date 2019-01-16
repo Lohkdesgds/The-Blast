@@ -62,9 +62,9 @@ namespace LSW {
 				void loadInternalBMP();
 			public:
 				void verify(const bool = false); // reload
-				const bool load(const Safer::safe_string);
-				const bool loadFromDatabase(const Safer::safe_string = Defaults::font_default_name);
-				const bool loadFromURL(const Safer::safe_string, const Safer::safe_string); // url, name it as (THE FILE! NOT ID)
+				const bool load(const Safer::safe_string = Defaults::font_default_name, const bool = false);
+				/*const bool loadFromDatabase(const Safer::safe_string = Defaults::font_default_name);
+				const bool loadFromURL(const Safer::safe_string, const Safer::safe_string); // url, name it as (THE FILE! NOT ID)*/
 
 				void unload();
 

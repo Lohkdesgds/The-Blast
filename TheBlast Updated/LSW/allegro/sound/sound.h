@@ -20,8 +20,8 @@ namespace LSW {
 				Safer::safe_string			my_nick;
 			public:
 				const bool load(const Safer::safe_string);
-				const bool loadFromDatabase(const Safer::safe_string);
-				const bool loadFromURL(const Safer::safe_string, const Safer::safe_string); // url, name it as (THE FILE! NOT ID)
+				/*const bool loadFromDatabase(const Safer::safe_string);
+				const bool loadFromURL(const Safer::safe_string, const Safer::safe_string); // url, name it as (THE FILE! NOT ID)*/
 
 				void set(const track_p, const bool);
 				void set(const track_f, const float);

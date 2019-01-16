@@ -318,7 +318,7 @@ d_musics_database msk_data(LSW::v2::Sound::_find); \
 				return size.QuadPart;
 			}
 			
-			inline const bool saveFromCloud(const Safer::safe_string url, const Safer::safe_string wher)
+			/*inline const bool saveFromCloud(const Safer::safe_string url, const Safer::safe_string wher)
 			{
 				downloader down;
 				Safer::safe_string wher_actual = Defaults::default_data_path.g() + wher.g();
@@ -337,9 +337,9 @@ d_musics_database msk_data(LSW::v2::Sound::_find); \
 					fclose(fp);
 				}
 				return false;
-			}
+			}*/
 		}
-		namespace Tools_experimental {
+		/*namespace Tools_experimental {
 
 			const int  amount_of_hashtg = 4;
 
@@ -588,6 +588,6 @@ d_musics_database msk_data(LSW::v2::Sound::_find); \
 
 				return 0;
 			}
-		}
+		}*/
 	}
 }
