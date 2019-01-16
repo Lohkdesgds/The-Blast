@@ -34,7 +34,7 @@ namespace LSW {
 					if (i == '\n') i = '\0';
 				}
 
-				_int64 amountofd = 0;
+				__int64 amountofd = 0;
 
 				if (memcmp(line, "#SS=", 4) == 0)
 				{
@@ -79,6 +79,21 @@ namespace LSW {
 					return false;
 				}
 
+				char line[96];
+				while (std::string(line) != "%LSW_E") {
+					fgets(line, 96, fp);
+
+					for (auto& i : line) {
+						if (i == '\n') i = '\0';
+					}
+
+					if (feof(fp)) {
+						throw "Failed on compactor::extractAll = End of index not found!";
+						return false;
+					}
+				}
+				
+
 				for (auto& i : stack) {
 					FILE* fl = nullptr;
 					if (fopen_s(&fl, i.filename.c_str(), "wb") != 0) {
@@ -88,10 +103,15 @@ namespace LSW {
 
 					__int64 readd = 0;
 
-					for (__int64 u = 0; u < i.siz_o_file; u += 2048)
+					for (__int64 u = 0; u < i.siz_o_file; u += readd)
 					{
-						char buf[2048];
-						readd = fread(buf, sizeof(char), 2048, fp);
+						char buf[stack_size_default];
+
+						__int64 expected;
+						if (i.siz_o_file - u < stack_size_default) expected = i.siz_o_file - u;
+						else expected = stack_size_default;
+
+						readd = fread(buf, sizeof(char), expected, fp);
 						fwrite(buf, sizeof(char), (size_t)readd, fl);
 					}
 
@@ -143,6 +163,8 @@ namespace LSW {
 					fprintf_s(fp, "%s\n%I64d\n", i.filename.c_str(), i.siz_o_file);
 				}
 
+				fprintf_s(fp, "%cLSW_E\n", '%');
+
 				for (auto& i : stack) {
 					FILE* fl = nullptr;
 					if (fopen_s(&fl, i.filename.c_str(), "rb") != 0) {
@@ -154,8 +176,8 @@ namespace LSW {
 
 					for (__int64 u = 0; u < i.siz_o_file; u += readd)
 					{
-						char buf[2048];
-						readd = fread(buf, sizeof(char), 2048, fl);
+						char buf[stack_size_default];
+						readd = fread(buf, sizeof(char), stack_size_default, fl);
 						fwrite(buf, sizeof(char), readd, fp);
 					}
 

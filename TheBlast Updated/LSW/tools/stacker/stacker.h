@@ -10,6 +10,8 @@ namespace LSW {
 	namespace v2 {
 		namespace Stacker {
 
+			const size_t stack_size_default = 4096;
+
 			struct _stack_assist {
 				std::string filename;
 				__int64 siz_o_file = 0;
