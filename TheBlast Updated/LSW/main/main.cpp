@@ -20,14 +20,7 @@ namespace local {
 
 int sub_main(const int, Display::display&);
 void temp_thr_load(float*, bool*, Display::display*, bool);
-void temp_xtract(Stacker::extractor* xtract, Safer::safe_string interp, Safer::safe_string saveon)
-{
-	if (xtract) {
-		xtract->interpret(interp.g());
-		xtract->extractAll(saveon.g());
-	}
-	else throw "NULL POINTER AT TEMP_XTRACT!";
-}
+void temp_xtract(Stacker::extractor*, Safer::safe_string, Safer::safe_string);
 void killall();
 
 int main(int argc, char* argv[])
@@ -108,25 +101,33 @@ int main(int argc, char* argv[])
 
 		/* CREATING LAYERS FOR COLLISION...? */
 
-		lyr.getOne(0).set(1).colliding[2] = true;
+		lyr.getOne(2).set(2).colliding[100] = true;
+		lyr.getOne(0).set(0).colliding[100] = true;
 
 
 		/* CREATING LAYERS FOR CAMERA...? */
 
-		// LAYER -2
+		// LAYER -2 // before intro
 		cam.set(-2, -2, true);
 		cam.set(-2, Camera::ZOOM, 1.0);
 		cam.set(-2, Camera::OFFY, 2.7);
 
-		// LAYER -1
+		// LAYER -1 // intro
 		cam.set(-1, -1, true);
-		cam.set(-1, Camera::ZOOM, 1.1);
+		cam.set(-1, Camera::ZOOM, 1.15);
+		//cam.set(-1, 100, true);
 
-		// LAYER 0
-		cam.set(0, Camera::ZOOM, 1.0);
-		for (int p = 0; p < 4; p++) cam.set(0, p, true);
+		// LAYER 0 // menu
+		cam.apply(0);
+		cam.set(0, -20, true);
+		cam.set(0, 0, true);
+		cam.set(0, 99, true);
+		cam.set(0, 100, true);
 
-
+		// LAYER 2
+		cam.set(2, Camera::ZOOM, 1.0);
+		cam.set(2, 100, true);
+		for (int p = 1; p < 4; p++) cam.set(2, p, true);
 
 
 		float perc = 0.0;
@@ -266,6 +267,37 @@ int main(int argc, char* argv[])
 		nulp->_setKeepOnMemory(strt.fixmem);
 	}
 
+	// LAST SETTINGS
+
+	// VARS
+	Sprite::sprite* spr_t = nullptr;
+	Text::text* wtt = nullptr;
+
+	// BAR_00_TEXT
+	if (!txt_data.get(wtt, "BAR_00_TEXT")) throw "FAILED TO LOAD BAR_00_TEXT";
+	wtt->verify();
+	wtt->get(Text::SPRITE, spr_t);
+
+	if (spr_t){
+		spr_t->set(Sprite::SCALEY, 1.5);
+	}
+	spr_t = nullptr;
+	wtt = nullptr;
+
+
+	// BAR_01_TEXT
+	if (!txt_data.get(wtt, "BAR_01_TEXT")) throw "FAILED TO LOAD BAR_01_TEXT";
+	wtt->verify();
+	wtt->get(Text::SPRITE, spr_t);
+
+	if (spr_t){
+		spr_t->set(Sprite::SCALEY, 1.5);
+	}
+	spr_t = nullptr;
+	wtt = nullptr;
+
+
+
 	// start functions
 	bev.g().addFunction(NEWF(Events::add_t_s, 0), &Events::defaultfunction_add);
 	bev.g().addFunction(NEWF(Events::cos_t_s, 1), &Events::defaultfunction_cos);
@@ -318,8 +350,6 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 	*b = false;
 	*f = 0.0;
 
-	//al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR);
-
 	d_sprite_database spr_data;
 	d_images_database img_data;
 	d_texts_database  txt_data;
@@ -334,29 +364,10 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 
 	logg << Log::TIMEF << "[THR_load] Loading resources from the internet..." << Log::ENDL;
 	logg.flush();
-
-
-	/* DOWNLOADING TEXTURES */
-	//Tools::saveFromCloud("https://www.dropbox.com/s/y3vgmzb6qhyqf5i/mouse.png?dl=1", "mouse.png");
-
-
+	   
 	/* LOADING TEXTURES...? */
 	float o = 0.01;
 
-	/*std::thread thr1(Image::multipleCloudLoad, "DEFAULT", "pause/pause_", 29, 2, ".png", nullptr, &o);
-	while (o != 1.0) {
-		*f = o * 0.48;
-	}
-
-	o = 0.0;
-	thr1.join();
-
-	std::thread thr2(Image::multipleCloudLoad,"INTRO", "logo/frame", 115, 2, ".png", nullptr, &o);
-	while (o != 1.0){
-		*f = 0.48 + o * 0.48;
-	}
-
-	thr2.join();*/
 
 	if (!skipdownload){
 
@@ -392,7 +403,11 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 
 	logg << "[THR_load] Loading..." << Log::ENDL;
 	
-	std::thread thr1(Image::multipleLoad, "DEFAULT", "pause/pause_", 29, 2, ".png", &o);
+
+	/* LOADING TEXTURES...? */
+
+
+	std::thread thr1(Image::multipleLoad, "PAUSE", "pause/pause_", 29, 2, ".png", &o);
 	while (o != 1.0) {
 		*f = 0.60 + o * 0.10;
 	}
@@ -400,52 +415,156 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 	o = 0.0;
 	thr1.join();
 
-	std::thread thr2(Image::multipleLoad,"INTRO", "logo/frame", 115, 2, ".png", &o);
+	std::thread thr2(Image::multipleLoad,"LOGO", "logo/frame", 115, 2, ".png", &o);
 	while (o != 1.0){
-		*f = 0.70 + o * 0.10;
+		*f = 0.70 + o * 0.05;
 	}
 
 	thr2.join();
 
 	img_data.create(wi);
 	wi->load("mouse.png");
-	//wi->loadFromDatabase(/*"https://www.dropbox.com/s/y3vgmzb6qhyqf5i/mouse.png?dl=1",*/ "mouse.png");
 	wi->setID("MOUSE");
 	wi = nullptr;
+	
+	img_data.create(wi);
+	wi->load("the_storm.png");
+	wi->setID("BLAST_LOGO");
+	wi = nullptr;
+
+	img_data.create(wi);
+	wi->load("bar_single_one_on.png");
+	wi->setID("BAR_ON");
+	wi = nullptr;
+
+	img_data.create(wi);
+	wi->load("bar_single_one.png");
+	wi->setID("BAR_OFF");
+	wi = nullptr;
+
+	img_data.create(wi);
+	wi->load("background_gameplay_start.png");
+	wi->setID("BG_INTRO");
+	wi = nullptr;
+
+	/// anim
+	
+	std::thread thr4(Image::multipleLoad, "BLOCK_", "anim/bloco", 10, 2, ".png", &o);
+	while (o != 1.0) {
+		*f = 0.75 + o * 0.05;
+	}
+
+	thr4.join();
+
+
 
 	*f = 0.81;
 
-	/* CREATING MUSICS...? */
+	/* LOADING MUSICS...? */
 
 	msk_data.create(wm);
-	//wm->loadFromDatabase("musics/music_01.wav");
 	wm->load("musics/music_01.wav");
 	wm->set(Sound::ID, "MUSIC_0");
-	wm->set(Sound::PLAYING, true);
+	wm->set(Sound::PLAYING, false);
 	wm->set(Sound::PLAYMODE, Sound::LOOP);
+	wm = nullptr;
+
+	msk_data.create(wm);
+	wm->load("musics/music_02.wav");
+	wm->set(Sound::ID, "MUSIC_1");
+	wm->set(Sound::PLAYING, false);
+	wm->set(Sound::PLAYMODE, Sound::LOOP);
+	wm = nullptr;
+	
+
+	msk_data.create(wm);
+	wm->load("musics/music_03.wav");
+	wm->set(Sound::ID, "MUSIC_2");
+	wm->set(Sound::PLAYING, false);
+	wm->set(Sound::PLAYMODE, Sound::LOOP);
+	wm = nullptr;
+
+	msk_data.create(wm);
+	wm->load("musics/jump_01.wav");
+	wm->set(Sound::ID, "JUMP_FX");
+	wm->set(Sound::PLAYING, false);
+	wm->set(Sound::PLAYMODE, Sound::ONCE);
+	wm = nullptr;
+	
+	msk_data.create(wm);
+	wm->load("musics/walk_01.wav");
+	wm->set(Sound::ID, "WALK_FX");
+	wm->set(Sound::PLAYING, false);
+	wm->set(Sound::PLAYMODE, Sound::ONCE);
+	wm = nullptr;
 
 	*f = 0.83;
 
 	/* CREATING SPRITES...? */
 
 	spr_data.create(ws);
-	ws->add("DEFAULT", 29); // adds texture called DEFAULT
+	ws->add("BLAST_LOGO"); // adds texture called DEFAULT
+	ws->setID("BLAST_LOGO"); // set sprite name DEFAULT
+	ws->set(Sprite::POSX, 0.0);
+	ws->set(Sprite::POSY, -0.45);
+	ws->set(Sprite::SCALEG, 1.0);
+	ws->set(Sprite::SCALEY, 0.6);
+	ws->set(Sprite::COLLIDE, true);
+	ws->set(Sprite::AFFECTED_BY_COLLISION, false);
+	//ws->set(Sprite::SHOWBOX, true);
+	ws->set(Sprite::LAYER, 0);
+	//ws->set(Sprite::AFFECTED_BY_CAM, false);
+	ws = nullptr;
+
+	spr_data.create(ws);
+	ws->add("BAR_OFF"); // adds texture called DEFAULT
+	ws->add("BAR_ON"); // adds texture called DEFAULT
+	ws->setID("BAR_00"); // set sprite name DEFAULT
+	ws->set(Sprite::POSX, 0.0);
+	ws->set(Sprite::POSY, 0.4);
+	ws->set(Sprite::SCALEG, 0.55);
+	ws->set(Sprite::SCALEY, 0.3);
+	ws->set(Sprite::COLLIDE, true);
+	ws->set(Sprite::AFFECTED_BY_COLLISION, false);
+	//ws->set(Sprite::SHOWBOX, true);
+	ws->set(Sprite::LAYER, 0);
+	//ws->set(Sprite::AFFECTED_BY_CAM, false);
+	ws = nullptr;
+
+	spr_data.create(ws);
+	ws->add("BAR_OFF"); // adds texture called DEFAULT
+	ws->add("BAR_ON"); // adds texture called DEFAULT
+	ws->setID("BAR_01"); // set sprite name DEFAULT
+	ws->set(Sprite::POSX, 0.0);
+	ws->set(Sprite::POSY, 0.65);
+	ws->set(Sprite::SCALEG, 0.55);
+	ws->set(Sprite::SCALEY, 0.3);
+	ws->set(Sprite::COLLIDE, true);
+	ws->set(Sprite::AFFECTED_BY_COLLISION, false);
+	//ws->set(Sprite::SHOWBOX, true);
+	ws->set(Sprite::LAYER, 0);
+	//ws->set(Sprite::AFFECTED_BY_CAM, false);
+	ws = nullptr;
+
+
+	spr_data.create(ws);
+	ws->add("PAUSE", 29); // adds texture called DEFAULT
 	ws->setID("DEFAULT"); // set sprite name DEFAULT
 	ws->set(Sprite::ANIMATIONTIME, 24.0);
 	ws->set(Sprite::POSX, 0.5);
 	ws->set(Sprite::POSY, 0.5);
-	ws->set(Sprite::LAYER, 1);
 	ws->set(Sprite::SCALEG, 0.2);
 	ws->set(Sprite::COLLIDE, true);
 	ws->set(Sprite::AFFECTED_BY_COLLISION, true);
 	ws->set(Sprite::SHOWBOX, true);
+	ws->set(Sprite::LAYER, 2);
 	//ws->set(Sprite::AFFECTED_BY_CAM, false);
 	ws = nullptr;
 
 	*f = 0.85;
 
 	spr_data.create(ws);
-	ws->add("DEFAULT", 29); // adds texture called DEFAULT
+	ws->add("PAUSE", 29); // adds texture called DEFAULT
 	ws->setID("DEFAULT3"); // set sprite name DEFAULT
 	ws->set(Sprite::ANIMATIONTIME, 40.0);
 	ws->set(Sprite::SCALEG, 0.4);
@@ -454,30 +573,31 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 	ws->set(Sprite::COLLIDE, true);
 	ws->set(Sprite::AFFECTED_BY_COLLISION, true);
 	ws->set(Sprite::SHOWBOX, true);
-	ws->set(Sprite::LAYER, 1);
+	ws->set(Sprite::LAYER, 2);
 	//ws->set(Sprite::AFFECTED_BY_CAM, false);
 	ws = nullptr;
 
 	*f = 0.88;
 
 	spr_data.create(ws);
-	ws->add("DEFAULT", 29); // adds texture called DEFAULT
+	ws->add("PAUSE", 29); // adds texture called DEFAULT
 	ws->setID("DEFAULT2"); // set sprite name DEFAULT
 	ws->set(Sprite::ANIMATIONTIME, 30.0);
+	ws->set(Sprite::LAYER, 100);
 	ws->set(Sprite::SCALEG, 0.6);
 	ws->set(Sprite::POSX, 0.0);
 	ws->set(Sprite::POSY, 0.0);
 	ws->set(Sprite::COLLIDE, true);
 	ws->set(Sprite::AFFECTED_BY_COLLISION, true);
 	ws->set(Sprite::SHOWBOX, true);
-	ws->set(Sprite::LAYER, 1);
+	ws->set(Sprite::LAYER, 2);
 	//ws->set(Sprite::AFFECTED_BY_CAM, false);
 	ws = nullptr;
 
 	*f = 0.90;
 
 	spr_data.create(ws);
-	ws->add("INTRO", 115); // adds texture called DEFAULT
+	ws->add("LOGO", 115); // adds texture called DEFAULT
 	ws->setID("INTRO"); // set sprite name DEFAULT
 	ws->set(Sprite::ANIMATIONTIME, 0.0);
 	ws->set(Sprite::SCALEX, 1.6);
@@ -494,7 +614,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 	spr_data.create(ws);
 	ws->add("MOUSE");
 	ws->setID("MOUSE");
-	ws->set(Sprite::LAYER, 2);
+	ws->set(Sprite::LAYER, 100);
 	ws->set(Sprite::SCALEX, 0.60);
 	//ws->set(Sprite::SCALEY, 1.6);
 	ws->set(Sprite::SCALEG, 0.07);
@@ -508,9 +628,33 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 	/* CREATING A TEXT...? */
 
 	txt_data.create(wt);
+	wt->set(Text::SETSTRING, "< START >");
+	wt->set(Text::MODE, Text::ALIGN_CENTER);
+	wt->set(Text::LAYER, 99);
+	wt->set(Text::SETFOLLOW, "BAR_00");
+	wt->set(Text::UPDATETIME, 1.0);
+	wt->set(Text::POSY, -0.045);
+	wt->setID("BAR_00_TEXT");
+	wt->set(Text::USEBUFOPT, true);
+	wt = nullptr;
+
+	txt_data.create(wt);
+	wt->set(Text::SETSTRING, "< EXIT >");
+	wt->set(Text::MODE, Text::ALIGN_CENTER);
+	wt->set(Text::LAYER, 99);
+	wt->set(Text::SETFOLLOW, "BAR_01");
+	wt->set(Text::UPDATETIME, 1.0);
+	wt->set(Text::POSY, -0.045);
+	wt->setID("BAR_01_TEXT");
+	wt->set(Text::USEBUFOPT, true);
+	wt = nullptr;
+
+
+	txt_data.create(wt);
 	//wt->loadFromDatabase();
 	wt->set(Text::SETSTRING, "0 [%pos_x% %pos_y%] at XY %sprite_speed_x% : %sprite_speed_y%");
 	wt->set(Text::MODE, Text::ALIGN_CENTER);
+	wt->set(Text::LAYER, 4);
 	wt->set(Text::SETFOLLOW, "DEFAULT");
 	wt->setID("FOLLOW_0");
 	//wt->set(Text::USEBUFOPT, true);
@@ -522,6 +666,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 	//wt->load();
 	wt->set(Text::SETSTRING, "1 [%pos_x% %pos_y%] at XY %sprite_speed_x% : %sprite_speed_y%");
 	wt->set(Text::MODE, Text::ALIGN_CENTER);
+	wt->set(Text::LAYER, 4);
 	wt->set(Text::SETFOLLOW, "DEFAULT2");
 	wt->setID("FOLLOW_1");
 	//wt->set(Text::USEBUFOPT, true);
@@ -533,6 +678,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 	//wt->load();
 	wt->set(Text::SETSTRING, "2 [%pos_x% %pos_y%] at XY %sprite_speed_x% : %sprite_speed_y%");
 	wt->set(Text::MODE, Text::ALIGN_CENTER);
+	wt->set(Text::LAYER, 4);
 	wt->set(Text::SETFOLLOW, "DEFAULT3");
 	wt->setID("FOLLOW_2");
 	//wt->set(Text::USEBUFOPT, true);
@@ -545,6 +691,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 	wt->set(Text::POSX, -1.0);
 	wt->set(Text::POSY, -1.0);
 	wt->set(Text::MODE, Text::ALIGN_LEFT);
+	wt->set(Text::LAYER, 4);
 	wt->setMainDisplay(disp);
 	wt->set(Text::UPDATETIME, 0.20);
 	wt->setID("OSD_0");
@@ -567,8 +714,8 @@ int sub_main(const int l, Display::display& disp)
 
 	Log::gfile logg;
 	Camera::camera_g cam;
+	Layer::layerer lyr;
 	logg.flush();
-
 	
 	switch (l)
 	{
@@ -587,6 +734,7 @@ int sub_main(const int l, Display::display& disp)
 
 			disp.capFPS(60);
 			cam.apply(-1);
+			lyr.setUsingNow(-1);
 
 			double start_point = al_get_time();
 
@@ -603,6 +751,8 @@ int sub_main(const int l, Display::display& disp)
 
 
 				if (!disp.flip()) return -1;
+
+				if (bev.g().getKey(Events::KEY_ESCAPE)) return 0;
 			}
 
 			sprite_0->set(Sprite::ANIMATIONTIME, 0.0);
@@ -613,7 +763,9 @@ int sub_main(const int l, Display::display& disp)
 
 				spr_data.draw();
 				txt_data.draw();
-				if (!disp.flip()) return -1;
+				if (!disp.flip()) return -10;
+
+				if (bev.g().getKey(Events::KEY_ESCAPE)) return 0;
 			}
 
 			// -------------------- END OF THE SCENE -------------------- //
@@ -623,20 +775,76 @@ int sub_main(const int l, Display::display& disp)
 		return 0;
 	case 0:
 		{
+			int nexte = 0;
 			disp.capFPS();
 			cam.apply(0);
-			Sprite::sprite*		sprite_0 = nullptr;
+			lyr.setUsingNow(0);
+
+			Sprite::sprite*		sprite_m = nullptr;
+			Sprite::sprite*     sprite_b0 = nullptr;
+			Sprite::sprite*     sprite_b1 = nullptr;
+
+			if (!spr_data.get(sprite_m, "MOUSE")) throw "FAILED TO LOAD MOUSE";
+			if (!spr_data.get(sprite_b0, "BAR_00")) throw "FAILED TO LOAD BAR_00";
+			if (!spr_data.get(sprite_b1, "BAR_01")) throw "FAILED TO LOAD BAR_01";
+
+			Fx::bubbles imkrA(300, 60.0, -20);
+
+			bool mk = false;
+
+			for (double n = al_get_time(); al_get_time() - n < 10.0 || mk;)
+			{
+				bool b0, b1;
+				sprite_b0->get(Sprite::_IS_COLLIDING, b0);
+				sprite_b1->get(Sprite::_IS_COLLIDING, b1);
+
+				mk = bev.g().getKey(Events::MOUSE_0, false);
+
+				if (mk) {
+					if (b0) {
+						nexte = 2;
+						n = al_get_time() - 10.0;
+					}
+					if (b1) {
+						nexte = 1;
+						n = al_get_time() - 10.0;
+					}
+				}
+
+				sprite_m->set(Sprite::ROTATION, bev.g().getFunctionValNow(0));
+				sprite_m->set(Sprite::SCALEG, 0.07*bev.g().getFunctionValNow(1));
+
+				imkrA.think();
+				imkrA.draw();
+
+				img_data.draw();
+				spr_data.draw();
+				txt_data.draw();
+				if (!disp.flip()) return -10;
+
+				if (bev.g().getKey(Events::KEY_ESCAPE)) return -10;
+			}
+
+			return nexte;
+		}
+	case 2:
+		{
+			disp.capFPS();
+			cam.apply(2);
+			lyr.setUsingNow(2);
+
+			Sprite::sprite*		sprite_m = nullptr;
 			Sprite::sprite*		sprite_1 = nullptr;
 
-			if (!spr_data.get(sprite_0, "MOUSE")) throw "FAILED TO LOAD MOUSE";
+			if (!spr_data.get(sprite_m, "MOUSE")) throw "FAILED TO LOAD MOUSE";
 			if (!spr_data.get(sprite_1, "DEFAULT2")) throw "FAILED TO LOAD DEFAULT2";
 
-			Fx::bubbles imkr(300, 60.0);
+			Fx::bubbles imkrB(300, 60.0, 1);
 
-			for (double n = al_get_time(); al_get_time() - n < 5.0;)
+			for (double n = al_get_time(); al_get_time() - n < 30.0;)
 			{
-				sprite_0->set(Sprite::ROTATION, bev.g().getFunctionValNow(0));
-				sprite_0->set(Sprite::SCALEG, 0.07*bev.g().getFunctionValNow(1));
+				sprite_m->set(Sprite::ROTATION, bev.g().getFunctionValNow(0));
+				sprite_m->set(Sprite::SCALEG, 0.07*bev.g().getFunctionValNow(1));
 				//sprite_1->set(Sprite::SCALEG, bev.g().getFunctionValNow(2));
 				//cam.set(Camera::ZOOM, 0.75 + 0.3*cos(al_get_time()*0.65));
 				//cam.set(Camera::OFFX, 0.6*cos(al_get_time()*0.41) * 1.0 / (fabs(cam.get(Camera::ZOOM))) + 0.01);
@@ -644,25 +852,30 @@ int sub_main(const int l, Display::display& disp)
 
 				//cam.apply();
 
-				imkr.think();
-				imkr.draw();
+				imkrB.think();
+				imkrB.draw();
 
 				img_data.draw();
 				spr_data.draw();
 				txt_data.draw();
-				if (!disp.flip()) return -1;
+				if (!disp.flip()) return -10;
+
+				if (bev.g().getKey(Events::KEY_ESCAPE)) return 0;
 			}
-			return 1;
+			return 0;
 		}
 	case 1:
 		{
-			Fx::lines lines;
+			cam.apply(2);
+			lyr.setUsingNow(2);
+
+			Fx::lines lines(1);
 
 			Sprite::sprite*		sprite_0 = nullptr;
 
 			if (!spr_data.get(sprite_0, "MOUSE")) throw "FAILED TO LOAD MOUSE";
 
-			for (double n = al_get_time(); al_get_time() - n < 5.0;) {
+			for (double n = al_get_time(); al_get_time() - n < 30.0;) {
 				sprite_0->set(Sprite::ROTATION, bev.g().getFunctionValNow(0));
 
 				/*cam.set(cam.getLastApplyID(), Camera::ZOOM, 0.75 + 0.3*cos(al_get_time()*0.65));
@@ -677,13 +890,24 @@ int sub_main(const int l, Display::display& disp)
 				spr_data.draw();
 				txt_data.draw();
 
-				if (!disp.flip()) return -1;
+				if (!disp.flip()) return -10;
+
+				if (bev.g().getKey(Events::KEY_ESCAPE)) return 0;
 			}
-			return -1;
+			return 0;
 		}
 	}
 
 	return -10;
+}
+
+void temp_xtract(Stacker::extractor* xtract, Safer::safe_string interp, Safer::safe_string saveon)
+{
+	if (xtract) {
+		xtract->interpret(interp.g());
+		xtract->extractAll(saveon.g());
+	}
+	else throw "NULL POINTER AT TEMP_XTRACT!";
 }
 
 void killall()

@@ -3,7 +3,7 @@
 namespace LSW {
 	namespace v2 {
 		namespace Fx {
-			bubbles::bubbles(const unsigned amout, const float mfps)
+			bubbles::bubbles(const unsigned amout, const float mfps, const int layer)
 			{
 				if (firstcall) {
 
@@ -21,7 +21,7 @@ namespace LSW {
 					spr_data.create(disguy);
 					disguy->add("BKG_NULL");
 					disguy->setID("BKG_NULL");
-					disguy->set(Sprite::LAYER, 0);
+					disguy->set(Sprite::LAYER, layer);
 					disguy->set(Sprite::SCALEG, 2.0);
 					disguy->set(Sprite::AFFECTED_BY_CAM, false);
 
@@ -145,7 +145,7 @@ namespace LSW {
 				}
 				return gotten;
 			}
-			lines::lines()
+			lines::lines(const int layer)
 			{
 				d_images_database img_data;
 				d_sprite_database spr_data;
@@ -161,7 +161,7 @@ namespace LSW {
 				spr_data.create(disguy);
 				disguy->add("LINES_NULL");
 				disguy->setID("LINES_NULL");
-				disguy->set(Sprite::LAYER, 0);
+				disguy->set(Sprite::LAYER, layer);
 				disguy->set(Sprite::SCALEG, 2.0);
 				disguy->set(Sprite::AFFECTED_BY_CAM, false);
 			}

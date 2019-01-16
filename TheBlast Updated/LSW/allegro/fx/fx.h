@@ -29,7 +29,7 @@ namespace LSW {
 				//bool updatebitmap = false;
 			public:
 				// amount of entities running forever :3 and fps
-				bubbles(const unsigned, const float);
+				bubbles(const unsigned, const float, const int = 0);
 				~bubbles();
 
 				void draw();
@@ -43,7 +43,7 @@ namespace LSW {
 				Sprite::sprite* disguy = nullptr;
 				int rad = 2;
 			public:
-				lines();
+				lines(const int = 0);
 				~lines();
 
 				void draw();
