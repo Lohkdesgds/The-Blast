@@ -79,8 +79,6 @@ int main(int argc, char* argv[])
 
 	logg << "[" << Log::TIMEF << "]" << "[INFO] Starting the app..." << Log::ENDL;
 
-	//disp.custom_launch(1920, 1080, ALLEGRO_OPENGL | ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE);
-
 	if (strt.changed) disp.custom_launch(strt.res[0], strt.res[1], strt.mode);
 	else disp.launch();
 
