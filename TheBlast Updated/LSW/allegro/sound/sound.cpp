@@ -23,7 +23,7 @@ namespace LSW {
 				return true;
 			}
 
-			const bool track::loadFromDatabase(const Safer::safe_string newname)
+			/*const bool track::loadFromDatabase(const Safer::safe_string newname)
 			{
 				Safer::safe_string s = Defaults::initial_call_url.g() + newname.g();
 				Tools::clearPath(s, true);
@@ -34,7 +34,7 @@ namespace LSW {
 				if (!load(s_o)) assert(Tools::saveFromCloud(url, s_o));
 				else return true;
 				return load(s_o);
-			}
+			}*/
 
 			void track::set(const track_p e, const bool v)
 			{

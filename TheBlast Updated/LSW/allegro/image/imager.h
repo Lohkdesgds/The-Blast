@@ -32,9 +32,10 @@ namespace LSW {
 
 				const bool _load_NOADJUST(const Safer::safe_string);
 			public:
+				//const bool set(const Safer::safe_string);
 				const bool load(const Safer::safe_string);
-				const bool loadFromDatabase(const Safer::safe_string);
-				const bool loadFromURL(const Safer::safe_string, const Safer::safe_string); // url, name it as (THE FILE! NOT ID)
+				//const bool loadFromDatabase(const Safer::safe_string);
+				//const bool loadFromURL(const Safer::safe_string, const Safer::safe_string); // url, name it as (THE FILE! NOT ID)
 				const bool create(int, int);
 				void setID(const Safer::safe_string);
 
@@ -63,9 +64,9 @@ namespace LSW {
 			void _draw_complex();*/
 
 			// its name, initial path, how many, how many 0's, end (format)
-			void multipleLoad(const Safer::safe_string, Safer::safe_string, const size_t, const unsigned, Safer::safe_string);
+			void multipleLoad(const Safer::safe_string, Safer::safe_string, const size_t, const unsigned, Safer::safe_string, float* = nullptr);
 			// its name, initial path, how many, how many 0's, end (format), urls
-			void multipleCloudLoad(const Safer::safe_string, Safer::safe_string, const size_t, const unsigned, Safer::safe_string, const Safer::safe_string* = nullptr, float* = nullptr); // NULLPTR == from database on Defaults::initial_call_url
+			//void multipleCloudLoad(const Safer::safe_string, Safer::safe_string, const size_t, const unsigned, Safer::safe_string, const Safer::safe_string* = nullptr, float* = nullptr); // NULLPTR == from database on Defaults::initial_call_url
 		}
 	}
 }

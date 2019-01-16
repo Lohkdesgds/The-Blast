@@ -24,6 +24,21 @@ namespace LSW {
 				return false;
 			}
 
+			/*const bool image_low::set(const Safer::safe_string s_o)
+			{
+				unload();
+
+				Safer::safe_string s = Defaults::default_data_path.g() + s_o.g();
+				Tools::interpret_path(s);
+
+				if (Tools::getFileSize(s) > 0) {
+					path = s;
+					lastcall = 0;
+					return true;
+				}
+				return false;
+			}*/
+
 			const bool image_low::load(const Safer::safe_string s_o)
 			{
 				unload();
@@ -33,7 +48,7 @@ namespace LSW {
 				return _load_NOADJUST(s);
 			}
 
-			const bool image_low::loadFromDatabase(const Safer::safe_string newname)
+			/*const bool image_low::loadFromDatabase(const Safer::safe_string newname)
 			{
 				Safer::safe_string s = Defaults::initial_call_url.g() + newname.g();
 				Tools::clearPath(s, true);
@@ -45,7 +60,7 @@ namespace LSW {
 				if (!load(s_o)) assert(Tools::saveFromCloud(url, s_o));
 				else return true;
 				return load(s_o);
-			}
+			}*/
 			const bool image_low::create(int x, int y)
 			{
 				if (x <= 0 || y <= 0) {
@@ -276,7 +291,7 @@ namespace LSW {
 				
 			}*/
 
-			void multipleLoad(const Safer::safe_string nickname, Safer::safe_string start, const size_t max, const unsigned format, Safer::safe_string end)
+			void multipleLoad(const Safer::safe_string nickname, Safer::safe_string start, const size_t max, const unsigned format, Safer::safe_string end, float *perc)
 			{
 				Tools::interpret_path(start);
 				Tools::interpret_path(end);
@@ -295,23 +310,36 @@ namespace LSW {
 				sprintf_s(format_nick, "%s%clu", nickname.g().c_str(), '%');
 
 				for (size_t p = 0; p < max; p++) {
+					if (perc) {
+						*perc = 1.0f * p / max;
+					}
+
 					char newname[276];
 					char newnick[148];
 
 					sprintf_s(newname, format_ch, p);
 					sprintf_s(newnick, format_nick, p);
 
-					log << "[multipleLoad] Registered load of \"" << newname << "\" named \"" << newnick << "\"... ";
+					log << Log::TIMEF << "[multipleLoad] Registered load of \"" << newname << "\" named \"" << newnick << "\"... " << Log::ENDL;
 
 					img_data.create(wi);
 					wi->setID(newnick);
-					wi->load(newname);
+					if (!wi->load(newname))
+					{
+						log << Log::ERRDV << Log::TIMEF << "[multipleLoad] ERROR LOADING \"" << newname << "\" named \"" << newnick << "\"! Skipping!" << Log::ENDL;
+						log.flush();
+					}
+					else {
+						log << Log::TIMEF << "[multipleLoad] LOADED Successfully: \"" << newname << "\" named \"" << newnick << "\"." << Log::ENDL;
+					}
 
-					log << "(" << ((wi->isLoaded()) ? "LOADED" : "FAILED_TO_LOAD") << ")" << Log::ENDL;
+					//log << "(" << ((wi->isLoaded()) ? "LOADED" : "FAILED_TO_LOAD") << ")" << Log::ENDL;
 					wi = nullptr;
 				}
+
+				if (perc) *perc = 1.0;
 			}
-			void multipleCloudLoad(const Safer::safe_string nickname, Safer::safe_string start, const size_t max, const unsigned format, Safer::safe_string end, const Safer::safe_string* urls, float* perc)
+			/*void multipleCloudLoad(const Safer::safe_string nickname, Safer::safe_string start, const size_t max, const unsigned format, Safer::safe_string end, const Safer::safe_string* urls, float* perc)
 			{
 				Tools::interpret_path(start);
 				Tools::interpret_path(end);
@@ -355,7 +383,7 @@ namespace LSW {
 					wi = nullptr;
 				}
 				if (perc) *perc = 1.0;
-			}
+			}*/
 		}
 	}
 }

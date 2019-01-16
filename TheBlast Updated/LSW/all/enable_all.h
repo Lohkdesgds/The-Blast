@@ -16,15 +16,19 @@
 #include <stdio.h>
 #include <thread>
 #include <map>
+#include <vector>
+#include <filesystem>
+#include "..\_external\dirent.h"
 
 #include "..\safer\safer.h"
 
 #include "..\defaults\defaults.h"
 
-#include "..\download_manager\downloader_v2.h"
 #include "..\tools\tools.h"
-
 #include "..\log_file\log.h"
+
+#include "..\tools\stacker\stacker.h"
+#include "..\download_manager\downloader_v2.h"
 
 #include "..\allegro\layerer\layerer.h"
 #include "..\allegro\camera\camera.h"
