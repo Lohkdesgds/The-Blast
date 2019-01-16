@@ -162,6 +162,7 @@ int main(int argc, char* argv[])
 		wt->set(Text::LAYER, -2);
 		wt->setID("LOADING_0");
 
+
 		disp.checkUpImages();
 
 		std::thread thr(temp_thr_load, &perc, &isdone, &disp, strt.skipdown);
