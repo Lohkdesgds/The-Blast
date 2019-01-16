@@ -1,0 +1,756 @@
+#include "..\..\all\enable_all.h"
+
+
+
+namespace LSW {
+	namespace v2 {
+		namespace Events {
+
+			events* big_event::eventr = nullptr;
+
+			void _functionThr::setId(const int v)
+			{
+				id = v;
+			}
+			const int _functionThr::getId()
+			{
+				return id;
+			}
+
+			void _functionThr::setUpdateTime(const double tps)
+			{
+				pertime = tps;
+			}
+			void _functionThr::resetTo(const double v)
+			{
+				f = v;
+			}
+			const bool _functionThr::_gotWork()
+			{
+				if (al_get_time() - _lasttry > pertime)
+				{
+					_lasttry += pertime;
+					return true;
+				}
+				return false;
+			}
+			double _functionThr::getVal()
+			{
+				return f;
+			}
+			void _functionThr::setF(void(*fuf) (void*, double&))
+			{
+				fu = fuf;
+			}
+
+
+			const char _string_work::translate(const int code)
+			{
+				char ch = 0;
+				switch (code)
+				{
+				case ALLEGRO_KEY_A:
+					ch = 'A';
+					break;
+				case ALLEGRO_KEY_B:
+					ch = 'B';
+					break;
+				case ALLEGRO_KEY_C:
+					ch = 'C';
+					break;
+				case ALLEGRO_KEY_D:
+					ch = 'D';
+					break;
+				case ALLEGRO_KEY_E:
+					ch = 'E';
+					break;
+				case ALLEGRO_KEY_F:
+					ch = 'F';
+					break;
+				case ALLEGRO_KEY_G:
+					ch = 'G';
+					break;
+				case ALLEGRO_KEY_H:
+					ch = 'H';
+					break;
+				case ALLEGRO_KEY_I:
+					ch = 'I';
+					break;
+				case ALLEGRO_KEY_J:
+					ch = 'J';
+					break;
+				case ALLEGRO_KEY_K:
+					ch = 'K';
+					break;
+				case ALLEGRO_KEY_L:
+					ch = 'L';
+					break;
+				case ALLEGRO_KEY_M:
+					ch = 'M';
+					break;
+				case ALLEGRO_KEY_N:
+					ch = 'N';
+					break;
+				case ALLEGRO_KEY_O:
+					ch = 'O';
+					break;
+				case ALLEGRO_KEY_P:
+					ch = 'P';
+					break;
+				case ALLEGRO_KEY_Q:
+					ch = 'Q';
+					break;
+				case ALLEGRO_KEY_R:
+					ch = 'R';
+					break;
+				case ALLEGRO_KEY_S:
+					ch = 'S';
+					break;
+				case ALLEGRO_KEY_T:
+					ch = 'T';
+					break;
+				case ALLEGRO_KEY_U:
+					ch = 'U';
+					break;
+				case ALLEGRO_KEY_V:
+					ch = 'V';
+					break;
+				case ALLEGRO_KEY_W:
+					ch = 'W';
+					break;
+				case ALLEGRO_KEY_X:
+					ch = 'X';
+					break;
+				case ALLEGRO_KEY_Y:
+					ch = 'Y';
+					break;
+				case ALLEGRO_KEY_Z:
+					ch = 'Z';
+					break;
+				case ALLEGRO_KEY_0:
+					ch = '0';
+					break;
+				case ALLEGRO_KEY_1:
+					ch = '1';
+					break;
+				case ALLEGRO_KEY_2:
+					ch = '2';
+					break;
+				case ALLEGRO_KEY_3:
+					ch = '3';
+					break;
+				case ALLEGRO_KEY_4:
+					ch = '4';
+					break;
+				case ALLEGRO_KEY_5:
+					ch = '5';
+					break;
+				case ALLEGRO_KEY_6:
+					ch = '6';
+					break;
+				case ALLEGRO_KEY_7:
+					ch = '7';
+					break;
+				case ALLEGRO_KEY_8:
+					ch = '8';
+					break;
+				case ALLEGRO_KEY_9:
+					ch = '9';
+					break;
+				case ALLEGRO_KEY_SPACE:
+					ch = ' ';
+					break;
+				case ALLEGRO_KEY_ENTER:
+				case ALLEGRO_KEY_PAD_ENTER:
+					ch = 1;
+					break;
+				case ALLEGRO_KEY_FULLSTOP:
+					ch = '.';
+					break;
+				case ALLEGRO_KEY_BACKSPACE:
+					ch = 2;
+					break;
+				case ALLEGRO_KEY_ESCAPE:
+					ch = 3;
+					break;
+				}
+				return ch;
+			}
+
+			void _string_work::interpret(int last_key, int allegro_code) // unichar, keycode
+			{
+				//ev_handlr evh;
+
+				/*if (lastkey != last_key)
+				{*/
+					lastkey = last_key;
+
+					if (last_key != 0)
+					{
+						char translated = translate(allegro_code);
+						
+						if (translated == 1)
+						{
+							if (ongoing.g().length() > 0) done = ongoing;
+							ongoing.clear();
+						}
+						else if (translated == 2)
+						{
+							ongoing.pop_back();
+						}
+						else if (translated == 3)
+						{
+							ongoing.clear();
+						}
+						else
+						{
+							if (lastkey != '%') ongoing += last_key;
+						}
+					}
+				//}
+				return;
+			}
+			void _string_work::getLastString(Safer::safe_string& u)
+			{
+				u = done;
+			}
+			void _string_work::getOnGoingString(Safer::safe_string& u)
+			{
+				u = ongoing;
+			}
+			const bool _string_work::isHack(hack_strings & e)
+			{
+				if (ongoing == "SETMEIMMORTAL") { e = HACK_IMMORTAL; return true; }
+				if (ongoing == "JUMPNEXTLEVEL") { e = HACK_NEXTLEVEL; return true; }
+				// else
+				e = HACK_NONE;
+				return false;
+			}
+			void _string_work::clear()
+			{
+				done.clear();
+			}
+			void _string_work::clearall()
+			{
+				clear();
+				ongoing.clear();
+			}
+
+
+			_functionThr* events::_get(const int r)
+			{
+				_functionThr* re = nullptr;
+				for (size_t p = 0; p < funcs.getMax(); p++)
+				{
+					if (funcs[p]->getId() == r) {
+						re = funcs[p];
+						break;
+					}
+				}
+				return re;
+			}
+			const bool events::setup()
+			{
+				if (!targ) {
+					glog << "[" << Log::TIMEF << "]" << "[INFO][EVENTS] Initializing event handler... (thread)" << Log::ENDL;
+
+					targ = al_get_current_display();
+					if (!targ) {
+						glog << "[" << Log::TIMEF << "]" << "[ERROR][EVENTS] Cannot detect display! Something is not great!" << Log::ENDL;
+						glog.flush();
+						return false;
+					}
+
+					if (!(ev_qu = al_create_event_queue())) {
+						targ = nullptr;
+						glog << "[" << Log::TIMEF << "]" << "[ERROR][EVENTS] Could not create event queue." << Log::ENDL;
+						return false;
+					}
+
+					al_register_event_source(ev_qu, al_get_keyboard_event_source());
+					al_register_event_source(ev_qu, al_get_mouse_event_source());
+					al_register_event_source(ev_qu, al_get_display_event_source(targ));
+
+					glog << "[" << Log::TIMEF << "]" << "[INFO][EVENTS] Initializing thread right now..." << Log::ENDL;
+
+					thr = new std::thread(_thread_ev, this);
+
+					for (clock_t now = clock(); clock() - now < 20 * CLOCKS_PER_SEC && !alright;);
+					if (!alright) {
+						glog << "[" << Log::TIMEF << "]" << "[ERROR][EVENTS] SOMETHING WENT WRONG, I guess. I have to wait for the thread, so..." << Log::ENDL;
+						glog.flush();
+						thr->join();
+						alright = false;
+						al_destroy_event_queue(ev_qu);
+						ev_qu = nullptr;
+						targ = nullptr;
+						glog << "[" << Log::TIMEF << "]" << "[WARN][EVENTS] Trying again..." << Log::ENDL;
+						setup();
+					}
+				}
+				return true;
+			}
+
+			void events::stop()
+			{
+				if (!targ) {
+					glog << "[" << Log::TIMEF << "]" << "[INFO][EVENTS] Shutting down thread..." << Log::ENDL;
+					glog.flush();
+					alright = false;
+					thr->join();
+					al_destroy_event_queue(ev_qu);
+					ev_qu = nullptr;
+					targ = nullptr;
+				}
+			}
+
+			bool * events::getKeep()
+			{
+				return &alright;
+			}
+
+			void events::setMultiplierForUpdatingImg(const double v)
+			{
+				multiplier_hz_d = 1.0 / v;
+			}
+
+			const bool events::addFunction(_functionThr* u, void(*f)(void*, double&)) //int(*f)(void*, bool), void* data)
+			{
+				for (size_t p = 0; p < funcs.getMax(); p++)
+				{
+					if (funcs[p]->getId() == u->getId()) {
+						// a function is returning the same value for null as someone else already on functions!
+						// change the default "nullptr" return for the new function for correct usage of this "hack" I made :3
+						glog << "[" << Log::TIMEF << "]" << "[WARN][EVENTS] A function added on functions vector has already been added or there's another one with the same signature! PLEASE VERIFY THIS SITUATION! Return value got: " << u->getId() << Log::ENDL;
+						glog.flush();
+						exit(EXIT_FAILURE);
+					}
+				}
+				u->setF(f);
+				funcs.push(u);
+				//params_f.push(data);
+				return true;
+			}
+			void events::delFunction(const int r)
+			{
+				for (size_t p = 0; p < funcs.getMax(); p++)
+				{
+					if (funcs[p]->getId() == r) {
+						delete funcs[p];
+						funcs.erase(p);
+						return;
+					}
+				}
+			}
+
+			void events::delAllFunctions()
+			{
+				funcs.clear();
+			}
+
+			double events::getFunctionValNow(const int r)
+			{
+				_functionThr* tf = _get(r);
+				if (tf) {
+					return tf->getVal();
+				}
+				return 0.0;
+			}
+
+			void * events::getFVoidArg(const int r)
+			{
+				_functionThr* tf = _get(r);
+				if (tf) {
+					return tf->getArgAsVoid();
+				}
+				return nullptr;
+			}
+
+			void events::setTimerForF(const double u, const int r)
+			{
+				_functionThr* tf = _get(r);
+				if (tf) {
+					assert(u >= Defaults::functions_timer); // cannot be faster than that
+					tf->setUpdateTime(u);
+				}
+			}
+
+			void events::resetFValTo(const double u, const int r)
+			{
+				_functionThr* tf = _get(r);
+				if (tf) {
+					tf->resetTo(u);
+				}
+			}
+
+			ALLEGRO_TIMER * events::getTimer(const int v, const double a)
+			{
+				ALLEGRO_TIMER * t = nullptr;
+				std::map<int, ALLEGRO_TIMER*>::iterator it = timers.find(v);
+				if (it == timers.end())
+				{
+					t = al_create_timer(a);
+					al_register_event_source(ev_qu, al_get_timer_event_source(t));
+					timers[v] = t;
+					al_start_timer(t);
+					return t;
+				}
+				else
+				{
+					return it->second;
+				}
+			}
+			void events::setRunningTimer(const int v, const bool a)
+			{
+				ALLEGRO_TIMER * t = nullptr;
+				std::map<int, ALLEGRO_TIMER*>::iterator it = timers.find(v);
+				if (it != timers.end())
+				{
+					t = it->second;
+					if (a) al_stop_timer(t);
+					else al_start_timer(t);
+				}
+			}
+			void events::delTimer(const int v)
+			{
+				if (v < 0)
+				{
+					for (auto& i : timers) {
+						al_stop_timer(i.second);
+						al_destroy_timer(i.second);
+					}
+					timers.clear();
+					return;
+				}
+
+				ALLEGRO_TIMER * t = nullptr;
+				std::map<int, ALLEGRO_TIMER*>::iterator it = timers.find(v);
+				if (it != timers.end())
+				{
+					t = it->second;
+					al_stop_timer(t);
+					al_destroy_timer(t);
+					timers.erase(v);
+				}
+			}
+
+			const bool events::getKey(const events_keys v, const bool e)
+			{
+				bool r = Tools::GetWithDef(keys, v, false);
+				if (e) keys[v] = false;
+				return r;
+			}
+			void events::getMouse(float & v, const event_xy o)
+			{
+				v = axis[o];
+			}
+			const bool events::getLastString(Safer::safe_string& u, const bool clr)
+			{
+				if (lastString.g().length() > 0) {
+					u = lastString;
+					if (clr) lastString.clear();
+					return true;
+				}
+				return false;
+			}
+			const bool events::getCurrentString(Safer::safe_string& u, const bool clr)
+			{
+				if (currString.g().length() > 0) {
+					u = currString;
+					if (clr) currString.clear();
+					return true;
+				}
+				return false;
+			}
+
+			const unsigned events::getCurrentMaxTickCounted()
+			{
+				return ticks_one_sec;
+			}
+
+			const bool events::_nextEv(ALLEGRO_EVENT& e, const bool wait)
+			{
+				if (ev_qu) {
+					if (!wait) return al_get_next_event(ev_qu, &e); // bugs
+					else {
+						al_wait_for_event(ev_qu, &e);
+						return true;
+					}
+				}
+				return false;
+			}
+			void events::_setKey(const events_keys v, const bool k)
+			{
+				keys[v] = k;
+			}
+			void events::_confirm_initialized_thr()
+			{
+				alright = true;
+			}
+			const bool events::_keep()
+			{
+				return alright;
+			}
+			void events::_update_functions()
+			{
+				for (size_t p = 0; p < funcs.getMax(); p++)
+				{
+					
+					funcs[p]->work();
+
+					//funcs[p] = funcs[p].f(funcs[p], funcs[p].arg);
+
+					/*void* val = params_f[p];
+					functions[p](val,true);*/
+				}
+			}
+			void events::_setMousePos(const float x, const float y)
+			{
+				axis[0] = x;
+				axis[1] = y;
+			}
+			void events::_setLastString(const Safer::safe_string u)
+			{
+				lastString = u;
+			}
+			void events::_setCurrString(const Safer::safe_string u)
+			{
+				currString = u;
+			}
+
+			void events::_setMaxTickCount(const unsigned u)
+			{
+				ticks_one_sec = u;
+			}
+
+			const double events::_getMultiplierForUpdatingImg()
+			{
+				return multiplier_hz_d;
+			}
+
+			ALLEGRO_DISPLAY * events::_getTargD()
+			{
+				return targ;
+			}
+
+			void events::_setShutDownNow()
+			{
+				alright = false;
+			}
+
+
+
+
+			void _thread_ev(events* e)
+			{
+				if (!e) return;
+				e->_confirm_initialized_thr();
+
+				d_sprite_database spr_data;
+				_string_work wrk;
+				Log::gfile glog;
+				unsigned count = 0;
+				double last = al_get_time();
+				/*double fixMultI = e->_getMultiplierForUpdatingImg();
+				if (fixMultI > 1.0 / 60) fixMultI = 1.0 / 60;*/
+				ALLEGRO_TIMER* collisionTimer = e->getTimer(0, Defaults::collision_timer);
+				ALLEGRO_TIMER* functionsTimer = e->getTimer(1, Defaults::functions_timer);
+				ALLEGRO_TIMER* checkEnd_Timer = e->getTimer(2, Defaults::checkEnd_timer);
+				ALLEGRO_TIMER* calcLoopsTimer = e->getTimer(3, Defaults::calcLoops_timer);
+				ALLEGRO_TIMER* updatePosTimer = e->getTimer(4, Defaults::updatepos_timer);
+
+				glog << "[" << Log::TIMEF << "]" << "[INFO][THR2][EVENTS] Thread initialized successfully." << Log::ENDL;
+
+				while (e->_keep())
+				{
+					ALLEGRO_EVENT ev;
+
+					if (e->_nextEv(ev, true))
+					{
+						count++;
+						if (ev.type == ALLEGRO_EVENT_TIMER)
+						{
+							if (ev.timer.source == collisionTimer)
+							{
+								Layer::layerer lyr;
+								Sprite::sprite* spr, *spr2;
+
+								for (auto& i : lyr.getNow().work())
+								{
+									for (size_t p = 0; p < spr_data.work().getMax(); p++)
+									{
+										spr_data.get(spr, p);
+										int u, m;
+										spr->get(Sprite::LAYER, u);
+
+										if (u == i.first) {
+
+											spr->_resetCollision();
+
+											for (size_t q = 0; q < spr_data.work().getMax(); q++)
+											{
+												if (q != p) {
+													spr_data.get(spr2, q);
+													spr2->get(Sprite::LAYER, m);
+
+													for (auto& k : i.second.colliding)
+													{
+														if (k.first == m && k.second) {
+															spr->_verifyCollision(*spr2);
+															break;
+														}
+													}
+												}
+											}
+										}
+									}
+								}							
+							}
+							else if (ev.timer.source == functionsTimer)
+							{
+								e->_update_functions();
+							}
+							else if (ev.timer.source == checkEnd_Timer)
+							{
+								continue;
+							}
+							else if (ev.timer.source == calcLoopsTimer)
+							{
+								e->_setMaxTickCount(count);
+								count = 0;
+							}
+							else if (ev.timer.source == updatePosTimer)
+							{
+								Sprite::sprite* spr;
+								for (size_t p = 0; p < spr_data.work().getMax(); p++)
+								{
+									spr_data.get(spr, p);
+									spr->_updateAcceleration(/*fixMultI*/);
+								}
+							}
+						}
+						else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+							glog << "[" << Log::TIMEF << "]" << "[INFO][THR2][EVENTS] Display has been closed!" << Log::ENDL;
+							glog.flush();							
+
+							e->delTimer(-1); // all
+							e->_setShutDownNow();
+
+							//exit(0); // change later
+							continue;
+						}
+						else if (ev.type == ALLEGRO_EVENT_DISPLAY_RESIZE)
+						{
+							al_acknowledge_resize(e->_getTargD());
+						}
+						else if (ev.type == ALLEGRO_EVENT_MOUSE_AXES)
+						{
+							float ax = ev.mouse.x;
+							float ay = ev.mouse.y;
+							int dx = al_get_display_width(ev.mouse.display);
+							int dy = al_get_display_height(ev.mouse.display);
+
+							ax /= 1.0 * dx;
+							ay /= 1.0 * dy;
+							ax = ax * 2.0 - 1.0;
+							ay = ay * 2.0 - 1.0;
+
+							e->_setMousePos(ax, ay);
+						}
+						else if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN)
+						{
+							if (ev.mouse.button - 1 + MOUSE_0 <= MOUSE_9) {
+								e->_setKey((events_keys)(ev.mouse.button + MOUSE_0 - 1), true);
+								glog << "[" << Log::TIMEF << "]" << "[INFO][THR2][EVENTS] Mouse key pressed: N" << ev.mouse.button << Log::ENDL;
+							}
+						}
+						else if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP)
+						{
+							if (ev.mouse.button - 1 + MOUSE_0 <= MOUSE_9) {
+								e->_setKey((events_keys)(ev.mouse.button + MOUSE_0 - 1), false);
+								glog << "[" << Log::TIMEF << "]" << "[INFO][THR2][EVENTS] Mouse key released: N" << ev.mouse.button << Log::ENDL;
+							}
+						}
+
+						else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
+						{
+							e->_setKey((events_keys)ev.keyboard.keycode, true);
+							glog << "[" << Log::TIMEF << "]" << "[INFO][THR2][EVENTS] Detected keyboard pressed: N" << ev.keyboard.keycode << Log::ENDL;
+						}
+						else if (ev.type == ALLEGRO_EVENT_KEY_UP)
+						{
+							e->_setKey((events_keys)ev.keyboard.keycode, false);
+							glog << "[" << Log::TIMEF << "]" << "[INFO][THR2][EVENTS] Detected keyboard released: N" << ev.keyboard.keycode << Log::ENDL;
+						}
+
+						else if (ev.type == ALLEGRO_EVENT_KEY_UP || ev.type == ALLEGRO_EVENT_KEY_CHAR)
+						{
+							wrk.interpret(ev.keyboard.unichar, ev.keyboard.keycode);
+
+							Safer::safe_string str, str2;
+							wrk.getOnGoingString(str2);
+							e->_setCurrString(str2);
+
+							wrk.getLastString(str);
+							if (str.g().length() > 1) {
+								wrk.clear();
+								glog << "[" << Log::TIMEF << "]" << "[INFO][THR2][EVENTS] New string for last string: " << str << Log::ENDL;
+								e->_setLastString(str);
+							}
+
+							hack_strings val;
+							if (wrk.isHack(val))
+							{
+								switch (val)
+								{
+								case HACK_IMMORTAL:
+									glog << "[" << Log::TIMEF << "]" << "[INFO][THR2][EVENTS] GOT IMMORTAL HACK CODE!" << str << Log::ENDL;
+									break;
+								case HACK_NEXTLEVEL:
+									glog << "[" << Log::TIMEF << "]" << "[INFO][THR2][EVENTS] GOT NEXTLEVEL HACK CODE!" << str << Log::ENDL;
+									break;
+								}
+							}
+						}
+					}
+				}
+				glog << "[" << Log::TIMEF << "]" << "[INFO][THR2][EVENTS] Got call for end. Bye!" << Log::ENDL;
+			}
+			big_event::~big_event()
+			{
+				if (!eventr) {
+					eventr->stop();
+					delete eventr;
+					eventr = nullptr;
+				}
+			}
+			void big_event::initInstance()
+			{
+				if (!eventr) eventr = new events();
+			}
+			void big_event::initSetupAndRun()
+			{
+				if (eventr)
+				{
+					eventr->setup();
+				}
+			}
+			events & big_event::g()
+			{
+				assert(eventr);
+				return *eventr;
+			}
+
+			void defaultfunction_add(void* va, double& d)
+			{				
+				add_t_s* v = (add_t_s*)va;
+				d += v->adding;
+			}
+			void defaultfunction_cos(void* va, double& d)
+			{
+				cos_t_s* v = (cos_t_s*)va;
+				d = v->default_val + cos(al_get_time() * v->time_multiplier) * v->ampl;
+			}
+		}
+	}
+}
