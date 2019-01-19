@@ -40,6 +40,7 @@ namespace LSW {
 				void setID(const Safer::safe_string);
 
 				const bool amI(const Safer::safe_string);
+				const bool amI(const _img_mode);
 				const Safer::safe_string whoAmI();
 				const bool isLoaded();
 

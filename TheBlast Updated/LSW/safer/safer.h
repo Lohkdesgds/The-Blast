@@ -111,10 +111,18 @@ namespace LSW {
 			template <typename T>
 			inline const T& safe_vector<T>::get(const size_t s, const bool skip)
 			{
-				if (!skip) assert(s < getMax());
-				if (!skip) m.lock();
+				if (skip)
+				{
+					bool locked = m.try_lock();
+					assert(s < getMax());
+					T& i = v[s];
+					if (locked) m.unlock();
+					return i;
+				}
+				m.lock();
+				assert(s < getMax());
 				T& i = v[s];
-				if (!skip) m.unlock();
+				m.unlock();
 				return i;
 			}
 
@@ -127,16 +135,16 @@ namespace LSW {
 			template <typename T>
 			inline void safe_vector<T>::erase(size_t p)
 			{
-				assert(p < getMax());
 				m.lock();
+				assert(p < getMax());
 				v.erase(v.begin() + p);
 				m.unlock();
 			}
 			template <typename T>
 			inline T safe_vector<T>::pop()
 			{
-				assert(!v.empty());
 				m.lock();
+				assert(!v.empty());
 				T t = v.back();
 				v.pop_back();
 				m.unlock();
@@ -145,8 +153,8 @@ namespace LSW {
 			template <typename T>
 			inline T safe_vector<T>::fpop()
 			{
-				assert(!v.empty());
 				m.lock();
+				assert(!v.empty());
 				T t = v.front();
 				v.erase(v.begin());
 				m.unlock();
@@ -183,16 +191,16 @@ namespace LSW {
 			template<typename T>
 			inline const T & safe_vector<T>::operator[](const size_t & u) const
 			{
-				return get(u);
+				return get(u, true);
 			}
 
 			template<typename T>
 			inline T & safe_vector<T>::operator[](const size_t& s)
 			{
+				bool locked = m.try_lock();
 				assert(s < getMax());
-				m.lock();
 				T& i = v[s];
-				m.unlock();
+				if (locked) m.unlock();
 				return i;
 			}
 

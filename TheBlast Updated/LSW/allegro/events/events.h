@@ -266,7 +266,9 @@ namespace LSW {
 				MOUSE_6,
 				MOUSE_7,
 				MOUSE_8,
-				MOUSE_9
+				MOUSE_9,
+
+				CUSTOMEVENT_DISPLAY_TOGGLED
 
 			};
 			enum event_xy{X,Y};

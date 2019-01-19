@@ -41,6 +41,9 @@ namespace LSW {
 
 				bool usebuf = false;
 
+				double lastToggleFS = 0;
+				bool isFullscreen = false;
+
 				ALLEGRO_COLOR blur = al_map_rgba_f(Defaults::blur_buf_frame, Defaults::blur_buf_frame, Defaults::blur_buf_frame, Defaults::blur_buf_frame);
 
 				const bool loadModes(const int);
@@ -58,6 +61,7 @@ namespace LSW {
 				void setBlur(const ALLEGRO_COLOR);
 
 				void flip();
+				void toggleFullscreen();
 			};
 
 			class display {
@@ -83,6 +87,8 @@ namespace LSW {
 
 				float getFPS();
 				void capFPS(const int = -1);
+
+				void toggleFS();
 
 				_display_raw& _get();
 			};

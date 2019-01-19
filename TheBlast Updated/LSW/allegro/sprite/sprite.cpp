@@ -8,7 +8,9 @@ namespace LSW {
 			const _sprite_collision_info sprite::_doesCollideWith(const _sprite_area a, const _sprite_area b) // a should be this, and b the test. so if north, b is north compared to a.
 			{
 				_sprite_collision_info spi;
+				Log::gfile logg;
 
+				
 				spi.rdx = b.cx - a.cx; // if > 0, b is right, else left
 				spi.rdy = b.cy - a.cy; // if > 0, b is down, else up
 
@@ -17,6 +19,11 @@ namespace LSW {
 
 				if (spi.colliding = (spi.dx < 0.0 && spi.dy < 0.0))
 				{
+					/*if (a.debug_name && b.debug_name)
+					{
+						logg.debug("COLLIDED: " + a.debug_name->g() + " with " + b.debug_name->g());
+					}*/
+
 					if (spi.dx > spi.dy) // x is nearer then y
 					{
 						if (spi.rdx > 0) { // rdx shows center distance for precised positioning
@@ -35,13 +42,71 @@ namespace LSW {
 						}
 					}
 				}
-
 				return spi;
 			}
+/*#undef max()
+#undef min()
+			const _sprite_collision_info sprite::_doTheyIntersect(const _sprite_area aa, const _sprite_area bb)
+			{				
+				QPolygonF a;
+				QPolygonF b;
+
+				a.push_back(clssss(aa.cx - aa.sx, aa.cy - aa.sy));
+				a.push_back(clssss(aa.cx - aa.sx, aa.cy + aa.sy));
+				a.push_back(clssss(aa.cx + aa.sx, aa.cy - aa.sy));
+				a.push_back(clssss(aa.cx + aa.sx, aa.cy + aa.sy));
+
+
+				for (int polyi = 0; polyi < 2; ++polyi)
+				{
+					QPolygonF& polygon = ((polyi == 0) ? a : b);
+
+					for (int i1 = 0; i1 < polygon.size(); ++i1)
+					{
+						const int i2 = (i1 + 1) % polygon.size();
+
+						const double normalx = polygon[i2].y - polygon[i1].y;
+						const double normaly = polygon[i2].x - polygon[i1].x;
+
+						double minA = std::numeric_limits<double>::max();
+						double maxA = std::numeric_limits<double>::min();
+						for (int ai = 0; ai < a.size(); ++ai)
+						{
+							double projected = normalx * a[ai].x +
+								normaly * a[ai].y;
+							if (projected < minA) minA = projected;
+							if (projected > maxA) maxA = projected;
+						}
+
+						double minB = std::numeric_limits<double>::max();
+						double maxB = std::numeric_limits<double>::min();
+						for (int bi = 0; bi < b.size(); ++bi)
+						{
+							const double projected = normalx * b[bi].x +
+								normaly * b[bi].y;
+							if (projected < minB) minB = projected;
+							if (projected > maxB) maxB = projected;
+						}
+
+						if (maxA < minB || maxB < minA)
+							return false;
+					}
+				}
+
+				return true;
+			}*/
 
 			sprite::sprite()
 			{
 				reset_sprite_data(data);
+				Log::gfile logg;
+				logg.debug(" -> CREATED NEW SPRITE ID#" + std::to_string((int)this) + " <- ");
+			}
+
+			sprite::~sprite()
+			{
+				Log::gfile logg;
+				logg.debug(" -> DELETED SPRITE ID#" + std::to_string((int)this) + " <- ");
 			}
 
 			void sprite::add(Safer::safe_string s, const size_t amount) // search in database
@@ -83,6 +148,15 @@ namespace LSW {
 						bmps.push(img);
 					}
 				}
+			}
+			void sprite::replaceAllWith(Safer::safe_string s, const size_t i)
+			{
+				replacing.lock();
+
+				bmps.clear();
+				add(s, i);
+
+				replacing.unlock();
 			}
 			void sprite::remove(const Safer::safe_string s) // ids from images
 			{
@@ -221,10 +295,14 @@ namespace LSW {
 					get display by al_get_target_bitmap (probably it will be the buffer, so continue
 					*/
 					Camera::camera_g cam;
-					Log::gfile log;
 					size_t frame = lastcall_opt;
 
-					if (bmps.getMax() == 0) return false;
+					replacing.lock();
+
+					if (bmps.getMax() == 0) {
+						replacing.unlock();
+						return false;
+					}
 
 					if (lastcall == 0) lastcall = al_get_time();
 
@@ -244,61 +322,95 @@ namespace LSW {
 
 					ALLEGRO_BITMAP* trg = al_get_target_bitmap();
 					if (!trg) {
+						replacing.unlock();
 						return false;
 					}
 					ALLEGRO_BITMAP* bmp = nullptr; // current bitmap
 					bmps.get(frame, Defaults::exp_veryfast)->get(bmp);
-					if (!bmp) return false;
+					if (!bmp) {
+						replacing.unlock();
+						return false;
+					}
 
 					bx = al_get_bitmap_width(bmp);
 					by = al_get_bitmap_height(bmp);
 
 					const int lastapply = cam.getLastApplyID();
 
-					if (!data.bval[AFFECTED_BY_CAM])
-					{
-						cam.copy(Defaults::default_layer_backup, lastapply);
-						cam.reset(lastapply);
-						cam.apply(lastapply);
-					}
+
+					cam.copy(Defaults::default_layer_backup, lastapply);
+
+					if (!data.bval[AFFECTED_BY_CAM]) cam.reset(lastapply);
+
+
+					double rotation_rad = data.dval[ROTATION] * ALLEGRO_PI / 180.0;
 
 					double targ_draw_xy[2];
-					targ_draw_xy[0] = data.dval[POSX];
-					targ_draw_xy[1] = data.dval[POSY];
+					targ_draw_xy[0] = data.dval[POSX] * cos(rotation_rad) + data.dval[POSY] * sin(rotation_rad);
+					targ_draw_xy[1] = - data.dval[POSX] * sin(rotation_rad) + data.dval[POSY] * cos(rotation_rad);
 					
 					double bmp_s_center[2];
 					bmp_s_center[0] = al_get_bitmap_width(bmp) * ((data.dval[CENTERX] + 1.0) * 0.5);
 					bmp_s_center[1] = al_get_bitmap_height(bmp)* ((data.dval[CENTERY] + 1.0) * 0.5);
 
-					double rotation_rad = data.dval[ROTATION] * ALLEGRO_PI / 180.0;
-
 					double targ_distortion_xy[2];
 					targ_distortion_xy[0] = data.dval[SCALEX] * data.dval[SCALEG] * (1.0 / al_get_bitmap_width(bmp));
 					targ_distortion_xy[1] = data.dval[SCALEY] * data.dval[SCALEG] * (1.0 / al_get_bitmap_height(bmp));
 
-					if (rotation_rad != 0.0) targ_distortion_xy[0] = targ_distortion_xy[1] = sqrt(targ_distortion_xy[0] * targ_distortion_xy[1]);
+					//if (rotation_rad != 0.0) targ_distortion_xy[0] = targ_distortion_xy[1] = sqrt(targ_distortion_xy[0] * targ_distortion_xy[1]);
+
+					cam.set(lastapply, Camera::ROTATION, cam.get(lastapply, Camera::ROTATION) + rotation_rad);
+
+					cam.apply(lastapply);
+
 
 					if (data.bval[USE_TINTED_DRAWING]) al_draw_tinted_scaled_rotated_bitmap(bmp, data.tint, bmp_s_center[0], bmp_s_center[1], targ_draw_xy[0], targ_draw_xy[1], targ_distortion_xy[0], targ_distortion_xy[1], rotation_rad, 0);
-					else al_draw_scaled_rotated_bitmap(bmp, bmp_s_center[0], bmp_s_center[1], targ_draw_xy[0], targ_draw_xy[1], targ_distortion_xy[0], targ_distortion_xy[1], rotation_rad, 0);
+					else al_draw_scaled_rotated_bitmap(bmp, bmp_s_center[0], bmp_s_center[1], targ_draw_xy[0], targ_draw_xy[1], targ_distortion_xy[0], targ_distortion_xy[1], 0.0 /*rotation_rad*/, 0);
 
-					if (!data.bval[AFFECTED_BY_CAM])
-					{
-						cam.copy(lastapply, Defaults::default_layer_backup);
-						cam.apply(lastapply);
-					}
+					replacing.unlock();
 
-					if (data.bval[SHOWBOX]) {
-						if (data.bval[_IS_COLLIDING]) {
-							al_draw_rectangle(targ_draw_xy[0] - bmp_s_center[0] * targ_distortion_xy[0], targ_draw_xy[1] - bmp_s_center[1] * targ_distortion_xy[1], targ_draw_xy[0] + bmp_s_center[0] * targ_distortion_xy[0], targ_draw_xy[1] + bmp_s_center[1] * targ_distortion_xy[1], al_map_rgb(255, 0, 0), 0.1*fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM) * sqrt(cam.get(cam.getLastApplyID(), Camera::ZOOMX)*cam.get(cam.getLastApplyID(), Camera::ZOOMY)) * 0.20));
+					if (data.bval[SHOWBOX] || data.bval[SHOWDOT]) {
+
+						ALLEGRO_COLOR colorr = al_map_rgb(0, 255, 0);
+
+						if (data.bval[FOLLOWKEYBOARD]) colorr = al_map_rgb(255, 255, 255);
+						else if (data.bval[_IS_COLLIDING]) colorr = al_map_rgb(255, 0, 0);
+						else if (al_get_time() - lastresetcollisioncall < Defaults::diff_time_show_last_resetCollision) colorr = al_map_rgb(255, 255, 0);
+						
+
+						//if (data.bval[_IS_COLLIDING]) {
+						if (data.bval[SHOWBOX]) {
+							al_draw_filled_circle(targ_draw_xy[0] - bmp_s_center[0] * targ_distortion_xy[0], targ_draw_xy[1] - bmp_s_center[1] * targ_distortion_xy[1], 0.1*fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM) * sqrt(cam.get(cam.getLastApplyID(), Camera::ZOOMX)*cam.get(cam.getLastApplyID(), Camera::ZOOMY)) * 0.20), colorr);
+							al_draw_filled_circle(targ_draw_xy[0] - bmp_s_center[0] * targ_distortion_xy[0], targ_draw_xy[1] + bmp_s_center[1] * targ_distortion_xy[1], 0.1*fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM) * sqrt(cam.get(cam.getLastApplyID(), Camera::ZOOMX)*cam.get(cam.getLastApplyID(), Camera::ZOOMY)) * 0.20), colorr);
+							al_draw_filled_circle(targ_draw_xy[0] + bmp_s_center[0] * targ_distortion_xy[0], targ_draw_xy[1] - bmp_s_center[1] * targ_distortion_xy[1], 0.1*fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM) * sqrt(cam.get(cam.getLastApplyID(), Camera::ZOOMX)*cam.get(cam.getLastApplyID(), Camera::ZOOMY)) * 0.20), colorr);
+							al_draw_filled_circle(targ_draw_xy[0] + bmp_s_center[0] * targ_distortion_xy[0], targ_draw_xy[1] + bmp_s_center[1] * targ_distortion_xy[1], 0.1*fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM) * sqrt(cam.get(cam.getLastApplyID(), Camera::ZOOMX)*cam.get(cam.getLastApplyID(), Camera::ZOOMY)) * 0.20), colorr);
 						}
+
+						if (data.bval[SHOWDOT])
+						{
+							al_draw_filled_circle(targ_draw_xy[0], targ_draw_xy[1], 0.1*fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM) * sqrt(cam.get(cam.getLastApplyID(), Camera::ZOOMX)*cam.get(cam.getLastApplyID(), Camera::ZOOMY)) * 0.20) * (data.bval[FOLLOWKEYBOARD] ? 1.2 : 1.0), colorr);
+						}
+
+
+							
+							//al_draw_rectangle(targ_draw_xy[0] - bmp_s_center[0] * targ_distortion_xy[0], targ_draw_xy[1] - bmp_s_center[1] * targ_distortion_xy[1], targ_draw_xy[0] + bmp_s_center[0] * targ_distortion_xy[0], targ_draw_xy[1] + bmp_s_center[1] * targ_distortion_xy[1], al_map_rgb(255, 0, 0), 0.1*fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM) * sqrt(cam.get(cam.getLastApplyID(), Camera::ZOOMX)*cam.get(cam.getLastApplyID(), Camera::ZOOMY)) * 0.20));
+						/*}
 						else {
-							al_draw_rectangle(targ_draw_xy[0] - bmp_s_center[0] * targ_distortion_xy[0], targ_draw_xy[1] - bmp_s_center[1] * targ_distortion_xy[1], targ_draw_xy[0] + bmp_s_center[0] * targ_distortion_xy[0], targ_draw_xy[1] + bmp_s_center[1] * targ_distortion_xy[1], al_map_rgb(0, 255, 0), 0.1*fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM) * sqrt(cam.get(cam.getLastApplyID(), Camera::ZOOMX)*cam.get(cam.getLastApplyID(), Camera::ZOOMY)) * 0.20));
-						}
+							al_draw_filled_circle(targ_draw_xy[0] - bmp_s_center[0] * targ_distortion_xy[0], targ_draw_xy[1] - bmp_s_center[1] * targ_distortion_xy[1], 0.1*fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM) * sqrt(cam.get(cam.getLastApplyID(), Camera::ZOOMX)*cam.get(cam.getLastApplyID(), Camera::ZOOMY)) * 0.20), al_map_rgb(0, 255, 0));
+							al_draw_filled_circle(targ_draw_xy[0] - bmp_s_center[0] * targ_distortion_xy[0], targ_draw_xy[1] + bmp_s_center[1] * targ_distortion_xy[1], 0.1*fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM) * sqrt(cam.get(cam.getLastApplyID(), Camera::ZOOMX)*cam.get(cam.getLastApplyID(), Camera::ZOOMY)) * 0.20), al_map_rgb(0, 255, 0));
+							al_draw_filled_circle(targ_draw_xy[0] + bmp_s_center[0] * targ_distortion_xy[0], targ_draw_xy[1] - bmp_s_center[1] * targ_distortion_xy[1], 0.1*fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM) * sqrt(cam.get(cam.getLastApplyID(), Camera::ZOOMX)*cam.get(cam.getLastApplyID(), Camera::ZOOMY)) * 0.20), al_map_rgb(0, 255, 0));
+							al_draw_filled_circle(targ_draw_xy[0] + bmp_s_center[0] * targ_distortion_xy[0], targ_draw_xy[1] + bmp_s_center[1] * targ_distortion_xy[1], 0.1*fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM) * sqrt(cam.get(cam.getLastApplyID(), Camera::ZOOMX)*cam.get(cam.getLastApplyID(), Camera::ZOOMY)) * 0.20), al_map_rgb(0, 255, 0));
+
+							//al_draw_rectangle(targ_draw_xy[0] - bmp_s_center[0] * targ_distortion_xy[0], targ_draw_xy[1] - bmp_s_center[1] * targ_distortion_xy[1], targ_draw_xy[0] + bmp_s_center[0] * targ_distortion_xy[0], targ_draw_xy[1] + bmp_s_center[1] * targ_distortion_xy[1], al_map_rgb(0, 255, 0), 0.1*fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM) * sqrt(cam.get(cam.getLastApplyID(), Camera::ZOOMX)*cam.get(cam.getLastApplyID(), Camera::ZOOMY)) * 0.20));
+						}*/
 					}
 
 					if (Defaults::debug) {
 						al_draw_circle(targ_draw_xy[0], targ_draw_xy[1], fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM) * 0.10), al_map_rgb(255, 255, 0), 0.3*fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM) * sqrt(cam.get(cam.getLastApplyID(), Camera::ZOOMX)*cam.get(cam.getLastApplyID(), Camera::ZOOMY)) * 0.20));
 					}
+
+					cam.copy(lastapply, Defaults::default_layer_backup);
+					cam.apply(lastapply);
 
 					return true;
 				}
@@ -333,6 +445,8 @@ namespace LSW {
 
 				ar.cx = data.dval[POSX];
 				ar.cy = data.dval[POSY];
+				//ar.rot = data.dval[ROTATION] * ALLEGRO_PI / 180.0; // later
+				//ar.debug_name = &id_g;  // later
 
 				ar.sx = 0.5 * (data.dval[SCALEX] * data.dval[SCALEG]);
 				ar.sy = 0.5 * (data.dval[SCALEY] * data.dval[SCALEG]);
@@ -352,6 +466,7 @@ namespace LSW {
 			void sprite::_resetCollision()
 			{
 				data.bval[_IS_COLLIDING] = false;
+				lastresetcollisioncall = al_get_time();
 			}
 
 			void sprite::_verifyCollision(const double x, const double y)
@@ -371,46 +486,72 @@ namespace LSW {
 			void sprite::_verifyCollision(Sprite::sprite& u)
 			{
 				if (!data.bval[COLLIDE]) return;
-				_verifyCollision(u._getArea());
+				bool bb, b2;
+				_verifyCollision(u._getArea(), &bb);
+				u.get(Sprite::_IS_COLLIDING, b2);
+				u.set(Sprite::_IS_COLLIDING, b2 ? b2 : bb);
 			}
 
-			void sprite::_verifyCollision(const _sprite_area & mse)
+			void sprite::_verifyCollision(const _sprite_area & mse, bool* saveit)
 			{
 				_sprite_area ths = _getArea();
 
 				if (ths.sx < 0 || mse.sx < 0) return;
 
 				_sprite_collision_info col = _doesCollideWith(ths, mse);
+				if (saveit) *saveit = col.colliding;
 				Layer::layerer lyr;
 				Layer::each_layer& e = lyr.getNow();
 
-				if ((data.bval[_IS_COLLIDING] = ((data.bval[_IS_COLLIDING]) ? true : col.colliding)) && data.bval[AFFECTED_BY_COLLISION])
+				if ((data.bval[_IS_COLLIDING] = ((data.bval[_IS_COLLIDING]) ? true : col.colliding)))
 				{
-					switch (col.way) {
-					case NORTH:
-						if (data.dval[SPEEDY] < 0.0) data.dval[SPEEDY] = 0.0;
-						data.dval[SPEEDY] += (fabs(col.dy * e.work()[layer].collision_acel_multiplier) + e.work()[layer].min_collision_acel);
-						break;
-					case SOUTH:
-						if (data.dval[SPEEDY] > 0.0) data.dval[SPEEDY] = 0.0;
-						data.dval[SPEEDY] -= (fabs(col.dy * e.work()[layer].collision_acel_multiplier) + e.work()[layer].min_collision_acel);
-						break;
-					case EAST:
-						if (data.dval[SPEEDX] > 0.0) data.dval[SPEEDX] = 0.0;
-						data.dval[SPEEDX] -= (fabs(col.dx * e.work()[layer].collision_acel_multiplier) + e.work()[layer].min_collision_acel);
-						break;
-					case WEST:
-						if (data.dval[SPEEDX] < 0.0) data.dval[SPEEDX] = 0.0;
-						data.dval[SPEEDX] += (fabs(col.dx * e.work()[layer].collision_acel_multiplier) + e.work()[layer].min_collision_acel);
-						break;
+					if (data.bval[AFFECTED_BY_COLLISION]) {
+						switch (col.way) { // col veio de
+						case NORTH:
+							if (data.dval[SPEEDY] < 0.0) data.dval[SPEEDY] = 0.0;
+							data.dval[SPEEDY] += (fabs(col.dy * e.work()[layer].collision_acel_multiplier) + e.work()[layer].min_collision_acel);
+							data.dval[POSY] += fabs(col.dy);
+							break;
+						case SOUTH:
+							if (data.dval[SPEEDY] > 0.0) data.dval[SPEEDY] = 0.0;
+							data.dval[SPEEDY] -= (fabs(col.dy * e.work()[layer].collision_acel_multiplier) + e.work()[layer].min_collision_acel);
+							data.dval[POSY] -= fabs(col.dy);
+							break;
+						case EAST:
+							if (data.dval[SPEEDX] > 0.0) data.dval[SPEEDX] = 0.0;
+							data.dval[SPEEDX] -= (fabs(col.dx * e.work()[layer].collision_acel_multiplier) + e.work()[layer].min_collision_acel);
+							data.dval[POSX] -= fabs(col.dx);
+							break;
+						case WEST:
+							if (data.dval[SPEEDX] < 0.0) data.dval[SPEEDX] = 0.0;
+							data.dval[SPEEDX] += (fabs(col.dx * e.work()[layer].collision_acel_multiplier) + e.work()[layer].min_collision_acel);
+							data.dval[POSX] += fabs(col.dx);
+							break;
+						}
 					}
-
+					/*if (data.bval[DOES_COLLISION_ROTATE_OBJECT])
+					{
+						switch (col.way) {
+						case NORTH:
+							data.dval[SPEEDROT] += 0.01;//0.1 * col.rdx;
+							break;
+						case SOUTH:
+							data.dval[SPEEDROT] -= 0.01;//0.1 * col.rdx;
+							break;
+						case EAST:
+							data.dval[SPEEDROT] += 0.01;//0.1 * col.rdy;
+							break;
+						case WEST:
+							data.dval[SPEEDROT] -= 0.01;//0.1 * col.rdy;
+							break;
+						}
+					}*/ // later
 				}
 			}
 
 			void sprite::_updateAcceleration(const double tick) // 1 / fps (expected fps)
 			{
-				if (/*data.bval[_IS_COLLIDING] && */data.bval[AFFECTED_BY_COLLISION]) {
+				//if (/*data.bval[_IS_COLLIDING] && */data.bval[AFFECTED_BY_COLLISION]) {
 					Layer::layerer lyr;
 					Layer::each_layer& e = lyr.getNow();
 
@@ -419,7 +560,91 @@ namespace LSW {
 
 					data.dval[SPEEDX] *= data.dval[SMOOTHNESS_X] * tick * e.work()[layer].smoothness_keep_sprite_movement;
 					data.dval[SPEEDY] *= data.dval[SMOOTHNESS_Y] * tick * e.work()[layer].smoothness_keep_sprite_movement;
+				//}
+				/*if (data.bval[DOES_COLLISION_ROTATE_OBJECT]){
+					Layer::layerer lyr;
+					Layer::each_layer& e = lyr.getNow();
+
+					data.dval[ROTATION] += data.dval[SPEEDROT];
+
+					data.dval[SPEEDROT] *= data.dval[SMOOTHNESS_ROT] * tick * e.work()[layer].smoothness_keep_sprite_movement_rotation;
+
+
+					while (data.dval[ROTATION] > 360.0) data.dval[ROTATION] -= 360.0;
+					while (data.dval[ROTATION] < 0.0) data.dval[ROTATION] += 360.0;
+				}*/ // later
+			}
+
+			void sprite::_echoPropertiesOnConsole()
+			{
+				logg.debug("# ------------------------------------------");
+				logg.debug("# Debug informations about Sprite ID#" + std::to_string((int)this) + ";NAME=" + id_g.g());
+				logg.debug("# POSX:" + std::to_string(data.dval[POSX]));
+				logg.debug("# POSY:" + std::to_string(data.dval[POSY]));
+				logg.debug("# ROTT:" + std::to_string(data.dval[ROTATION]));
+				logg.debug("# SPEX:" + std::to_string(data.dval[SPEEDX]));
+				logg.debug("# SPEY:" + std::to_string(data.dval[SPEEDY]));
+				logg.debug("# SCLX:" + std::to_string(data.dval[SCALEX]));
+				logg.debug("# SCLY:" + std::to_string(data.dval[SCALEY]));
+				logg.debug("# SCLG:" + std::to_string(data.dval[SCALEG]));
+				logg.debug("# BMPS:");
+				bmps.lock();
+				size_t p = 0;
+				for (auto& i : bmps.work()) {
+					if (i->checkExistance()) {
+						logg.debug("#" + std::to_string(p) + " > ID: " + i->whoAmI().g());
+						logg.debug("#" + std::to_string(p) + " > ISLOADED: " + ((i->isLoaded()) ? "Y" : "N"));
+					}
+					else {
+						logg.debug("#" + std::to_string(p) + " > FAILED TO CHECK EXISTANCE! SKIPPING...");
+					}
+					p++;
 				}
+				bmps.unlock();
+				logg.debug("# ------------------------------------------");
+			}
+
+			const bool sprite::_quickIsDelayed()
+			{
+				return ((delayed_collision_times > 0) ? (delayed_collision_times--) : false);
+			}
+
+			const bool sprite::_quickIsCollisionPossible(Sprite::sprite & u)
+			{
+				if (!data.bval[COLLIDE]) {
+					delayed_collision_times = Defaults::max_delayed_times;
+					return false;
+				}
+				bool ub;
+				u.get(Sprite::COLLIDE, ub);
+				if (!ub) {;
+					return false;
+				}
+				
+				double ux, uy, usx, usy, us;
+
+				u.get(Sprite::POSX, ux);
+				u.get(Sprite::POSY, uy);
+				u.get(Sprite::SCALEX, usx);
+				u.get(Sprite::SCALEY, usy);
+				u.get(Sprite::SCALEG, us);
+
+				usx *= us;
+				usy *= us;
+
+				double diffx = (fabs(data.dval[POSX] - ux) - 1.1*(usx + (data.dval[SCALEG] * data.dval[SCALEX])));
+				double diffy = (fabs(data.dval[POSY] - ux) - 1.1*(usx + (data.dval[SCALEG] * data.dval[SCALEY])));
+
+				bool red = ((diffx < 0) && (diffy < 0));
+				if (!red) {
+					delayed_collision_times = (int)fabs(10.0*sqrt(diffx*diffy));
+				}
+				return red;
+			}
+
+			const bool sprite::_quickLayerAmIOn(const int u)
+			{
+				return (u == layer);
 			}
 
 			size_t _find(const Safer::safe_string s, Safer::safe_vector<sprite*>& v, bool& u)
@@ -469,15 +694,21 @@ namespace LSW {
 				u.dval[SPEEDY] = 0.0;
 				u.dval[SMOOTHNESS_X] = Defaults::smoothness_keep_sprite_movement;
 				u.dval[SMOOTHNESS_Y] = Defaults::smoothness_keep_sprite_movement;
+				//u.dval[SMOOTHNESS_ROT] = Defaults::smoothness_keep_sprite_movement_rotational; // later
+
+				u.dval[ACCELERATION_BY_KEYING] = Defaults::acceleration_by_user_normal;
 
 				u.bval[DRAW] = true;
 				u.bval[COLLIDE] = false;
 				u.bval[_IS_COLLIDING] = false;
 				u.bval[AFFECTED_BY_COLLISION] = false;
+				//u.bval[DOES_COLLISION_ROTATE_OBJECT] = false; // later
 				u.bval[AFFECTED_BY_CAM] = true;
 				u.bval[LOOPING_IMAGES] = true;
 				u.bval[SHOWBOX] = false;
+				u.bval[SHOWDOT] = false;
 				u.bval[FOLLOWMOUSE] = false;
+				u.bval[FOLLOWKEYBOARD] = false;
 				u.bval[USE_TINTED_DRAWING] = false;
 			}
 		}

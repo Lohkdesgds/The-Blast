@@ -4,31 +4,20 @@ namespace LSW {
 	namespace v2 {
 		namespace Text {
 
-			ALLEGRO_FONT* text::default_font = nullptr;
+			//ALLEGRO_FONT* text::default_font = nullptr;
 			Display::display* text::ref_disp = nullptr;
-			unsigned text::text_count = 0;
+			//unsigned text::text_count = 0;
+			bool text::is_gpath_raw = false;
+			Safer::safe_string text::gpath;
 			//Sprite::sprite* text::global_paint = nullptr;
 			//size_t text::counter = 0;
 
-			void text::_draw()
+			void text::_draw(const double targ_draw_xy[2])
 			{
 				//Camera::camera_g cam;
 
-				if (follow) {
-					follow->get(Sprite::POSX, off_plr[0]);
-					follow->get(Sprite::POSY, off_plr[1]);
-				}
-				else {
-					off_plr[0] = off_plr[1] = 0.0;
-				}
-
-
-				double targ_draw_xy[2];
-
-				if (!usebuf) {
-					targ_draw_xy[0] = 1.0 * Defaults::sharpness_font *(pos[0] + off_plr[0]);// /*+ (affected_by_camera ? 0.0 : cam.get(Camera::OFFX))*/)* (affected_by_camera ? cam.get(Camera::ZOOM) * cam.get(Camera::ZOOMX) : 1.0);
-					targ_draw_xy[1] = 1.0 * Defaults::sharpness_font *(pos[1] + off_plr[1]);// /*+ (affected_by_camera ? 0.0 : cam.get(Camera::OFFY))*/)* (affected_by_camera ? cam.get(Camera::ZOOM) * cam.get(Camera::ZOOMY) : 1.0);
-				}
+				
+				/*}
 				else {
 					targ_draw_xy[0] = targ_draw_xy[1] = 0.0;
 					loadInternalBMP();
@@ -37,9 +26,9 @@ namespace LSW {
 						local_paint->set(Sprite::POSX, (pos[0] + off_plr[0]));
 						local_paint->set(Sprite::POSY, (pos[1] + off_plr[1]));
 					}
-				}
+				}*/
 
-				al_draw_text(default_font, color, targ_draw_xy[0], targ_draw_xy[1], mode, string.g().c_str());
+				al_draw_text(default_font, color, 1.0 * targ_draw_xy[0] / (scale), 1.0 * targ_draw_xy[1] / (scale), mode, string.g().c_str());
 			}
 			void text::_interpretTags(Safer::safe_string& s)
 			{
@@ -116,9 +105,9 @@ namespace LSW {
 						case T_TIME:
 							sprintf_s(tempstr_c, "%.3lf", al_get_time());
 							break;
-						case T_ISUSINGBUF:
+						/*case T_ISUSINGBUF:
 							sprintf_s(tempstr_c, "%s", (usebuf ? "Y" : "N"));
-							break;
+							break;*/
 						case T_GB_RESX:
 							sprintf_s(tempstr_c, "%d", (d ? al_get_display_width(d) : -1));
 							break;
@@ -164,7 +153,13 @@ namespace LSW {
 							{
 								Safer::safe_string str;
 								bev.g().getCurrentString(str);
-								sprintf_s(tempstr_c, "%s", str.g().c_str());
+								int u = (str.g().length()) / 20;
+								if (u > 3) u = 3;
+								if (u < 0) u = 0;
+
+								for (int p = 0; p < u; p++) tempstr_c[p] = '.';
+
+								sprintf_s(tempstr_c + u, 128 - u, "%s", (str.g().substr((str.g().length() >= 20) ? str.g().length() - 19 - u : 0) + '\0').c_str());
 							}
 							break;
 						case T_SPRITE_SPEEDX:
@@ -231,7 +226,7 @@ namespace LSW {
 				follow = u;
 			}
 
-			void text::loadInternalBMP()
+			/*void text::loadInternalBMP()
 			{
 				if (!usebuf) return;
 
@@ -258,35 +253,77 @@ namespace LSW {
 
 					text_count++;
 				}
-			}
+			}*/
 
-			void text::verify(const bool reload)
+			const bool text::load(const Safer::safe_string p, const bool raw, const double siz)
 			{
-				if (reload) {
-					unload();
-				}
-				if (!default_font) {
-					if (path.g().length() == 0) path = Defaults::font_altern_name_full;
-					load(path);
-				}
-				loadInternalBMP();
-			}
+				Log::gfile logg;
+				logg << Log::START << "[TEXT:LOAD_][INFO] Verifying new loading of texture called " << p << "... (ID#" << (int)this << ")" << Log::ENDL;
 
-			const bool text::load(const Safer::safe_string p, const bool raw)
-			{
 				if (!default_font) {
 					//Camera::camera_g cam;
+
+					logg << Log::START << "[TEXT:LOAD_][INFO] Load allowed for " << p << "... (ID#" << (int)this << ")" << Log::ENDL;
+
+					_bpath = p;
 
 					Safer::safe_string s;
 					if (raw) s = (p.g());
 					else s = (Defaults::default_data_path.g() + p.g());
 					Tools::interpret_path(s);
 
+					lastwasraw = raw;
 					path = s;
 
-					return (default_font = al_load_ttf_font(s.g().c_str(), 1.0 * Defaults::sharpness_font / 20.0/*(sqrt(cam.get(Camera::BUF_X)*cam.get(Camera::BUF_Y)))*(2.5 / 144)*/, 0));
+					bool aa= (default_font = al_load_ttf_font(s.g().c_str(), 1.0 * siz * Defaults::sharpness_font / 20.0/*(sqrt(cam.get(Camera::BUF_X)*cam.get(Camera::BUF_Y)))*(2.5 / 144)*/, 0));
+
+					logg << Log::START << "[TEXT:LOAD_][INFO] Settings: {LOADSUCCESS=" << (aa ? "Y" : "N") << ";ID=#" << (int)this << ";PATH=" << s << ";SIZE=" << 1000000.0 * siz * Defaults::sharpness_font / 20.0 << "E-6}" << Log::ENDL;
+					logg.flush();
+
+					return aa;
 				}
 				return true;
+			}
+
+			void text::reload()
+			{
+				unload();
+				if (using_gpath) path.clear();
+
+				if (path.g().length() == 0) {
+					if (gpath.g().length() > 0)
+					{
+						using_gpath = true;
+						path = gpath;
+						lastwasraw = is_gpath_raw;
+					}
+					else path = Defaults::font_altern_name_full;
+				}
+				load(path, lastwasraw, scale);
+			}
+
+			void text::_verify()
+			{
+				if (!default_font) {
+					reload();
+				}
+				if (using_gpath && gpath != _bpath)
+				{
+					reload();
+				}
+			}
+
+			void text::verify(const bool reloadd)
+			{
+				if (reloadd) {
+					reload();
+					return;
+				}
+				if (final_scale != last_final_scale) {
+					unload();
+					last_final_scale = final_scale;
+				}
+				_verify();
 			}
 
 			/*const bool text::loadFromDatabase(const Safer::safe_string newname)
@@ -324,6 +361,13 @@ namespace LSW {
 				case SETFOLLOW:
 					setFollow(e);
 					break;
+				case SETGLOBALPATH:
+					gpath = e;
+					break;
+				case SETLOCALPATH:
+					path = e;
+					using_gpath = false;
+					break;
 				}
 			}
 			void text::set(const _text_opt_bool o, const bool e)
@@ -332,12 +376,22 @@ namespace LSW {
 				case SHOW:
 					show = e;
 					break;
-				case USEBUFOPT:
+				/*case USEBUFOPT:
 					usebuf = e;
 					if (usebuf) loadInternalBMP();
-					break;
+					break;*/
 				case AFFECTED_BY_CAM:
 					affected_by_camera = e;
+					break;
+				case IS_LOCALPATH_RAW:
+					lastwasraw = e;
+					break;
+				case IS_GLOBALPATH_RAW:
+					is_gpath_raw = e;
+					if (using_gpath) {
+						lastwasraw = true;
+						reload();
+					}
 					break;
 				}
 			}
@@ -349,6 +403,9 @@ namespace LSW {
 					break;
 				case POSY:
 					pos[1] = e;
+					break;
+				case SCALEG:
+					scale = e;
 					break;
 				case UPDATETIME:
 					update_time = e;
@@ -371,10 +428,10 @@ namespace LSW {
 					break;
 				case LAYER:
 					layer = e;
-					if (usebuf) {
+					/*if (usebuf) {
 						loadInternalBMP();
 						local_paint->set(Sprite::LAYER, layer);
-					}
+					}*/
 					break;
 				}
 			}
@@ -399,11 +456,17 @@ namespace LSW {
 				case SHOW:
 					e = show;
 					break;
-				case USEBUFOPT:
+				/*case USEBUFOPT:
 					e = usebuf;
-					break;
+					break;*/
 				case AFFECTED_BY_CAM:
 					e = affected_by_camera;
+					break;
+				case IS_LOCALPATH_RAW:
+					e = lastwasraw;
+					break;
+				case IS_GLOBALPATH_RAW:
+					e = is_gpath_raw;
 					break;
 				}
 			}
@@ -415,6 +478,9 @@ namespace LSW {
 					break;
 				case POSY:
 					e = pos[1];
+					break;
+				case SCALEG:
+					e = scale;
 					break;
 				case UPDATETIME:
 					e = update_time;
@@ -429,20 +495,20 @@ namespace LSW {
 					break;
 				case LAYER:
 					e = layer;
-					if (local_paint) {
+					/*if (local_paint) {
 						local_paint->set(Sprite::LAYER, layer);
-					}
+					}*/
 					break;
 				}
 			}
-			void text::get(const _text_opt_sprite o, Sprite::sprite *& e)
+			/*void text::get(const _text_opt_sprite o, Sprite::sprite *& e)
 			{
 				switch (o) {
 				case SPRITE:
 					if (usebuf && this->local_paint) e = local_paint;
 					break;
 				}
-			}
+			}*/
 			void text::get(const _text_opt_color o, ALLEGRO_COLOR& e)
 			{
 				switch (o) {
@@ -476,10 +542,6 @@ namespace LSW {
 					return;
 				}
 
-				if (!default_font) {
-					verify();
-					return;
-				}
 				if (al_get_time() - lastinterpret > update_time) {
 					if(lastinterpret == 0) lastinterpret = al_get_time();
 					else {
@@ -496,12 +558,15 @@ namespace LSW {
 					}
 				}
 
+				while (rot > 360.0) rot -= 360.0;
+				while (rot < 0.0) rot += 360.0;
+
 				Camera::camera_g cam;
 				const int lastapply = cam.getLastApplyID();
 				ALLEGRO_BITMAP* d = al_get_target_bitmap();
 				assert(d);
 
-				if (usebuf) {
+				/*if (usebuf) {
 					
 					loadInternalBMP();
 
@@ -516,13 +581,17 @@ namespace LSW {
 
 						if (affected_by_camera)
 						{
-							cam.set(cam.getLastApplyID(), Camera::ZOOM, cam.get(lastapply, Camera::ZOOM) * 1.0 / Defaults::sharpness_font);
+							cam.set(cam.getLastApplyID(), Camera::ZOOM, cam.get(lastapply, Camera::ZOOMX) * transf[1]);
+							cam.set(cam.getLastApplyID(), Camera::ZOOM, cam.get(lastapply, Camera::ZOOMY) * transf[2]);
+							cam.set(cam.getLastApplyID(), Camera::ZOOM, cam.get(lastapply, Camera::ZOOM) * transf[0] * 1.0 / Defaults::sharpness_font);
 							cam.set(cam.getLastApplyID(), Camera::OFFX, cam.get(lastapply, Camera::OFFX) * Defaults::sharpness_font);
 							cam.set(cam.getLastApplyID(), Camera::OFFY, cam.get(lastapply, Camera::OFFY) * Defaults::sharpness_font);
 						}
 						else {
 							cam.reset(lastapply);
-							cam.set(cam.getLastApplyID(), Camera::ZOOM, 1.0 / Defaults::sharpness_font);
+							cam.set(cam.getLastApplyID(), Camera::ZOOMX, transf[1]);
+							cam.set(cam.getLastApplyID(), Camera::ZOOMY, transf[2]);
+							cam.set(cam.getLastApplyID(), Camera::ZOOM, transf[0] * 1.0 / Defaults::sharpness_font);
 							cam.set(cam.getLastApplyID(), Camera::OFFX, 0.0);
 							cam.set(cam.getLastApplyID(), Camera::OFFY, 0.0);
 						}
@@ -537,31 +606,65 @@ namespace LSW {
 						cam.apply(lastapply);
 					}
 				}
-				else {
-					cam.copy(Defaults::default_layer_backup, lastapply);
-					
-					if (affected_by_camera)
-					{
-						cam.set(cam.getLastApplyID(), Camera::ZOOM, cam.get(lastapply, Camera::ZOOM) * 1.0 / Defaults::sharpness_font);
-						cam.set(cam.getLastApplyID(), Camera::OFFX, cam.get(lastapply, Camera::OFFX) * Defaults::sharpness_font);
-						cam.set(cam.getLastApplyID(), Camera::OFFY, cam.get(lastapply, Camera::OFFY) * Defaults::sharpness_font);
-					}
-					else {
-						cam.reset(lastapply);
-						cam.set(cam.getLastApplyID(), Camera::ZOOM, 1.0 / Defaults::sharpness_font);
-						cam.set(cam.getLastApplyID(), Camera::OFFX, 0.0);
-						cam.set(cam.getLastApplyID(), Camera::OFFY, 0.0);
-					}
-					cam.apply(lastapply);
-
-					_draw();
-
-					cam.copy(lastapply, Defaults::default_layer_backup);
-
-					cam.apply(lastapply);
-					al_set_target_bitmap(d);
-					cam.apply(lastapply);
+				else {*/
+				
+				if (follow) {
+					follow->get(Sprite::POSX, off_plr[0]);
+					follow->get(Sprite::POSY, off_plr[1]);
+					follow->get(Sprite::ROTATION, ofr_plr);
 				}
+				else {
+					off_plr[0] = off_plr[1] = 0.0;
+				}
+
+				double t_rotation_rad = (rot) * ALLEGRO_PI / 180.0;
+				double p_rotation_rad = (ofr_plr) * ALLEGRO_PI / 180.0;
+				double rotation_rad = t_rotation_rad + p_rotation_rad;
+
+				if (rotation_rad > ALLEGRO_PI * 2) rotation_rad -= ALLEGRO_PI * 2;
+				if (rotation_rad < 0) rotation_rad +=  ALLEGRO_PI * 2;
+
+				double pos_now[2];
+				pos_now[0] = 1.0 * Defaults::sharpness_font *((pos[0] * cos(p_rotation_rad) - pos[1] * sin(p_rotation_rad)) + off_plr[0]);
+				pos_now[1] = 1.0 * Defaults::sharpness_font *((-pos[0] * sin(p_rotation_rad) + pos[1] * cos(p_rotation_rad)) + off_plr[1]);
+
+
+				double targ_draw_xy[2];
+				targ_draw_xy[0] = pos_now[0] * cos(rotation_rad) + pos_now[1] * sin(rotation_rad);
+				targ_draw_xy[1] = -pos_now[0] * sin(rotation_rad) + pos_now[1] * cos(rotation_rad);
+
+
+				cam.copy(Defaults::default_layer_backup, lastapply);
+					
+				if (affected_by_camera)
+				{
+					cam.set(cam.getLastApplyID(), Camera::ZOOM, cam.get(lastapply, Camera::ZOOM) * scale * 1.0 / Defaults::sharpness_font);
+					cam.set(cam.getLastApplyID(), Camera::OFFX, cam.get(lastapply, Camera::OFFX) * Defaults::sharpness_font / scale);
+					cam.set(cam.getLastApplyID(), Camera::OFFY, cam.get(lastapply, Camera::OFFY) * Defaults::sharpness_font / scale);
+									}
+				else {
+					cam.reset(lastapply);
+					cam.set(cam.getLastApplyID(), Camera::ZOOM, 1.0 * scale / Defaults::sharpness_font);
+					cam.set(cam.getLastApplyID(), Camera::OFFX, 0.0 / scale);
+					cam.set(cam.getLastApplyID(), Camera::OFFY, 0.0 / scale);
+				}
+
+				cam.set(lastapply, Camera::ROTATION, cam.get(lastapply, Camera::ROTATION) + rotation_rad);
+
+				cam.apply(lastapply);
+
+				final_scale = scale;// *cam.get(lastapply, Camera::ZOOM);
+				verify();
+
+				_draw(targ_draw_xy);
+
+				cam.copy(lastapply, Defaults::default_layer_backup);
+
+				cam.apply(lastapply);
+				al_set_target_bitmap(d);
+				cam.apply(lastapply);
+
+				//}
 			}
 			
 
