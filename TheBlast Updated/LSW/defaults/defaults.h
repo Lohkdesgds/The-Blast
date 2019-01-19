@@ -7,7 +7,7 @@ namespace LSW {
 	namespace v2 {
 		namespace Defaults {
 
-			const Safer::safe_string version_app = "V0.1.0A";
+			const Safer::safe_string version_app = "V0.1.0B";
 
 			const Safer::safe_string default_root_path = "%appdata%/Lohk's Studios/TheBlast/";
 			const Safer::safe_string default_global_path = "%appdata%/Lohk's Studios/TheBlast/logs/latest.log";
@@ -50,7 +50,7 @@ namespace LSW {
 			const double collision_timer = 1.0 / 240;
 			const int max_delayed_times = 90;
 			const double functions_timer = 1.0 / 240;
-			const double checkEnd_timer = 1.0 / 2;
+			//const double checkEnd_timer = 1.0 / 2;
 			const double calcLoops_timer = 1.0;
 			const double updatepos_timer = 1.0 / 240;
 

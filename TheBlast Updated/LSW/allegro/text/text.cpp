@@ -121,9 +121,23 @@ namespace LSW {
 							if (ref_disp) sprintf_s(tempstr_c, "%.2f", ref_disp->getFPS());
 							else sprintf_s(tempstr_c, "NOT_AVAILABLE");
 							break;
-						case T_TPS:
-							sprintf_s(tempstr_c, "%u", bev.g().getCurrentMaxTickCounted());
+
+						case T_TPS_COUNT:
+							sprintf_s(tempstr_c, "%u", bev.g()._getEventLog().loops_per_second);
 							break;
+						case T_TPS_COLLISION:
+							sprintf_s(tempstr_c, "%.3lf", bev.g()._getEventLog().collisionTimer_tps);
+							break;
+						case T_TPS_FUNCTIONS:
+							sprintf_s(tempstr_c, "%.3lf", bev.g()._getEventLog().functionsTimer_tps);
+							break;
+						case T_TPS_SECOND_TAKEN:
+							sprintf_s(tempstr_c, "%.3lf", bev.g()._getEventLog().calcLoopsTimer_tps);
+							break;
+						case T_TPS_POSUPDATE:
+							sprintf_s(tempstr_c, "%.3lf", bev.g()._getEventLog().updatePosTimer_tps);
+							break;
+
 						case T_SPRITE_FRAME:
 							if (follow) sprintf_s(tempstr_c, "%lu", follow->_lastFrameNumber());
 							else sprintf_s(tempstr_c, "NOT_AVAILABLE");

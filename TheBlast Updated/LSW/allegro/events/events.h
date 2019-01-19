@@ -342,11 +342,29 @@ namespace LSW {
 				void clear();
 				void clearall();
 			};
+			
+			struct _event_log {
+				double _collisionTimer_last = 0.0;
+				double _functionsTimer_last = 0.0;
+				//double _checkEnd_Timer_last = 0.0;
+				double _calcLoopsTimer_last = 0.0;
+				double _updatePosTimer_last = 0.0;
+				unsigned _loops = 0;
+
+				double collisionTimer_tps = 0.0;
+				double functionsTimer_tps = 0.0;
+				//double checkEnd_Timer_tps = 0.0;
+				double calcLoopsTimer_tps = 0.0;
+				double updatePosTimer_tps = 0.0;
+
+				unsigned loops_per_second = 0;
+			};
+
 
 			class events {
 				Log::gfile glog;
 				std::thread* thr = nullptr;
-				unsigned ticks_one_sec = 0;
+				//unsigned ticks_one_sec = 0;
 				ALLEGRO_DISPLAY* targ = nullptr;
 				ALLEGRO_EVENT_QUEUE* ev_qu = nullptr;
 				ALLEGRO_EVENT ev;
@@ -363,6 +381,8 @@ namespace LSW {
 				double multiplier_hz_d = 1.0 / 60;
 
 				bool alright = false;
+
+				_event_log last_log;
 
 				_functionThr* _get(const int);
 			public:
@@ -388,7 +408,7 @@ namespace LSW {
 				void getMouse(float&, const event_xy);
 				const bool getLastString(Safer::safe_string&, const bool = false); // clear?
 				const bool getCurrentString(Safer::safe_string&, const bool = false); // clear?
-				const unsigned getCurrentMaxTickCounted();
+				//const unsigned getCurrentMaxTickCounted();
 
 				const bool _nextEv(ALLEGRO_EVENT&, const bool = false); // wait?
 				void _setKey(const events_keys, const bool);
@@ -398,9 +418,12 @@ namespace LSW {
 				void _setMousePos(const float, const float);
 				void _setLastString(const Safer::safe_string);
 				void _setCurrString(const Safer::safe_string);
-				void _setMaxTickCount(const unsigned);
+				//void _setMaxTickCount(const unsigned);
 				const double _getMultiplierForUpdatingImg();
 				ALLEGRO_DISPLAY* _getTargD();
+
+				_event_log& _getEventLog();
+				//void _setEventLog(const _event_log&);
 
 				void _setShutDownNow();
 			};
@@ -423,7 +446,9 @@ namespace LSW {
 			void defaultfunction_cos(void*, double&);
 
 
-			
+			void _i_thr_collisionTimed(_event_log*, events*);
+			void _i_thr_functionsTimed(_event_log*, events*);
+			void _i_thr_updatePosTimed(_event_log*, events*);
 		}
 	}
 }

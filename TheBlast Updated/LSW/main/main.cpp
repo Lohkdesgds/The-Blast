@@ -875,12 +875,32 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 	wt->set(Text::SETSTRING, "%fps%/%tps% | CAM: %cam_x% : %cam_y% @ %cam_zoom% | %curr_string% | %mouse_x%x%mouse_y%");
 	wt->set(Text::POSX, -1.0);
 	wt->set(Text::POSY, -1.0);
+	wt->set(Text::SCALEG, 0.8);
 	wt->set(Text::MODE, Text::ALIGN_LEFT);
 	wt->set(Text::LAYER, Defaults::default_font_foreground_layer);
 	wt->setMainDisplay(disp);
 	wt->set(Text::UPDATETIME, 0.20);
+	//wt->set(Text::COLOR, al_map_rgba_f(0.9, 0.9, 0.0, 0.9));
 	wt->set(Text::AFFECTED_BY_CAM, false);
 	wt->setID("OSD_0");
+	wt = nullptr;
+
+	txt_data.create(wt);
+	wt->set(Text::SETSTRING,
+		"{COL=[%tps_col%/" + std::to_string((int)(1.0/Defaults::collision_timer)) +
+		"];FUNC=[%tps_funcs%/" + std::to_string((int)(1.0 / Defaults::functions_timer)) +
+		"];SEC=[%tps_second%/" + std::to_string((int)(1.0 / Defaults::calcLoops_timer)) +
+		"];POSUPD=[%tps_posupd%/" + std::to_string((int)(1.0 / Defaults::updatepos_timer)) + "]}");
+	wt->set(Text::POSX, -1.0);
+	wt->set(Text::POSY, -0.97);
+	wt->set(Text::SCALEG, 0.7);
+	wt->set(Text::MODE, Text::ALIGN_LEFT);
+	wt->set(Text::LAYER, Defaults::default_font_foreground_layer);
+	wt->setMainDisplay(disp);
+	wt->set(Text::UPDATETIME, 0.50);
+	//wt->set(Text::COLOR, al_map_rgba_f(0.9, 0.9, 0.0, 0.9));
+	wt->set(Text::AFFECTED_BY_CAM, false);
+	wt->setID("OSD_1");
 	wt = nullptr;
 
 	//al_rest(4.0);

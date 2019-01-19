@@ -463,10 +463,10 @@ namespace LSW {
 				return false;
 			}
 
-			const unsigned events::getCurrentMaxTickCounted()
+			/*const unsigned events::getCurrentMaxTickCounted()
 			{
-				return ticks_one_sec;
-			}
+				return last_log.loops_per_second;
+			}*/
 
 			const bool events::_nextEv(ALLEGRO_EVENT& e, const bool wait)
 			{
@@ -518,10 +518,10 @@ namespace LSW {
 				currString = u;
 			}
 
-			void events::_setMaxTickCount(const unsigned u)
+			/*void events::_setMaxTickCount(const unsigned u)
 			{
 				ticks_one_sec = u;
-			}
+			}*/
 
 			const double events::_getMultiplierForUpdatingImg()
 			{
@@ -532,6 +532,16 @@ namespace LSW {
 			{
 				return targ;
 			}
+
+			_event_log& events::_getEventLog()
+			{
+				return last_log;
+			}
+
+			/*void events::_setEventLog(const _event_log & u)
+			{
+				last_log = u;
+			}*/
 
 			void events::_setShutDownNow()
 			{
@@ -549,13 +559,14 @@ namespace LSW {
 				d_sprite_database spr_data;
 				_string_work wrk;
 				Log::gfile glog;
-				unsigned count = 0;
+				//unsigned count = 0;
+				_event_log& tlogging = e->_getEventLog();
 				double last = al_get_time();
 				/*double fixMultI = e->_getMultiplierForUpdatingImg();
 				if (fixMultI > 1.0 / 60) fixMultI = 1.0 / 60;*/
 				ALLEGRO_TIMER* collisionTimer = e->getTimer(0, Defaults::collision_timer);
 				ALLEGRO_TIMER* functionsTimer = e->getTimer(1, Defaults::functions_timer);
-				ALLEGRO_TIMER* checkEnd_Timer = e->getTimer(2, Defaults::checkEnd_timer);
+				//ALLEGRO_TIMER* checkEnd_Timer = e->getTimer(2, Defaults::checkEnd_timer);
 				ALLEGRO_TIMER* calcLoopsTimer = e->getTimer(3, Defaults::calcLoops_timer);
 				ALLEGRO_TIMER* updatePosTimer = e->getTimer(4, Defaults::updatepos_timer);
 
@@ -567,128 +578,33 @@ namespace LSW {
 
 					if (e->_nextEv(ev, true))
 					{
-						count++;
+						tlogging._loops++;
 						if (ev.type == ALLEGRO_EVENT_TIMER)
 						{
 							if (ev.timer.source == collisionTimer)
 							{
-								Layer::layerer lyr;
-								Sprite::sprite* spr, *spr2;
-
-								switch (lyr.getNow().getMode())
-								{
-								case Layer::STANDARD:
-									for (auto& i : lyr.getNow().work())
-									{
-										for (size_t p = 0; p < spr_data.work().getMax(); p++)
-										{
-											spr_data.get(spr, p);
-											int u, m;
-											spr->get(Sprite::LAYER, u);
-
-											if (u == i.first) {
-
-												spr->_resetCollision();
-
-												for (size_t q = 0; q < spr_data.work().getMax(); q++)
-												{
-													if (q != p) {
-														spr_data.get(spr2, q);
-														spr2->get(Sprite::LAYER, m);
-
-														for (auto& k : i.second.colliding)
-														{
-															if (k.first == m && k.second) {
-																spr->_verifyCollision(*spr2);
-																break;
-															}
-														}
-													}
-												}
-											}
-										}
-									}
-									break;
-								case Layer::USEMAP:
-									((Map::map*)lyr.getNow().get_package())->testCollisionPlayer();
-								}
+								_i_thr_collisionTimed(&tlogging, e);
 							}
 							else if (ev.timer.source == functionsTimer)
 							{
-								e->_update_functions();
+								_i_thr_functionsTimed(&tlogging, e);
 							}
-							else if (ev.timer.source == checkEnd_Timer)
+							/*else if (ev.timer.source == checkEnd_Timer)
 							{
 								continue;
-							}
+							}*/
 							else if (ev.timer.source == calcLoopsTimer)
 							{
-								e->_setMaxTickCount(count);
-								count = 0;
+								double tii = al_get_time();
+								tlogging.calcLoopsTimer_tps = 1.0 / (tii - tlogging._calcLoopsTimer_last);
+								tlogging._calcLoopsTimer_last = tii;
+
+								tlogging.loops_per_second = tlogging._loops;
+								tlogging._loops = 0;
 							}
 							else if (ev.timer.source == updatePosTimer)
 							{
-								Sprite::sprite* spr;
-								//Camera::camera_g cam;								
-
-								for (size_t p = 0; p < spr_data.work().getMax(); p++)
-								{
-									spr_data.get(spr, p);
-
-									/*bool still = false;
-
-									try {
-										for (auto& i : cam.getLayers(cam.getLastApplyID()))
-										{
-											if (i.second) {
-												if (spr->_quickLayerAmIOn(i.first))
-												{
-													still = true;
-													break;
-												}
-											}
-										}
-									}
-									catch (const char* c)
-									{
-										Log::gfile logg;
-										logg << Log::ERRDV << Log::START << "[THR2:EVENT][ERRR] Failed at for(auto&:cam) with error: " << c << ". Trying to continue as is." << Log::ENDL;
-										continue;
-									}
-									catch (...)
-									{
-										Log::gfile logg;
-										logg << Log::ERRDV << Log::START << "[THR2:EVENT][ERRR] Failed at for(auto&:cam) with UNKNOWN ERROR. Trying to continue as is." << Log::ENDL;
-										continue;
-									}
-
-									if (!still) continue;*/
-
-									bool isControllerBased;
-									spr->get(Sprite::FOLLOWKEYBOARD, isControllerBased);
-									if (isControllerBased)
-									{
-										bool wasd[4] = { e->getKey(KEY_W, false) || e->getKey(KEY_UP, false),e->getKey(KEY_A, false) || e->getKey(KEY_LEFT, false),e->getKey(KEY_S, false) || e->getKey(KEY_DOWN, false),e->getKey(KEY_D, false) || e->getKey(KEY_RIGHT, false) };
-										double acceleration;// , temp;
-										spr->get(Sprite::ACCELERATION_BY_KEYING, acceleration);
-
-										if (wasd[0]) { // go north
-											spr->set(Sprite::SPEEDY, -acceleration);
-										}
-										else if (wasd[2]) { // go south
-											spr->set(Sprite::SPEEDY, acceleration);
-										}
-
-										if (wasd[1]) { // go left
-											spr->set(Sprite::SPEEDX, -acceleration);
-										}
-										else if (wasd[3]) { // go right
-											spr->set(Sprite::SPEEDX, acceleration);
-										}
-									}
-
-									spr->_updateAcceleration(/*fixMultI*/);
-								}
+								_i_thr_updatePosTimed(&tlogging, e);
 							}
 						}
 						else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
@@ -812,6 +728,104 @@ namespace LSW {
 			{
 				cos_t_s* v = (cos_t_s*)va;
 				d = v->default_val + cos(al_get_time() * v->time_multiplier) * v->ampl;
+			}
+
+
+
+			void _i_thr_collisionTimed(_event_log* evl, events* e)
+			{
+				double tii = al_get_time();
+				evl->collisionTimer_tps = 1.0 / (tii - evl->_collisionTimer_last);
+				evl->_collisionTimer_last = tii;
+
+				Layer::layerer lyr;
+				d_sprite_database spr_data;
+				Sprite::sprite* spr, *spr2;
+
+				switch (lyr.getNow().getMode())
+				{
+				case Layer::STANDARD:
+					for (auto& i : lyr.getNow().work())
+					{
+						for (size_t p = 0; p < spr_data.work().getMax(); p++)
+						{
+							spr_data.get(spr, p);
+							int u, m;
+							spr->get(Sprite::LAYER, u);
+
+							if (u == i.first) {
+
+								spr->_resetCollision();
+
+								for (size_t q = 0; q < spr_data.work().getMax(); q++)
+								{
+									if (q != p) {
+										spr_data.get(spr2, q);
+										spr2->get(Sprite::LAYER, m);
+
+										for (auto& k : i.second.colliding)
+										{
+											if (k.first == m && k.second) {
+												spr->_verifyCollision(*spr2);
+												break;
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+					break;
+				case Layer::USEMAP:
+					((Map::map*)lyr.getNow().get_package())->testCollisionPlayer();
+				}
+			}
+			void _i_thr_functionsTimed(_event_log* evl, events* e)
+			{
+				double tii = al_get_time();
+				evl->functionsTimer_tps = 1.0 / (tii - evl->_functionsTimer_last);
+				evl->_functionsTimer_last = tii;
+
+				e->_update_functions();
+			}
+			void _i_thr_updatePosTimed(_event_log* evl, events* e)
+			{
+				double tii = al_get_time();
+				evl->updatePosTimer_tps = 1.0 / (tii - evl->_updatePosTimer_last);
+				evl->_updatePosTimer_last = tii;
+
+				d_sprite_database spr_data;
+				Sprite::sprite* spr;
+
+				for (size_t p = 0; p < spr_data.work().getMax(); p++)
+				{
+					spr_data.get(spr, p);
+
+					bool isControllerBased;
+					spr->get(Sprite::FOLLOWKEYBOARD, isControllerBased);
+					if (isControllerBased)
+					{
+						bool wasd[4] = { e->getKey(KEY_W, false) || e->getKey(KEY_UP, false),e->getKey(KEY_A, false) || e->getKey(KEY_LEFT, false),e->getKey(KEY_S, false) || e->getKey(KEY_DOWN, false),e->getKey(KEY_D, false) || e->getKey(KEY_RIGHT, false) };
+						double acceleration;// , temp;
+						spr->get(Sprite::ACCELERATION_BY_KEYING, acceleration);
+
+						if (wasd[0]) { // go north
+							spr->set(Sprite::SPEEDY, -acceleration);
+						}
+						else if (wasd[2]) { // go south
+							spr->set(Sprite::SPEEDY, acceleration);
+						}
+
+						if (wasd[1]) { // go left
+							spr->set(Sprite::SPEEDX, -acceleration);
+						}
+						else if (wasd[3]) { // go right
+							spr->set(Sprite::SPEEDX, acceleration);
+						}
+					}
+
+					spr->_updateAcceleration(/*fixMultI*/);
+				}
 			}
 		}
 	}
