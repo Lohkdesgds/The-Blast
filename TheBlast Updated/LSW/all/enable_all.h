@@ -18,6 +18,7 @@
 #include <map>
 #include <vector>
 #include <filesystem>
+#include <limits>
 #include "..\_external\dirent.h"
 
 #include "..\safer\safer.h"
@@ -39,3 +40,5 @@
 #include "..\allegro\display\display.h"
 #include "..\allegro\text\text.h"
 #include "..\allegro\sound\sound.h"
+
+#include "..\map\map_control.h"

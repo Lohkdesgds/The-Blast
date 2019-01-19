@@ -204,7 +204,7 @@ namespace LSW {
 						}
 						else
 						{
-							if (lastkey != '%') ongoing += last_key;
+							if (lastkey != '%' && ongoing.g().length() < Defaults::max_string_input_size) ongoing += last_key;
 						}
 					}
 				//}
@@ -252,18 +252,18 @@ namespace LSW {
 			const bool events::setup()
 			{
 				if (!targ) {
-					glog << "[" << Log::TIMEF << "]" << "[INFO][EVENTS] Initializing event handler... (thread)" << Log::ENDL;
+					glog << Log::START << "[THR?:EVENT][INFO] Initializing event handler... (thread)" << Log::ENDL;
 
 					targ = al_get_current_display();
 					if (!targ) {
-						glog << "[" << Log::TIMEF << "]" << "[ERROR][EVENTS] Cannot detect display! Something is not great!" << Log::ENDL;
+						glog << Log::START << "[THR?:EVENT][ERRR] Cannot detect display! Something is not great!" << Log::ENDL;
 						glog.flush();
 						return false;
 					}
 
 					if (!(ev_qu = al_create_event_queue())) {
 						targ = nullptr;
-						glog << "[" << Log::TIMEF << "]" << "[ERROR][EVENTS] Could not create event queue." << Log::ENDL;
+						glog << Log::START << "[THR?:EVENT][ERRR] Could not create event queue." << Log::ENDL;
 						return false;
 					}
 
@@ -271,20 +271,20 @@ namespace LSW {
 					al_register_event_source(ev_qu, al_get_mouse_event_source());
 					al_register_event_source(ev_qu, al_get_display_event_source(targ));
 
-					glog << "[" << Log::TIMEF << "]" << "[INFO][EVENTS] Initializing thread right now..." << Log::ENDL;
+					glog << Log::START << "[THR?:EVENT][INFO] Initializing thread right now..." << Log::ENDL;
 
 					thr = new std::thread(_thread_ev, this);
 
 					for (clock_t now = clock(); clock() - now < 20 * CLOCKS_PER_SEC && !alright;);
 					if (!alright) {
-						glog << "[" << Log::TIMEF << "]" << "[ERROR][EVENTS] SOMETHING WENT WRONG, I guess. I have to wait for the thread, so..." << Log::ENDL;
+						glog << Log::START << "[THR?:EVENT][ERRR] SOMETHING WENT WRONG, I guess. I have to wait for the thread, so..." << Log::ENDL;
 						glog.flush();
 						thr->join();
 						alright = false;
 						al_destroy_event_queue(ev_qu);
 						ev_qu = nullptr;
 						targ = nullptr;
-						glog << "[" << Log::TIMEF << "]" << "[WARN][EVENTS] Trying again..." << Log::ENDL;
+						glog << Log::START << "[THR?:EVENT][WARN] Trying again..." << Log::ENDL;
 						setup();
 					}
 				}
@@ -294,7 +294,7 @@ namespace LSW {
 			void events::stop()
 			{
 				if (!targ) {
-					glog << "[" << Log::TIMEF << "]" << "[INFO][EVENTS] Shutting down thread..." << Log::ENDL;
+					glog << Log::START << "[THR?:EVENT][INFO] Shutting down thread..." << Log::ENDL;
 					glog.flush();
 					alright = false;
 					thr->join();
@@ -321,7 +321,7 @@ namespace LSW {
 					if (funcs[p]->getId() == u->getId()) {
 						// a function is returning the same value for null as someone else already on functions!
 						// change the default "nullptr" return for the new function for correct usage of this "hack" I made :3
-						glog << "[" << Log::TIMEF << "]" << "[WARN][EVENTS] A function added on functions vector has already been added or there's another one with the same signature! PLEASE VERIFY THIS SITUATION! Return value got: " << u->getId() << Log::ENDL;
+						glog << Log::START << "[THR?:EVENTS][WARN] A function added on functions vector has already been added or there's another one with the same signature! PLEASE VERIFY THIS SITUATION! Return value got: " << u->getId() << Log::ENDL;
 						glog.flush();
 						exit(EXIT_FAILURE);
 					}
@@ -559,7 +559,7 @@ namespace LSW {
 				ALLEGRO_TIMER* calcLoopsTimer = e->getTimer(3, Defaults::calcLoops_timer);
 				ALLEGRO_TIMER* updatePosTimer = e->getTimer(4, Defaults::updatepos_timer);
 
-				glog << "[" << Log::TIMEF << "]" << "[INFO][THR2][EVENTS] Thread initialized successfully." << Log::ENDL;
+				glog << Log::START << "[THR2:EVENT][INFO] Thread initialized successfully." << Log::ENDL;
 
 				while (e->_keep())
 				{
@@ -575,36 +575,43 @@ namespace LSW {
 								Layer::layerer lyr;
 								Sprite::sprite* spr, *spr2;
 
-								for (auto& i : lyr.getNow().work())
+								switch (lyr.getNow().getMode())
 								{
-									for (size_t p = 0; p < spr_data.work().getMax(); p++)
+								case Layer::STANDARD:
+									for (auto& i : lyr.getNow().work())
 									{
-										spr_data.get(spr, p);
-										int u, m;
-										spr->get(Sprite::LAYER, u);
+										for (size_t p = 0; p < spr_data.work().getMax(); p++)
+										{
+											spr_data.get(spr, p);
+											int u, m;
+											spr->get(Sprite::LAYER, u);
 
-										if (u == i.first) {
+											if (u == i.first) {
 
-											spr->_resetCollision();
+												spr->_resetCollision();
 
-											for (size_t q = 0; q < spr_data.work().getMax(); q++)
-											{
-												if (q != p) {
-													spr_data.get(spr2, q);
-													spr2->get(Sprite::LAYER, m);
+												for (size_t q = 0; q < spr_data.work().getMax(); q++)
+												{
+													if (q != p) {
+														spr_data.get(spr2, q);
+														spr2->get(Sprite::LAYER, m);
 
-													for (auto& k : i.second.colliding)
-													{
-														if (k.first == m && k.second) {
-															spr->_verifyCollision(*spr2);
-															break;
+														for (auto& k : i.second.colliding)
+														{
+															if (k.first == m && k.second) {
+																spr->_verifyCollision(*spr2);
+																break;
+															}
 														}
 													}
 												}
 											}
 										}
 									}
-								}							
+									break;
+								case Layer::USEMAP:
+									((Map::map*)lyr.getNow().get_package())->testCollisionPlayer();
+								}
 							}
 							else if (ev.timer.source == functionsTimer)
 							{
@@ -622,15 +629,70 @@ namespace LSW {
 							else if (ev.timer.source == updatePosTimer)
 							{
 								Sprite::sprite* spr;
+								//Camera::camera_g cam;								
+
 								for (size_t p = 0; p < spr_data.work().getMax(); p++)
 								{
 									spr_data.get(spr, p);
+
+									/*bool still = false;
+
+									try {
+										for (auto& i : cam.getLayers(cam.getLastApplyID()))
+										{
+											if (i.second) {
+												if (spr->_quickLayerAmIOn(i.first))
+												{
+													still = true;
+													break;
+												}
+											}
+										}
+									}
+									catch (const char* c)
+									{
+										Log::gfile logg;
+										logg << Log::ERRDV << Log::START << "[THR2:EVENT][ERRR] Failed at for(auto&:cam) with error: " << c << ". Trying to continue as is." << Log::ENDL;
+										continue;
+									}
+									catch (...)
+									{
+										Log::gfile logg;
+										logg << Log::ERRDV << Log::START << "[THR2:EVENT][ERRR] Failed at for(auto&:cam) with UNKNOWN ERROR. Trying to continue as is." << Log::ENDL;
+										continue;
+									}
+
+									if (!still) continue;*/
+
+									bool isControllerBased;
+									spr->get(Sprite::FOLLOWKEYBOARD, isControllerBased);
+									if (isControllerBased)
+									{
+										bool wasd[4] = { e->getKey(KEY_W, false) || e->getKey(KEY_UP, false),e->getKey(KEY_A, false) || e->getKey(KEY_LEFT, false),e->getKey(KEY_S, false) || e->getKey(KEY_DOWN, false),e->getKey(KEY_D, false) || e->getKey(KEY_RIGHT, false) };
+										double acceleration;// , temp;
+										spr->get(Sprite::ACCELERATION_BY_KEYING, acceleration);
+
+										if (wasd[0]) { // go north
+											spr->set(Sprite::SPEEDY, -acceleration);
+										}
+										else if (wasd[2]) { // go south
+											spr->set(Sprite::SPEEDY, acceleration);
+										}
+
+										if (wasd[1]) { // go left
+											spr->set(Sprite::SPEEDX, -acceleration);
+										}
+										else if (wasd[3]) { // go right
+											spr->set(Sprite::SPEEDX, acceleration);
+										}
+									}
+
 									spr->_updateAcceleration(/*fixMultI*/);
 								}
 							}
 						}
 						else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
-							glog << "[" << Log::TIMEF << "]" << "[INFO][THR2][EVENTS] Display has been closed!" << Log::ENDL;
+							glog << Log::START << "[THR2:EVENT][INFO] Display has been closed!" << Log::ENDL;
 							glog.flush();							
 
 							e->delTimer(-1); // all
@@ -661,26 +723,26 @@ namespace LSW {
 						{
 							if (ev.mouse.button - 1 + MOUSE_0 <= MOUSE_9) {
 								e->_setKey((events_keys)(ev.mouse.button + MOUSE_0 - 1), true);
-								glog << "[" << Log::TIMEF << "]" << "[INFO][THR2][EVENTS] Mouse key pressed: N" << ev.mouse.button << Log::ENDL;
+								glog << Log::START << "[THR2:EVENT][INFO] Mouse key pressed: N" << ev.mouse.button << Log::ENDL;
 							}
 						}
 						else if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP)
 						{
 							if (ev.mouse.button - 1 + MOUSE_0 <= MOUSE_9) {
 								e->_setKey((events_keys)(ev.mouse.button + MOUSE_0 - 1), false);
-								glog << "[" << Log::TIMEF << "]" << "[INFO][THR2][EVENTS] Mouse key released: N" << ev.mouse.button << Log::ENDL;
+								glog << Log::START << "[THR2:EVENT][INFO] Mouse key released: N" << ev.mouse.button << Log::ENDL;
 							}
 						}
 
 						else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
 						{
 							e->_setKey((events_keys)ev.keyboard.keycode, true);
-							glog << "[" << Log::TIMEF << "]" << "[INFO][THR2][EVENTS] Detected keyboard pressed: N" << ev.keyboard.keycode << Log::ENDL;
+							glog << Log::START << "[THR2:EVENT][INFO] Detected keyboard pressed: N" << ev.keyboard.keycode << Log::ENDL;
 						}
 						else if (ev.type == ALLEGRO_EVENT_KEY_UP)
 						{
 							e->_setKey((events_keys)ev.keyboard.keycode, false);
-							glog << "[" << Log::TIMEF << "]" << "[INFO][THR2][EVENTS] Detected keyboard released: N" << ev.keyboard.keycode << Log::ENDL;
+							glog << Log::START << "[THR2:EVENT][INFO] Detected keyboard released: N" << ev.keyboard.keycode << Log::ENDL;
 						}
 
 						else if (ev.type == ALLEGRO_EVENT_KEY_UP || ev.type == ALLEGRO_EVENT_KEY_CHAR)
@@ -694,7 +756,7 @@ namespace LSW {
 							wrk.getLastString(str);
 							if (str.g().length() > 1) {
 								wrk.clear();
-								glog << "[" << Log::TIMEF << "]" << "[INFO][THR2][EVENTS] New string for last string: " << str << Log::ENDL;
+								glog << Log::START << "[THR2:EVENT][INFO] New string for last string: " << str << Log::ENDL;
 								e->_setLastString(str);
 							}
 
@@ -704,17 +766,17 @@ namespace LSW {
 								switch (val)
 								{
 								case HACK_IMMORTAL:
-									glog << "[" << Log::TIMEF << "]" << "[INFO][THR2][EVENTS] GOT IMMORTAL HACK CODE!" << str << Log::ENDL;
+									glog << Log::START << "[THR2:EVENT][INFO] GOT IMMORTAL HACK CODE!" << str << Log::ENDL;
 									break;
 								case HACK_NEXTLEVEL:
-									glog << "[" << Log::TIMEF << "]" << "[INFO][THR2][EVENTS] GOT NEXTLEVEL HACK CODE!" << str << Log::ENDL;
+									glog << Log::START << "[THR2:EVENT][INFO] GOT NEXTLEVEL HACK CODE!" << str << Log::ENDL;
 									break;
 								}
 							}
 						}
 					}
 				}
-				glog << "[" << Log::TIMEF << "]" << "[INFO][THR2][EVENTS] Got call for end. Bye!" << Log::ENDL;
+				glog << Log::START << "[THR2:EVENT][INFO] Got call for end. Bye!" << Log::ENDL;
 			}
 			big_event::~big_event()
 			{

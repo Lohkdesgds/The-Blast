@@ -105,7 +105,7 @@ namespace LSW {
 				case ZOOMX:
 					return cam.t->get(o).scale_x;
 				case ZOOMY:
-					return cam.t->get(o).scale_x;
+					return cam.t->get(o).scale_y;
 				case ROTATION:
 					return cam.t->get(o).rotation;
 				}

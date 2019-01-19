@@ -8,7 +8,7 @@ namespace LSW {
 			{
 				Log::gfile logg;
 
-				logg << "[" << Log::TIMEF << "]" << "[INFO][Graphics] Loading screen modes..." << Log::ENDL;
+				logg << Log::START << "[DRAW:GR_LM][INFO] Loading screen modes..." << Log::ENDL;
 
 				int nva = al_get_num_video_adapters();
 				if (nva < 1) return false;
@@ -31,7 +31,7 @@ namespace LSW {
 						}
 						if (push) {
 							d_mods.modes.push_back(mod);
-							logg << "[" << Log::TIMEF << "]" << "[INFO][Graphics] Added new valid resolution: " << mod.x << "x" << mod.y << "@" << mod.hz << Log::ENDL;
+							logg << Log::START << "[DRAW:GR_LM][INFO] Added new valid resolution: " << mod.x << "x" << mod.y << "@" << mod.hz << Log::ENDL;
 						}
 					}
 				}
@@ -49,7 +49,7 @@ namespace LSW {
 			_display_raw::~_display_raw()
 			{
 				Log::gfile logg;
-				logg << "[" << Log::TIMEF << "]" << "[INFO][Graphics] Display ended." << Log::ENDL;
+				logg << Log::START << "[DRAW:~DEST][QUIT] Display ended." << Log::ENDL;
 				_clearUp();
 			}
 
@@ -69,10 +69,16 @@ namespace LSW {
 				if (b) b = al_install_keyboard();
 				if (b) b = al_install_mouse();
 				if (!b) {
-					logg << "[" << Log::TIMEF << "]" << "[INFO][Graphics] Failed to start graphics api" << Log::ENDL;
+					logg << Log::START << "[DRAW:LAUNC][ERRR] Failed to start graphics api" << Log::ENDL;
+					return false;
 				}
 
-				logg << "[" << Log::TIMEF << "]" << "[INFO][Graphics] Launching new display..." << Log::ENDL;
+				logg << Log::START << "[DRAW:LAUNC][INFO] Launching new display..." << Log::ENDL;
+
+				if (flags & ALLEGRO_FULLSCREEN)
+				{
+					isFullscreen = true;
+				}
 
 				int assistance = 0;
 				lsw_mode mode_selected;
@@ -80,7 +86,7 @@ namespace LSW {
 
 				if (x > 0 && y > 0)
 				{
-					logg << "[" << Log::TIMEF << "]" << "[INFO][Graphics] Trying to set resolution for display manually (call) [" << x << "x" << y << "]" << Log::ENDL;
+					logg << Log::START << "[DRAW:LAUNC][INFO] Trying to set resolution for display manually (call) [" << x << "x" << y << "]" << Log::ENDL;
 
 					assistance = -1;
 				    if (!loadModes(flags)) return false;
@@ -94,7 +100,7 @@ namespace LSW {
 								mode_selected.y = y;
 								mode_selected.hz = i.hz;
 								failed = false;
-								logg << "[" << Log::TIMEF << "]" << "[INFO][Graphics] Got a valid option for resolution: " << x << "x" << y << "@" << i.hz << Log::ENDL;
+								logg << Log::START << "[DRAW:LAUNC][INFO] Got a valid option for resolution: " << x << "x" << y << "@" << i.hz << Log::ENDL;
 							}
 						}
 					}
@@ -102,7 +108,7 @@ namespace LSW {
 				if (failed) {
 					if (x > 0 && y > 0)
 					{
-						logg << "[" << Log::TIMEF << "]" << "[WARN][Graphics] Failed searching for valid value for " << x << "x" << y << ". Looking for defaults..." << Log::ENDL;
+						logg << Log::START << "[DRAW:LAUNC][WARN] Failed searching for valid value for " << x << "x" << y << ". Looking for defaults..." << Log::ENDL;
 					}
 					if (d_mods.modes.size() == 0)
 					{
@@ -124,7 +130,7 @@ namespace LSW {
 						mode_selected = d_mods.modes[d_mods.using_rn];
 					}
 				}
-				logg << "[" << Log::TIMEF << "]" << "[INFO][Graphics] Using " << mode_selected.x << "x" << mode_selected.y << "@" << mode_selected.hz << Log::ENDL;
+				logg << Log::START << "[DRAW:LAUNC][INFO] Using " << mode_selected.x << "x" << mode_selected.y << "@" << mode_selected.hz << Log::ENDL;
 
 				al_set_new_display_flags(flags);
 				al_set_new_display_option(ALLEGRO_VSYNC, 2, ALLEGRO_SUGGEST);
@@ -135,7 +141,7 @@ namespace LSW {
 					_clearUp();
 
 					logg << Log::ERRDV;
-					logg << "[" << Log::TIMEF << "]" << "[ERROR][Graphics] Failed creating display." << Log::ENDL;
+					logg << Log::START << "[DRAW:LAUNC][ERRR] Failed creating display." << Log::ENDL;
 					logg.flush();
 
 					return false;
@@ -146,7 +152,7 @@ namespace LSW {
 						_clearUp();
 						
 						logg << Log::ERRDV;
-						logg << "[" << Log::TIMEF << "]" << "[ERROR][Graphics] Failed creating buffer for display." << Log::ENDL;
+						logg << Log::START << "[ERROR][Graphics] Failed creating buffer for display." << Log::ENDL;
 						logg.flush();
 						return false;
 					}
@@ -304,6 +310,18 @@ namespace LSW {
 				setTarget();
 			}
 
+			void _display_raw::toggleFullscreen()
+			{
+				if (al_get_time() - lastToggleFS < Defaults::display_fullscreen_toggle_min_time) return;
+				lastToggleFS = al_get_time();
+				isFullscreen = !isFullscreen;
+				al_toggle_display_flag(display, ALLEGRO_FULLSCREEN_WINDOW, isFullscreen);
+				al_acknowledge_resize(display);
+
+				Events::big_event bev;
+				bev.g()._setKey(Events::CUSTOMEVENT_DISPLAY_TOGGLED, true);
+			}
+
 
 			void display::custom_launch(const int x, const int y, const int f)
 			{
@@ -406,6 +424,11 @@ namespace LSW {
 			void display::capFPS(const int i)
 			{
 				cap_fps_to = i;
+			}
+
+			void display::toggleFS()
+			{
+				if (disp_raw) disp_raw->toggleFullscreen();
 			}
 
 			_display_raw & display::_get()

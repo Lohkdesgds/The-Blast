@@ -7,12 +7,12 @@ namespace LSW {
 		namespace Log {
 
 			enum mode{LOCAL,GLOBAL};
-			enum bruk{ENDL,TIMEF,ERRDV};
+			enum bruk{ENDL,START,ERRDV};
 
 			struct _log {
 				FILE* f = nullptr;
 				Safer::safe_string path = "log.log"; // temp
-				std::mutex f_m;
+				std::mutex f_m, each_call;
 				bool store_log = true;
 				Safer::safe_string now;
 				Safer::safe_vector<Safer::safe_string> lines;
@@ -20,6 +20,7 @@ namespace LSW {
 
 			template <mode N>
 			class _file {
+				static bool showconsole;
 				static _log g;
 				_log l;
 			public:
@@ -28,8 +29,10 @@ namespace LSW {
 				void push(const Safer::safe_string&);
 				void printclock();
 
+				void showOnConsole(const bool);
 				void flush();
 				void saveOnMemory(const bool); // global only
+				void debug(const Safer::safe_string&);
 
 				_file& operator<<(const Safer::safe_string&);
 				_file& operator<<(const bruk&);
@@ -48,8 +51,8 @@ namespace LSW {
 				IMPLEMENTATION
 			*/
 
-			template <mode N>
-			_log _file<N>::g;
+			template <mode N> _log _file<N>::g;
+			template <mode N> bool _file<N>::showconsole = false;
 
 			template <mode N>
 			inline const bool _file<N>::setPath(const Safer::safe_string& orig, const char* mode, const bool autopath) // easier
@@ -121,6 +124,8 @@ namespace LSW {
 					for (auto& i : s.g())
 					{
 						putc(i, g.f);
+						if (showconsole) printf("%c",i);
+
 						if (g.store_log) {
 							if (i == '\n') {
 								g.lines.push(g.now);
@@ -142,6 +147,7 @@ namespace LSW {
 					for (auto& i : s.g())
 					{
 						putc(i, l.f);
+						if (showconsole) printf("%c", i);
 					}
 					l.f_m.unlock();
 				}
@@ -153,8 +159,22 @@ namespace LSW {
 				char temp[24];
 				SYSTEMTIME t;
 				GetLocalTime(&t);
-				sprintf_s(temp, "%02d-%02d-%02d_%02d-%02d", t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute);
+				sprintf_s(temp, "[%02d-%02d-%02d_%02d-%02d]", t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute);
 				push(temp);
+			}
+			template<mode N>
+			inline void _file<N>::showOnConsole(const bool u)
+			{
+				showconsole = u;
+				if (u) {
+					AllocConsole();
+					FILE* temphandle = stdout;
+					freopen_s(&temphandle, "CONOUT$", "w", stdout);
+
+					printf("Now showing on console.\n");
+					*this << Log::START << "Console output enabled! It can cause lag and/or lower FPS in game! Use for testing only!" << Log::ENDL;
+				}
+				else FreeConsole();
 			}
 			template<mode N>
 			inline void _file<N>::flush()
@@ -178,6 +198,20 @@ namespace LSW {
 			}
 
 			template<mode N>
+			inline void _file<N>::debug(const Safer::safe_string & s)
+			{
+				if (showconsole) {
+					if (N == GLOBAL) g.each_call.lock();
+					else l.each_call.lock();
+
+					printf("[DEBUG][CONSOLE_ONLY] %s\n", s.g().c_str());
+
+					if (N == GLOBAL) g.each_call.unlock();
+					else l.each_call.unlock();
+				}
+			}
+
+			template<mode N>
 			inline _file<N>& _file<N>::operator<<(const Safer::safe_string& u)
 			{
 				push(u);
@@ -190,8 +224,12 @@ namespace LSW {
 				{
 				case ENDL:
 					push("\n");
+					if (N == GLOBAL) g.each_call.unlock();
+					else l.each_call.unlock();
 					break;
-				case TIMEF:
+				case START:
+					if (N == GLOBAL) g.each_call.lock();
+					else l.each_call.lock();
 					printclock();
 					break;
 				case ERRDV:

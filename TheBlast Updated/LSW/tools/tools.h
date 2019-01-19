@@ -110,22 +110,28 @@ namespace LSW {
 
 					bool right = false;
 					size_t pos = f(s, data, right);
+					data.lock();
 
 					if (right)
 					{
 						r = data[pos];
+						data.unlock();
 						return true;
 					}
+					data.unlock();
 					return false;
 				}
 
 				template<class T, typename U>
 				inline const bool manager<T, U>::get(T *& r, const size_t pos)
 				{
+					data.lock();
 					if (pos < data.getMax()) {
 						r = data[pos];
+						data.unlock();
 						return true;
 					}
+					data.unlock();
 					return false;
 				}
 

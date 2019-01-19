@@ -6,10 +6,20 @@ namespace LSW {
 	namespace v2 {
 		namespace Sprite {
 
+			/*class clssss {
+			public:
+				clssss(double a, double b) { x = a; y = b; }
+				double x, y;
+			};
+			
+#define QPolygonF std::vector<clssss>*/
+
 			enum _sprite_dvals{POSX,POSY,SCALEX,SCALEY,CENTERX,CENTERY,SCALEG,ROTATION,ANIMATIONTIME, // rotation = degrees, ANIMATIONTIME = animation time (fps)
-			SPEEDX,SPEEDY,SMOOTHNESS_X,SMOOTHNESS_Y, // smoothness = speed *= smoothness
+			SPEEDX,SPEEDY,SPEEDROT,SMOOTHNESS_X,SMOOTHNESS_Y,/*SMOOTHNESS_ROT // TO BE IMPLEMENTED LATER ,*/ // smoothness = speed *= smoothness
+			ACCELERATION_BY_KEYING,
 			DVAL_MAX};
-			enum _sprite_bvals{DRAW,COLLIDE,_IS_COLLIDING,AFFECTED_BY_COLLISION,AFFECTED_BY_CAM,LOOPING_IMAGES,SHOWBOX,FOLLOWMOUSE,USE_TINTED_DRAWING,
+			enum _sprite_bvals{DRAW,COLLIDE,_IS_COLLIDING,AFFECTED_BY_COLLISION,/*DOES_COLLISION_ROTATE_OBJECT// TO BE IMPLEMENTED LATER,*/AFFECTED_BY_CAM,LOOPING_IMAGES, SHOWDOT,SHOWBOX,FOLLOWMOUSE,USE_TINTED_DRAWING,
+			FOLLOWKEYBOARD,
 			BVAL_MAX};
 			enum _sprite_ivals{LAYER};
 			enum _sprite_zvals{SIZE,FRAME};
@@ -23,7 +33,8 @@ namespace LSW {
 			};
 
 			struct _sprite_area {
-				double cx, cy, sx, sy;
+				double cx, cy, sx, sy; // , rot = 0.0;// TO BE IMPLEMENTED LATER
+				//Safer::safe_string* debug_name = nullptr; // not needed anymore (testing failed ;-;)
 			};
 			
 			struct _sprite_collision_info {
@@ -42,16 +53,23 @@ namespace LSW {
 				bool got_to_end_one_time_at_least = false;
 				size_t lastcall_opt = 0;
 				double lastcall = 0;
+				double lastresetcollisioncall = 0;
 				//double lastverify = 0.0;
 				int layer = 0; // 0 is first to be drawn. (background)
 				int bx = 0, by = 0;
+				int delayed_collision_times = 0;
 				Log::gfile logg;
 
+				std::mutex replacing;
+
 				const _sprite_collision_info _doesCollideWith(const _sprite_area, const _sprite_area);
+				//const _sprite_collision_info _doTheyIntersect(const _sprite_area, const _sprite_area); // TODO
 			public:
 				sprite();
+				~sprite();
 
 				void add(Safer::safe_string, const size_t = 1); // search in database
+				void replaceAllWith(Safer::safe_string, const size_t = 1); // add and remove at the same time
 				void remove(const Safer::safe_string); // ids from images
 
 				void setID(const Safer::safe_string); // set sprite id
@@ -85,8 +103,13 @@ namespace LSW {
 				void _resetCollision();
 				void _verifyCollision(const double, const double);
 				void _verifyCollision(Sprite::sprite&);
-				void _verifyCollision(const _sprite_area&);
+				void _verifyCollision(const _sprite_area&, bool* = nullptr);
 				void _updateAcceleration(const double = 1.0); // hmm change later? double was meant to be timer, but it doesn't work like I thought
+				void _echoPropertiesOnConsole(); // debugging!
+
+				const bool _quickIsDelayed();
+				const bool _quickIsCollisionPossible(Sprite::sprite&);
+				const bool _quickLayerAmIOn(const int);
 
 				//void runOn(void(*fu)(ALLEGRO_FONT*, ALLEGRO_COLOR, float, float, const char*), ALLEGRO_FONT*, ALLEGRO_COLOR, float, float, const char*, const size_t = 0);
 			};

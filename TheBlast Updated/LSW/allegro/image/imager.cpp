@@ -10,9 +10,9 @@ namespace LSW {
 
 			const bool image_low::_load_NOADJUST(const Safer::safe_string s)
 			{
-				Log::gfile log;
+				Log::gfile logg;
 
-				log << Log::TIMEF << "[_load_NOADJUST] Registered load of \"" << s << "\"... " << Log::ENDL;
+				logg << Log::START << "[IMGL:LOADN][INFO] Registered load of \"" << s << "\"... " << Log::ENDL;
 
 				bmp = al_load_bitmap(s.g().c_str());
 				if (bmp)
@@ -25,13 +25,13 @@ namespace LSW {
 					path = s;
 
 					
-					log << Log::TIMEF << "[_load_NOADJUST] LOADED Successfully: \"" << s << "\"." << Log::ENDL;
+					logg << Log::START << "[IMGL:LOADN][INFO] LOADED Successfully: \"" << s << "\"." << Log::ENDL;
 					
 					return true;
 				}
 
-				log << Log::ERRDV << Log::TIMEF << "[multipleLoad] ERROR LOADING \"" << s << "\"! Skipping!" << Log::ENDL;
-				log.flush();
+				logg << Log::ERRDV << Log::START << "[IMGL:LOADN][ERRR] ERROR LOADING \"" << s << "\"! Skipping!" << Log::ENDL;
+				logg.flush();
 
 				return false;
 			}
@@ -75,7 +75,7 @@ namespace LSW {
 			}*/
 			const bool image_low::create(int x, int y)
 			{
-				Log::gfile log;
+				Log::gfile logg;
 
 				if (x <= 0 || y <= 0) {
 					ALLEGRO_DISPLAY *d = al_get_current_display();
@@ -85,13 +85,13 @@ namespace LSW {
 					created_itself = true;
 				}
 
-				log << Log::TIMEF << "[_load_NOADJUST] Registered creation of a bitmap with size " << x << "x" << y << "... " << Log::ENDL;
+				logg << Log::START << "[IMGL:NEWBP][INFO] Registered creation of a bitmap with size " << x << "x" << y << "... " << Log::ENDL;
 
 				unload();
 				bmp = al_create_bitmap(x, y);
 				if (bmp)
 				{
-					log << Log::TIMEF << "[_load_NOADJUST] CREATED Successfully a bitmap with size " << x << "x" << y << "... " << Log::ENDL;
+					logg << Log::START << "[IMGL:NEWBP][INFO] CREATED Successfully a bitmap with size " << x << "x" << y << "... " << Log::ENDL;
 					//proportion = 1.0;
 					lastcall = GetTickCount64();
 					orig_siz[0] = al_get_bitmap_width(bmp);
@@ -100,7 +100,7 @@ namespace LSW {
 					return true;
 				}
 
-				log << Log::ERRDV << Log::TIMEF << "[_load_NOADJUST] FAILED CREATING a bitmap with size " << x << "x" << y << "... " << Log::ENDL;
+				logg << Log::ERRDV << Log::START << "[IMGL:NEWBP][ERRR] FAILED CREATING a bitmap with size " << x << "x" << y << "... " << Log::ENDL;
 
 				return false;
 			}
@@ -111,6 +111,11 @@ namespace LSW {
 			const bool image_low::amI(const Safer::safe_string o)
 			{
 				return (id == o);
+			}
+
+			const bool image_low::amI(const _img_mode m)
+			{
+				return (m == mode);
 			}
 
 			const Safer::safe_string image_low::whoAmI()
@@ -125,10 +130,10 @@ namespace LSW {
 
 			void image_low::unload()
 			{
-				Log::gfile log;
+				Log::gfile logg;
 
-				if (path.g().length() > 0) log << Log::TIMEF << "[unload] Registering unload of texture named \"" << path.g() << "\"." << Log::ENDL;
-				else log << Log::TIMEF << "[unload] Registering unload of texture with size " << orig_siz[0] << "x" << orig_siz[1] << "." << Log::ENDL;
+				if (path.g().length() > 0) logg << Log::START << "[IMGL:NLOAD][INFO] Registering unload of texture named \"" << path.g() << "\"." << Log::ENDL;
+				else logg << Log::START << "[IMGL:NLOAD][INFO] Registering unload of texture with size " << orig_siz[0] << "x" << orig_siz[1] << "." << Log::ENDL;
 
 				//proportion = 1.0;
 				//orig_siz[0] = orig_siz[1] = 0;
@@ -189,7 +194,7 @@ namespace LSW {
 
 			void image_low::verify()
 			{
-				Log::gfile log;
+				Log::gfile logg;
 
 				if (!bmp && !optimized) return;
 
@@ -217,7 +222,7 @@ namespace LSW {
 					
 					reload();
 
-					log << "[image_low] Reloaded " << id << Log::ENDL;
+					logg << Log::START << "[IMGL:VERIF][INFO] Reloaded " << id << Log::ENDL;
 
 					optimized = false;
 
@@ -227,7 +232,7 @@ namespace LSW {
 
 			void image_low::checkMemory()
 			{
-				Log::gfile log;
+				Log::gfile logg;
 				if (keep_on_memory_always) return;
 
 				//if (al_get_time() - lastimagereload < 1.0 / Defaults::max_images_reload_per_sec) return;
@@ -238,7 +243,7 @@ namespace LSW {
 					//optimizeIt();
 					unload();
 
-					log << "[image_low] Optimized " << id << Log::ENDL;
+					logg << Log::START << "[IMGL:CHKMM][INFO] Optimized " << id << Log::ENDL;
 
 					optimized = true;
 
@@ -249,8 +254,6 @@ namespace LSW {
 
 			void image_low::get(ALLEGRO_BITMAP*& b)
 			{
-				Log::gfile log;
-
 				lastcall = al_get_time();
 
 				if (!bmp) verify();
@@ -285,10 +288,14 @@ namespace LSW {
 			void _draw()
 			{
 				d_images_database img_data;
+				Events::big_event bev;
+
+				bool hasChanged = bev.g().getKey(Events::CUSTOMEVENT_DISPLAY_TOGGLED);
 
 				for (int u = 0; u < (int)img_data.work().getMax(); u++)
 				{
-					img_data.work().get(u)->checkMemory();
+					if (hasChanged && img_data.work().get(u)->amI(Image::CREATED)) img_data.work().get(u)->reload();
+					else img_data.work().get(u)->checkMemory();
 				}
 			}
 
@@ -325,7 +332,6 @@ namespace LSW {
 				Tools::clearPath(start);
 				Tools::clearPath(end);
 
-				//Log::gfile log;
 				d_images_database img_data;
 				Image::image_low* wi = nullptr;
 
@@ -346,18 +352,18 @@ namespace LSW {
 					sprintf_s(newname, format_ch, p);
 					sprintf_s(newnick, format_nick, p);
 
-					//log << Log::TIMEF << "[multipleLoad] Registered load of \"" << newname << "\" named \"" << newnick << "\"... " << Log::ENDL;
+					//log << Log::START << "[multipleLoad] Registered load of \"" << newname << "\" named \"" << newnick << "\"... " << Log::ENDL;
 
 					img_data.create(wi);
 					wi->setID(newnick);
 					wi->load(newname);
 					/*if (!)
 					{
-						//log << Log::ERRDV << Log::TIMEF << "[multipleLoad] ERROR LOADING \"" << newname << "\" named \"" << newnick << "\"! Skipping!" << Log::ENDL;
+						//log << Log::ERRDV << Log::START << "[multipleLoad] ERROR LOADING \"" << newname << "\" named \"" << newnick << "\"! Skipping!" << Log::ENDL;
 						//log.flush();
 					}
 					else {
-						log << Log::TIMEF << "[multipleLoad] LOADED Successfully: \"" << newname << "\" named \"" << newnick << "\"." << Log::ENDL;
+						log << Log::START << "[multipleLoad] LOADED Successfully: \"" << newname << "\" named \"" << newnick << "\"." << Log::ENDL;
 					}*/
 
 					//log << "(" << ((wi->isLoaded()) ? "LOADED" : "FAILED_TO_LOAD") << ")" << Log::ENDL;
@@ -374,7 +380,6 @@ namespace LSW {
 				Tools::clearPath(start);
 				Tools::clearPath(end);
 
-				Log::gfile log;
 				d_images_database img_data;
 				Image::image_low* wi = nullptr;
 

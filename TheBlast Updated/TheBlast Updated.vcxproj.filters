@@ -70,6 +70,9 @@
     <Filter Include="tools\stacker">
       <UniqueIdentifier>{65139002-d2ef-4911-bd41-dc0563591794}</UniqueIdentifier>
     </Filter>
+    <Filter Include="map">
+      <UniqueIdentifier>{46d05355-6ecb-407e-90f3-d78a127f9c05}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LSW\safer\safer.h">
@@ -123,6 +126,9 @@
     <ClInclude Include="LSW\tools\stacker\stacker.h">
       <Filter>tools\stacker</Filter>
     </ClInclude>
+    <ClInclude Include="LSW\map\map_control.h">
+      <Filter>map</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LSW\download_manager\downloader_v2.cpp">
@@ -160,6 +166,9 @@
     </ClCompile>
     <ClCompile Include="LSW\allegro\sprite\sprite.cpp">
       <Filter>allegro\sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="LSW\map\map_control.cpp">
+      <Filter>map</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

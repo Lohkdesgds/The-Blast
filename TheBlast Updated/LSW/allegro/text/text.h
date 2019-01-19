@@ -6,12 +6,12 @@ namespace LSW {
 	namespace v2 {
 		namespace Text {
 
-			enum _text_opt_str {SETSTRING, SETID, SETFOLLOW};
-			enum _text_opt_bool{SHOW,USEBUFOPT,AFFECTED_BY_CAM};
-			enum _text_opt_db  {POSX,POSY,UPDATETIME};
+			enum _text_opt_str {SETSTRING, SETID, SETFOLLOW, SETGLOBALPATH, SETLOCALPATH};
+			enum _text_opt_bool{SHOW/*,USEBUFOPT*/,AFFECTED_BY_CAM,IS_LOCALPATH_RAW,IS_GLOBALPATH_RAW};
+			enum _text_opt_db  {POSX,POSY,SCALEG,ROTATION,UPDATETIME};
 			enum _text_opt_int {MODE, LAYER};
 			enum _text_opt_color {COLOR};
-			enum _text_opt_sprite {SPRITE};
+			//enum _text_opt_sprite {SPRITE};
 
 			enum mode_int{ALIGN_LEFT = ALLEGRO_ALIGN_LEFT,ALIGN_CENTER = ALLEGRO_ALIGN_CENTER,ALIGN_RIGHT = ALLEGRO_ALIGN_RIGHT};
 			// 2
@@ -22,16 +22,23 @@ namespace LSW {
 			class text {
 				Sprite::sprite* follow = nullptr;
 				double off_plr[2] = { 0.0,0.0 };
+				double ofr_plr = 0.0;
 
 				Events::big_event bev;
 
 				int layer = 0;
 
+				double scale = 1.0;
+				double final_scale = 1.0;
+				double last_final_scale = 1.0;
+				double rot = 0.0;
+
 				double pos[2] = { 0,0 };
 				int mode = ALLEGRO_ALIGN_CENTER;
 				bool affected_by_camera = true;
 
-				static ALLEGRO_FONT* default_font;
+				ALLEGRO_FONT* default_font = nullptr;
+				bool lastwasraw = false;
 
 				ALLEGRO_COLOR color = al_map_rgb(255, 255, 255);
 				Safer::safe_string orig_str;
@@ -41,29 +48,34 @@ namespace LSW {
 				//static size_t counter;
 				//Sprite::sprite* sbuf = nullptr;
 				//ALLEGRO_BITMAP* buf = nullptr;
-				bool usebuf = false;
+				//bool usebuf = false;
 				bool show = true;
 
 				double lastinterpret = 0;
 				double update_time = 0.05; // sec
 
 				static Display::display* ref_disp;
-				static unsigned text_count;
+				//static unsigned text_count;
 
-				Sprite::sprite* local_paint = nullptr;
-				Image::image_low* local_paint_i = nullptr;
+				//Sprite::sprite* local_paint = nullptr;
+				//Image::image_low* local_paint_i = nullptr;
 
-				Safer::safe_string id, path;
+				Safer::safe_string id, path, _bpath;
+				static Safer::safe_string gpath;
+				static bool is_gpath_raw;
+				bool using_gpath = true;
 
-				void _draw();
+				void _draw(const double[2]);
 				void _interpretTags(Safer::safe_string&);
 
 				void setFollow(const Safer::safe_string);
 				void setFollow(Sprite::sprite*);
-				void loadInternalBMP();
+				const bool load(const Safer::safe_string = Defaults::font_default_name, const bool = false, const double = 1.0);
+				void reload();
+				//void loadInternalBMP();
+				void _verify();
 			public:
 				void verify(const bool = false); // reload
-				const bool load(const Safer::safe_string = Defaults::font_default_name, const bool = false);
 				/*const bool loadFromDatabase(const Safer::safe_string = Defaults::font_default_name);
 				const bool loadFromURL(const Safer::safe_string, const Safer::safe_string); // url, name it as (THE FILE! NOT ID)*/
 
@@ -80,7 +92,7 @@ namespace LSW {
 				void get(const _text_opt_db, double&);
 				void get(const _text_opt_color, ALLEGRO_COLOR&);
 				void get(const _text_opt_int, int&);
-				void get(const _text_opt_sprite, Sprite::sprite*&);
+				//void get(const _text_opt_sprite, Sprite::sprite*&);
 
 
 				void setID(const Safer::safe_string);
