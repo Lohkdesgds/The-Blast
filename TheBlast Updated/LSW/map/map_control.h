@@ -23,10 +23,16 @@ namespace LSW {
 
 			class map {
 				int map_i[Defaults::map_size_default_x][Defaults::map_size_default_y];
+
 				Sprite::sprite* map_p[Defaults::map_size_default_x][Defaults::map_size_default_y];
+				Sprite::sprite* big_map = nullptr;
+				Image::image_low* big_map_il = nullptr;
+
 				double spawn[2] = { 0.0,0.0 };
 				int seed = 0;
 				int layerUsed = 0;
+
+				bool hasToUpdate = false;
 
 				const double x_off = (1.0*(1.0 / (Defaults::map_size_default_x*1.0)));
 				const double y_off = (1.0*(1.0 / (Defaults::map_size_default_y*1.0)));
@@ -52,6 +58,8 @@ namespace LSW {
 				void killMap();
 				void corruptWorldTick();
 				void setPlayer(Sprite::sprite*);
+
+				void checkDraw();
 
 				void testCollisionPlayer();
 				void testCollisionOther(Sprite::sprite&);

@@ -364,6 +364,7 @@ namespace LSW {
 			class events {
 				Log::gfile glog;
 				std::thread* thr = nullptr;
+				bool thr_running_yet = false;
 				//unsigned ticks_one_sec = 0;
 				ALLEGRO_DISPLAY* targ = nullptr;
 				ALLEGRO_EVENT_QUEUE* ev_qu = nullptr;
@@ -421,11 +422,13 @@ namespace LSW {
 				//void _setMaxTickCount(const unsigned);
 				const double _getMultiplierForUpdatingImg();
 				ALLEGRO_DISPLAY* _getTargD();
+				void _setThrRunning(const bool);
 
 				_event_log& _getEventLog();
 				//void _setEventLog(const _event_log&);
 
 				void _setShutDownNow();
+				const bool isSafeToQuit();
 			};
 
 			class big_event {
@@ -446,9 +449,9 @@ namespace LSW {
 			void defaultfunction_cos(void*, double&);
 
 
-			void _i_thr_collisionTimed(_event_log*, events*);
-			void _i_thr_functionsTimed(_event_log*, events*);
-			void _i_thr_updatePosTimed(_event_log*, events*);
+			void _i_thr_collisionTimed(_event_log*, events*, double, bool*);
+			void _i_thr_functionsTimed(_event_log*, events*, double, bool*);
+			void _i_thr_updatePosTimed(_event_log*, events*, double, bool*);
 		}
 	}
 }

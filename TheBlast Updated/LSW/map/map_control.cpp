@@ -659,6 +659,10 @@ namespace LSW {
 					debugg[debugi] = '\0';
 					logg.debug("New map:\n" + std::string(debugg));
 				}
+
+
+				d_images_database img_data;
+				d_sprite_database spr_data;
 				
 				for (int b = 0; b < Defaults::map_size_default_y; b++)
 				{
@@ -670,9 +674,6 @@ namespace LSW {
 						if (ouu > BLOCKID_C03) ouu = BLOCKID_C03;
 						Safer::safe_string id_path = interpretIntToBlockName((blockstats)ouu);
 
-						d_images_database img_data;
-						d_sprite_database spr_data;
-
 						spr_data.create(each);
 						each->setID("_MAP_" + std::to_string(a) + "_" + std::to_string(b));
 						each->add(id_path);
@@ -681,14 +682,33 @@ namespace LSW {
 						each->set(Sprite::SCALEX, 2.0 / Defaults::map_size_default_x);
 						each->set(Sprite::SCALEY, 2.0 / Defaults::map_size_default_y);
 						each->set(Sprite::LAYER, layerUsed);
-						each->set(Sprite::SHOWDOT, true);
+						//each->set(Sprite::SHOWDOT, true);
 						each->set(Sprite::COLLIDE, true);
+						each->set(Sprite::DRAW, false);
 
 						map_p[a][b] = each;
 
 						each = nullptr;
 					}
 				}
+
+				if (!big_map)
+				{
+					img_data.create(big_map_il);
+					big_map_il->create(-1, -1);
+					big_map_il->setID("__MAP_FRAME_FULL");
+
+					spr_data.create(big_map);
+					big_map->setID("__MAP_FRAME_FULL_S");
+					big_map->add("__MAP_FRAME_FULL");
+					big_map->set(Sprite::LAYER, layerUsed);
+					big_map->set(Sprite::DRAW, true);
+					big_map->set(Sprite::AFFECTED_BY_CAM, false);
+					big_map->set(Sprite::SCALEG, 2.0);
+				}
+
+				hasToUpdate = true;
+
 				/*for (int a = 0; a < Defaults::map_size_default_x; a++)
 				{
 					for (int b = 0; b < Defaults::map_size_default_y; b++)
@@ -716,8 +736,8 @@ namespace LSW {
 							spawn[1] = (1.0*(2.0*b / (Defaults::map_size_default_y*1.0)) - 1.0);
 
 							if (player) {
-								player->set(Sprite::POSX, spawn[0]);
-								player->set(Sprite::POSY, spawn[1]);
+								player->set(Sprite::POSX, spawn[0] + x_off);
+								player->set(Sprite::POSY, spawn[1] + y_off);
 								player->set(Sprite::SPEEDX, 0.0);
 								player->set(Sprite::SPEEDY, 0.0);
 								player->set(Sprite::SCALEX, 2.0 / Defaults::map_size_default_x);
@@ -736,18 +756,32 @@ namespace LSW {
 			void map::killMap()
 			{
 				Log::gfile logg;
+				d_sprite_database spr_data;
+				d_images_database img_data;
+
 				logg << Log::START << "[MAP:KILLMP][INFO] Erasing map data..." << Log::ENDL;
 
 				for (int a = 0; a < Defaults::map_size_default_x; a++)
 				{
 					for (int b = 0; b < Defaults::map_size_default_y; b++)
 					{
-						d_sprite_database spr_data;
 						spr_data.remove("_MAP_" + std::to_string(a) + "_" + std::to_string(b));
 						/*delete map_p[a][b];*/
 						map_p[a][b] = nullptr;
 						map_i[a][b] = SPACEID;
 					}
+				}
+				if (big_map)
+				{
+					if (big_map_il) big_map_il->unload();
+
+					spr_data.remove("__MAP_FRAME_FULL_S");
+					img_data.remove("__MAP_FRAME_FULL");
+
+					if (big_map_il) delete big_map_il;
+					delete big_map;
+					big_map = nullptr;
+					big_map_il = nullptr;
 				}
 				logg << Log::START << "[MAP:KILLMP][INFO] Done erasing mapa data." << Log::ENDL;
 			}
@@ -812,12 +846,51 @@ namespace LSW {
 						}
 					}
 				}
+				hasToUpdate = true;
 
 				logg << Log::START << "[MAP:CORRPT][INFO] Done processing blocks." << Log::ENDL;
 			}
 			void map::setPlayer(Sprite::sprite * s)
 			{
 				player = s;
+			}
+			void map::checkDraw()
+			{
+				if (hasToUpdate || big_map_il->hasReloaded()) {
+					hasToUpdate = false;
+
+					Camera::camera_g cam;
+					Log::gfile logg;
+
+					ALLEGRO_BITMAP* targ = al_get_target_bitmap();
+					if (!targ) {
+						logg << Log::ERRDV << Log::START << "[MAP:CHKDRW][WARN] Could not get target bitmap! Skipping map update for now..." << Log::ENDL;
+						hasToUpdate = true;
+						return;
+					}
+					else big_map_il->hasReloaded(true);
+
+					big_map->_setAsTarg();
+
+					const int lastapply = cam.getLastApplyID();
+					cam.copy(Defaults::default_map_layer_backup, lastapply); // backup
+
+					cam.apply(lastapply);
+
+					for (auto& i : map_p)
+					{
+						for (auto& j : i)
+						{
+							j->forceDraw();
+						}
+					}
+
+					/*cam.copy(lastapply, Defaults::default_layer_backup);
+					cam.apply(lastapply);*/ // not needed because transformation is bitmap based.
+
+					al_set_target_bitmap(targ);
+					logg.debug("Map has updated its image.");
+				}
 			}
 			void map::testCollisionPlayer()
 			{

@@ -146,8 +146,16 @@ namespace LSW {
 				}
 			}
 
+			const bool image_low::hasReloaded(const bool b)
+			{
+				bool d = has_Reloaded;
+				if (b) has_Reloaded = false;
+				return d;
+			}
+
 			const bool image_low::reload()
 			{
+				has_Reloaded = true;
 				al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR);
 
 				if (created_itself)

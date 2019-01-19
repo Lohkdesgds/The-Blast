@@ -30,7 +30,8 @@ namespace LSW {
 
 			const int default_layer_colliding_first = -9999;
 			const int default_layer_backup = -9999;
-			const int default_font_foreground_layer = -9999;
+			const int default_map_layer_backup = -9998;
+			const int default_font_foreground_layer = -9997;
 
 			const bool debug = false;
 

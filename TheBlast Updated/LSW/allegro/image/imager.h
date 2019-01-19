@@ -23,6 +23,7 @@ namespace LSW {
 				bool optimized = false;
 				bool created_itself = false;
 				double check_time = 0.0;
+				bool has_Reloaded = false;
 				std::mutex optimizing;
 
 				//double proportion = 1.0; // when resized for low memory usage if not using or when drawing is half or so
@@ -46,6 +47,7 @@ namespace LSW {
 
 				void unload();
 
+				const bool hasReloaded(const bool = false);
 				const bool reload();
 
 				void optimizeIt();

@@ -336,8 +336,6 @@ namespace LSW {
 					by = al_get_bitmap_height(bmp);
 
 					const int lastapply = cam.getLastApplyID();
-
-
 					cam.copy(Defaults::default_layer_backup, lastapply);
 
 					if (!data.bval[AFFECTED_BY_CAM]) cam.reset(lastapply);

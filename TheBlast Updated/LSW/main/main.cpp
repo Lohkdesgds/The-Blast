@@ -112,10 +112,6 @@ int main(int argc, char* argv[])
 
 	// global always-in-use variables (textures, texts, etc)
 	{
-
-
-
-
 		/* CREATING LAYERS FOR COLLISION...? */
 
 
@@ -162,10 +158,6 @@ int main(int argc, char* argv[])
 		cam.set(3, 70, true);
 
 		//for (int p = 1; p < 4; p++) cam.set(2, p, true);
-
-
-
-
 
 		float perc = 0.0;
 		bool isdone = false;
@@ -488,7 +480,6 @@ int main(int argc, char* argv[])
 	logg.flush();
 
 	killall();
-	
 
 	return 0;
 }
@@ -1220,6 +1211,8 @@ int sub_main(const int l, Display::display& disp)
 				cam.set(3, Camera::ZOOM, zoom);
 				cam.apply(3);
 
+				mapp.checkDraw();
+
 				img_data.draw();
 				spr_data.draw();
 				txt_data.draw();
@@ -1247,15 +1240,19 @@ void temp_xtract(Stacker::extractor* xtract, Safer::safe_string interp, Safer::s
 void killall()
 {
 	Events::big_event bev;
+
 	d_sprite_database spr_data;
 	d_images_database img_data;
 	d_texts_database  txt_data;
 	d_musics_database msk_data;
 
 	bev.g().delAllFunctions();
+	bev.g()._setShutDownNow();
 
 	spr_data.clear();
 	img_data.clear();
 	txt_data.clear();
 	msk_data.clear();
+
+	while (!bev.g().isSafeToQuit());
 }
