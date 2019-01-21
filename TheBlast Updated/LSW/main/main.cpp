@@ -80,10 +80,15 @@ int main(int argc, char* argv[])
 			{
 				logg.showOnConsole(true);
 			}
+			if (wrk == "-longlog")
+			{
+				logg.longLog(true);
+				logg << Log::NEEDED_START << "[THR0:MAIN_][WARN] LongLog enabled. Everything is going to be saved!" << Log::NEEDED_ENDL;
+			}
 		}
 	}
 
-	logg << Log::START << "[THR0:MAIN_][WARN]}" << Log::ENDL;
+	logg << Log::NEEDED_START << "[THR0:MAIN_][WARN]}" << Log::NEEDED_ENDL;
 
 	prepare_commom_templates
 
@@ -98,7 +103,7 @@ int main(int argc, char* argv[])
 	Events::big_event bev;
 
 
-	logg << Log::START << "[THR0:MAIN_][INFO] Starting the app..." << Log::ENDL;
+	logg << Log::NEEDED_START << "[THR0:MAIN_][INFO] Starting the app..." << Log::NEEDED_ENDL;
 
 	if (strt.changed) disp.custom_launch(strt.res[0], strt.res[1], strt.mode);
 	else disp.launch();
@@ -116,9 +121,11 @@ int main(int argc, char* argv[])
 
 
 		// setting 0, layer 0 collide and (probably) is affected by 100
-		lyr.getOne(0).set(0).colliding[100] = true;
-		lyr.getOne(2).set(2).colliding[100] = true;
-		lyr.getOne(3).set(50).colliding[70] = true;
+		lyr.getOne(0).getR(0).colliding[100] = true;
+		lyr.getOne(2).getR(2).colliding[100] = true;
+		//lyr.getOne(3).set(Defaults::map_default_layer).colliding[Defaults::user_default_layer] = true;
+		//lyr.getOne(3).set(Defaults::map_default_layer).colliding[Defaults::badboys_default_layer] = true;
+		//lyr.getOne(3).set(Defaults::badboys_default_layer).colliding[Defaults::user_default_layer] = true;
 
 
 		/* CREATING LAYERS FOR CAMERA...? */
@@ -154,8 +161,9 @@ int main(int argc, char* argv[])
 		// LAYER 3
 		//cam.set(3, 100, true);
 		cam.set(3, Defaults::default_font_foreground_layer, true);
-		cam.set(3, 50, true);
-		cam.set(3, 70, true);
+		cam.set(3, Defaults::map_default_layer, true);
+		cam.set(3, Defaults::user_default_layer, true);
+		cam.set(3, Defaults::badboys_default_layer, true);
 
 		//for (int p = 1; p < 4; p++) cam.set(2, p, true);
 
@@ -179,7 +187,7 @@ int main(int argc, char* argv[])
 		wt->setMainDisplay(&disp);
 		wt->set(Text::UPDATETIME, 0.05);
 		wt->set(Text::LAYER, -9999);
-		wt->setID("EARLY_ACCESS_00");
+		wt->set(Text::SETID,"EARLY_ACCESS_00");
 		wt = nullptr;
 
 		txt_data.create(wt);
@@ -193,7 +201,7 @@ int main(int argc, char* argv[])
 		wt->setMainDisplay(&disp);
 		wt->set(Text::UPDATETIME, 0.05);
 		wt->set(Text::LAYER, -9999);
-		wt->setID("EARLY_ACCESS_01");
+		wt->set(Text::SETID,"EARLY_ACCESS_01");
 		wt = nullptr;
 
 
@@ -206,7 +214,7 @@ int main(int argc, char* argv[])
 		wt2->set(Text::MODE, Text::ALIGN_CENTER);
 		wt2->set(Text::UPDATETIME, 1.00);
 		wt2->set(Text::LAYER, -2);
-		wt2->setID("LOADING_1");
+		wt2->set(Text::SETID,"LOADING_1");
 
 		txt_data.create(wt);
 		wt->set(Text::SETSTRING, "Loading...");
@@ -216,21 +224,21 @@ int main(int argc, char* argv[])
 		wt->setMainDisplay(&disp);
 		wt->set(Text::UPDATETIME, 0.05);
 		wt->set(Text::LAYER, -2);
-		wt->setID("LOADING_0");
+		wt->set(Text::SETID,"LOADING_0");
 
 
 
 		//disp.checkUpImages();
 
 
-		logg << Log::START << "[THR0:MAIN_][INFO] Calling THR1:LOAD_..." << Log::ENDL;
+		logg << Log::NEEDED_START << "[THR0:MAIN_][INFO] Calling THR1:LOAD_..." << Log::NEEDED_ENDL;
 
 		std::thread thr(temp_thr_load, &perc, &isdone, &disp, strt.skipdown);
 
 		disp.capFPS(60);
 		cam.apply(-2);
 
-		logg << Log::START << "[THR0:MAIN_][INFO] Showing loading screen. Registering time..." << Log::ENDL;
+		logg << Log::NEEDED_START << "[THR0:MAIN_][INFO] Showing loading screen. Registering time..." << Log::NEEDED_ENDL;
 
 		double took_time = al_get_time();
 		int step = 0;
@@ -336,9 +344,9 @@ int main(int argc, char* argv[])
 
 		thr.join();
 
-		logg << Log::START << "[THR0:MAIN_][INFO] Time taken: " << (al_get_time() - took_time) << " second(s)." << Log::ENDL;
+		logg << Log::NEEDED_START << "[THR0:MAIN_][INFO] Time taken: " << (al_get_time() - took_time) << " second(s)." << Log::NEEDED_ENDL;
 
-		logg << Log::START << "[THR0:MAIN_][INFO] Reloading optimized version of the textures..." << Log::ENDL;
+		logg << Log::NEEDED_START << "[THR0:MAIN_][INFO] Reloading optimized version of the textures..." << Log::NEEDED_ENDL;
 
 		took_time = al_get_time();
 		
@@ -347,7 +355,7 @@ int main(int argc, char* argv[])
 		txt_data.remove("LOADING_1");
 
 		if (hasbeenkilledwhile) {
-			logg << Log::START << "[THR0:MAIN_][WARN] User left before game start. It's not recommended to exit this way." << Log::ENDL;
+			logg << Log::NEEDED_START << "[THR0:MAIN_][WARN] User left before game start. It's not recommended to exit this way." << Log::NEEDED_ENDL;
 			logg.flush();
 
 			killall();
@@ -387,12 +395,12 @@ int main(int argc, char* argv[])
 		img_data.work().unlock();
 
 
-		logg << Log::START << "[THR0:MAIN_][INFO] Time taken: " << (al_get_time() - took_time) << " second(s)." << Log::ENDL;
-
-		logg << Log::START << "[THR0:MAIN_][INFO] Preparing functions to start..." << Log::ENDL;
+		logg << Log::NEEDED_START << "[THR0:MAIN_][INFO] Time taken: " << (al_get_time() - took_time) << " second(s)." << Log::NEEDED_ENDL;
 
 		//al_rest(0.5);
 	}
+
+	logg << Log::NEEDED_START << "[THR0:MAIN_][INFO] Preparing functions to start..." << Log::NEEDED_ENDL;
 
 
 	if (strt.fixmem) {
@@ -466,7 +474,7 @@ int main(int argc, char* argv[])
 	// done
 
 	//disp._get().enableBlur(); // not working as expected hmm
-	logg << Log::START << "[THR0:MAIN_][INFO] Now running!" << Log::ENDL;
+	logg << Log::NEEDED_START << "[THR0:MAIN_][INFO] Now running!" << Log::NEEDED_ENDL;
 	logg.flush();
 
 	srand(al_get_time());
@@ -476,7 +484,7 @@ int main(int argc, char* argv[])
 		res = sub_main(res, disp);
 	}
 
-	logg << Log::START << "[THR0:MAIN_][INFO] Now exiting the game the usual way!" << Log::ENDL;
+	logg << Log::NEEDED_START << "[THR0:MAIN_][INFO] Now exiting the game the usual way!" << Log::NEEDED_ENDL;
 	logg.flush();
 
 	killall();
@@ -503,7 +511,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 
 	Log::gfile logg;
 
-	logg << Log::START << "[THR1:LOAD_][INFO] Loading resources from the internet..." << Log::ENDL;
+	logg << Log::NEEDED_START << "[THR1:LOAD_][INFO] Loading resources from the internet..." << Log::NEEDED_ENDL;
 	logg.flush();
 	   
 	/* LOADING TEXTURES...? */
@@ -539,16 +547,16 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 		std::experimental::filesystem::remove(path_d.g());
 	}
 	else {
-		logg << Log::START << "[THR1:LOAD_][WARN] SkipDownload flag skipped auto download." << Log::ENDL;
+		logg << Log::NEEDED_START << "[THR1:LOAD_][WARN] SkipDownload flag skipped auto download." << Log::NEEDED_ENDL;
 	}
 
-	logg << Log::START << "[THR1:LOAD_][INFO] Loading..." << Log::ENDL;
+	logg << Log::NEEDED_START << "[THR1:LOAD_][INFO] Pre-loading textures..." << Log::NEEDED_ENDL;
 	
 
 	/* LOADING TEXTURES...? */
 
 
-	std::thread thr1(Image::multipleLoad, "PAUSE", "pause/pause_", 29, 2, ".png", &o);
+	std::thread thr1(Image::multipleLoad, "PAUSE", "pause/pause_", 29, 2, ".png", &o, true);
 	while (o != 1.0 && disp->isOpen()) {
 		*f = 0.95 + o * 0.01;
 	}
@@ -556,7 +564,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 	o = 0.0;
 	thr1.join();
 
-	std::thread thr2(Image::multipleLoad,"LOGO", "logo/frame", 115, 2, ".png", &o);
+	std::thread thr2(Image::multipleLoad,"LOGO", "logo/frame", 115, 2, ".png", &o, true);
 	while (o != 1.0 && disp->isOpen()){
 		*f = 0.96 + o * 0.01;
 	}
@@ -590,7 +598,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 
 	/// anim
 	
-	std::thread thr4(Image::multipleLoad, Defaults::map_default_start, "anim/bloco", 10, Defaults::map_default_len_name_int, ".png", &o);
+	std::thread thr4(Image::multipleLoad, Defaults::map_default_start, "anim/bloco", 10, Defaults::map_default_len_name_int, ".png", &o, false);
 	while (o != 1.0 && disp->isOpen()) {
 		*f = 0.97 + o * 0.01;
 	}
@@ -762,7 +770,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 	ws->set(Sprite::USE_TINTED_DRAWING, true);
 	ws = nullptr;
 
-	spr_data.create(ws);
+	/*spr_data.create(ws);
 	ws->add("BAR_ON");
 	ws->setID("PLAYER");
 	ws->set(Sprite::LAYER, 70);
@@ -770,7 +778,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 	ws->set(Sprite::FOLLOWKEYBOARD, true);
 	ws->set(Sprite::COLLIDE, true);
 	ws->set(Sprite::AFFECTED_BY_COLLISION, true);
-	ws = nullptr;
+	ws = nullptr;*/
 
 	spr_data.create(ws);
 	ws->add("MOUSE");
@@ -794,7 +802,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 	wt->set(Text::SCALEG, 1.35);
 	wt->set(Text::POSY, -0.053);
 	wt->set(Text::POSX, 0.002);
-	wt->setID("BAR_00_TEXT");
+	wt->set(Text::SETID,"BAR_00_TEXT");
 	wt = nullptr;
 
 	txt_data.create(wt);
@@ -806,7 +814,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 	wt->set(Text::SCALEG, 1.35);
 	wt->set(Text::POSY, -0.053);
 	wt->set(Text::POSX, 0.002);
-	wt->setID("BAR_01_TEXT");
+	wt->set(Text::SETID,"BAR_01_TEXT");
 	wt = nullptr;
 
 	txt_data.create(wt);
@@ -818,19 +826,19 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 	wt->set(Text::SCALEG, 1.35);
 	wt->set(Text::POSY, -0.053);
 	wt->set(Text::POSX, 0.002);
-	wt->setID("BAR_02_TEXT");
+	wt->set(Text::SETID,"BAR_02_TEXT");
 	wt = nullptr;
 
 
-	txt_data.create(wt);
+	/*txt_data.create(wt);
 	//wt->loadFromDatabase();
 	wt->set(Text::SETSTRING, "PLAYER [%pos_x% : %pos_y% | %sprite_speed_x% : %sprite_speed_y%]");
 	wt->set(Text::MODE, Text::ALIGN_CENTER);
 	wt->set(Text::LAYER, 70);
 	wt->set(Text::SETFOLLOW, "PLAYER");
-	wt->setID("PLAYER_TEXT");
+	wt->set(Text::SETID,"PLAYER_TEXT");
 	//wt->set(Text::USEBUFOPT, true);
-	wt = nullptr;
+	wt = nullptr;*/
 
 	txt_data.create(wt);
 	//wt->loadFromDatabase();
@@ -838,7 +846,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 	wt->set(Text::MODE, Text::ALIGN_CENTER);
 	wt->set(Text::LAYER, 2);
 	wt->set(Text::SETFOLLOW, "DEFAULT");
-	wt->setID("FOLLOW_0");
+	wt->set(Text::SETID,"FOLLOW_0");
 	//wt->set(Text::USEBUFOPT, true);
 	wt = nullptr;
 	
@@ -848,7 +856,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 	wt->set(Text::MODE, Text::ALIGN_CENTER);
 	wt->set(Text::LAYER, 2);
 	wt->set(Text::SETFOLLOW, "DEFAULT2");
-	wt->setID("FOLLOW_1");
+	wt->set(Text::SETID,"FOLLOW_1");
 	//wt->set(Text::USEBUFOPT, true);
 	wt = nullptr;
 	
@@ -858,7 +866,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 	wt->set(Text::MODE, Text::ALIGN_CENTER);
 	wt->set(Text::LAYER, 2);
 	wt->set(Text::SETFOLLOW, "DEFAULT3");
-	wt->setID("FOLLOW_2");
+	wt->set(Text::SETID,"FOLLOW_2");
 	//wt->set(Text::USEBUFOPT, true);
 	wt = nullptr;
 	
@@ -873,7 +881,7 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 	wt->set(Text::UPDATETIME, 0.20);
 	//wt->set(Text::COLOR, al_map_rgba_f(0.9, 0.9, 0.0, 0.9));
 	wt->set(Text::AFFECTED_BY_CAM, false);
-	wt->setID("OSD_0");
+	wt->set(Text::SETID,"OSD_0");
 	wt = nullptr;
 
 	txt_data.create(wt);
@@ -891,14 +899,14 @@ void temp_thr_load(float* f, bool* b, Display::display* disp, bool skipdownload)
 	wt->set(Text::UPDATETIME, 0.50);
 	//wt->set(Text::COLOR, al_map_rgba_f(0.9, 0.9, 0.0, 0.9));
 	wt->set(Text::AFFECTED_BY_CAM, false);
-	wt->setID("OSD_1");
+	wt->set(Text::SETID,"OSD_1");
 	wt = nullptr;
 
 	//al_rest(4.0);
 
 	*f = 1.0;
 	*b = true;
-	logg << Log::START << "[THR1:LOAD_][INFO] Done." << Log::ENDL;
+	logg << Log::NEEDED_START << "[THR1:LOAD_][INFO] Done." << Log::NEEDED_ENDL;
 }
 
 
@@ -1042,11 +1050,11 @@ int sub_main(const int l, Display::display& disp)
 
 				if (mk) {
 					if (b0) { // test 1
-						nexte = 3;
+						nexte = 1;
 						t = false;
 					}
 					if (b1) { // test 2
-						nexte = 1;
+						nexte = 2;
 						t = false;
 					}
 					if (b2) { // exit
@@ -1071,7 +1079,7 @@ int sub_main(const int l, Display::display& disp)
 			}
 		}
 		break;
-	case 1:
+	/*case 1:
 		{
 			cam.apply(2);
 			lyr.setUsingNow(2);
@@ -1098,11 +1106,11 @@ int sub_main(const int l, Display::display& disp)
 			for (double n = al_get_time(); al_get_time() - n < 30.0 && (nexte == -999999999);) {
 				sprite_0->set(Sprite::ROTATION, bev.g().getFunctionValNow(0));
 
-				/*cam.set(cam.getLastApplyID(), Camera::ZOOM, 0.75 + 0.3*cos(al_get_time()*0.65));
-				cam.set(cam.getLastApplyID(), Camera::OFFX, 0.6*cos(al_get_time()*0.41) * 1.0 / (fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM))) + 0.01);
-				cam.set(cam.getLastApplyID(), Camera::OFFY, 0.6*sin(al_get_time()*0.53) * 1.0 / (fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM))) + 0.01);
+				//cam.set(cam.getLastApplyID(), Camera::ZOOM, 0.75 + 0.3*cos(al_get_time()*0.65));
+				//cam.set(cam.getLastApplyID(), Camera::OFFX, 0.6*cos(al_get_time()*0.41) * 1.0 / (fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM))) + 0.01);
+				//cam.set(cam.getLastApplyID(), Camera::OFFY, 0.6*sin(al_get_time()*0.53) * 1.0 / (fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM))) + 0.01);
 
-				cam.apply();*/
+				//cam.apply();
 
 				lines.draw();
 
@@ -1117,8 +1125,8 @@ int sub_main(const int l, Display::display& disp)
 			}
 			nexte = 0;
 		}
-		break;
-	case 2:
+		break;*/
+	/*case 2:
 		{
 			disp.capFPS();
 			cam.apply(2);
@@ -1167,10 +1175,11 @@ int sub_main(const int l, Display::display& disp)
 			}
 			nexte = 0;
 		}
-		break;
-	case 3:
+		break;*/
+	case 1:
 		{
-			Map::map mapp;
+			d_entity_database ent;
+			Map::map* mapp = nullptr;
 			Sprite::sprite*		sprite_m = nullptr;
 			Sprite::sprite*		sprite_p = nullptr;
 
@@ -1179,7 +1188,7 @@ int sub_main(const int l, Display::display& disp)
 			Sound::track* tck3 = nullptr;
 
 			if (!spr_data.get(sprite_m, "MOUSE")) throw "FAILED TO LOAD MOUSE";
-			if (!spr_data.get(sprite_p, "PLAYER")) throw "FAILED TO LOAD PLAYER";
+			//if (!spr_data.get(sprite_p, "PLAYER")) throw "FAILED TO LOAD PLAYER";
 			
 			if (!msk_data.get(tck, "MUSIC_0")) throw "FAILED TO LOAD MUSIC_0";
 			if (!msk_data.get(tck2, "MUSIC_1")) throw "FAILED TO LOAD MUSIC_1";
@@ -1189,29 +1198,80 @@ int sub_main(const int l, Display::display& disp)
 			tck2->set(Sound::PLAYING, false);
 			tck3->set(Sound::PLAYING, true);
 
-			mapp.setPlayer(sprite_p);
+			if (!(mapp = new Map::map())) return 0;
+
+			mapp->launch_player("BAR_ON");
+			mapp->launch_badboys("BAR_OFF", 4);
 
 			cam.apply(3);
 			lyr.setUsingNow(3);
-			lyr.getNow().save_package(&mapp);
+
+			mapp->setLayer(Defaults::map_default_layer);
+			mapp->setSeed(rand());
+
+			mapp->start_cpu_thr();
+			mapp->start_draw_thr();
+
+			lyr.getNow().save_package(mapp);
 			lyr.getNow().setMode(Layer::USEMAP);
 
-			mapp.setLayer(50);
-			mapp.setSeed(rand());
-			mapp.generateMap();
-
 			double zoom = 1.0;
+			double pos_x = 0.0, pos_y = 0.0;
+			bool is_following_player = false;
 
-			while (!bev.g().getKey(Events::KEY_ESCAPE))
+			while (!bev.g().getKey(Events::KEY_ESCAPE) && (nexte == -999999999))
 			{
-				if (bev.g().getKey(Events::MOUSE_5)) zoom *= 1.1;
-				if (bev.g().getKey(Events::MOUSE_4)) zoom *= 0.9;
-				if (bev.g().getKey(Events::MOUSE_1)) zoom = 1.0;
+				if (bev.g().getKey(Events::KEY_PAD_PLUS)) zoom *= 1.1;
+				if (bev.g().getKey(Events::KEY_PAD_MINUS)) zoom *= 0.9;
+				if (bev.g().getKey(Events::KEY_PAD_ENTER)) zoom = 1.0;
+				if (bev.g().getKey(Events::KEY_PAD_2)) pos_y += 0.1;
+				if (bev.g().getKey(Events::KEY_PAD_8)) pos_y -= 0.1;
+				if (bev.g().getKey(Events::KEY_PAD_6)) pos_x += 0.1;
+				if (bev.g().getKey(Events::KEY_PAD_4)) pos_x -= 0.1;
+				if (bev.g().getKey(Events::KEY_PAD_5)) pos_x = pos_y = 0.0;
+				if (bev.g().getKey(Events::KEY_NUMLOCK)) is_following_player = !is_following_player;
+
+				if (is_following_player) {
+					if ((sprite_p = mapp->_getPlayerSprite())) {
+						sprite_p->get(Sprite::POSX, pos_x);
+						sprite_p->get(Sprite::POSY, pos_y);
+						zoom = 1.6;
+					}
+				}
 
 				cam.set(3, Camera::ZOOM, zoom);
+				cam.set(3, Camera::OFFX, pos_x);
+				cam.set(3, Camera::OFFY, pos_y);
 				cam.apply(3);
 
-				mapp.checkDraw();
+				mapp->checkDraw();
+				mapp->checkPositionChange();
+
+				if (mapp->hasReachedEnd()) { // NOT WORKING SOMEHOW
+					//lyr.setUsingNow(0);
+
+					mapp->setCPULock(true);
+					while (mapp->isCPUtasking());
+
+					mapp->reset_cpu_thr();
+					mapp->reset_draw_thr();
+					/*delete mapp;
+
+					if (!(mapp = new Map::map())) return 0;
+
+					mapp->launch_player("BAR_ON");
+					mapp->launch_badboys("BAR_OFF", 4, Defaults::badboys_default_layer);
+
+					mapp->setLayer(Defaults::map_default_layer);
+					mapp->setSeed(rand());*/
+
+					mapp->setSeed(rand());
+
+					mapp->start_cpu_thr();
+					mapp->start_draw_thr();
+
+					mapp->setCPULock(false);
+				}
 
 				img_data.draw();
 				spr_data.draw();
@@ -1219,9 +1279,147 @@ int sub_main(const int l, Display::display& disp)
 				if (!disp.flip()) return -10;
 
 				if (bev.g().getKey(Events::KEY_F11, true)) disp.toggleFS();
+
+				//ent.draw();
 			}
 
-			nexte = 0;
+			if (mapp) {
+				mapp->setCPULock(true);
+				while (mapp->isCPUtasking());
+
+				delete mapp;
+				mapp = nullptr;
+			}
+
+			if (nexte == -999999999) nexte = 0;
+		}
+		break;
+
+	case 2:
+		{
+			// copy of case 1, but more bots and corrosion
+
+			d_entity_database ent;
+			Map::map* mapp = nullptr;
+			Sprite::sprite*		sprite_m = nullptr;
+			Sprite::sprite*		sprite_p = nullptr;
+
+			Sound::track* tck = nullptr;
+			Sound::track* tck2 = nullptr;
+			Sound::track* tck3 = nullptr;
+
+			if (!spr_data.get(sprite_m, "MOUSE")) throw "FAILED TO LOAD MOUSE";
+			//if (!spr_data.get(sprite_p, "PLAYER")) throw "FAILED TO LOAD PLAYER";
+
+			if (!msk_data.get(tck, "MUSIC_0")) throw "FAILED TO LOAD MUSIC_0";
+			if (!msk_data.get(tck2, "MUSIC_1")) throw "FAILED TO LOAD MUSIC_1";
+			if (!msk_data.get(tck3, "MUSIC_2")) throw "FAILED TO LOAD MUSIC_2";
+
+			tck->set(Sound::PLAYING, false);
+			tck2->set(Sound::PLAYING, false);
+			tck3->set(Sound::PLAYING, true);
+
+			if (!(mapp = new Map::map())) return 0;
+
+			mapp->launch_player("BAR_ON");
+			mapp->launch_badboys("BAR_OFF", 12);
+
+			cam.apply(3);
+			lyr.setUsingNow(3);
+
+			mapp->setLayer(Defaults::map_default_layer);
+			mapp->setSeed(rand());
+
+			mapp->start_cpu_thr();
+			mapp->start_draw_thr();
+
+			lyr.getNow().save_package(mapp);
+			lyr.getNow().setMode(Layer::USEMAP);
+
+			double zoom = 1.0;
+			double pos_x = 0.0, pos_y = 0.0;
+			bool is_following_player = false;
+
+			double last_corrosion = al_get_time();
+
+			while (!bev.g().getKey(Events::KEY_ESCAPE) && (nexte == -999999999))
+			{
+				if (bev.g().getKey(Events::KEY_PAD_PLUS)) zoom *= 1.1;
+				if (bev.g().getKey(Events::KEY_PAD_MINUS)) zoom *= 0.9;
+				if (bev.g().getKey(Events::KEY_PAD_ENTER)) zoom = 1.0;
+				if (bev.g().getKey(Events::KEY_PAD_2)) pos_y += 0.1;
+				if (bev.g().getKey(Events::KEY_PAD_8)) pos_y -= 0.1;
+				if (bev.g().getKey(Events::KEY_PAD_6)) pos_x += 0.1;
+				if (bev.g().getKey(Events::KEY_PAD_4)) pos_x -= 0.1;
+				if (bev.g().getKey(Events::KEY_PAD_5)) pos_x = pos_y = 0.0;
+				if (bev.g().getKey(Events::KEY_NUMLOCK)) is_following_player = !is_following_player;
+
+				if (is_following_player) {
+					if ((sprite_p = mapp->_getPlayerSprite())) {
+						sprite_p->get(Sprite::POSX, pos_x);
+						sprite_p->get(Sprite::POSY, pos_y);
+						zoom = 1.6;
+					}
+				}
+
+				cam.set(3, Camera::ZOOM, zoom);
+				cam.set(3, Camera::OFFX, pos_x);
+				cam.set(3, Camera::OFFY, pos_y);
+				cam.apply(3);
+
+				mapp->checkDraw();
+				mapp->checkPositionChange();
+
+				if (mapp->hasReachedEnd()) { // NOT WORKING SOMEHOW
+					//lyr.setUsingNow(0);
+
+					mapp->setCPULock(true);
+					while (mapp->isCPUtasking());
+
+					mapp->reset_cpu_thr();
+					mapp->reset_draw_thr();
+					/*delete mapp;
+
+					if (!(mapp = new Map::map())) return 0;
+
+					mapp->launch_player("BAR_ON");
+					mapp->launch_badboys("BAR_OFF", 4, Defaults::badboys_default_layer);
+
+					mapp->setLayer(Defaults::map_default_layer);
+					mapp->setSeed(rand());*/
+
+					mapp->setSeed(rand());
+
+					mapp->start_cpu_thr();
+					mapp->start_draw_thr();
+
+					mapp->setCPULock(false);
+				}
+
+				if (al_get_time() - last_corrosion > 3.0) {
+					last_corrosion += 1.0;
+					mapp->corruptWorldTick();
+				}
+
+				img_data.draw();
+				spr_data.draw();
+				txt_data.draw();
+				if (!disp.flip()) return -10;
+
+				if (bev.g().getKey(Events::KEY_F11, true)) disp.toggleFS();
+
+				//ent.draw(); // THISSSSSSSSSSSSSSSSSSSSSSSSSSSS
+			}
+
+			if (mapp) {
+				mapp->setCPULock(true);
+				while (mapp->isCPUtasking());
+
+				delete mapp;
+				mapp = nullptr;
+			}
+
+			if (nexte == -999999999) nexte = 0;
 		}
 		break;
 	}

@@ -25,6 +25,7 @@ namespace LSW {
 				T pop();
 				T fpop();
 				void clear();
+				void clearSomehow();
 
 				void lock();
 				const std::vector<T>& work();
@@ -166,6 +167,13 @@ namespace LSW {
 				m.lock();
 				v.clear();
 				m.unlock();
+			}
+			template <typename T>
+			inline void safe_vector<T>::clearSomehow()
+			{
+				bool b = m.try_lock();
+				v.clear();
+				if (b) m.unlock();
 			}
 			template <typename T>
 			inline void safe_vector<T>::lock()

@@ -30,10 +30,15 @@ namespace LSW {
 					return true;
 				}
 
-				logg << Log::ERRDV << Log::START << "[IMGL:LOADN][ERRR] ERROR LOADING \"" << s << "\"! Skipping!" << Log::ENDL;
+				logg << Log::ERRDV << Log::NEEDED_START << "[IMGL:LOADN][ERRR] ERROR LOADING \"" << s << "\"! Skipping!" << Log::NEEDED_ENDL;
 				logg.flush();
 
 				return false;
+			}
+
+			image_low::~image_low()
+			{
+				unload();
 			}
 
 			/*const bool image_low::set(const Safer::safe_string s_o)
@@ -100,7 +105,7 @@ namespace LSW {
 					return true;
 				}
 
-				logg << Log::ERRDV << Log::START << "[IMGL:NEWBP][ERRR] FAILED CREATING a bitmap with size " << x << "x" << y << "... " << Log::ENDL;
+				logg << Log::ERRDV << Log::NEEDED_START << "[IMGL:NEWBP][ERRR] FAILED CREATING a bitmap with size " << x << "x" << y << "... " << Log::NEEDED_ENDL;
 
 				return false;
 			}
@@ -179,7 +184,12 @@ namespace LSW {
 				return false;
 			}
 
-			void image_low::optimizeIt()
+			void image_low::shouldOptimize(const bool b)
+			{
+				noOptimization = !b;
+			}
+
+			/*void image_low::optimizeIt()
 			{
 				int new_x, new_y;
 				new_x = al_get_bitmap_width(bmp) * 0.25 + 1;
@@ -198,7 +208,7 @@ namespace LSW {
 
 				al_set_target_bitmap(targ);
 				optimized = true;
-			}
+			}*/
 
 			void image_low::verify()
 			{
@@ -241,7 +251,7 @@ namespace LSW {
 			void image_low::checkMemory()
 			{
 				Log::gfile logg;
-				if (keep_on_memory_always) return;
+				if (keep_on_memory_always || noOptimization) return;
 
 				//if (al_get_time() - lastimagereload < 1.0 / Defaults::max_images_reload_per_sec) return;
 				if (al_get_time() - lastcall > Defaults::timeout_image_unload && !optimized)
@@ -332,7 +342,7 @@ namespace LSW {
 				
 			}*/
 
-			void multipleLoad(const Safer::safe_string nickname, Safer::safe_string start, const size_t max, const unsigned format, Safer::safe_string end, float *perc)
+			void multipleLoad(const Safer::safe_string nickname, Safer::safe_string start, const size_t max, const unsigned format, Safer::safe_string end, float *perc, const bool optimizethem)
 			{
 				Tools::interpret_path(start);
 				Tools::interpret_path(end);
@@ -365,6 +375,7 @@ namespace LSW {
 					img_data.create(wi);
 					wi->setID(newnick);
 					wi->load(newname);
+					wi->shouldOptimize(optimizethem);
 					/*if (!)
 					{
 						//log << Log::ERRDV << Log::START << "[multipleLoad] ERROR LOADING \"" << newname << "\" named \"" << newnick << "\"! Skipping!" << Log::ENDL;

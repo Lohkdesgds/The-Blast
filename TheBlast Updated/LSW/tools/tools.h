@@ -23,6 +23,7 @@ namespace LSW {
 				public:
 					manager(size_t(*fi) (const Safer::safe_string, Safer::safe_vector<T*> &, bool &) = nullptr, void(*df) () = nullptr);
 
+					void add(T*);
 					void create(T*&);
 					void remove(const Safer::safe_string); // id
 					void remove(const size_t);
@@ -59,6 +60,13 @@ namespace LSW {
 					{
 						if (df) drw = df;
 					}
+				}
+
+				template<class T, typename U>
+				inline void manager<T, U>::add(T* u)
+				{
+					if (!u) return;
+					data.push(u);
 				}
 
 				template <class T, typename U>
@@ -151,6 +159,7 @@ namespace LSW {
 #define d_images_database experimental::Tools::manager<LSW::v2::Image::image_low/*,std::thread**/>
 #define d_texts_database  experimental::Tools::manager<LSW::v2::Text::text>
 #define d_musics_database experimental::Tools::manager<LSW::v2::Sound::track>
+#define d_entity_database experimental::Tools::manager<LSW::v2::Entities::entity>
 
 #define prepare_commom_templates \
 { \
@@ -159,6 +168,7 @@ d_images_database img_data(LSW::v2::Image::_find, LSW::v2::Image::_draw); \
 /*LSW::v2::Image::_start_thread();*/ \
 d_texts_database  txt_data(LSW::v2::Text::_find,LSW::v2::Text::_draw); \
 d_musics_database msk_data(LSW::v2::Sound::_find); \
+d_entity_database ent_data(LSW::v2::Entities::_find, LSW::v2::Entities::_draw); \
 }
 
 			}

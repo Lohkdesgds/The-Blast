@@ -61,6 +61,9 @@
     <Filter Include="map">
       <UniqueIdentifier>{46d05355-6ecb-407e-90f3-d78a127f9c05}</UniqueIdentifier>
     </Filter>
+    <Filter Include="entity">
+      <UniqueIdentifier>{e84f4d22-ed46-4850-9d49-cbe397b3d348}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LSW\safer\safer.h">
@@ -117,6 +120,9 @@
     <ClInclude Include="LSW\map\map_control.h">
       <Filter>map</Filter>
     </ClInclude>
+    <ClInclude Include="LSW\entity\entity.h">
+      <Filter>entity</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LSW\download_manager\downloader_v2.cpp">
@@ -157,6 +163,9 @@
     </ClCompile>
     <ClCompile Include="LSW\map\map_control.cpp">
       <Filter>map</Filter>
+    </ClCompile>
+    <ClCompile Include="LSW\entity\entity.cpp">
+      <Filter>entity</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

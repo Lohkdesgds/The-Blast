@@ -559,40 +559,14 @@ namespace LSW {
 				return false;
 			}
 
-			map::map()
-			{
-				for (int a = 0; a < Defaults::map_size_default_x; a++)
-				{
-					for (int b = 0; b < Defaults::map_size_default_y; b++)
-					{
-						map_p[a][b] = nullptr;
-					}
-				}
-			}
-
-			map::~map()
-			{
-				killMap();
-			}
-
-			void map::setSeed(const int u)
-			{
-				Log::gfile logg;
-				logg << Log::START << "[MAP:STSEED][INFO] Defined seed for map making as: " << u << Log::ENDL;
-
-				seed = u;
-			}
-			void map::setLayer(const int u)
-			{
-				Log::gfile logg;
-				logg << Log::START << "[MAP:SLAYER][INFO] Defined layer for further drawing as " << u << Log::ENDL;
-
-				layerUsed = u;
-			}
 			void map::generateMap()
 			{
 				Log::gfile logg;
 				logg << Log::START << "[MAP:GENMAP][INFO] Generating map..." << Log::ENDL;
+
+				has_reachedEnd = false;
+				hasToUpdate = true;
+				has_loadedMap = false;
 
 				spawn[0] = spawn[1] = 0.0;
 
@@ -660,37 +634,74 @@ namespace LSW {
 					logg.debug("New map:\n" + std::string(debugg));
 				}
 
+				has_loadedMap = true;
+				//is_new_Map = true;
+				logg << Log::START << "[MAP:GENMAP][INFO] Generated map." << Log::ENDL;
+			}
 
-				d_images_database img_data;
+			void map::_checkBitmapsOnMapP()
+			{
 				d_sprite_database spr_data;
-				
+				Log::gfile logg;
+
+				lock();
+
 				for (int b = 0; b < Defaults::map_size_default_y; b++)
 				{
 					for (int a = 0; a < Defaults::map_size_default_x; a++)
 					{
 						Sprite::sprite* each = nullptr;
+						if (!map_p[a][b]) {
+
+							if (spr_data.get(each, "_MAP_" + std::to_string(a) + "_" + std::to_string(b)))
+							{
+								map_p[a][b] = each;
+
+								logg.debug("Adjusted bitmap at " + std::to_string(a) + ":" + std::to_string(b));
+
+								each = nullptr;
+
+								continue;
+							}
+							else {
+								logg << Log::START << "[MAP:CHKBMM][INFO] Prepared Sprite on " << a << ":" << b << Log::ENDL;
+								spr_data.create(each);
+
+								each->setID("_MAP_" + std::to_string(a) + "_" + std::to_string(b));
+
+								each->set(Sprite::POSX, x_off + (1.0*(2.0*a / (Defaults::map_size_default_x*1.0)) - 1.0));
+								each->set(Sprite::POSY, y_off + (1.0*(2.0*b / (Defaults::map_size_default_y*1.0)) - 1.0));
+								each->set(Sprite::SCALEX, 2.0 / Defaults::map_size_default_x);
+								each->set(Sprite::SCALEY, 2.0 / Defaults::map_size_default_y);
+								each->set(Sprite::LAYER, layerUsed);
+								each->set(Sprite::COLLIDE, true);
+								each->set(Sprite::DRAW, false);
+
+								map_p[a][b] = each;
+							}
+						}
+						else each = map_p[a][b];
+
 						int ouu = map_i[a][b];
 						if (ouu < SPACEID) ouu = SPACEID;
 						if (ouu > BLOCKID_C03) ouu = BLOCKID_C03;
 						Safer::safe_string id_path = interpretIntToBlockName((blockstats)ouu);
+							
+						each->replaceAllWith(id_path);
 
-						spr_data.create(each);
-						each->setID("_MAP_" + std::to_string(a) + "_" + std::to_string(b));
-						each->add(id_path);
-						each->set(Sprite::POSX, x_off + (1.0*(2.0*a / (Defaults::map_size_default_x*1.0)) - 1.0));
-						each->set(Sprite::POSY, y_off + (1.0*(2.0*b / (Defaults::map_size_default_y*1.0)) - 1.0));
-						each->set(Sprite::SCALEX, 2.0 / Defaults::map_size_default_x);
-						each->set(Sprite::SCALEY, 2.0 / Defaults::map_size_default_y);
-						each->set(Sprite::LAYER, layerUsed);
-						//each->set(Sprite::SHOWDOT, true);
-						each->set(Sprite::COLLIDE, true);
-						each->set(Sprite::DRAW, false);
-
-						map_p[a][b] = each;
+						logg.debug("Generated bitmap at " + std::to_string(a) + ":" + std::to_string(b));
 
 						each = nullptr;
 					}
 				}
+
+				unlock();
+			}
+
+			void map::_checkBitmapsBigMap()
+			{
+				d_sprite_database spr_data;
+				d_images_database img_data;
 
 				if (!big_map)
 				{
@@ -703,37 +714,244 @@ namespace LSW {
 					big_map->add("__MAP_FRAME_FULL");
 					big_map->set(Sprite::LAYER, layerUsed);
 					big_map->set(Sprite::DRAW, true);
-					big_map->set(Sprite::AFFECTED_BY_CAM, false);
 					big_map->set(Sprite::SCALEG, 2.0);
 				}
+			}
 
-				hasToUpdate = true;
+			void map::_redraw()
+			{
+				Log::gfile logg;
 
+				if (!big_map) { //return;
+					logg << Log::ERRDV << Log::NEEDED_START << "[MAP:_REDRW][ERRR] Big_map is unreachable! Trying to fix this..." << Log::NEEDED_ENDL;
+
+					_checkBitmapsBigMap();
+
+					if (!big_map) {
+						logg << Log::ERRDV << Log::NEEDED_START << "[MAP:_REDRW][ERRR] Big_map STILL unreachable! Aborting _REDRAW!" << Log::NEEDED_ENDL;
+						return;
+					}
+				}
+
+				Camera::camera_g cam;
+				
+				ALLEGRO_BITMAP* targ = al_get_target_bitmap();
+				if (!targ) {
+					logg << Log::ERRDV << Log::START << "[MAP:_REDRW][WARN] Could not get target bitmap! Skipping map update for now..." << Log::ENDL;
+					hasToUpdate = true;
+					return;
+				}
+				else big_map_il->hasReloaded(true);
+
+				big_map->_setAsTarg();
+
+				//if (is_new_Map) al_clear_to_color(al_map_rgb(0, 0, 0));
+
+				//const int lastapply = cam.getLastApplyID();
+				/*cam.copy(Defaults::default_map_layer_backup, lastapply); // backup
+				cam.set(lastapply, Camera::OFFX, 0.0);
+				cam.set(lastapply, Camera::OFFY, 0.0);
+				cam.set(lastapply, Camera::ZOOM, 1.0);
+				cam.set(lastapply, Camera::ZOOMX, 1.0);
+				cam.set(lastapply, Camera::ZOOMY, 1.0);
+				cam.apply(lastapply);*/
+
+				cam.reset(Defaults::default_map_layer_backup);
+				cam.apply(Defaults::default_map_layer_backup);
+
+				for (auto& i : map_p)
+				{
+					size_t pp = 0;
+					for (auto& j : i)
+					{
+						if (!j) {
+							logg << Log::ERRDV << Log::NEEDED_START << "[MAP:_REDRW][ERRR] MAP NULL AT " << pp << "! Trying to adjust map_p!" << Log::NEEDED_ENDL;
+							_checkBitmapsOnMapP();
+							return _redraw();
+						}
+						/*else if (is_new_Map) {
+							j->forceDraw();
+						}*/
+						else if (j->hasChanged()) j->forceDraw();
+					}
+				}
+				///cam.copy(lastapply, Defaults::default_layer_backup);
+				//cam.apply(lastapply); // not needed because transformation is bitmap based.
+				al_set_target_bitmap(targ);
+				///cam.apply(lastapply);
+
+				//is_new_Map = false;
+
+				logg.debug("Map has updated its image.");
+			}
+
+			map::map()
+			{
 				/*for (int a = 0; a < Defaults::map_size_default_x; a++)
 				{
 					for (int b = 0; b < Defaults::map_size_default_y; b++)
 					{
-						d_sprite_database spr_data;
-						Sprite::sprite* spr = nullptr;
-						if (spr_data.get(spr, "_MAP_" + std::to_string(a) + "_" + std::to_string(b)))
-						{
-							spr->_echoPropertiesOnConsole();
-						}
-						else {
-							logg.debug("FAILED GETTING DEBUG INFORMATION ABOUT _MAP_" + std::to_string(a) + "_" + std::to_string(b) + "!");
-							al_rest(1.0);
-						}
+						map_p[a][b] = nullptr;
 					}
 				}*/
+				cpu_thr_ready = gpu_thr_ready = false;
+			}
+
+
+			map::~map()
+			{
+				if (cpu_thr_ready) reset_cpu_thr();
+				if (gpu_thr_ready) reset_draw_thr();
+
+				d_sprite_database spr_data;
+				d_images_database img_data;
+
+				Log::gfile logg;
+				
+				if (big_map)
+				{
+					spr_data.remove("__MAP_FRAME_FULL_S");
+					Sprite::sprite* temp = big_map;
+					big_map = nullptr;
+					delete temp;
+				}
+				if (big_map_il)
+				{
+					img_data.remove("__MAP_FRAME_FULL");
+					Image::image_low* temp = big_map_il;
+					big_map_il = nullptr;
+					delete big_map_il;
+				}
+				for (int a = 0; a < Defaults::map_size_default_x; a++)
+				{
+					for (int b = 0; b < Defaults::map_size_default_y; b++)
+					{
+						spr_data.remove("_MAP_" + std::to_string(a) + "_" + std::to_string(b));
+						logg << Log::START << "[MAP:~MAP__][INFO] Finally erased sprite at " << a << ":" << b << Log::ENDL;
+						Sprite::sprite* temp = map_p[a][b];
+						map_p[a][b] = nullptr;
+						delete temp;
+
+						map_i[a][b] = SPACEID;
+					}
+				}
+			}
+
+			void map::reset_draw_thr()
+			{
+				/* ---------------| IMAGES & SPRITES |--------------- */
+
+				d_sprite_database spr_data;
+				d_images_database img_data;
+
+				plr.reset();
+
+				gpu_thr_ready = false;
+			}
+			void map::reset_cpu_thr()
+			{
+				/* ---------------| Entities |--------------- */
+
+				d_entity_database ent_data;
+
+				lock();
+				badboys.clear();
+				unlock();
+
+				ent_data.work().lock();
+
+				Safer::safe_vector<Entities::entity*>& vec = ent_data.work();
+				Safer::safe_vector<Entities::entity*> clone;
+
+				//vec.lock();
+				for (auto& i : vec.work()) {
+					Entities::entity* tempp = i;
+					clone.push(tempp);
+				}
+				//vec.unlock();
+				vec.clearSomehow();
+				
+				clone.lock();
+				for (auto& i : clone.work())
+				{
+					switch (i->getType())
+					{
+					case Entities::PLAYER:
+					{
+						Entities::player* tempp = (Entities::player*)i;
+						is_player_enabled = false;
+						tempp->reset();
+						//delete tempp;
+					}
+					break;
+					case Entities::BADBOY:
+					{
+						Entities::badboy* tempp = (Entities::badboy*)i;
+						tempp->reset();
+						delete tempp;
+					}
+					break;
+					}
+				}
+				clone.clearSomehow();
+				clone.unlock();
+
+				ent_data.work().unlock();
+
+				has_loadedMap = false;
+
+
+				cpu_thr_ready = false;
+			}
+
+			const bool map::start_draw_thr()
+			{
+				Log::gfile logg;
+
+				d_images_database img_data;
+				d_sprite_database spr_data;
+
+				if (!is_player_enabled && last_player_path.g().length() > 0) {
+					launch_player(last_player_path, last_player_size, last_player_layer);
+				}
+				if (badboys.getMax() == 0 && last_badboys_path.g().length() > 0) {
+					launch_badboys(last_badboys_path, last_badboy_count, last_badboys_layer);
+				}
+
+				if (!plr.getS()) return false;
+				if (!cpu_thr_ready) return false;
+
+				if (!has_loadedMap) {
+					logg << Log::START << "[MAP:GENBMP][WARN] Called generateBitmaps before generating a map! Just call generateMap() before this!" << Log::ENDL;
+					return false;
+				}
+
+
+				/* ---------------| Sprites all over the map |--------------- */
+
+				_checkBitmapsOnMapP();
+
+				/* ---------------| The hero sprite |--------------- */
+
+				_checkBitmapsBigMap();
+
+				/* ---------------| Setup of first spawn for player |--------------- */
+
+				//lock();
+
+				hasToUpdate = true;
+				Safer::safe_vector<point> poss;
 
 				for (int a = 0; a < Defaults::map_size_default_x; a++)
 				{
 					for (int b = 0; b < Defaults::map_size_default_y; b++)
-					{						
+					{
 						if (map_i[a][b] == STARTID)
 						{
 							spawn[0] = (1.0*(2.0*a / (Defaults::map_size_default_x*1.0)) - 1.0);
 							spawn[1] = (1.0*(2.0*b / (Defaults::map_size_default_y*1.0)) - 1.0);
+
+							Sprite::sprite* player = plr.getS();
 
 							if (player) {
 								player->set(Sprite::POSX, spawn[0] + x_off);
@@ -744,6 +962,13 @@ namespace LSW {
 								player->set(Sprite::SCALEY, 2.0 / Defaults::map_size_default_y);
 								player->set(Sprite::SCALEG, Defaults::user_scale_compared_to_map);
 							}
+							{
+								point ab;
+								ab.x = a;
+								ab.y = b;
+								poss.push(ab);
+							}
+							logg.debug("[" + std::to_string(poss.getMax()) + "/??]Defined player spawn pos as " + std::to_string(a) + ":" + std::to_string(b));
 
 							a = Defaults::map_size_default_x;
 							b = Defaults::map_size_default_y;
@@ -751,40 +976,87 @@ namespace LSW {
 					}
 				}
 
-				logg << Log::START << "[MAP:GENMAP][INFO] Generated map." << Log::ENDL;
-			}
-			void map::killMap()
-			{
-				Log::gfile logg;
-				d_sprite_database spr_data;
-				d_images_database img_data;
+				//unlock(); // set position on screen should not crash the game (now)
 
-				logg << Log::START << "[MAP:KILLMP][INFO] Erasing map data..." << Log::ENDL;
+				/* ---------------| Setup of first spawn for badboys |--------------- */
 
-				for (int a = 0; a < Defaults::map_size_default_x; a++)
-				{
-					for (int b = 0; b < Defaults::map_size_default_y; b++)
+				for (size_t p = 0; p < badboys.getMax(); p++) {
+					double x, y;
+
+					int mapx = rand() % Defaults::map_size_default_x, mapy = rand() % Defaults::map_size_default_y;
+
+					for (bool donee = false; !donee;) {
+
+						mapx = (rand() % Defaults::map_size_default_x);
+						mapy = (rand() % Defaults::map_size_default_y);
+
+						if (!isBlockTransparent((blockstats)map_i[mapx][mapy])) continue;
+
+						donee = true;
+
+						poss.lock();
+						for (auto& i : poss.work())
+						{
+							if (mapx == i.x && mapy == i.y) {
+								donee = false;
+								break;
+							}
+						}
+						poss.unlock();
+					}
 					{
-						spr_data.remove("_MAP_" + std::to_string(a) + "_" + std::to_string(b));
-						/*delete map_p[a][b];*/
-						map_p[a][b] = nullptr;
-						map_i[a][b] = SPACEID;
+						point ab;
+						ab.x = mapx;
+						ab.y = mapy;
+						poss.push(ab);
+					}
+
+					logg.debug("[" + std::to_string(poss.getMax()) + "/" + std::to_string((int)badboys.getMax()) + "]Defined position of an enemy at " + std::to_string(mapx) + ":" + std::to_string(mapy));
+
+					x = x_off + (1.0*(2.0*mapx / (Defaults::map_size_default_x*1.0)) - 1.0);
+					y = y_off + (1.0*(2.0*mapy / (Defaults::map_size_default_y*1.0)) - 1.0);
+
+					Sprite::sprite* sprt = badboys[p]->getS();
+					if (sprt) {
+						sprt->set(Sprite::POSX, x);
+						sprt->set(Sprite::POSY, y);
 					}
 				}
-				if (big_map)
-				{
-					if (big_map_il) big_map_il->unload();
 
-					spr_data.remove("__MAP_FRAME_FULL_S");
-					img_data.remove("__MAP_FRAME_FULL");
+				gpu_thr_ready = true;
 
-					if (big_map_il) delete big_map_il;
-					delete big_map;
-					big_map = nullptr;
-					big_map_il = nullptr;
-				}
-				logg << Log::START << "[MAP:KILLMP][INFO] Done erasing mapa data." << Log::ENDL;
+				return true;
 			}
+
+			const bool map::start_cpu_thr()
+			{
+				lock();
+
+				generateMap();
+
+				hasToUpdate = true;
+				cpu_thr_ready = true;
+
+				unlock();
+
+				return true;
+			}
+
+			void map::setSeed(const int u)
+			{
+				Log::gfile logg;
+				logg << Log::START << "[MAP:STSEED][INFO] Defined seed for map making as: " << u << Log::ENDL;
+
+				seed = u;
+			}
+			void map::setLayer(const int u)
+			{
+				Log::gfile logg;
+				logg << Log::START << "[MAP:SLAYER][INFO] Defined layer for further drawing as " << u << Log::ENDL;
+
+				layerUsed = u;
+			}
+
 			void map::corruptWorldTick()
 			{
 				Log::gfile logg;
@@ -797,17 +1069,7 @@ namespace LSW {
 					map_i[posx][posy] = BLOCKID_C00;
 
 					Safer::safe_string id_path = interpretIntToBlockName(BLOCKID_C00);
-					d_sprite_database spr_data;
-					Sprite::sprite* spr = nullptr;
-					if (spr_data.get(spr, "_MAP_" + std::to_string(posx) + "_" + std::to_string(posy)))
-					{
-						spr->replaceAllWith(id_path);
-					}
-					else {
-						logg << Log::START << "[MAP:CORRPT][ERRR] Could not find MAP Sprite at " << posx << ":" << posy << "!" << Log::ENDL;
-					}
-					/*assert(map_p[posx][posy]);
-					map_p[posx][posy]->replaceAllWith(id_path);*/
+					map_p[posx][posy]->replaceAllWith(id_path);
 				}
 
 				for (int a = 0; a < Defaults::map_size_default_x; a++)
@@ -819,87 +1081,257 @@ namespace LSW {
 
 							Safer::safe_string id_path = interpretIntToBlockName(INVISID);
 
-							d_sprite_database spr_data;
-							Sprite::sprite* spr = nullptr;
-							if (spr_data.get(spr, "_MAP_" + std::to_string(posx) + "_" + std::to_string(posy)))
-							{
-								spr->replaceAllWith(id_path);
-							}
-							else {
-								logg << Log::START << "[MAP:CORRPT][ERRR] Could not find MAP Sprite at " << posx << ":" << posy << "!" << Log::ENDL;
-							}
+							map_p[a][b]->replaceAllWith(id_path);
 						}
 						else if (map_i[a][b] >= BLOCKID_C00 && map_i[a][b] < BLOCKID_C03) {
 							map_i[a][b]++;
 
 							Safer::safe_string id_path = interpretIntToBlockName((blockstats)map_i[a][b]);
 
-							d_sprite_database spr_data;
-							Sprite::sprite* spr = nullptr;
-							if (spr_data.get(spr, "_MAP_" + std::to_string(posx) + "_" + std::to_string(posy)))
-							{
-								spr->replaceAllWith(id_path);
-							}
-							else {
-								logg << Log::START << "[MAP:CORRPT][ERRR] Could not find MAP Sprite at " << posx << ":" << posy << "!" << Log::ENDL;
-							}
+							map_p[a][b]->replaceAllWith(id_path);
 						}
 					}
 				}
-				hasToUpdate = true;
+				hasToUpdate_a_block = true;
 
 				logg << Log::START << "[MAP:CORRPT][INFO] Done processing blocks." << Log::ENDL;
 			}
-			void map::setPlayer(Sprite::sprite * s)
+			/*void map::setPlayer(Sprite::sprite * s)
 			{
 				player = s;
+			}*/
+			void map::launch_player(const Safer::safe_string path, const double size, const int layer)
+			{
+				plr.reset();
+				plr.load(path, layer, size);
+				plr.setMyName(randomName());
+				{
+					lock();
+					d_entity_database ent_data;
+					Entities::entity* tempp = &plr;
+					ent_data.add(tempp);
+					unlock();
+				}
+
+				last_player_path = path;
+				last_player_size = size;
+				last_player_layer = layer;
+
+				is_player_enabled = true;
+			}
+			const bool map::launch_badboys(const Safer::safe_string path, const unsigned how_many, const int layerforbb)
+			{
+				if (!is_player_enabled) return false;
+
+				last_badboys_path = path;
+				last_badboy_count = how_many;
+				last_badboys_layer = layerforbb;
+
+				for (unsigned o = 0; o < how_many; o++)
+				{
+					Entities::badboy* bb = nullptr;
+
+					bb = new Entities::badboy();
+					{
+						lock();
+						d_entity_database ent_data;
+						Entities::entity* tempp = bb;
+						ent_data.add(tempp);
+						unlock();
+					}
+					bb->load(path);
+
+					Sprite::sprite* sprt = bb->getS();
+					if (sprt) {
+						sprt->set(Sprite::SPEEDX, 0.0);
+						sprt->set(Sprite::SPEEDY, 0.0);
+						sprt->set(Sprite::SCALEX, 2.0 / Defaults::map_size_default_x);
+						sprt->set(Sprite::SCALEY, 2.0 / Defaults::map_size_default_y);
+						sprt->set(Sprite::SCALEG, Defaults::user_scale_compared_to_map);
+						sprt->set(Sprite::COLLIDE, true);
+						sprt->set(Sprite::AFFECTED_BY_COLLISION, true);
+						sprt->set(Sprite::LAYER, layerforbb);
+						bb->setMyName(randomName());
+					}
+					else {
+						throw "FAILED CREATING BADBOY!";
+					}
+
+					badboys.push(bb);
+					bb = nullptr;
+				}
+
+				Sprite::sprite* spr = nullptr;
+				if ((spr = plr.getS())) {
+					badboys.lock();
+					for (auto& i : badboys.work())
+					{
+						i->setFollowing(spr);
+					}
+					badboys.unlock();
+				}
+
+				return true;
 			}
 			void map::checkDraw()
 			{
-				if (hasToUpdate || big_map_il->hasReloaded()) {
-					hasToUpdate = false;
-
-					Camera::camera_g cam;
-					Log::gfile logg;
-
-					ALLEGRO_BITMAP* targ = al_get_target_bitmap();
-					if (!targ) {
-						logg << Log::ERRDV << Log::START << "[MAP:CHKDRW][WARN] Could not get target bitmap! Skipping map update for now..." << Log::ENDL;
-						hasToUpdate = true;
-						return;
-					}
-					else big_map_il->hasReloaded(true);
-
-					big_map->_setAsTarg();
-
-					const int lastapply = cam.getLastApplyID();
-					cam.copy(Defaults::default_map_layer_backup, lastapply); // backup
-
-					cam.apply(lastapply);
-
-					for (auto& i : map_p)
-					{
-						for (auto& j : i)
-						{
-							j->forceDraw();
-						}
-					}
-
-					/*cam.copy(lastapply, Defaults::default_layer_backup);
-					cam.apply(lastapply);*/ // not needed because transformation is bitmap based.
-
-					al_set_target_bitmap(targ);
-					logg.debug("Map has updated its image.");
+				if (!big_map || !big_map_il) {
+					_checkBitmapsBigMap();
+					return;
 				}
+
+				Log::gfile logg;
+				if (hasToUpdate || big_map_il->hasReloaded() || hasToUpdate_a_block/* || is_new_Map*/) {
+
+					_redraw();
+					hasToUpdate = hasToUpdate_a_block = false;
+
+				}
+			}
+			void map::checkPositionChange()
+			{
+				if (!is_player_enabled) return;
+
+				Sprite::sprite* player = plr.getS();
+
+				if (player) {
+					double orig_x, orig_y;
+					int posx, posy;
+
+					player->get(Sprite::POSX, orig_x);
+					posx = (0.5 * ((orig_x/* + x_off*/) + 1.0))*Defaults::map_size_default_x;
+					player->get(Sprite::POSY, orig_y);
+					posy = (0.5 * ((orig_y/* + y_off*/) + 1.0))*Defaults::map_size_default_y;
+
+					if (posx < 0) posx = 0;
+					if (posx > Defaults::map_size_default_x) posx = Defaults::map_size_default_x - 1;
+
+					if (posy < 0) posy = 0;
+					if (posy > Defaults::map_size_default_y) posy = Defaults::map_size_default_y - 1;
+
+					switch (map_i[posx][posy])
+					{
+					case THENDID:
+						has_reachedEnd = true;
+						break;
+					case INVISID:
+						{
+							map_i[posx][posy] = NOEXTID;
+							Safer::safe_string id_path = interpretIntToBlockName(NOEXTID);
+							map_p[posx][posy]->replaceAllWith(id_path);
+							hasToUpdate_a_block = true;
+						}
+						break;
+					}
+
+
+					return;
+				}
+				else has_reachedEnd = false;
+			}
+			const bool map::isCPUtasking()
+			{
+				return cpu_tasking;
+			}
+			void map::setCPULock(const bool b)
+			{
+				set_cpu_lock = b;
 			}
 			void map::testCollisionPlayer()
 			{
-				if (player) verifyCollision(*player);
+				if (set_cpu_lock) return;
+
+				Log::gfile logg;
+				cpu_tasking = true;
+
+				if (!is_player_enabled) {
+					logg.debug("map::testCollisionPlayer() skipped task: no player found.");
+					cpu_tasking = false;
+					return;
+				}
+
+				if (!try_lock()) {
+					logg.debug("map::testCollisionPlayer() skipped task: cannot lock map for task.");
+					cpu_tasking = false;
+					return;
+				}
+
+				Sprite::sprite* player = plr.getS();
+				if (player) {
+					verifyCollision(*player);
+					for (size_t p = 0; p < badboys.getMax(); p++) {
+
+						badboys[p]->getS()->_verifyCollision(*player);
+						player->_verifyCollision(*badboys[p]->getS());
+
+						for (size_t j = 0; j < badboys.getMax(); j++) {
+							if (p != j) {
+								badboys[p]->getS()->_verifyCollision(*badboys[j]->getS());
+							}
+						}
+
+						verifyCollision(*badboys[p]->getS());
+					}
+				}
+
+				unlock();
+				cpu_tasking = false;
 			}
-			void map::testCollisionOther(Sprite::sprite & s)
+			/*void map::testCollisionOther(Sprite::sprite & s)
 			{
 				verifyCollision(s);
+			}*/
+			const bool map::hasReachedEnd()
+			{
+				return has_reachedEnd;
 			}
-		}
+			const bool map::isMapLoaded()
+			{
+				return has_loadedMap;
+			}
+			const bool map::try_lock()
+			{
+				return muu.try_lock();
+			}
+			void map::lock()
+			{
+				muu.lock();
+			}
+			void map::unlock()
+			{
+				muu.unlock();
+			}
+			Sprite::sprite * map::_getPlayerSprite()
+			{
+				return plr.getS();
+			}
+			const Safer::safe_string randomName()
+			{
+				switch (rand() % 10) {
+				case 0:
+					return "Jonas";
+				case 1:
+					return "Brother";
+				case 2:
+					return "Random";
+				case 3:
+					return "Flier";
+				case 4:
+					return "Banana";
+				case 5:
+					return "Disguised";
+				case 6:
+					return "Potato";
+				case 7:
+					return "Flash";
+				case 8:
+					return "Birdo";
+				case 9:
+					return "Luiz";
+				}
+
+				return "NULL";
+			}
+}
 	}
 }

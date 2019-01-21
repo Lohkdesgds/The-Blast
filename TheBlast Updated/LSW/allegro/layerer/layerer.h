@@ -22,9 +22,10 @@ namespace LSW {
 			struct _layer_down { // properties_of_layers
 				//bool hasCollision = true;
 				double smoothness_keep_sprite_movement = Defaults::smoothness_keep_sprite_movement;
-				double smoothness_keep_sprite_movement_rotation = Defaults::smoothness_keep_sprite_movement_rotational;
+				//double smoothness_keep_sprite_movement_rotation = Defaults::smoothness_keep_sprite_movement_rotational;
 				double collision_acel_multiplier = Defaults::collision_acel_multiplier;
 				double min_collision_acel = Defaults::min_collision_acel;
+				double gravity = Defaults::gravity_default;
 				std::map<int, bool> colliding; // layers id, colliding with what?
 			};
 
@@ -42,7 +43,7 @@ namespace LSW {
 				mode moe = STANDARD;
 				void* ppp = nullptr;
 			public:
-				_layer_down& set(const int);
+				_layer_down& getR(const int);
 				void unset(const int);
 				void setMode(const mode);
 				const mode getMode();

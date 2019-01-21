@@ -573,7 +573,7 @@ namespace LSW {
 				_event_log& tlogging = e->_getEventLog();
 				double last = al_get_time();
 
-				glog << Log::START << "[THR2:EVENT][INFO] Preparing smaller threads..." << Log::ENDL;
+				glog << Log::NEEDED_START << "[THR2:EVENT][INFO] Preparing smaller threads..." << Log::NEEDED_ENDL;
 
 				// multithread start:
 				std::thread* thrs[3];
@@ -614,7 +614,7 @@ namespace LSW {
 
 				ALLEGRO_TIMER* calcLoopsTimer = e->getTimer(3, Defaults::calcLoops_timer);
 
-				glog << Log::START << "[THR2:EVENT][INFO] Thread initialized successfully." << Log::ENDL;
+				glog << Log::NEEDED_START << "[THR2:EVENT][INFO] Thread initialized successfully." << Log::NEEDED_ENDL;
 
 				e->_setThrRunning(true);
 
@@ -729,17 +729,17 @@ namespace LSW {
 								switch (val)
 								{
 								case HACK_IMMORTAL:
-									glog << Log::START << "[THR2:EVENT][INFO] GOT IMMORTAL HACK CODE!" << str << Log::ENDL;
+									glog << Log::NEEDED_START << "[THR2:EVENT][INFO] GOT IMMORTAL HACK CODE!" << str << Log::NEEDED_ENDL;
 									break;
 								case HACK_NEXTLEVEL:
-									glog << Log::START << "[THR2:EVENT][INFO] GOT NEXTLEVEL HACK CODE!" << str << Log::ENDL;
+									glog << Log::NEEDED_START << "[THR2:EVENT][INFO] GOT NEXTLEVEL HACK CODE!" << str << Log::NEEDED_ENDL;
 									break;
 								}
 							}
 						}
 					}
 				}
-				glog << Log::START << "[THR2:EVENT][INFO] Got call for end. Waiting smaller threads..." << Log::ENDL;
+				glog << Log::NEEDED_START << "[THR2:EVENT][INFO] Got call for end. Waiting smaller threads..." << Log::NEEDED_ENDL;
 
 				{
 					bool isDone = false;
@@ -751,7 +751,7 @@ namespace LSW {
 					}
 				}
 
-				glog << Log::START << "[THR2:EVENT][INFO] Done. Bye!" << Log::ENDL;
+				glog << Log::NEEDED_START << "[THR2:EVENT][INFO] Done. Bye!" << Log::NEEDED_ENDL;
 
 				e->_setThrRunning(false);
 			}
@@ -797,27 +797,27 @@ namespace LSW {
 			{
 				Log::gfile logg;
 				if (!evl || !e || !amIRunning) {
-					logg << Log::ERRDV << Log::START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: NULL POINTER AT START!" << Log::ENDL;
+					logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: NULL POINTER AT START!" << Log::NEEDED_ENDL;
 					logg.flush();
 					exit(EXIT_FAILURE);
 				}
 
 				ALLEGRO_EVENT_QUEUE* ev_qu_internal = nullptr;
 				if (!(ev_qu_internal = al_create_event_queue())) {
-					logg << Log::ERRDV << Log::START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: Cannot setup Event queue!" << Log::ENDL;
+					logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: Cannot setup Event queue!" << Log::NEEDED_ENDL;
 					logg.flush();
 					exit(EXIT_FAILURE);
 				}
 				ALLEGRO_TIMER* ev_timer_internal = nullptr;
 				if (!(ev_timer_internal = al_create_timer(min_timer))) {
-					logg << Log::ERRDV << Log::START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: Cannot setup Timer for thread!" << Log::ENDL;
+					logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: Cannot setup Timer for thread!" << Log::NEEDED_ENDL;
 					logg.flush();
 					exit(EXIT_FAILURE);
 				}
 				al_register_event_source(ev_qu_internal, al_get_timer_event_source(ev_timer_internal));
 				al_start_timer(ev_timer_internal);
 
-				logg << Log::START << "[THR3:COLLD][INFO] Thread initialized successfully." << Log::ENDL;
+				logg << Log::NEEDED_START << "[THR3:COLLD][INFO] Thread initialized successfully." << Log::NEEDED_ENDL;
 				*amIRunning = true;
 
 				while (e->_keep()) {
@@ -871,7 +871,7 @@ namespace LSW {
 					}
 				}
 
-				logg << Log::START << "[THR3:COLLD][INFO] Thread has quit the usual way." << Log::ENDL;
+				logg << Log::NEEDED_START << "[THR3:COLLD][INFO] Thread has quit the usual way." << Log::NEEDED_ENDL;
 
 				al_stop_timer(ev_timer_internal);
 				al_unregister_event_source(ev_qu_internal, al_get_timer_event_source(ev_timer_internal));
@@ -886,27 +886,27 @@ namespace LSW {
 			{
 				Log::gfile logg;
 				if (!evl || !e || !amIRunning) {
-					logg << Log::ERRDV << Log::START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: NULL POINTER AT START!" << Log::ENDL;
+					logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: NULL POINTER AT START!" << Log::NEEDED_ENDL;
 					logg.flush();
 					exit(EXIT_FAILURE);
 				}
 
 				ALLEGRO_EVENT_QUEUE* ev_qu_internal = nullptr;
 				if (!(ev_qu_internal = al_create_event_queue())) {
-					logg << Log::ERRDV << Log::START << "[THR4:FUNCT][ERRR] FATAL ERROR AT _i_thr_functionsTimed: Cannot setup Event queue!" << Log::ENDL;
+					logg << Log::ERRDV << Log::NEEDED_START << "[THR4:FUNCT][ERRR] FATAL ERROR AT _i_thr_functionsTimed: Cannot setup Event queue!" << Log::NEEDED_ENDL;
 					logg.flush();
 					exit(EXIT_FAILURE);
 				}
 				ALLEGRO_TIMER* ev_timer_internal = nullptr;
 				if (!(ev_timer_internal = al_create_timer(min_timer))) {
-					logg << Log::ERRDV << Log::START << "[THR4:FUNCT][ERRR] FATAL ERROR AT _i_thr_functionsTimed: Cannot setup Timer for thread!" << Log::ENDL;
+					logg << Log::ERRDV << Log::NEEDED_START << "[THR4:FUNCT][ERRR] FATAL ERROR AT _i_thr_functionsTimed: Cannot setup Timer for thread!" << Log::NEEDED_ENDL;
 					logg.flush();
 					exit(EXIT_FAILURE);
 				}
 				al_register_event_source(ev_qu_internal, al_get_timer_event_source(ev_timer_internal));
 				al_start_timer(ev_timer_internal);
 
-				logg << Log::START << "[THR4:FUNCT][INFO] Thread initialized successfully." << Log::ENDL;
+				logg << Log::NEEDED_START << "[THR4:FUNCT][INFO] Thread initialized successfully." << Log::NEEDED_ENDL;
 
 				*amIRunning = true;
 
@@ -921,7 +921,7 @@ namespace LSW {
 					e->_update_functions();
 				}
 
-				logg << Log::START << "[THR4:FUNCT][INFO] Thread has quit the usual way." << Log::ENDL;
+				logg << Log::NEEDED_START << "[THR4:FUNCT][INFO] Thread has quit the usual way." << Log::NEEDED_ENDL;
 
 				al_stop_timer(ev_timer_internal);
 				al_unregister_event_source(ev_qu_internal, al_get_timer_event_source(ev_timer_internal));
@@ -936,27 +936,27 @@ namespace LSW {
 			{
 				Log::gfile logg;
 				if (!evl || !e || !amIRunning) {
-					logg << Log::ERRDV << Log::START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: NULL POINTER AT START!" << Log::ENDL;
+					logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: NULL POINTER AT START!" << Log::NEEDED_ENDL;
 					logg.flush();
 					exit(EXIT_FAILURE);
 				}
 
 				ALLEGRO_EVENT_QUEUE* ev_qu_internal = nullptr;
 				if (!(ev_qu_internal = al_create_event_queue())) {
-					logg << Log::ERRDV << Log::START << "[THR5:UPPLR][ERRR] FATAL ERROR AT _i_thr_updatePosTimed: Cannot setup Event queue!" << Log::ENDL;
+					logg << Log::ERRDV << Log::NEEDED_START << "[THR5:UPPLR][ERRR] FATAL ERROR AT _i_thr_updatePosTimed: Cannot setup Event queue!" << Log::NEEDED_ENDL;
 					logg.flush();
 					exit(EXIT_FAILURE);
 				}
 				ALLEGRO_TIMER* ev_timer_internal = nullptr;
 				if (!(ev_timer_internal = al_create_timer(min_timer))) {
-					logg << Log::ERRDV << Log::START << "[THR5:UPPLR][ERRR] FATAL ERROR AT _i_thr_updatePosTimed: Cannot setup Timer for thread!" << Log::ENDL;
+					logg << Log::ERRDV << Log::NEEDED_START << "[THR5:UPPLR][ERRR] FATAL ERROR AT _i_thr_updatePosTimed: Cannot setup Timer for thread!" << Log::NEEDED_ENDL;
 					logg.flush();
 					exit(EXIT_FAILURE);
 				}
 				al_register_event_source(ev_qu_internal, al_get_timer_event_source(ev_timer_internal));
 				al_start_timer(ev_timer_internal);
 
-				logg << Log::START << "[THR5:UPPLR][INFO] Thread initialized successfully." << Log::ENDL;
+				logg << Log::NEEDED_START << "[THR5:UPPLR][INFO] Thread initialized successfully." << Log::NEEDED_ENDL;
 
 				*amIRunning = true;
 
@@ -975,34 +975,80 @@ namespace LSW {
 					{
 						spr_data.get(spr, p);
 
-						bool isControllerBased;
+						/*bool isAffectedByGravity;  // ONLY ENTITIES OF PLAYER MOVE FROM KEYBOARD NOW
+						spr->get(Sprite::AFFECTED_BY_GRAVITY, isAffectedByGravity);
+						if (isAffectedByGravity)
+						{
+							Layer::layerer lyr;
+							double acceleration_gravity, scale;
+							int layer;
+
+							spr->get(Sprite::LAYER, layer);
+							spr->get(Sprite::ACCELERATION_GRAVITY_SCALE, scale);
+
+							acceleration_gravity = lyr.getNow().getR(layer).gravity;
+
+							spr->setScaled(Sprite::SPEEDY, acceleration_gravity, scale);
+						}
+
+						bool isControllerBased; 
 						spr->get(Sprite::FOLLOWKEYBOARD, isControllerBased);
 						if (isControllerBased)
 						{
-							bool wasd[4] = { e->getKey(KEY_W, false) || e->getKey(KEY_UP, false),e->getKey(KEY_A, false) || e->getKey(KEY_LEFT, false),e->getKey(KEY_S, false) || e->getKey(KEY_DOWN, false),e->getKey(KEY_D, false) || e->getKey(KEY_RIGHT, false) };
-							double acceleration;// , temp;
+							bool wasd[4] = { e->getKey(KEY_W, false) || (isAffectedByGravity ? e->getKey(KEY_UP, true) : e->getKey(KEY_UP, false),e->getKey(KEY_A, false) || e->getKey(KEY_LEFT, false),e->getKey(KEY_S, false) || e->getKey(KEY_DOWN, false),e->getKey(KEY_D, false) || e->getKey(KEY_RIGHT, false) };
+							double acceleration, scale;// , temp;
+
 							spr->get(Sprite::ACCELERATION_BY_KEYING, acceleration);
+							spr->get(Sprite::ACCELERATION_SCALE, scale);
 
 							if (wasd[0]) { // go north
-								spr->set(Sprite::SPEEDY, -acceleration);
+								if (isAffectedByGravity)
+								{
+									spr->setScaled(Sprite::SPEEDY, -acceleration, scale);
+								}
 							}
 							else if (wasd[2]) { // go south
-								spr->set(Sprite::SPEEDY, acceleration);
+								spr->setScaled(Sprite::SPEEDY, acceleration, scale);
 							}
 
 							if (wasd[1]) { // go left
-								spr->set(Sprite::SPEEDX, -acceleration);
+								spr->setScaled(Sprite::SPEEDX, -acceleration, scale);
 							}
 							else if (wasd[3]) { // go right
-								spr->set(Sprite::SPEEDX, acceleration);
+								spr->setScaled(Sprite::SPEEDX, acceleration, scale);
 							}
-						}
+						}*/
 
 						spr->_updateAcceleration(/*fixMultI*/);
 					}
+
+					d_entity_database ent_data;
+					ent_data.draw();
+
+					//Entities::entity* ent;
+
+					/*for (size_t p = 0; p < ent_data.work().getMax(); p++)
+					{
+						ent_data.get(ent, p);
+						switch (ent->getType())
+						{
+						case Entities::PLAYER:
+							{
+								Entities::player* pl = (Entities::player*)ent;
+								pl->tick();
+							}
+							break;
+						case Entities::BADBOY:
+							{
+								Entities::badboy* bb = (Entities::badboy*)ent;
+								ent->tick();
+							}
+							break;
+						}
+					}*/
 				}
 
-				logg << Log::START << "[THR5:UPPLR][INFO] Thread has quit the usual way." << Log::ENDL;
+				logg << Log::NEEDED_START << "[THR5:UPPLR][INFO] Thread has quit the usual way." << Log::NEEDED_ENDL;
 
 				al_stop_timer(ev_timer_internal);
 				al_unregister_event_source(ev_qu_internal, al_get_timer_event_source(ev_timer_internal));

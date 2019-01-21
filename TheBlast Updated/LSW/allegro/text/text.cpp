@@ -192,6 +192,44 @@ namespace LSW {
 							}
 							else sprintf_s(tempstr_c, "UNDEF");
 							break;
+						case T_SPRITE_NAME:
+							if (follow) {
+								Safer::safe_string temp;
+								follow->getID(temp);
+								sprintf_s(tempstr_c, "%s", temp.g().c_str());
+							}
+							else sprintf_s(tempstr_c, "UNDEF");
+							break;
+						case T_SPRITE_ENTITY_HEALTH:
+							if (follow) {
+
+								Entities::entity* ent = nullptr;
+								void* trash = nullptr;
+								follow->get(Sprite::ENTITY, trash);
+								ent = (Entities::entity*)trash;
+
+								if (ent) {
+									sprintf_s(tempstr_c, "%.3lf", ent->getMyHealth());
+								}
+								else sprintf_s(tempstr_c, "UNDEF");
+							}
+							else sprintf_s(tempstr_c, "UNDEF");
+							break;
+						case T_SPRITE_ENTITY_NAME:
+							if (follow) {
+
+								Entities::entity* ent = nullptr;
+								void* trash = nullptr;
+								follow->get(Sprite::ENTITY, trash);
+								ent = (Entities::entity*)trash;
+
+								if (ent) {
+									sprintf_s(tempstr_c, "%s", ent->getMyName().g().c_str());
+								}
+								else sprintf_s(tempstr_c, "UNDEF");
+							}
+							else sprintf_s(tempstr_c, "UNDEF");
+							break;
 						}
 
 						substitute = tempstr_c;
@@ -325,6 +363,11 @@ namespace LSW {
 				{
 					reload();
 				}
+			}
+
+			text::~text()
+			{
+				unload();
 			}
 
 			void text::verify(const bool reloadd)
@@ -532,10 +575,10 @@ namespace LSW {
 				}
 			}
 
-			void text::setID(const Safer::safe_string u)
+			/*void text::setID(const Safer::safe_string u)
 			{
 				set(Text::SETID, u);
-			}
+			}*/
 
 			const bool text::amI(const Safer::safe_string o)
 			{
@@ -668,7 +711,7 @@ namespace LSW {
 				cam.apply(lastapply);
 
 				final_scale = scale;// *cam.get(lastapply, Camera::ZOOM);
-				verify();
+				//verify();
 
 				_draw(targ_draw_xy);
 
@@ -710,10 +753,21 @@ namespace LSW {
 
 				for (auto& p : cam.getLayers(cam.getLastApplyID())) {
 					if (p.second) {
+						txt_data.work().lock();
+						for (auto& i : txt_data.work().work())
+						{
+							i->verify();
+							i->draw(p.first);
+						}
+						txt_data.work().unlock();
+						/*for (int u = 0; u < (int)txt_data.work().getMax(); u++)
+						{
+							txt_data.work().get(u)->verify();
+						}
 						for (int u = 0; u < (int)txt_data.work().getMax(); u++)
 						{
 							txt_data.work().get(u)->draw(p.first);
-						}
+						}*/
 					}
 				}
 			}
