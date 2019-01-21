@@ -23,7 +23,7 @@ namespace LSW {
 				layers.l.erase(o);
 			}
 
-			_layer_down & each_layer::set(const int o)
+			_layer_down & each_layer::getR(const int o)
 			{
 				/*if (lr[o].colliding.size() == 0) {
 					lr[o].colliding[o] = true;

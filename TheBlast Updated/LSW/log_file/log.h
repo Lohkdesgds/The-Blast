@@ -7,13 +7,15 @@ namespace LSW {
 		namespace Log {
 
 			enum mode{LOCAL,GLOBAL};
-			enum bruk{ENDL,START,ERRDV};
+			enum bruk{ENDL,START,ERRDV,NEEDED_START,NEEDED_ENDL};
 
 			struct _log {
 				FILE* f = nullptr;
 				Safer::safe_string path = "log.log"; // temp
 				std::mutex f_m, each_call;
 				bool store_log = true;
+				bool islonglog = false;
+				bool is_needed_lock = false;
 				Safer::safe_string now;
 				Safer::safe_vector<Safer::safe_string> lines;
 			};
@@ -30,6 +32,8 @@ namespace LSW {
 				void printclock();
 
 				void showOnConsole(const bool);
+				void longLog(const bool);
+
 				void flush();
 				void saveOnMemory(const bool); // global only
 				void debug(const Safer::safe_string&);
@@ -114,8 +118,15 @@ namespace LSW {
 			inline void _file<N>::push(const Safer::safe_string & s)
 			{
 				//const std::string temp = s.g();
+
 				if (N == GLOBAL)
 				{
+					if (showconsole) {
+						for (auto& i : s.g()) printf("%c", i);
+					}
+
+					if (!g.islonglog && !g.is_needed_lock) return;
+
 					if (!g.f)
 						if (!setPath(Defaults::default_global_path)) return;
 
@@ -124,7 +135,6 @@ namespace LSW {
 					for (auto& i : s.g())
 					{
 						putc(i, g.f);
-						if (showconsole) printf("%c",i);
 
 						if (g.store_log) {
 							if (i == '\n') {
@@ -140,14 +150,19 @@ namespace LSW {
 					}
 					g.f_m.unlock();
 				}
-				else {
+				else{
+					if (showconsole) {
+						for (auto& i : s.g()) printf("%c", i);
+					}
+
+					if (!l.islonglog && !l.is_needed_lock) return;
+
 					if (!l.f) return;
 					l.f_m.lock();
 					//fprintf_s(l.f, "%s", temp.c_str());
 					for (auto& i : s.g())
 					{
 						putc(i, l.f);
-						if (showconsole) printf("%c", i);
 					}
 					l.f_m.unlock();
 				}
@@ -175,6 +190,12 @@ namespace LSW {
 					*this << Log::START << "Console output enabled! It can cause lag and/or lower FPS in game! Use for testing only!" << Log::ENDL;
 				}
 				else FreeConsole();
+			}
+			template<mode N>
+			inline void _file<N>::longLog(const bool b)
+			{
+				if (N == GLOBAL) g.islonglog = b;
+				else l.islonglog = b;
 			}
 			template<mode N>
 			inline void _file<N>::flush()
@@ -222,18 +243,40 @@ namespace LSW {
 			{
 				switch (u)
 				{
-				case ENDL:
-					push("\n");
-					if (N == GLOBAL) g.each_call.unlock();
-					else l.each_call.unlock();
-					break;
 				case START:
 					if (N == GLOBAL) g.each_call.lock();
 					else l.each_call.lock();
 					printclock();
 					break;
+				case ENDL:
+					push("\n");
+					if (N == GLOBAL) g.each_call.unlock();
+					else l.each_call.unlock();
+					break;
 				case ERRDV:
 					push("\n---------- ERROR ----------\n");
+					break;
+				case NEEDED_START:
+					if (N == GLOBAL) {
+						g.each_call.lock();
+						g.is_needed_lock = true;
+					}
+					else {
+						l.each_call.lock();
+						l.is_needed_lock = true;
+					}
+					printclock();
+					break;
+				case NEEDED_ENDL:
+					if (N == GLOBAL) {
+						push("\n");
+						g.is_needed_lock = false;
+						g.each_call.unlock();
+					}
+					else {
+						l.is_needed_lock = false;
+						l.each_call.unlock();
+					}
 					break;
 				}
 				return *this;

@@ -41,4 +41,6 @@
 #include "..\allegro\text\text.h"
 #include "..\allegro\sound\sound.h"
 
+#include "..\entity\entity.h"
+
 #include "..\map\map_control.h"

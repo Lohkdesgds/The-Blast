@@ -106,7 +106,7 @@ namespace LSW {
 			sprite::~sprite()
 			{
 				Log::gfile logg;
-				logg.debug(" -> DELETED SPRITE ID#" + std::to_string((int)this) + " <- ");
+				logg.debug(" -> DELETED SPRITE ID#" + std::to_string((int)this) + "(" + id_g.g() + ") <- ");
 			}
 
 			void sprite::add(Safer::safe_string s, const size_t amount) // search in database
@@ -134,6 +134,7 @@ namespace LSW {
 							}
 							bmps.push(img);
 							img = nullptr;
+							hasChangedSomehow = true;
 						}
 					}
 				}
@@ -146,6 +147,7 @@ namespace LSW {
 							exit(-1);
 						}
 						bmps.push(img);
+						hasChangedSomehow = true;
 					}
 				}
 			}
@@ -155,6 +157,8 @@ namespace LSW {
 
 				bmps.clear();
 				add(s, i);
+
+				hasChangedSomehow = true;
 
 				replacing.unlock();
 			}
@@ -182,6 +186,28 @@ namespace LSW {
 				return (id_g == i);
 			}
 
+			void sprite::setScaled(const _sprite_dvals e, const double v, double ea)
+			{
+				if (ea < 0.0) ea = 0.0;
+				if (ea > 1.0) ea = 1.0;
+
+				double part_new, part_old;
+				part_new = ea;
+				part_old = 1.0 - ea;
+
+				data.dval[e] = data.dval[e] * part_old + v * part_new;
+
+				// from set() function
+				if (data.dval[ANIMATIONTIME] <= 0.0)
+				{
+					lastcall_opt = (int)(-data.dval[ANIMATIONTIME]);
+					if (lastcall_opt > bmps.getMax()) lastcall_opt = bmps.getMax() - 1;
+					lastcall = al_get_time();
+					got_to_end_one_time_at_least = false;
+					hasChangedSomehow = true;
+				}
+			}
+
 			void sprite::set(const _sprite_dvals e, const double v)
 			{
 				data.dval[e] = v;
@@ -192,6 +218,7 @@ namespace LSW {
 					if (lastcall_opt > bmps.getMax()) lastcall_opt = bmps.getMax() - 1;
 					lastcall = al_get_time();
 					got_to_end_one_time_at_least = false;
+					hasChangedSomehow = true;
 				}
 			}
 			void sprite::set(const _sprite_bvals e, const bool v)
@@ -211,6 +238,14 @@ namespace LSW {
 				switch (e) {
 				case TINT:
 					data.tint = v;
+					break;
+				}
+			}
+			void sprite::set(const _sprite_vvals e, void * v)
+			{
+				switch (e) {
+				case ENTITY:
+					custom_data = v;
 					break;
 				}
 			}
@@ -240,6 +275,15 @@ namespace LSW {
 					break;
 				case FRAME:
 					v = lastcall_opt;
+					break;
+				}
+			}
+
+			void sprite::get(const _sprite_vvals e, void *& v)
+			{
+				switch (e) {
+				case ENTITY:
+					v = custom_data;
 					break;
 				}
 			}
@@ -317,6 +361,7 @@ namespace LSW {
 								else lastcall_opt--;
 							}
 						}
+						if (frame != lastcall_opt) hasChangedSomehow = true;
 						frame = lastcall_opt;
 					}
 
@@ -336,8 +381,6 @@ namespace LSW {
 					by = al_get_bitmap_height(bmp);
 
 					const int lastapply = cam.getLastApplyID();
-
-
 					cam.copy(Defaults::default_layer_backup, lastapply);
 
 					if (!data.bval[AFFECTED_BY_CAM]) cam.reset(lastapply);
@@ -373,8 +416,9 @@ namespace LSW {
 
 						ALLEGRO_COLOR colorr = al_map_rgb(0, 255, 0);
 
-						if (data.bval[FOLLOWKEYBOARD]) colorr = al_map_rgb(255, 255, 255);
-						else if (data.bval[_IS_COLLIDING]) colorr = al_map_rgb(255, 0, 0);
+						//if (data.bval[FOLLOWKEYBOARD]) colorr = al_map_rgb(255, 255, 255);
+						/*else */
+						if (data.bval[_IS_COLLIDING]) colorr = al_map_rgb(255, 0, 0);
 						else if (al_get_time() - lastresetcollisioncall < Defaults::diff_time_show_last_resetCollision) colorr = al_map_rgb(255, 255, 0);
 						
 
@@ -388,7 +432,7 @@ namespace LSW {
 
 						if (data.bval[SHOWDOT])
 						{
-							al_draw_filled_circle(targ_draw_xy[0], targ_draw_xy[1], 0.1*fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM) * sqrt(cam.get(cam.getLastApplyID(), Camera::ZOOMX)*cam.get(cam.getLastApplyID(), Camera::ZOOMY)) * 0.20) * (data.bval[FOLLOWKEYBOARD] ? 1.2 : 1.0), colorr);
+							al_draw_filled_circle(targ_draw_xy[0], targ_draw_xy[1], 0.1*fabs(cam.get(cam.getLastApplyID(), Camera::ZOOM) * sqrt(cam.get(cam.getLastApplyID(), Camera::ZOOMX)*cam.get(cam.getLastApplyID(), Camera::ZOOMY)) * 0.20) /** (data.bval[FOLLOWKEYBOARD] ? 1.2 : 1.0)*/, colorr);
 						}
 
 
@@ -433,6 +477,18 @@ namespace LSW {
 				return r;
 			}
 
+			const bool sprite::hasChanged()
+			{
+				bool b = hasChangedSomehow;
+				hasChangedSomehow = false;
+				return b;
+			}
+
+
+			void sprite::_forceHasChangedTo(const bool b)
+			{
+				hasChangedSomehow = b;
+			}
 
 			_sprite_area sprite::_getArea()
 			{
@@ -509,26 +565,32 @@ namespace LSW {
 						switch (col.way) { // col veio de
 						case NORTH:
 							if (data.dval[SPEEDY] < 0.0) data.dval[SPEEDY] = 0.0;
-							data.dval[SPEEDY] += (fabs(col.dy * e.work()[layer].collision_acel_multiplier) + e.work()[layer].min_collision_acel);
+							setScaled(Sprite::SPEEDY, (fabs(col.dy * e.work()[layer].collision_acel_multiplier) + e.work()[layer].min_collision_acel), Defaults::sprite_default_collision_proportion_speed);
 							data.dval[POSY] += fabs(col.dy);
 							break;
 						case SOUTH:
 							if (data.dval[SPEEDY] > 0.0) data.dval[SPEEDY] = 0.0;
-							data.dval[SPEEDY] -= (fabs(col.dy * e.work()[layer].collision_acel_multiplier) + e.work()[layer].min_collision_acel);
+							setScaled(Sprite::SPEEDY, -(fabs(col.dy * e.work()[layer].collision_acel_multiplier) + e.work()[layer].min_collision_acel), Defaults::sprite_default_collision_proportion_speed);
 							data.dval[POSY] -= fabs(col.dy);
 							break;
 						case EAST:
 							if (data.dval[SPEEDX] > 0.0) data.dval[SPEEDX] = 0.0;
-							data.dval[SPEEDX] -= (fabs(col.dx * e.work()[layer].collision_acel_multiplier) + e.work()[layer].min_collision_acel);
+							setScaled(Sprite::SPEEDX, -(fabs(col.dx * e.work()[layer].collision_acel_multiplier) + e.work()[layer].min_collision_acel), Defaults::sprite_default_collision_proportion_speed);
 							data.dval[POSX] -= fabs(col.dx);
 							break;
 						case WEST:
 							if (data.dval[SPEEDX] < 0.0) data.dval[SPEEDX] = 0.0;
-							data.dval[SPEEDX] += (fabs(col.dx * e.work()[layer].collision_acel_multiplier) + e.work()[layer].min_collision_acel);
+							setScaled(Sprite::SPEEDX, (fabs(col.dx * e.work()[layer].collision_acel_multiplier) + e.work()[layer].min_collision_acel), Defaults::sprite_default_collision_proportion_speed);
 							data.dval[POSX] += fabs(col.dx);
 							break;
 						}
 					}
+
+					if (data.dval[SPEEDX] > Defaults::max_acceleration_possible) data.dval[SPEEDX] = Defaults::max_acceleration_possible;
+					if (data.dval[SPEEDX] < -Defaults::max_acceleration_possible) data.dval[SPEEDX] = -Defaults::max_acceleration_possible;
+					if (data.dval[SPEEDY] > Defaults::max_acceleration_possible) data.dval[SPEEDY] = Defaults::max_acceleration_possible;
+					if (data.dval[SPEEDY] < -Defaults::max_acceleration_possible) data.dval[SPEEDY] = -Defaults::max_acceleration_possible;
+
 					/*if (data.bval[DOES_COLLISION_ROTATE_OBJECT])
 					{
 						switch (col.way) {
@@ -696,7 +758,7 @@ namespace LSW {
 				u.dval[SMOOTHNESS_Y] = Defaults::smoothness_keep_sprite_movement;
 				//u.dval[SMOOTHNESS_ROT] = Defaults::smoothness_keep_sprite_movement_rotational; // later
 
-				u.dval[ACCELERATION_BY_KEYING] = Defaults::acceleration_by_user_normal;
+				
 
 				u.bval[DRAW] = true;
 				u.bval[COLLIDE] = false;
@@ -708,8 +770,9 @@ namespace LSW {
 				u.bval[SHOWBOX] = false;
 				u.bval[SHOWDOT] = false;
 				u.bval[FOLLOWMOUSE] = false;
-				u.bval[FOLLOWKEYBOARD] = false;
+				//u.bval[FOLLOWKEYBOARD] = false;
 				u.bval[USE_TINTED_DRAWING] = false;
+				//u.bval[AFFECTED_BY_GRAVITY] = false;
 			}
 		}
 	}

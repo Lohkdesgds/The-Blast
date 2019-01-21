@@ -139,6 +139,7 @@
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <FloatingPointModel>Precise</FloatingPointModel>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -156,6 +157,7 @@
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <FloatingPointModel>Precise</FloatingPointModel>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -176,6 +178,7 @@
     <ClInclude Include="LSW\all\enable_all.h" />
     <ClInclude Include="LSW\defaults\defaults.h" />
     <ClInclude Include="LSW\download_manager\downloader_v2.h" />
+    <ClInclude Include="LSW\entity\entity.h" />
     <ClInclude Include="LSW\log_file\log.h" />
     <ClInclude Include="LSW\map\map_control.h" />
     <ClInclude Include="LSW\safer\safer.h" />
@@ -194,6 +197,7 @@
     <ClCompile Include="LSW\allegro\sprite\sprite.cpp" />
     <ClCompile Include="LSW\allegro\text\text.cpp" />
     <ClCompile Include="LSW\download_manager\downloader_v2.cpp" />
+    <ClCompile Include="LSW\entity\entity.cpp" />
     <ClCompile Include="LSW\main\main.cpp" />
     <ClCompile Include="LSW\map\map_control.cpp" />
     <ClCompile Include="LSW\tools\stacker\stacker.cpp" />

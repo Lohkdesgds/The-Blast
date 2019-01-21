@@ -16,14 +16,15 @@ namespace LSW {
 
 			enum _sprite_dvals{POSX,POSY,SCALEX,SCALEY,CENTERX,CENTERY,SCALEG,ROTATION,ANIMATIONTIME, // rotation = degrees, ANIMATIONTIME = animation time (fps)
 			SPEEDX,SPEEDY,SPEEDROT,SMOOTHNESS_X,SMOOTHNESS_Y,/*SMOOTHNESS_ROT // TO BE IMPLEMENTED LATER ,*/ // smoothness = speed *= smoothness
-			ACCELERATION_BY_KEYING,
+			//ACCELERATION_BY_KEYING,ACCELERATION_SCALE,ACCELERATION_GRAVITY_SCALE,JUMP_SPEED_PROPORTION/*if AFFECTED_BY_GRAVITY && FOLLOWKEYBOARD*/,JUMP_TIME_DELAY,
 			DVAL_MAX};
 			enum _sprite_bvals{DRAW,COLLIDE,_IS_COLLIDING,AFFECTED_BY_COLLISION,/*DOES_COLLISION_ROTATE_OBJECT// TO BE IMPLEMENTED LATER,*/AFFECTED_BY_CAM,LOOPING_IMAGES, SHOWDOT,SHOWBOX,FOLLOWMOUSE,USE_TINTED_DRAWING,
-			FOLLOWKEYBOARD,
+			//FOLLOWKEYBOARD,//AFFECTED_BY_GRAVITY,
 			BVAL_MAX};
 			enum _sprite_ivals{LAYER};
 			enum _sprite_zvals{SIZE,FRAME};
 			enum _sprite_cvals{TINT};
+			enum _sprite_vvals{ENTITY};
 			enum _sprite_collision_way{NORTH,SOUTH,WEST,EAST};
 			
 			struct _sprite_data {
@@ -54,6 +55,7 @@ namespace LSW {
 				size_t lastcall_opt = 0;
 				double lastcall = 0;
 				double lastresetcollisioncall = 0;
+				bool hasChangedSomehow = false;
 				//double lastverify = 0.0;
 				int layer = 0; // 0 is first to be drawn. (background)
 				int bx = 0, by = 0;
@@ -61,6 +63,11 @@ namespace LSW {
 				Log::gfile logg;
 
 				std::mutex replacing;
+
+				void *custom_data = nullptr;
+
+				double last_jump = 0;
+				unsigned jump_times = 0;
 
 				const _sprite_collision_info _doesCollideWith(const _sprite_area, const _sprite_area);
 				//const _sprite_collision_info _doTheyIntersect(const _sprite_area, const _sprite_area); // TODO
@@ -76,15 +83,19 @@ namespace LSW {
 				void getID(Safer::safe_string&);
 				const bool amI(const Safer::safe_string);
 
+				void setScaled(const _sprite_dvals, const double, double); // last double: coef; 0.0 = totally itself, 1.0 = totally new number
+
 				void set(const _sprite_dvals, const double);
 				void set(const _sprite_bvals, const bool);
 				void set(const _sprite_ivals, const int);
 				void set(const _sprite_cvals, const ALLEGRO_COLOR);
+				void set(const _sprite_vvals, void*);
 				
 				void get(const _sprite_dvals, double&);
 				void get(const _sprite_bvals, bool&);
 				void get(const _sprite_ivals, int&);
 				void get(const _sprite_zvals, size_t&);
+				void get(const _sprite_vvals, void*&);
 
 				void add(const _sprite_dvals, const double);
 				void multiply(const _sprite_dvals, const double);
@@ -98,6 +109,9 @@ namespace LSW {
 				const size_t _lastFrameNumber();
 				const bool gotToEnd();
 
+				const bool hasChanged();
+
+				void _forceHasChangedTo(const bool);
 				_sprite_area _getArea();
 				void _setAsTarg(const size_t = 0);
 				void _resetCollision();

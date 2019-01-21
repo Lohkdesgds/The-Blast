@@ -23,6 +23,9 @@ namespace LSW {
 				bool optimized = false;
 				bool created_itself = false;
 				double check_time = 0.0;
+				bool has_Reloaded = false;
+
+				bool noOptimization = false;
 				std::mutex optimizing;
 
 				//double proportion = 1.0; // when resized for low memory usage if not using or when drawing is half or so
@@ -32,6 +35,7 @@ namespace LSW {
 
 				const bool _load_NOADJUST(const Safer::safe_string);
 			public:
+				~image_low();
 				//const bool set(const Safer::safe_string);
 				const bool load(const Safer::safe_string);
 				//const bool loadFromDatabase(const Safer::safe_string);
@@ -46,9 +50,11 @@ namespace LSW {
 
 				void unload();
 
+				const bool hasReloaded(const bool = false);
 				const bool reload();
 
-				void optimizeIt();
+				void shouldOptimize(const bool);
+				//void optimizeIt();
 
 				void verify();
 				void checkMemory();
@@ -64,8 +70,8 @@ namespace LSW {
 			/*void _start_thread();
 			void _draw_complex();*/
 
-			// its name, initial path, how many, how many 0's, end (format)
-			void multipleLoad(const Safer::safe_string, Safer::safe_string, const size_t, const unsigned, Safer::safe_string, float* = nullptr);
+			// its name, initial path, how many, how many 0's, end (format), perc, optimize those bitmaps?
+			void multipleLoad(const Safer::safe_string, Safer::safe_string, const size_t, const unsigned, Safer::safe_string, float* = nullptr, const bool = true);
 			// its name, initial path, how many, how many 0's, end (format), urls
 			//void multipleCloudLoad(const Safer::safe_string, Safer::safe_string, const size_t, const unsigned, Safer::safe_string, const Safer::safe_string* = nullptr, float* = nullptr); // NULLPTR == from database on Defaults::initial_call_url
 		}

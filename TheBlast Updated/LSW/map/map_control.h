@@ -21,17 +21,47 @@ namespace LSW {
 
 			const Safer::safe_string interpretIntToBlockName(const blockstats);
 
+			struct point {
+				int x, y;
+			};
+
 			class map {
 				int map_i[Defaults::map_size_default_x][Defaults::map_size_default_y];
 				Sprite::sprite* map_p[Defaults::map_size_default_x][Defaults::map_size_default_y];
+
+				Sprite::sprite* big_map = nullptr;
+				Image::image_low* big_map_il = nullptr;
+
 				double spawn[2] = { 0.0,0.0 };
 				int seed = 0;
-				int layerUsed = 0;
+				int layerUsed = Defaults::map_default_layer;
+
+				bool hasToUpdate = false;
+				bool hasToUpdate_a_block = false;
+				bool has_reachedEnd = false;
+				bool has_loadedMap = false;
+				//bool is_new_Map = false;
 
 				const double x_off = (1.0*(1.0 / (Defaults::map_size_default_x*1.0)));
 				const double y_off = (1.0*(1.0 / (Defaults::map_size_default_y*1.0)));
 
-				Sprite::sprite* player = nullptr;
+				bool is_player_enabled = false;
+				Entities::player plr;
+				Safer::safe_vector<Entities::badboy*> badboys;
+
+				bool cpu_thr_ready, gpu_thr_ready;
+
+				std::mutex muu;
+				bool set_cpu_lock = false;
+				bool cpu_tasking = false;
+
+				Safer::safe_string last_player_path;
+				double last_player_size = Defaults::user_default_size;
+				int last_player_layer = Defaults::user_default_layer;
+
+				Safer::safe_string last_badboys_path;
+				unsigned last_badboy_count = 4;
+				int last_badboys_layer = Defaults::badboys_default_layer;
 
 				void randomizer(const int);
 				const bool workOnItAndAnswer(const int, const int);
@@ -43,19 +73,52 @@ namespace LSW {
 
 				void verifyCollision(Sprite::sprite&);
 				const bool isBlockTransparent(const blockstats);
+				void generateMap();
+
+				void _checkBitmapsOnMapP();
+				void _checkBitmapsBigMap();
+				void _redraw();
 			public:
 				map();
 				~map();
+
+				void reset_draw_thr();
+				void reset_cpu_thr();
+
+				const bool start_draw_thr();
+				const bool start_cpu_thr();
+
 				void setSeed(const int);
 				void setLayer(const int);
-				void generateMap();
-				void killMap();
+				//void generateBitmaps();
+				//void killMap();
+				//void killEntities();
+				//void setPlayer(Sprite::sprite*);
 				void corruptWorldTick();
-				void setPlayer(Sprite::sprite*);
+
+				void launch_player(const Safer::safe_string, const double = Defaults::user_default_size, const int = Defaults::user_default_layer); // path
+				const bool launch_badboys(const Safer::safe_string, const unsigned, const int = Defaults::badboys_default_layer); // path, how many, layer
+
+				void checkDraw();
+				void checkPositionChange();
+
+				const bool isCPUtasking();
+				void setCPULock(const bool);
 
 				void testCollisionPlayer();
-				void testCollisionOther(Sprite::sprite&);
+				//void testCollisionOther(Sprite::sprite&);
+
+				const bool hasReachedEnd();
+				const bool isMapLoaded();
+
+				const bool try_lock();
+				void lock();
+				void unlock();
+
+				Sprite::sprite* _getPlayerSprite();
 			};
+
+			const Safer::safe_string randomName();
 		}
 	}
 }

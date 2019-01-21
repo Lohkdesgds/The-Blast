@@ -49,7 +49,7 @@ namespace LSW {
 			_display_raw::~_display_raw()
 			{
 				Log::gfile logg;
-				logg << Log::START << "[DRAW:~DEST][QUIT] Display ended." << Log::ENDL;
+				logg << Log::NEEDED_START << "[DRAW:~DEST][QUIT] Display ended." << Log::NEEDED_ENDL;
 				_clearUp();
 			}
 
@@ -69,7 +69,7 @@ namespace LSW {
 				if (b) b = al_install_keyboard();
 				if (b) b = al_install_mouse();
 				if (!b) {
-					logg << Log::START << "[DRAW:LAUNC][ERRR] Failed to start graphics api" << Log::ENDL;
+					logg << Log::NEEDED_START << "[DRAW:LAUNC][ERRR] Failed to start graphics api" << Log::NEEDED_ENDL;
 					return false;
 				}
 
@@ -130,7 +130,7 @@ namespace LSW {
 						mode_selected = d_mods.modes[d_mods.using_rn];
 					}
 				}
-				logg << Log::START << "[DRAW:LAUNC][INFO] Using " << mode_selected.x << "x" << mode_selected.y << "@" << mode_selected.hz << Log::ENDL;
+				logg << Log::NEEDED_START << "[DRAW:LAUNC][INFO] Using " << mode_selected.x << "x" << mode_selected.y << "@" << mode_selected.hz << Log::NEEDED_ENDL;
 
 				al_set_new_display_flags(flags);
 				al_set_new_display_option(ALLEGRO_VSYNC, 2, ALLEGRO_SUGGEST);
@@ -141,7 +141,7 @@ namespace LSW {
 					_clearUp();
 
 					logg << Log::ERRDV;
-					logg << Log::START << "[DRAW:LAUNC][ERRR] Failed creating display." << Log::ENDL;
+					logg << Log::NEEDED_START << "[DRAW:LAUNC][ERRR] Failed creating display." << Log::NEEDED_ENDL;
 					logg.flush();
 
 					return false;
@@ -401,6 +401,8 @@ namespace LSW {
 
 
 				//disp_raw->setTarget(Display::DISPLAY);
+
+				disp_raw->setTarget();
 
 				disp_raw->flip();
 

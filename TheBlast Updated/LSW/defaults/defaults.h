@@ -7,7 +7,7 @@ namespace LSW {
 	namespace v2 {
 		namespace Defaults {
 
-			const Safer::safe_string version_app = "V0.1.0A";
+			const Safer::safe_string version_app = "V0.2.0";
 
 			const Safer::safe_string default_root_path = "%appdata%/Lohk's Studios/TheBlast/";
 			const Safer::safe_string default_global_path = "%appdata%/Lohk's Studios/TheBlast/logs/latest.log";
@@ -30,7 +30,8 @@ namespace LSW {
 
 			const int default_layer_colliding_first = -9999;
 			const int default_layer_backup = -9999;
-			const int default_font_foreground_layer = -9999;
+			const int default_map_layer_backup = -9998;
+			const int default_font_foreground_layer = -9997;
 
 			const bool debug = false;
 
@@ -41,16 +42,11 @@ namespace LSW {
 
 			const unsigned max_loops_for_tps = 480;
 
-			const double smoothness_keep_sprite_movement_rotational = 0.99;
-			const double smoothness_keep_sprite_movement = 0.98;
-			const double collision_acel_multiplier = 0.001;
-			const double min_collision_acel = 0.0005;
-
 			// thr
 			const double collision_timer = 1.0 / 240;
 			const int max_delayed_times = 90;
 			const double functions_timer = 1.0 / 240;
-			const double checkEnd_timer = 1.0 / 2;
+			//const double checkEnd_timer = 1.0 / 2;
 			const double calcLoops_timer = 1.0;
 			const double updatepos_timer = 1.0 / 240;
 
@@ -81,8 +77,27 @@ namespace LSW {
 			const double diff_time_show_last_resetCollision = 0.5;
 
 			// game control
-			const double acceleration_by_user_normal = 0.003;
+			const double user_default_size = 0.08;
+			const int user_default_layer = 70;
+			const int badboys_default_layer = 71;
+			const int map_default_layer = 50;
+
+			const double acceleration_by_user_normal = 0.004;
+			const double acceleration_by_bot_normal =  0.002;
+
+			const double entity_default_proportion_speed = 0.09; // proportion on add
+			const double entity_default_jump_proportion_speed = 0.15; // proportion on add
+			const double sprite_bot_default_proportion_speed = 0.11; // proportion on add
+
+			const double max_acceleration_possible = 0.005;
 			const double user_scale_compared_to_map = 0.7;
+			const double sprite_default_collision_proportion_speed = 0.09; // proportion on collision acceleration add
+
+			const double smoothness_keep_sprite_movement = 0.987;
+			const double collision_acel_multiplier = 0.05;
+			const double min_collision_acel = 0.0001;
+			const double gravity_default = 0.020;
+			const double entity_default_gravity_speed = 0.005; // proportion on add
 
 			const size_t max_string_input_size = 1024;
 		}

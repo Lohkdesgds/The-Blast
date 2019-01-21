@@ -463,10 +463,10 @@ namespace LSW {
 				return false;
 			}
 
-			const unsigned events::getCurrentMaxTickCounted()
+			/*const unsigned events::getCurrentMaxTickCounted()
 			{
-				return ticks_one_sec;
-			}
+				return last_log.loops_per_second;
+			}*/
 
 			const bool events::_nextEv(ALLEGRO_EVENT& e, const bool wait)
 			{
@@ -518,10 +518,10 @@ namespace LSW {
 				currString = u;
 			}
 
-			void events::_setMaxTickCount(const unsigned u)
+			/*void events::_setMaxTickCount(const unsigned u)
 			{
 				ticks_one_sec = u;
-			}
+			}*/
 
 			const double events::_getMultiplierForUpdatingImg()
 			{
@@ -533,9 +533,29 @@ namespace LSW {
 				return targ;
 			}
 
+			void events::_setThrRunning(const bool b)
+			{
+				thr_running_yet = b;
+			}
+
+			_event_log& events::_getEventLog()
+			{
+				return last_log;
+			}
+
+			/*void events::_setEventLog(const _event_log & u)
+			{
+				last_log = u;
+			}*/
+
 			void events::_setShutDownNow()
 			{
 				alright = false;
+			}
+
+			const bool events::isSafeToQuit()
+			{
+				return !thr_running_yet;
 			}
 
 
@@ -549,17 +569,54 @@ namespace LSW {
 				d_sprite_database spr_data;
 				_string_work wrk;
 				Log::gfile glog;
-				unsigned count = 0;
+				//unsigned count = 0;
+				_event_log& tlogging = e->_getEventLog();
 				double last = al_get_time();
+
+				glog << Log::NEEDED_START << "[THR2:EVENT][INFO] Preparing smaller threads..." << Log::NEEDED_ENDL;
+
+				// multithread start:
+				std::thread* thrs[3];
+				bool arethey[3];
+
+				for (int p = 0; p < 3; p++) {
+					thrs[p] = nullptr;
+					arethey[p] = false;
+				}
+
+				thrs[0] = new std::thread(_i_thr_collisionTimed, &tlogging, e, Defaults::collision_timer, &arethey[0]);
+				thrs[1] = new std::thread(_i_thr_functionsTimed, &tlogging, e, Defaults::functions_timer, &arethey[1]);
+				thrs[2] = new std::thread(_i_thr_updatePosTimed, &tlogging, e, Defaults::updatepos_timer, &arethey[2]);
+
+				glog << Log::START << "[THR2:EVENT][INFO] Waiting smaller threads..." << Log::ENDL;
+
+				{
+					bool isDone = false;
+					while (!isDone) {
+						isDone = true;
+						for (auto& i : arethey) {
+							if (!i) isDone = false;
+						}
+					}
+				}
+
+				glog << Log::START << "[THR2:EVENT][INFO] They seem ready. Let's go!" << Log::ENDL;
+
+
 				/*double fixMultI = e->_getMultiplierForUpdatingImg();
 				if (fixMultI > 1.0 / 60) fixMultI = 1.0 / 60;*/
-				ALLEGRO_TIMER* collisionTimer = e->getTimer(0, Defaults::collision_timer);
-				ALLEGRO_TIMER* functionsTimer = e->getTimer(1, Defaults::functions_timer);
-				ALLEGRO_TIMER* checkEnd_Timer = e->getTimer(2, Defaults::checkEnd_timer);
-				ALLEGRO_TIMER* calcLoopsTimer = e->getTimer(3, Defaults::calcLoops_timer);
-				ALLEGRO_TIMER* updatePosTimer = e->getTimer(4, Defaults::updatepos_timer);
 
-				glog << Log::START << "[THR2:EVENT][INFO] Thread initialized successfully." << Log::ENDL;
+				/*ALLEGRO_TIMER* collisionTimer = e->getTimer(0, Defaults::collision_timer);
+				ALLEGRO_TIMER* functionsTimer = e->getTimer(1, Defaults::functions_timer);
+				ALLEGRO_TIMER* updatePosTimer = e->getTimer(4, Defaults::updatepos_timer);*/
+
+				//ALLEGRO_TIMER* checkEnd_Timer = e->getTimer(2, Defaults::checkEnd_timer);
+
+				ALLEGRO_TIMER* calcLoopsTimer = e->getTimer(3, Defaults::calcLoops_timer);
+
+				glog << Log::NEEDED_START << "[THR2:EVENT][INFO] Thread initialized successfully." << Log::NEEDED_ENDL;
+
+				e->_setThrRunning(true);
 
 				while (e->_keep())
 				{
@@ -567,129 +624,35 @@ namespace LSW {
 
 					if (e->_nextEv(ev, true))
 					{
-						count++;
+						tlogging._loops++;
 						if (ev.type == ALLEGRO_EVENT_TIMER)
 						{
-							if (ev.timer.source == collisionTimer)
+							/*if (ev.timer.source == collisionTimer)
 							{
-								Layer::layerer lyr;
-								Sprite::sprite* spr, *spr2;
-
-								switch (lyr.getNow().getMode())
-								{
-								case Layer::STANDARD:
-									for (auto& i : lyr.getNow().work())
-									{
-										for (size_t p = 0; p < spr_data.work().getMax(); p++)
-										{
-											spr_data.get(spr, p);
-											int u, m;
-											spr->get(Sprite::LAYER, u);
-
-											if (u == i.first) {
-
-												spr->_resetCollision();
-
-												for (size_t q = 0; q < spr_data.work().getMax(); q++)
-												{
-													if (q != p) {
-														spr_data.get(spr2, q);
-														spr2->get(Sprite::LAYER, m);
-
-														for (auto& k : i.second.colliding)
-														{
-															if (k.first == m && k.second) {
-																spr->_verifyCollision(*spr2);
-																break;
-															}
-														}
-													}
-												}
-											}
-										}
-									}
-									break;
-								case Layer::USEMAP:
-									((Map::map*)lyr.getNow().get_package())->testCollisionPlayer();
-								}
-							}
-							else if (ev.timer.source == functionsTimer)
+								_i_thr_collisionTimed(&tlogging, e);
+							}*/
+							/*else if (ev.timer.source == functionsTimer)
 							{
-								e->_update_functions();
-							}
-							else if (ev.timer.source == checkEnd_Timer)
+								_i_thr_functionsTimed(&tlogging, e);
+							}*/
+							/*else if (ev.timer.source == checkEnd_Timer)
 							{
 								continue;
-							}
-							else if (ev.timer.source == calcLoopsTimer)
+							}*/
+							/*else */
+							if (ev.timer.source == calcLoopsTimer)
 							{
-								e->_setMaxTickCount(count);
-								count = 0;
+								double tii = al_get_time();
+								tlogging.calcLoopsTimer_tps = 1.0 / (tii - tlogging._calcLoopsTimer_last);
+								tlogging._calcLoopsTimer_last = tii;
+
+								tlogging.loops_per_second = tlogging._loops;
+								tlogging._loops = 0;
 							}
-							else if (ev.timer.source == updatePosTimer)
+							/*else if (ev.timer.source == updatePosTimer)
 							{
-								Sprite::sprite* spr;
-								//Camera::camera_g cam;								
-
-								for (size_t p = 0; p < spr_data.work().getMax(); p++)
-								{
-									spr_data.get(spr, p);
-
-									/*bool still = false;
-
-									try {
-										for (auto& i : cam.getLayers(cam.getLastApplyID()))
-										{
-											if (i.second) {
-												if (spr->_quickLayerAmIOn(i.first))
-												{
-													still = true;
-													break;
-												}
-											}
-										}
-									}
-									catch (const char* c)
-									{
-										Log::gfile logg;
-										logg << Log::ERRDV << Log::START << "[THR2:EVENT][ERRR] Failed at for(auto&:cam) with error: " << c << ". Trying to continue as is." << Log::ENDL;
-										continue;
-									}
-									catch (...)
-									{
-										Log::gfile logg;
-										logg << Log::ERRDV << Log::START << "[THR2:EVENT][ERRR] Failed at for(auto&:cam) with UNKNOWN ERROR. Trying to continue as is." << Log::ENDL;
-										continue;
-									}
-
-									if (!still) continue;*/
-
-									bool isControllerBased;
-									spr->get(Sprite::FOLLOWKEYBOARD, isControllerBased);
-									if (isControllerBased)
-									{
-										bool wasd[4] = { e->getKey(KEY_W, false) || e->getKey(KEY_UP, false),e->getKey(KEY_A, false) || e->getKey(KEY_LEFT, false),e->getKey(KEY_S, false) || e->getKey(KEY_DOWN, false),e->getKey(KEY_D, false) || e->getKey(KEY_RIGHT, false) };
-										double acceleration;// , temp;
-										spr->get(Sprite::ACCELERATION_BY_KEYING, acceleration);
-
-										if (wasd[0]) { // go north
-											spr->set(Sprite::SPEEDY, -acceleration);
-										}
-										else if (wasd[2]) { // go south
-											spr->set(Sprite::SPEEDY, acceleration);
-										}
-
-										if (wasd[1]) { // go left
-											spr->set(Sprite::SPEEDX, -acceleration);
-										}
-										else if (wasd[3]) { // go right
-											spr->set(Sprite::SPEEDX, acceleration);
-										}
-									}
-
-									spr->_updateAcceleration(/*fixMultI*/);
-								}
-							}
+								_i_thr_updatePosTimed(&tlogging, e);
+							}*/
 						}
 						else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
 							glog << Log::START << "[THR2:EVENT][INFO] Display has been closed!" << Log::ENDL;
@@ -766,17 +729,31 @@ namespace LSW {
 								switch (val)
 								{
 								case HACK_IMMORTAL:
-									glog << Log::START << "[THR2:EVENT][INFO] GOT IMMORTAL HACK CODE!" << str << Log::ENDL;
+									glog << Log::NEEDED_START << "[THR2:EVENT][INFO] GOT IMMORTAL HACK CODE!" << str << Log::NEEDED_ENDL;
 									break;
 								case HACK_NEXTLEVEL:
-									glog << Log::START << "[THR2:EVENT][INFO] GOT NEXTLEVEL HACK CODE!" << str << Log::ENDL;
+									glog << Log::NEEDED_START << "[THR2:EVENT][INFO] GOT NEXTLEVEL HACK CODE!" << str << Log::NEEDED_ENDL;
 									break;
 								}
 							}
 						}
 					}
 				}
-				glog << Log::START << "[THR2:EVENT][INFO] Got call for end. Bye!" << Log::ENDL;
+				glog << Log::NEEDED_START << "[THR2:EVENT][INFO] Got call for end. Waiting smaller threads..." << Log::NEEDED_ENDL;
+
+				{
+					bool isDone = false;
+					while (!isDone) {
+						isDone = true;
+						for (auto& i : arethey) {
+							if (i) isDone = false;
+						}
+					}
+				}
+
+				glog << Log::NEEDED_START << "[THR2:EVENT][INFO] Done. Bye!" << Log::NEEDED_ENDL;
+
+				e->_setThrRunning(false);
 			}
 			big_event::~big_event()
 			{
@@ -812,6 +789,273 @@ namespace LSW {
 			{
 				cos_t_s* v = (cos_t_s*)va;
 				d = v->default_val + cos(al_get_time() * v->time_multiplier) * v->ampl;
+			}
+
+
+
+			void _i_thr_collisionTimed(_event_log* evl, events* e, double min_timer, bool* amIRunning)
+			{
+				Log::gfile logg;
+				if (!evl || !e || !amIRunning) {
+					logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: NULL POINTER AT START!" << Log::NEEDED_ENDL;
+					logg.flush();
+					exit(EXIT_FAILURE);
+				}
+
+				ALLEGRO_EVENT_QUEUE* ev_qu_internal = nullptr;
+				if (!(ev_qu_internal = al_create_event_queue())) {
+					logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: Cannot setup Event queue!" << Log::NEEDED_ENDL;
+					logg.flush();
+					exit(EXIT_FAILURE);
+				}
+				ALLEGRO_TIMER* ev_timer_internal = nullptr;
+				if (!(ev_timer_internal = al_create_timer(min_timer))) {
+					logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: Cannot setup Timer for thread!" << Log::NEEDED_ENDL;
+					logg.flush();
+					exit(EXIT_FAILURE);
+				}
+				al_register_event_source(ev_qu_internal, al_get_timer_event_source(ev_timer_internal));
+				al_start_timer(ev_timer_internal);
+
+				logg << Log::NEEDED_START << "[THR3:COLLD][INFO] Thread initialized successfully." << Log::NEEDED_ENDL;
+				*amIRunning = true;
+
+				while (e->_keep()) {
+					ALLEGRO_EVENT ev;
+					al_wait_for_event(ev_qu_internal, &ev); // it can be only the timer.
+
+					double tii = al_get_time();
+					evl->collisionTimer_tps = 1.0 / (tii - evl->_collisionTimer_last);
+					evl->_collisionTimer_last = tii;
+
+					Layer::layerer lyr;
+					d_sprite_database spr_data;
+					Sprite::sprite* spr, *spr2;
+
+					switch (lyr.getNow().getMode())
+					{
+					case Layer::STANDARD:
+						for (auto& i : lyr.getNow().work())
+						{
+							for (size_t p = 0; p < spr_data.work().getMax(); p++)
+							{
+								spr_data.get(spr, p);
+								int u, m;
+								spr->get(Sprite::LAYER, u);
+
+								if (u == i.first) {
+
+									spr->_resetCollision();
+
+									for (size_t q = 0; q < spr_data.work().getMax(); q++)
+									{
+										if (q != p) {
+											spr_data.get(spr2, q);
+											spr2->get(Sprite::LAYER, m);
+
+											for (auto& k : i.second.colliding)
+											{
+												if (k.first == m && k.second) {
+													spr->_verifyCollision(*spr2);
+													break;
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+						break;
+					case Layer::USEMAP:
+						((Map::map*)lyr.getNow().get_package())->testCollisionPlayer();
+					}
+				}
+
+				logg << Log::NEEDED_START << "[THR3:COLLD][INFO] Thread has quit the usual way." << Log::NEEDED_ENDL;
+
+				al_stop_timer(ev_timer_internal);
+				al_unregister_event_source(ev_qu_internal, al_get_timer_event_source(ev_timer_internal));
+				al_destroy_timer(ev_timer_internal);
+				al_destroy_event_queue(ev_qu_internal);
+
+				*amIRunning = false;
+			}
+
+
+			void _i_thr_functionsTimed(_event_log* evl, events* e, double min_timer, bool* amIRunning)
+			{
+				Log::gfile logg;
+				if (!evl || !e || !amIRunning) {
+					logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: NULL POINTER AT START!" << Log::NEEDED_ENDL;
+					logg.flush();
+					exit(EXIT_FAILURE);
+				}
+
+				ALLEGRO_EVENT_QUEUE* ev_qu_internal = nullptr;
+				if (!(ev_qu_internal = al_create_event_queue())) {
+					logg << Log::ERRDV << Log::NEEDED_START << "[THR4:FUNCT][ERRR] FATAL ERROR AT _i_thr_functionsTimed: Cannot setup Event queue!" << Log::NEEDED_ENDL;
+					logg.flush();
+					exit(EXIT_FAILURE);
+				}
+				ALLEGRO_TIMER* ev_timer_internal = nullptr;
+				if (!(ev_timer_internal = al_create_timer(min_timer))) {
+					logg << Log::ERRDV << Log::NEEDED_START << "[THR4:FUNCT][ERRR] FATAL ERROR AT _i_thr_functionsTimed: Cannot setup Timer for thread!" << Log::NEEDED_ENDL;
+					logg.flush();
+					exit(EXIT_FAILURE);
+				}
+				al_register_event_source(ev_qu_internal, al_get_timer_event_source(ev_timer_internal));
+				al_start_timer(ev_timer_internal);
+
+				logg << Log::NEEDED_START << "[THR4:FUNCT][INFO] Thread initialized successfully." << Log::NEEDED_ENDL;
+
+				*amIRunning = true;
+
+				while (e->_keep()) {
+					ALLEGRO_EVENT ev;
+					al_wait_for_event(ev_qu_internal, &ev); // it can be only the timer.
+
+					double tii = al_get_time();
+					evl->functionsTimer_tps = 1.0 / (tii - evl->_functionsTimer_last);
+					evl->_functionsTimer_last = tii;
+
+					e->_update_functions();
+				}
+
+				logg << Log::NEEDED_START << "[THR4:FUNCT][INFO] Thread has quit the usual way." << Log::NEEDED_ENDL;
+
+				al_stop_timer(ev_timer_internal);
+				al_unregister_event_source(ev_qu_internal, al_get_timer_event_source(ev_timer_internal));
+				al_destroy_timer(ev_timer_internal);
+				al_destroy_event_queue(ev_qu_internal);
+
+				*amIRunning = false;
+			}
+
+
+			void _i_thr_updatePosTimed(_event_log* evl, events* e, double min_timer, bool* amIRunning)
+			{
+				Log::gfile logg;
+				if (!evl || !e || !amIRunning) {
+					logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: NULL POINTER AT START!" << Log::NEEDED_ENDL;
+					logg.flush();
+					exit(EXIT_FAILURE);
+				}
+
+				ALLEGRO_EVENT_QUEUE* ev_qu_internal = nullptr;
+				if (!(ev_qu_internal = al_create_event_queue())) {
+					logg << Log::ERRDV << Log::NEEDED_START << "[THR5:UPPLR][ERRR] FATAL ERROR AT _i_thr_updatePosTimed: Cannot setup Event queue!" << Log::NEEDED_ENDL;
+					logg.flush();
+					exit(EXIT_FAILURE);
+				}
+				ALLEGRO_TIMER* ev_timer_internal = nullptr;
+				if (!(ev_timer_internal = al_create_timer(min_timer))) {
+					logg << Log::ERRDV << Log::NEEDED_START << "[THR5:UPPLR][ERRR] FATAL ERROR AT _i_thr_updatePosTimed: Cannot setup Timer for thread!" << Log::NEEDED_ENDL;
+					logg.flush();
+					exit(EXIT_FAILURE);
+				}
+				al_register_event_source(ev_qu_internal, al_get_timer_event_source(ev_timer_internal));
+				al_start_timer(ev_timer_internal);
+
+				logg << Log::NEEDED_START << "[THR5:UPPLR][INFO] Thread initialized successfully." << Log::NEEDED_ENDL;
+
+				*amIRunning = true;
+
+				while (e->_keep()) {
+					ALLEGRO_EVENT ev;
+					al_wait_for_event(ev_qu_internal, &ev); // it can be only the timer.
+
+					double tii = al_get_time();
+					evl->updatePosTimer_tps = 1.0 / (tii - evl->_updatePosTimer_last);
+					evl->_updatePosTimer_last = tii;
+
+					d_sprite_database spr_data;
+					Sprite::sprite* spr;
+
+					for (size_t p = 0; p < spr_data.work().getMax(); p++)
+					{
+						spr_data.get(spr, p);
+
+						/*bool isAffectedByGravity;  // ONLY ENTITIES OF PLAYER MOVE FROM KEYBOARD NOW
+						spr->get(Sprite::AFFECTED_BY_GRAVITY, isAffectedByGravity);
+						if (isAffectedByGravity)
+						{
+							Layer::layerer lyr;
+							double acceleration_gravity, scale;
+							int layer;
+
+							spr->get(Sprite::LAYER, layer);
+							spr->get(Sprite::ACCELERATION_GRAVITY_SCALE, scale);
+
+							acceleration_gravity = lyr.getNow().getR(layer).gravity;
+
+							spr->setScaled(Sprite::SPEEDY, acceleration_gravity, scale);
+						}
+
+						bool isControllerBased; 
+						spr->get(Sprite::FOLLOWKEYBOARD, isControllerBased);
+						if (isControllerBased)
+						{
+							bool wasd[4] = { e->getKey(KEY_W, false) || (isAffectedByGravity ? e->getKey(KEY_UP, true) : e->getKey(KEY_UP, false),e->getKey(KEY_A, false) || e->getKey(KEY_LEFT, false),e->getKey(KEY_S, false) || e->getKey(KEY_DOWN, false),e->getKey(KEY_D, false) || e->getKey(KEY_RIGHT, false) };
+							double acceleration, scale;// , temp;
+
+							spr->get(Sprite::ACCELERATION_BY_KEYING, acceleration);
+							spr->get(Sprite::ACCELERATION_SCALE, scale);
+
+							if (wasd[0]) { // go north
+								if (isAffectedByGravity)
+								{
+									spr->setScaled(Sprite::SPEEDY, -acceleration, scale);
+								}
+							}
+							else if (wasd[2]) { // go south
+								spr->setScaled(Sprite::SPEEDY, acceleration, scale);
+							}
+
+							if (wasd[1]) { // go left
+								spr->setScaled(Sprite::SPEEDX, -acceleration, scale);
+							}
+							else if (wasd[3]) { // go right
+								spr->setScaled(Sprite::SPEEDX, acceleration, scale);
+							}
+						}*/
+
+						spr->_updateAcceleration(/*fixMultI*/);
+					}
+
+					d_entity_database ent_data;
+					ent_data.draw();
+
+					//Entities::entity* ent;
+
+					/*for (size_t p = 0; p < ent_data.work().getMax(); p++)
+					{
+						ent_data.get(ent, p);
+						switch (ent->getType())
+						{
+						case Entities::PLAYER:
+							{
+								Entities::player* pl = (Entities::player*)ent;
+								pl->tick();
+							}
+							break;
+						case Entities::BADBOY:
+							{
+								Entities::badboy* bb = (Entities::badboy*)ent;
+								ent->tick();
+							}
+							break;
+						}
+					}*/
+				}
+
+				logg << Log::NEEDED_START << "[THR5:UPPLR][INFO] Thread has quit the usual way." << Log::NEEDED_ENDL;
+
+				al_stop_timer(ev_timer_internal);
+				al_unregister_event_source(ev_qu_internal, al_get_timer_event_source(ev_timer_internal));
+				al_destroy_timer(ev_timer_internal);
+				al_destroy_event_queue(ev_qu_internal);
+
+				*amIRunning = false;
 			}
 		}
 	}
