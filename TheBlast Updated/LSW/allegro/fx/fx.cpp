@@ -3,7 +3,29 @@
 namespace LSW {
 	namespace v2 {
 		namespace Fx {
+			bubbles::bubbles()
+			{
+				firstcall = true;
+			}
 			bubbles::bubbles(const unsigned amout, const float mfps, const int layer)
+			{
+				init(amout, mfps, layer);
+			}
+			bubbles::~bubbles()
+			{
+				positions.clear();
+				disguy->remove("BKG_NULL");
+				//imglw->unload();
+
+				d_images_database img_data;
+				d_sprite_database spr_data;
+				img_data.remove("BKG_NULL");
+				spr_data.remove("BKG_NULL");
+				disguy = nullptr;
+				imglw = nullptr;
+			}
+
+			void bubbles::init(const unsigned amout, const float mfps, const int layer)
 			{
 				if (firstcall) {
 
@@ -46,22 +68,13 @@ namespace LSW {
 					firstcall = false;
 				}
 			}
-			bubbles::~bubbles()
-			{
-				positions.clear();
-				disguy->remove("BKG_NULL");
-				//imglw->unload();
-
-				d_images_database img_data;
-				d_sprite_database spr_data;
-				img_data.remove("BKG_NULL");
-				spr_data.remove("BKG_NULL");
-				disguy = nullptr;
-				imglw = nullptr;
-			}
 
 			void bubbles::draw()
 			{
+				if (firstcall) {
+					throw "BUBBLES::DRAW NOT STARTED!";
+					return;
+				}
 				/*if (updatebitmap) {
 					if (lastbitmap) al_destroy_bitmap(lastbitmap);
 
@@ -100,6 +113,10 @@ namespace LSW {
 			}
 			void bubbles::think()
 			{
+				if (firstcall) {
+					throw "BUBBLES::DRAW NOT STARTED!";
+					return;
+				}
 				//updatebitmap = (lastbitmapwidth != nec.getINT("Display", "Width"));
 
 				if ((al_get_time() - lastdraw) >= (1.0 / fps))

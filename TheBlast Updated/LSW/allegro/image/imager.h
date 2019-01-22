@@ -38,6 +38,7 @@ namespace LSW {
 				~image_low();
 				//const bool set(const Safer::safe_string);
 				const bool load(const Safer::safe_string);
+				void setToLoad(const Safer::safe_string);
 				//const bool loadFromDatabase(const Safer::safe_string);
 				//const bool loadFromURL(const Safer::safe_string, const Safer::safe_string); // url, name it as (THE FILE! NOT ID)
 				const bool create(int, int);
@@ -74,6 +75,9 @@ namespace LSW {
 			void multipleLoad(const Safer::safe_string, Safer::safe_string, const size_t, const unsigned, Safer::safe_string, float* = nullptr, const bool = true);
 			// its name, initial path, how many, how many 0's, end (format), urls
 			//void multipleCloudLoad(const Safer::safe_string, Safer::safe_string, const size_t, const unsigned, Safer::safe_string, const Safer::safe_string* = nullptr, float* = nullptr); // NULLPTR == from database on Defaults::initial_call_url
+
+			image_low* getOrCreate(const Safer::safe_string, const bool = false); // create?
+			void easyRemove(const Safer::safe_string);
 		}
 	}
 }

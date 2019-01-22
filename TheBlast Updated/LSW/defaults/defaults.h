@@ -7,7 +7,7 @@ namespace LSW {
 	namespace v2 {
 		namespace Defaults {
 
-			const Safer::safe_string version_app = "V0.2.0";
+			const Safer::safe_string version_app = "V0.3.0pre1";
 
 			const Safer::safe_string default_root_path = "%appdata%/Lohk's Studios/TheBlast/";
 			const Safer::safe_string default_global_path = "%appdata%/Lohk's Studios/TheBlast/logs/latest.log";
@@ -65,7 +65,7 @@ namespace LSW {
 			const Safer::safe_string font_default_name = "font.ttf";
 			const Safer::safe_string font_altern_name_full = "C:\\Windows\\Fonts\\calibri.ttf";
 
-			const int default_display_settings = 516;//ALLEGRO_FULLSCREEN_WINDOW | ALLEGRO_OPENGL;
+			const int default_display_settings = ALLEGRO_FULLSCREEN_WINDOW | ALLEGRO_OPENGL | ALLEGRO_RESIZABLE;
 
 			const double verify_imager_timer_created = 2.0;
 
@@ -100,6 +100,9 @@ namespace LSW {
 			const double entity_default_gravity_speed = 0.005; // proportion on add
 
 			const size_t max_string_input_size = 1024;
+
+			const double map_load_max_time = 0.20;
+			const double map_resolve_max_time = 0.15;
 		}
 	}
 }

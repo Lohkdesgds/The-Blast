@@ -180,6 +180,7 @@
     <ClInclude Include="LSW\download_manager\downloader_v2.h" />
     <ClInclude Include="LSW\entity\entity.h" />
     <ClInclude Include="LSW\log_file\log.h" />
+    <ClInclude Include="LSW\main\sub_main\sub_main.h" />
     <ClInclude Include="LSW\map\map_control.h" />
     <ClInclude Include="LSW\safer\safer.h" />
     <ClInclude Include="LSW\tools\stacker\stacker.h" />
@@ -199,6 +200,7 @@
     <ClCompile Include="LSW\download_manager\downloader_v2.cpp" />
     <ClCompile Include="LSW\entity\entity.cpp" />
     <ClCompile Include="LSW\main\main.cpp" />
+    <ClCompile Include="LSW\main\sub_main\sub_main.cpp" />
     <ClCompile Include="LSW\map\map_control.cpp" />
     <ClCompile Include="LSW\tools\stacker\stacker.cpp" />
   </ItemGroup>

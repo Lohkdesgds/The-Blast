@@ -747,28 +747,43 @@ namespace LSW {
 			{
 				d_texts_database txt_data;
 				Camera::camera_g cam;
+				std::vector<int> v = cam.getLayers(cam.getLastApplyID());
 
-				/*int l0 = cam.get(Camera::LAYERLOWER);
-				int l1 = cam.get(Camera::LAYERHIGHER);*/
-
-				for (auto& p : cam.getLayers(cam.getLastApplyID())) {
-					if (p.second) {
-						txt_data.work().lock();
-						for (auto& i : txt_data.work().work())
-						{
-							i->verify();
-							i->draw(p.first);
-						}
-						txt_data.work().unlock();
-						/*for (int u = 0; u < (int)txt_data.work().getMax(); u++)
-						{
-							txt_data.work().get(u)->verify();
-						}
-						for (int u = 0; u < (int)txt_data.work().getMax(); u++)
-						{
-							txt_data.work().get(u)->draw(p.first);
-						}*/
+				for (auto& j : v) {
+					txt_data.work().lock();
+					for (auto& i : txt_data.work().work())
+					{
+						i->verify();
+						i->draw(j);
 					}
+					txt_data.work().unlock();
+				}
+
+			}
+
+			text* getOrCreate(const Safer::safe_string s, const bool create)
+			{
+				d_texts_database txt_data;
+				text* ref = nullptr;
+				if (txt_data.get(ref, s)) return ref;
+				if (create) {
+					txt_data.create(ref);
+					ref->set(Text::SETID, s);
+					return ref;
+				}
+				else {
+					throw "EXCEPTION AT TEXT GETORCREATE: NOT FOUND AND NOT SUPPOSED TO CREATE!";
+					return nullptr;
+				}
+			}
+			void easyRemove(const Safer::safe_string s)
+			{
+				d_texts_database txt_data;
+				text* ref = nullptr;
+				if (txt_data.get(ref, s)) {
+					txt_data.remove(s);
+					ref->unload();
+					delete ref;
 				}
 			}
 		}

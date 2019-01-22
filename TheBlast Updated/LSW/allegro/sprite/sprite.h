@@ -138,6 +138,9 @@ namespace LSW {
 			void _draw();
 
 			void reset_sprite_data(_sprite_data&);
+			
+			sprite* getOrCreate(const Safer::safe_string, const bool = false); // create?
+			void easyRemove(const Safer::safe_string);
 		}
 	}
 }

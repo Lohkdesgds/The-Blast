@@ -3,15 +3,12 @@
 #include "..\all\enable_all.h"
 
 
-#define LIVRE       0
-#define VISITADO   -2
-#define SEM_SAIDA  -3
-#define LOAD_MAX_TIME 0.05
-#define RESOLVE_MAX_TIME 0.05
 
 namespace LSW {
 	namespace v2 {
 		namespace Map {
+
+			enum keys_map_gen {LIVRE=0,VISITADO=-2,SEM_SAIDA=-3};
 
 			enum keysgamehu { KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT };
 			enum blockstats { /*GAMEPLAY_CORRUPTION = -4, INTRO_CORRUPTION = -3, INTRO_ANIMATED = -2, MENU_ANIMATED = -1,*/
@@ -27,6 +24,7 @@ namespace LSW {
 
 			class map {
 				int map_i[Defaults::map_size_default_x][Defaults::map_size_default_y];
+				
 				Sprite::sprite* map_p[Defaults::map_size_default_x][Defaults::map_size_default_y];
 
 				Sprite::sprite* big_map = nullptr;

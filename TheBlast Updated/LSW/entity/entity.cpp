@@ -58,7 +58,7 @@ namespace LSW {
 			}
 			const bool entity::amI(const Safer::safe_string s)
 			{
-				return false;
+				return (name == s);
 			}
 
 			Sprite::sprite * entity::getS()
@@ -134,6 +134,7 @@ namespace LSW {
 				spr->set(Sprite::COLLIDE, true);
 				spr->set(Sprite::AFFECTED_BY_COLLISION, true);
 				spr->set(Sprite::ENTITY, (void*)this);
+				spr->set(Sprite::POSY, 10.0);
 				//spr->set(Sprite::AFFECTED_BY_GRAVITY, true);
 
 				txt_data.create(txt);
@@ -154,6 +155,12 @@ namespace LSW {
 
 			void player::tick()
 			{
+				m.lock();
+				if (!spr) {
+					m.unlock();
+					return;
+				}
+
 				Events::big_event bev;
 
 				/* --------------- GRAVITY ---------------*/
@@ -171,9 +178,9 @@ namespace LSW {
 
 				/* --------------- KEYBOARD ---------------*/
 
-				bool wad[3] = { bev.g().getKey(Events::KEY_W, false) || bev.g().getKey(Events::KEY_UP, false), bev.g().getKey(Events::KEY_A, false) || bev.g().getKey(Events::KEY_LEFT, false)/*, bev.g().getKey(Events::KEY_S, false) || bev.g().getKey(Events::KEY_DOWN, false)*/, bev.g().getKey(Events::KEY_D, false) || bev.g().getKey(Events::KEY_RIGHT, false) };
+				bool wasd[4] = { bev.g().getKey(Events::KEY_W, false) || bev.g().getKey(Events::KEY_UP, false), bev.g().getKey(Events::KEY_A, false) || bev.g().getKey(Events::KEY_LEFT, false), bev.g().getKey(Events::KEY_S, false) || bev.g().getKey(Events::KEY_DOWN, false), bev.g().getKey(Events::KEY_D, false) || bev.g().getKey(Events::KEY_RIGHT, false) };
 
-				if (wad[0]) { // go north
+				if (wasd[0]) { // go north
 
 					/*if (al_get_time() - data.dval[_LAST_JUMP_TIME] > data.dval[JUMP_TIME_DELAY])
 					{
@@ -182,15 +189,20 @@ namespace LSW {
 					}*/
 					spr->setScaled(Sprite::SPEEDY, -data.dval[ACCELERATION_BY_KEYING], data.dval[JUMP_SPEED_PROPORTION]);
 				}
+				else if (wasd[2]) {
+					spr->setScaled(Sprite::SPEEDY, data.dval[ACCELERATION_BY_KEYING], data.dval[ACCELERATION_SCALE]);
+				}
 
-				if (wad[1]) { // go left
+				if (wasd[1]) { // go left
 					spr->setScaled(Sprite::SPEEDX, -data.dval[ACCELERATION_BY_KEYING], data.dval[ACCELERATION_SCALE]);
 				}
-				else if (wad[2]) { // go right
+				else if (wasd[3]) { // go right
 					spr->setScaled(Sprite::SPEEDX, data.dval[ACCELERATION_BY_KEYING], data.dval[ACCELERATION_SCALE]);
 				}
 
 				//spr->setScaled(Sprite::SPEEDY, -data.dval[ACCELERATION_BY_KEYING], data.dval[ACCELERATION_SCALE]);
+
+				m.unlock();
 			}
 
 			void player::set(const _eplayer_dvals e, const double v)
@@ -214,7 +226,9 @@ namespace LSW {
 
 			void player::load(const Safer::safe_string path, const int layer, const double siz)
 			{
-				if (spr) return;
+				m.lock();
+
+				if (spr) reset();
 
 				d_sprite_database spr_data;
 				d_texts_database txt_data;
@@ -230,6 +244,7 @@ namespace LSW {
 				spr->set(Sprite::COLLIDE, true);
 				spr->set(Sprite::AFFECTED_BY_COLLISION, true);
 				spr->set(Sprite::ENTITY, (void*)this);
+				spr->set(Sprite::POSY, 10.0);
 				//spr->set(Sprite::AFFECTED_BY_GRAVITY, true);
 
 				txt_data.create(txt);
@@ -239,6 +254,8 @@ namespace LSW {
 				txt->set(Text::SETFOLLOW, temp);
 				txt->set(Text::UPDATETIME, 0.5);
 				txt->set(Text::SETID, temp);
+
+				m.unlock();
 			}
 
 
@@ -261,18 +278,21 @@ namespace LSW {
 				d_entity_database ent_data;
 				//Camera::camera_g cam;
 
-				for (int u = 0; u < (int)ent_data.work().getMax(); u++)
+
+				ent_data.work().lock();
+				for (auto& i : ent_data.work().work())
 				{
-					switch (ent_data.work().get(u)->getType())
+					switch (i->getType())
 					{
 					case PLAYER:
-						((player*)(ent_data.work().get(u)))->tick();
+						((player*)i)->tick();
 						break;
 					case BADBOY:
-						((badboy*)(ent_data.work().get(u)))->tick();
+						((badboy*)i)->tick();
 						break;
 					}
 				}
+				ent_data.work().unlock();
 			}
 
 

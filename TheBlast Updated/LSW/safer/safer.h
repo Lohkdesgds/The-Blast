@@ -17,7 +17,9 @@ namespace LSW {
 				std::mutex m;
 				bool locked_work = false;
 			public:
-				void push(T&, const bool = false);
+				safe_vector();
+
+				void push(T, const bool = false);
 				const T& get(const size_t, const bool = false);
 				const size_t getMax();
 
@@ -33,6 +35,7 @@ namespace LSW {
 
 				const T& operator[](const size_t&) const;
 				T& operator[](const size_t&);
+				//safe_vector& operator=(const safe_vector&);
 			};
 
 			class safe_string {
@@ -101,8 +104,23 @@ namespace LSW {
 				IMPLEMENTATION
 			*/
 
+			template<typename T>
+			inline safe_vector<T>::safe_vector()
+			{
+				// none needed
+			}
+
+			/*template<typename T>
+			inline safe_vector<T>::safe_vector(safe_vector& sv)
+			{
+				sv.lock();
+				v.clear();
+				v = sv.work();
+				sv.unlock();
+			}*/
+
 			template <typename T>
-			inline void safe_vector<T>::push(T& u, const bool skip)
+			inline void safe_vector<T>::push(T u, const bool skip)
 			{
 				if (!skip) m.lock();
 				v.push_back(u);
@@ -211,6 +229,16 @@ namespace LSW {
 				if (locked) m.unlock();
 				return i;
 			}
+
+			/*template<typename T>
+			inline safe_vector<T> & safe_vector<T>::operator=(const safe_vector<T>& sv)
+			{
+				sv.lock();
+				v.clear();
+				v = sv.work();
+				sv.unlock();
+				return *this;
+			}*/
 
 
 

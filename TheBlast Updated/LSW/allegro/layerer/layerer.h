@@ -26,7 +26,7 @@ namespace LSW {
 				double collision_acel_multiplier = Defaults::collision_acel_multiplier;
 				double min_collision_acel = Defaults::min_collision_acel;
 				double gravity = Defaults::gravity_default;
-				std::map<int, bool> colliding; // layers id, colliding with what?
+				std::vector<int> collides_with; // layers id, colliding with what?
 			};
 
 			class layerer {
@@ -44,6 +44,7 @@ namespace LSW {
 				void* ppp = nullptr;
 			public:
 				_layer_down& getR(const int);
+				void copy(const _layer_down, const int);
 				void unset(const int);
 				void setMode(const mode);
 				const mode getMode();
@@ -52,6 +53,9 @@ namespace LSW {
 				void* get_package();
 
 				std::map<int, _layer_down>& work();
+
+				//each_layer& operator=(each_layer&);
+				//void setD(std::map<int, Layer::_layer_down>&);
 			};
 
 		}

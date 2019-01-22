@@ -29,9 +29,11 @@ namespace LSW {
 				//bool updatebitmap = false;
 			public:
 				// amount of entities running forever :3 and fps
+				bubbles();
 				bubbles(const unsigned, const float, const int = 0);
 				~bubbles();
 
+				void init(const unsigned, const float, const int = 0);
 				void draw();
 				void think();
 			};

@@ -666,6 +666,7 @@ namespace LSW {
 						}
 						else if (ev.type == ALLEGRO_EVENT_DISPLAY_RESIZE)
 						{
+							e->_setKey(CUSTOMEVENT_DISPLAY_RESIZED, true);
 							al_acknowledge_resize(e->_getTargD());
 						}
 						else if (ev.type == ALLEGRO_EVENT_MOUSE_AXES)
@@ -853,9 +854,9 @@ namespace LSW {
 											spr_data.get(spr2, q);
 											spr2->get(Sprite::LAYER, m);
 
-											for (auto& k : i.second.colliding)
+											for(auto& a : i.second.collides_with)
 											{
-												if (k.first == m && k.second) {
+												if (a == m) {
 													spr->_verifyCollision(*spr2);
 													break;
 												}

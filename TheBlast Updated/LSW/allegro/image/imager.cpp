@@ -64,6 +64,16 @@ namespace LSW {
 
 				return _load_NOADJUST(s);
 			}
+			void image_low::setToLoad(const Safer::safe_string s_o)
+			{
+				unload();
+				Safer::safe_string s = Defaults::default_data_path.g() + s_o.g();
+				Tools::interpret_path(s);
+
+				path = s;
+				mode = Image::LOADED;
+				optimized = true;
+			}
 
 			/*const bool image_low::loadFromDatabase(const Safer::safe_string newname)
 			{
@@ -160,6 +170,8 @@ namespace LSW {
 
 			const bool image_low::reload()
 			{
+				if (bmp) unload();
+
 				has_Reloaded = true;
 				al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR);
 
@@ -240,6 +252,10 @@ namespace LSW {
 					
 					reload();
 
+					lastcall = GetTickCount64();
+					orig_siz[0] = al_get_bitmap_width(bmp);
+					orig_siz[1] = al_get_bitmap_height(bmp);
+
 					logg << Log::START << "[IMGL:VERIF][INFO] Reloaded " << id << Log::ENDL;
 
 					optimized = false;
@@ -308,13 +324,15 @@ namespace LSW {
 				d_images_database img_data;
 				Events::big_event bev;
 
-				bool hasChanged = bev.g().getKey(Events::CUSTOMEVENT_DISPLAY_TOGGLED);
+				bool hasChanged = bev.g().getKey(Events::CUSTOMEVENT_DISPLAY_TOGGLED) || bev.g().getKey(Events::CUSTOMEVENT_DISPLAY_RESIZED);
 
-				for (int u = 0; u < (int)img_data.work().getMax(); u++)
+				img_data.work().lock();
+				for (auto& i : img_data.work().work())
 				{
-					if (hasChanged && img_data.work().get(u)->amI(Image::CREATED)) img_data.work().get(u)->reload();
-					else img_data.work().get(u)->checkMemory();
+					if (hasChanged && i->amI(Image::CREATED)) i->reload();
+					else i->checkMemory();
 				}
+				img_data.work().unlock();
 			}
 
 			/*void _start_thread()
@@ -374,7 +392,7 @@ namespace LSW {
 
 					img_data.create(wi);
 					wi->setID(newnick);
-					wi->load(newname);
+					wi->setToLoad(newname);
 					wi->shouldOptimize(optimizethem);
 					/*if (!)
 					{
@@ -435,6 +453,34 @@ namespace LSW {
 				}
 				if (perc) *perc = 1.0;
 			}*/
+
+
+
+			image_low* getOrCreate(const Safer::safe_string s, const bool create)
+			{
+				d_images_database img_data;
+				image_low* ref = nullptr;
+				if (img_data.get(ref, s)) return ref;
+				if (create){
+					img_data.create(ref);
+					ref->setID(s);
+					return ref;
+				}
+				else {
+					throw "EXCEPTION AT IMAGE_LOW GETORCREATE: NOT FOUND AND NOT SUPPOSED TO CREATE!";
+					return nullptr;
+				}
+			}
+			void easyRemove(const Safer::safe_string s)
+			{
+				d_images_database img_data;
+				image_low* ref = nullptr;
+				if (img_data.get(ref, s)) {
+					img_data.remove(s);
+					ref->unload();
+					delete ref;
+				}
+			}
 		}
 	}
 }

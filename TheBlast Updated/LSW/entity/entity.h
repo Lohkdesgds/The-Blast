@@ -53,6 +53,7 @@ namespace LSW {
 
 			class player : public entity
 			{
+				std::mutex m;
 				_player_data data;
 			public:
 				player();

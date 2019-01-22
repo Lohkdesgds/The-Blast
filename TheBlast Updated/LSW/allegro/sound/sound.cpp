@@ -23,19 +23,14 @@ namespace LSW {
 				return true;
 			}
 
-			/*const bool track::loadFromDatabase(const Safer::safe_string newname)
+			void track::unload()
 			{
-				Safer::safe_string s = Defaults::initial_call_url.g() + newname.g();
-				Tools::clearPath(s, true);
-				return loadFromURL(s, newname);
+				if (instance) al_destroy_sample_instance(instance);
+				if (mse) al_destroy_sample(mse);
+				instance = nullptr;
+				mse = nullptr;
 			}
-			const bool track::loadFromURL(const Safer::safe_string url, Safer::safe_string s_o) // url, name it as (THE FILE! NOT ID)
-			{
-				if (!load(s_o)) assert(Tools::saveFromCloud(url, s_o));
-				else return true;
-				return load(s_o);
-			}*/
-
+			
 			void track::set(const track_p e, const bool v)
 			{
 				if (!instance) return;
@@ -74,7 +69,7 @@ namespace LSW {
 			}
 			void track::set(const track_s e, const Safer::safe_string v)
 			{
-				if (!instance) return;
+				//if (!instance) return;
 
 				switch (e)
 				{
@@ -122,7 +117,7 @@ namespace LSW {
 			}
 			void track::get(const track_s e, Safer::safe_string& v)
 			{
-				if (!instance) return;
+				//if (!instance) return;
 
 				switch (e)
 				{
@@ -150,6 +145,32 @@ namespace LSW {
 				return 0;
 			}
 
+
+			track* getOrCreate(const Safer::safe_string s, const bool create)
+			{
+				d_musics_database msk_data;
+				track* ref = nullptr;
+				if (msk_data.get(ref, s)) return ref;
+				if (create) {
+					msk_data.create(ref);
+					ref->set(Sound::ID, s);
+					return ref;
+				}
+				else {
+					throw "EXCEPTION AT TRACK GETORCREATE: NOT FOUND AND NOT SUPPOSED TO CREATE!";
+					return nullptr;
+				}
+			}
+			void easyRemove(const Safer::safe_string s)
+			{
+				d_musics_database msk_data;
+				track* ref = nullptr;
+				if (msk_data.get(ref, s)) {
+					msk_data.remove(s);
+					ref->unload();
+					delete ref;
+				}
+			}
 		}
 	}
 }

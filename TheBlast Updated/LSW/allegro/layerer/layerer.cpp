@@ -31,6 +31,11 @@ namespace LSW {
 				return lr[o];
 			}
 
+			void each_layer::copy(const _layer_down v, const int o)
+			{
+				lr[o] = v;
+			}
+
 			void each_layer::unset(const int o)
 			{
 				lr.erase(o);
@@ -60,6 +65,18 @@ namespace LSW {
 			{
 				return lr;
 			}
+
+			/*each_layer & each_layer::operator=(each_layer & e)
+			{
+				lr.clear();
+				lr = e.work();
+				return *this;
+			}*/
+			/*void each_layer::setD(std::map<int, Layer::_layer_down> & e)
+			{
+				lr.clear();
+				lr = e;
+			}*/
 
 		}
 	}

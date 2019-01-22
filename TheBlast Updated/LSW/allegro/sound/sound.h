@@ -20,8 +20,7 @@ namespace LSW {
 				Safer::safe_string			my_nick;
 			public:
 				const bool load(const Safer::safe_string);
-				/*const bool loadFromDatabase(const Safer::safe_string);
-				const bool loadFromURL(const Safer::safe_string, const Safer::safe_string); // url, name it as (THE FILE! NOT ID)*/
+				void unload();
 
 				void set(const track_p, const bool);
 				void set(const track_f, const float);
@@ -35,6 +34,10 @@ namespace LSW {
 			};
 
 			size_t _find(const Safer::safe_string, Safer::safe_vector<track*>&, bool&);
+
+
+			track* getOrCreate(const Safer::safe_string, const bool = false); // create?
+			void easyRemove(const Safer::safe_string);
 		}
 	}
 }

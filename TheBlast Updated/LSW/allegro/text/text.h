@@ -108,6 +108,10 @@ namespace LSW {
 			size_t _find(const Safer::safe_string, Safer::safe_vector<text*>&, bool&);
 			void _draw();
 
+
+			text* getOrCreate(const Safer::safe_string s, const bool = false); // create?
+			void easyRemove(const Safer::safe_string);
+
 		}
 	}
 }

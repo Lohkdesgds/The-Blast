@@ -38,7 +38,7 @@ namespace LSW {
 
 				while (not_done)
 				{
-					for (int time = 0; time < 1000000 && al_get_time() - start < LOAD_MAX_TIME;)
+					for (int time = 0; time < 1000000 && al_get_time() - start < Defaults::map_load_max_time;)
 					{
 						//getch();
 						map_i[posx][posy] = backup;
@@ -207,7 +207,7 @@ namespace LSW {
 							{
 								posx = rand() % (Defaults::map_size_default_x - 2) + 1;
 								posy = rand() % (Defaults::map_size_default_y - 2) + 1;
-							} while (map_i[posx][posy] != SPACEID && al_get_time() - start < LOAD_MAX_TIME);
+							} while (map_i[posx][posy] != SPACEID && al_get_time() - start < Defaults::map_load_max_time);
 						}
 						backup = map_i[posx][posy];
 						map_i[posx][posy] = 3;
@@ -251,7 +251,7 @@ namespace LSW {
 
 					start = al_get_time();
 
-					while (map_i[posx][posy] != STARTID && al_get_time() - start < LOAD_MAX_TIME)
+					while (map_i[posx][posy] != STARTID && al_get_time() - start < Defaults::map_load_max_time)
 					{
 						posx = rand() % (Defaults::map_size_default_x - 2) + 1;
 						posy = rand() % (Defaults::map_size_default_y - 2) + 1;
@@ -309,7 +309,7 @@ namespace LSW {
 						man[a][b] = map_i[a][b];
 				}
 
-				while (!done && al_get_time() - tima < RESOLVE_MAX_TIME)
+				while (!done && al_get_time() - tima < Defaults::map_resolve_max_time)
 				{
 					int loko = rand() % 4;
 
@@ -734,6 +734,7 @@ namespace LSW {
 				}
 
 				Camera::camera_g cam;
+				bool redrawall = false;
 				
 				ALLEGRO_BITMAP* targ = al_get_target_bitmap();
 				if (!targ) {
@@ -741,13 +742,16 @@ namespace LSW {
 					hasToUpdate = true;
 					return;
 				}
-				else big_map_il->hasReloaded(true);
+				else if (big_map_il->hasReloaded(true))
+				{
+					redrawall = true;
+				}
 
 				big_map->_setAsTarg();
 
 				//if (is_new_Map) al_clear_to_color(al_map_rgb(0, 0, 0));
 
-				//const int lastapply = cam.getLastApplyID();
+				const int lastapply = cam.getLastApplyID();
 				/*cam.copy(Defaults::default_map_layer_backup, lastapply); // backup
 				cam.set(lastapply, Camera::OFFX, 0.0);
 				cam.set(lastapply, Camera::OFFY, 0.0);
@@ -772,13 +776,13 @@ namespace LSW {
 						/*else if (is_new_Map) {
 							j->forceDraw();
 						}*/
-						else if (j->hasChanged()) j->forceDraw();
+						else if (j->hasChanged() || redrawall) j->forceDraw();
 					}
 				}
 				///cam.copy(lastapply, Defaults::default_layer_backup);
 				//cam.apply(lastapply); // not needed because transformation is bitmap based.
 				al_set_target_bitmap(targ);
-				///cam.apply(lastapply);
+				cam.apply(lastapply);
 
 				//is_new_Map = false;
 
@@ -840,11 +844,14 @@ namespace LSW {
 			void map::reset_draw_thr()
 			{
 				/* ---------------| IMAGES & SPRITES |--------------- */
+				
 
-				d_sprite_database spr_data;
-				d_images_database img_data;
+				/*lock();
+				d_entity_database ent_data;
+				ent_data.remove(plr.getMyName());
+				unlock();
 
-				plr.reset();
+				plr.reset();*/
 
 				gpu_thr_ready = false;
 			}
@@ -899,7 +906,6 @@ namespace LSW {
 				ent_data.work().unlock();
 
 				has_loadedMap = false;
-
 
 				cpu_thr_ready = false;
 			}
@@ -1102,7 +1108,7 @@ namespace LSW {
 			}*/
 			void map::launch_player(const Safer::safe_string path, const double size, const int layer)
 			{
-				plr.reset();
+				//plr.reset();
 				plr.load(path, layer, size);
 				plr.setMyName(randomName());
 				{
