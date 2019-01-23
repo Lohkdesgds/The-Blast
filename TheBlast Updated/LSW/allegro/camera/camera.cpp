@@ -111,7 +111,7 @@ namespace LSW {
 				}
 				return 0.0;
 			}
-			void camera_g::get(/*const _cam_p a, */const int o, std::map<int, bool>& v)
+			void camera_g::get(/*const _cam_p a, */const int o, Safer::safe_vector<int>& v)
 			{
 				assert(cam.t);
 
@@ -122,10 +122,12 @@ namespace LSW {
 				case LAYERHIGHER:
 					return cam.t->get(o).limits[1];
 				}*/
-				v = cam.t->get(o).layers_enabled;
+
+				v.clear();
+				for (auto& i : cam.t->get(o).layers_enabled) v.push(i);
 			}
 
-			std::map<int, bool> camera_g::getLayers(const int u)
+			std::vector<int>& camera_g::getLayers(const int u)
 			{
 				assert(cam.t);
 
@@ -171,8 +173,24 @@ namespace LSW {
 			{
 				assert(cam.t);
 
-
-				cam.t->get(o).layers_enabled[v] = t;
+				if (t) {
+					for (auto& i : cam.t->get(o).layers_enabled) {
+						if (i == v) return;
+					}
+					cam.t->get(o).layers_enabled.push_back(v);
+				}
+				else {
+					size_t p = 0;
+					bool found = false;
+					for (auto& i : cam.t->get(o).layers_enabled) {
+						if (i == v) {
+							found = true;
+							break;
+						}
+						p++;
+					}
+					if (found) cam.t->get(o).layers_enabled.erase(cam.t->get(o).layers_enabled.begin() + p);
+				}
 
 				/*switch (a)
 				{

@@ -36,7 +36,7 @@ namespace LSW {
 				float offset_y = 0.0;
 				float rotation = 0.0;
 				//int limits[2] = { 0,3 };
-				std::map<int,bool> layers_enabled;
+				std::vector<int> layers_enabled;
 			};
 
 			// transformator has scale, pos and rotation transformations
@@ -77,8 +77,8 @@ namespace LSW {
 				const int getLastApplyID();
 
 				const double get(const int, const _cam_v); // get config of n int, typ _cam_v
-				void get(const int, std::map<int, bool>&);
-				std::map<int, bool> getLayers(const int);
+				void get(const int, Safer::safe_vector<int>&);
+				std::vector<int>& getLayers(const int);
 				
 				void set(const int, const _cam_v, const double);
 				void set(const int, const int, const bool); // set config n int if layer int is true/false

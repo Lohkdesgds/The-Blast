@@ -29,14 +29,16 @@ namespace LSW {
 				//bool updatebitmap = false;
 			public:
 				// amount of entities running forever :3 and fps
+				bubbles();
 				bubbles(const unsigned, const float, const int = 0);
 				~bubbles();
 
+				void init(const unsigned, const float, const int = 0);
 				void draw();
 				void think();
 			};
 
-			const double maxone(double);
+			const double maxone(double, const double = 1.0);
 
 			class lines {
 				Image::image_low* imglw = nullptr;

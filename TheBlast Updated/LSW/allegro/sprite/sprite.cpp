@@ -371,6 +371,9 @@ namespace LSW {
 						return false;
 					}
 					ALLEGRO_BITMAP* bmp = nullptr; // current bitmap
+					if (!bmps.get(frame, Defaults::exp_veryfast)) {
+						return false;
+					}
 					bmps.get(frame, Defaults::exp_veryfast)->get(bmp);
 					if (!bmp) {
 						replacing.unlock();
@@ -514,7 +517,7 @@ namespace LSW {
 			{
 				ALLEGRO_BITMAP* bmp = nullptr;
 				bmps.get(a, Defaults::exp_veryfast)->get(bmp);
-				assert(bmp);
+				if (!bmp) throw "SPRITE::_SETASTARG - Cannot set id #" + std::to_string((int)this) + " as target";
 
 				al_set_target_bitmap(bmp);
 			}
@@ -726,17 +729,15 @@ namespace LSW {
 			{
 				d_sprite_database spr_data;
 				Camera::camera_g cam;
+				std::vector<int> v = cam.getLayers(cam.getLastApplyID());
 
-				/*int l0 = cam.get(Camera::LAYERLOWER);
-				int l1 = cam.get(Camera::LAYERHIGHER);*/
-				
-				for (auto& p : cam.getLayers(cam.getLastApplyID())) {
-					if (p.second) {
-						for (int u = 0; u < (int)spr_data.work().getMax(); u++)
-						{
-							spr_data.work().get(u)->drawIfLayer(p.first);
-						}
+				for (auto& i : v) {
+					spr_data.work().lock();
+					for (auto& u : spr_data.work().work())
+					{
+						u->drawIfLayer(i);
 					}
+					spr_data.work().unlock();
 				}
 			}
 
@@ -773,6 +774,34 @@ namespace LSW {
 				//u.bval[FOLLOWKEYBOARD] = false;
 				u.bval[USE_TINTED_DRAWING] = false;
 				//u.bval[AFFECTED_BY_GRAVITY] = false;
+				u.bval[_SKIP_DEFAULT_COLLISION_METHOD] = false;
+			}
+
+
+			sprite* getOrCreate(const Safer::safe_string s, const bool create)
+			{
+				d_sprite_database spr_data;
+				sprite* ref = nullptr;
+				if (spr_data.get(ref, s)) return ref;
+				if (create) {
+					spr_data.create(ref);
+					ref->setID(s);
+					return ref;
+				}
+				else {
+					throw "EXCEPTION AT SPRITE GETORCREATE: NOT FOUND AND NOT SUPPOSED TO CREATE!";
+					return nullptr;
+				}
+			}
+			void easyRemove(const Safer::safe_string s)
+			{
+				d_sprite_database spr_data;
+				sprite* ref = nullptr;
+				if (spr_data.get(ref, s)) {
+					spr_data.remove(s);
+					// delete should do the trick
+					delete ref;
+				}
 			}
 		}
 	}

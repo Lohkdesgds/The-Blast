@@ -622,6 +622,11 @@ namespace LSW {
 				{
 					ALLEGRO_EVENT ev;
 
+					// simple tasks
+					if (e->getKey(CUSTOMEVENT_RESETCURRSTRING)) {
+						wrk.clearall();
+					}
+
 					if (e->_nextEv(ev, true))
 					{
 						tlogging._loops++;
@@ -648,6 +653,7 @@ namespace LSW {
 
 								tlogging.loops_per_second = tlogging._loops;
 								tlogging._loops = 0;
+
 							}
 							/*else if (ev.timer.source == updatePosTimer)
 							{
@@ -666,6 +672,7 @@ namespace LSW {
 						}
 						else if (ev.type == ALLEGRO_EVENT_DISPLAY_RESIZE)
 						{
+							e->_setKey(CUSTOMEVENT_DISPLAY_RESIZED, true);
 							al_acknowledge_resize(e->_getTargD());
 						}
 						else if (ev.type == ALLEGRO_EVENT_MOUSE_AXES)
@@ -710,6 +717,7 @@ namespace LSW {
 
 						else if (ev.type == ALLEGRO_EVENT_KEY_UP || ev.type == ALLEGRO_EVENT_KEY_CHAR)
 						{
+
 							wrk.interpret(ev.keyboard.unichar, ev.keyboard.keycode);
 
 							Safer::safe_string str, str2;
@@ -830,16 +838,21 @@ namespace LSW {
 
 					Layer::layerer lyr;
 					d_sprite_database spr_data;
-					Sprite::sprite* spr, *spr2;
+					//Sprite::sprite* spr, *spr2;
 
 					switch (lyr.getNow().getMode())
 					{
 					case Layer::STANDARD:
 						for (auto& i : lyr.getNow().work())
 						{
-							for (size_t p = 0; p < spr_data.work().getMax(); p++)
+							spr_data.work().lock();
+							for (auto& spr : spr_data.work().work())
 							{
-								spr_data.get(spr, p);
+								bool skip;
+								spr->get(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, skip);
+								if (skip) continue;
+
+								//spr_data.get(spr, p);
 								int u, m;
 								spr->get(Sprite::LAYER, u);
 
@@ -847,15 +860,17 @@ namespace LSW {
 
 									spr->_resetCollision();
 
-									for (size_t q = 0; q < spr_data.work().getMax(); q++)
+									for (auto& spr2 : spr_data.work().work())
 									{
-										if (q != p) {
-											spr_data.get(spr2, q);
+										if (spr != spr2) {
+											spr2->get(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, skip);
+											if (skip) continue;
+
 											spr2->get(Sprite::LAYER, m);
 
-											for (auto& k : i.second.colliding)
+											for(auto& a : i.second.collides_with)
 											{
-												if (k.first == m && k.second) {
+												if (a == m) {
 													spr->_verifyCollision(*spr2);
 													break;
 												}
@@ -864,10 +879,17 @@ namespace LSW {
 									}
 								}
 							}
+							spr_data.work().unlock();
 						}
 						break;
 					case Layer::USEMAP:
-						((Map::map*)lyr.getNow().get_package())->testCollisionPlayer();
+						{
+							Map::map* map = ((Map::map*)lyr.getNow().get_package());
+							if (map) {
+								map->cpuTask();
+							}
+						}
+						break;
 					}
 				}
 
@@ -883,7 +905,7 @@ namespace LSW {
 
 
 			void _i_thr_functionsTimed(_event_log* evl, events* e, double min_timer, bool* amIRunning)
-			{
+			{				
 				Log::gfile logg;
 				if (!evl || !e || !amIRunning) {
 					logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: NULL POINTER AT START!" << Log::NEEDED_ENDL;
@@ -1022,8 +1044,17 @@ namespace LSW {
 						spr->_updateAcceleration(/*fixMultI*/);
 					}
 
-					d_entity_database ent_data;
-					ent_data.draw();
+					Layer::layerer lyr;
+					if (lyr.getNow().getMode() == Layer::USEMAP) {
+						Map::map* map = ((Map::map*)lyr.getNow().get_package());
+						if (map) {
+							if (!map->isPaused())
+							{
+								d_entity_database ent_data;
+								ent_data.draw();
+							}
+						}
+					}
 
 					//Entities::entity* ent;
 

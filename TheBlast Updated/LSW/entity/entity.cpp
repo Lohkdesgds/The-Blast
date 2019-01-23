@@ -26,11 +26,20 @@ namespace LSW {
 					txt_data.remove(str);
 					delete txt;
 				}
+				if (rgb)
+				{
+					d_images_database img_data;
+					Safer::safe_string str = rgb->whoAmI();
+					img_data.remove(str);
+					rgb->unload();
+					delete rgb;
+				}
 				spr = nullptr;
 				txt = nullptr;
+				rgb = nullptr;
 
 				name.clear();
-				health = 1.0;
+				//health = 1.0;
 			}
 			void entity::setMyName(const Safer::safe_string nam)
 			{
@@ -58,7 +67,7 @@ namespace LSW {
 			}
 			const bool entity::amI(const Safer::safe_string s)
 			{
-				return false;
+				return (name == s);
 			}
 
 			Sprite::sprite * entity::getS()
@@ -116,6 +125,37 @@ namespace LSW {
 				}
 			}
 
+			void badboy::load(const ALLEGRO_COLOR color, const int layer, const double siz)
+			{
+				if (spr) return;
+
+				Safer::safe_string temp = "_ENTITY_" + std::to_string(countt++);
+
+				rgb = Image::getOrCreate(temp, true);
+				rgb->create(32, 32);
+				rgb->paint(color);
+
+				spr = Sprite::getOrCreate(temp, true);
+				spr->add(temp);
+				spr->set(Sprite::LAYER, layer);
+				spr->set(Sprite::SCALEG, siz);
+				spr->set(Sprite::COLLIDE, true);
+				spr->set(Sprite::AFFECTED_BY_COLLISION, true);
+				spr->set(Sprite::ENTITY, (void*)this);
+				spr->set(Sprite::POSY, 10.0);
+				spr->set(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, true);
+
+				txt = Text::getOrCreate(temp, true);
+				//txt->set(Text::SETSTRING, "[BOT] %entity_name% [%entity_health%]"); // TODO
+				txt->set(Text::SETSTRING, "[BOT] %entity_name%");
+				txt->set(Text::MODE, Text::ALIGN_CENTER);
+				txt->set(Text::LAYER, 70);
+				txt->set(Text::SCALEG, 0.85);
+				txt->set(Text::POSY, -0.09);
+				txt->set(Text::SETFOLLOW, temp);
+				txt->set(Text::UPDATETIME, 0.5);
+			}
+
 			void badboy::load(const Safer::safe_string path, const int layer, const double siz)
 			{
 				if (spr) return;
@@ -125,24 +165,25 @@ namespace LSW {
 
 				Safer::safe_string temp = "_ENTITY_" + std::to_string(countt++);
 
-				spr_data.create(spr);
+				spr = Sprite::getOrCreate(temp, true);
 				spr->add(path);
-				spr->setID(temp);
 				spr->set(Sprite::LAYER, layer);
 				spr->set(Sprite::SCALEG, siz);
-				//spr->set(Sprite::FOLLOWKEYBOARD, true);
 				spr->set(Sprite::COLLIDE, true);
 				spr->set(Sprite::AFFECTED_BY_COLLISION, true);
 				spr->set(Sprite::ENTITY, (void*)this);
-				//spr->set(Sprite::AFFECTED_BY_GRAVITY, true);
+				spr->set(Sprite::POSY, 10.0);
+				spr->set(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, true);
 
-				txt_data.create(txt);
-				txt->set(Text::SETSTRING, "[BOT] %entity_name% [%entity_health%]");
+				txt = Text::getOrCreate(temp, true);
+				//txt->set(Text::SETSTRING, "[BOT] %entity_name% [%entity_health%]"); // TODO
+				txt->set(Text::SETSTRING, "[BOT] %entity_name%");
 				txt->set(Text::MODE, Text::ALIGN_CENTER);
 				txt->set(Text::LAYER, 70);
+				txt->set(Text::SCALEG, 0.85);
+				txt->set(Text::POSY, -0.09);
 				txt->set(Text::SETFOLLOW, temp);
 				txt->set(Text::UPDATETIME, 0.5);
-				txt->set(Text::SETID, temp);
 			}
 
 
@@ -154,6 +195,18 @@ namespace LSW {
 
 			void player::tick()
 			{
+				if (data.sleep) {
+					spr->set(Sprite::SPEEDY, 0.0);
+					spr->set(Sprite::SPEEDX, 0.0);
+					return;
+				}
+
+				m.lock();
+				if (!spr) {
+					m.unlock();
+					return;
+				}
+
 				Events::big_event bev;
 
 				/* --------------- GRAVITY ---------------*/
@@ -171,9 +224,9 @@ namespace LSW {
 
 				/* --------------- KEYBOARD ---------------*/
 
-				bool wad[3] = { bev.g().getKey(Events::KEY_W, false) || bev.g().getKey(Events::KEY_UP, false), bev.g().getKey(Events::KEY_A, false) || bev.g().getKey(Events::KEY_LEFT, false)/*, bev.g().getKey(Events::KEY_S, false) || bev.g().getKey(Events::KEY_DOWN, false)*/, bev.g().getKey(Events::KEY_D, false) || bev.g().getKey(Events::KEY_RIGHT, false) };
+				bool wasd[4] = { bev.g().getKey(Events::KEY_W, false) || bev.g().getKey(Events::KEY_UP, false), bev.g().getKey(Events::KEY_A, false) || bev.g().getKey(Events::KEY_LEFT, false), bev.g().getKey(Events::KEY_S, false) || bev.g().getKey(Events::KEY_DOWN, false), bev.g().getKey(Events::KEY_D, false) || bev.g().getKey(Events::KEY_RIGHT, false) };
 
-				if (wad[0]) { // go north
+				if (wasd[0]) { // go north
 
 					/*if (al_get_time() - data.dval[_LAST_JUMP_TIME] > data.dval[JUMP_TIME_DELAY])
 					{
@@ -182,15 +235,20 @@ namespace LSW {
 					}*/
 					spr->setScaled(Sprite::SPEEDY, -data.dval[ACCELERATION_BY_KEYING], data.dval[JUMP_SPEED_PROPORTION]);
 				}
+				else if (wasd[2]) {
+					spr->setScaled(Sprite::SPEEDY, data.dval[ACCELERATION_BY_KEYING], data.dval[ACCELERATION_SCALE]);
+				}
 
-				if (wad[1]) { // go left
+				if (wasd[1]) { // go left
 					spr->setScaled(Sprite::SPEEDX, -data.dval[ACCELERATION_BY_KEYING], data.dval[ACCELERATION_SCALE]);
 				}
-				else if (wad[2]) { // go right
+				else if (wasd[3]) { // go right
 					spr->setScaled(Sprite::SPEEDX, data.dval[ACCELERATION_BY_KEYING], data.dval[ACCELERATION_SCALE]);
 				}
 
 				//spr->setScaled(Sprite::SPEEDY, -data.dval[ACCELERATION_BY_KEYING], data.dval[ACCELERATION_SCALE]);
+
+				m.unlock();
 			}
 
 			void player::set(const _eplayer_dvals e, const double v)
@@ -204,6 +262,11 @@ namespace LSW {
 				if (e != D_EPLAYERS_MAX)
 					v = data.dval[e];
 			}
+
+			void player::sleep(const bool b)
+			{
+				data.sleep = b;
+			}
 			
 			void player::set(const _eplayer_bvals e, const bool v)
 			{
@@ -212,33 +275,68 @@ namespace LSW {
 			}
 
 
-			void player::load(const Safer::safe_string path, const int layer, const double siz)
+			void player::load(const ALLEGRO_COLOR color, const int layer, const double siz)
 			{
-				if (spr) return;
+				m.lock();
 
-				d_sprite_database spr_data;
-				d_texts_database txt_data;
+				if (spr) reset();
 
 				Safer::safe_string temp = "_ENTITY_" + std::to_string(countt++);
 
-				spr_data.create(spr);
-				spr->add(path);
-				spr->setID(temp);
+				rgb = Image::getOrCreate(temp, true);
+				rgb->create(32, 32);
+				rgb->paint(color);
+
+				spr = Sprite::getOrCreate(temp, true);
+				spr->add(temp);
 				spr->set(Sprite::LAYER, layer);
 				spr->set(Sprite::SCALEG, siz);
-				//spr->set(Sprite::FOLLOWKEYBOARD, true);
 				spr->set(Sprite::COLLIDE, true);
 				spr->set(Sprite::AFFECTED_BY_COLLISION, true);
 				spr->set(Sprite::ENTITY, (void*)this);
-				//spr->set(Sprite::AFFECTED_BY_GRAVITY, true);
+				spr->set(Sprite::POSY, 10.0);
+				spr->set(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, true);
 
-				txt_data.create(txt);
-				txt->set(Text::SETSTRING, "%entity_name% [%entity_health%]");
+				txt = Text::getOrCreate(temp, true);
+				txt->set(Text::SETSTRING, "%entity_name% [HEALTH:%entity_health%]"); // TODO
 				txt->set(Text::MODE, Text::ALIGN_CENTER);
 				txt->set(Text::LAYER, 70);
+				txt->set(Text::SCALEG, 0.85);
+				txt->set(Text::POSY, -0.09);
 				txt->set(Text::SETFOLLOW, temp);
 				txt->set(Text::UPDATETIME, 0.5);
-				txt->set(Text::SETID, temp);
+
+				m.unlock();
+			}
+
+			void player::load(const Safer::safe_string path, const int layer, const double siz)
+			{
+				m.lock();
+
+				if (spr) reset();
+
+				Safer::safe_string temp = "_ENTITY_" + std::to_string(countt++);
+
+				spr = Sprite::getOrCreate(temp, true);
+				spr->add(path);
+				spr->set(Sprite::LAYER, layer);
+				spr->set(Sprite::SCALEG, siz);
+				spr->set(Sprite::COLLIDE, true);
+				spr->set(Sprite::AFFECTED_BY_COLLISION, true);
+				spr->set(Sprite::ENTITY, (void*)this);
+				spr->set(Sprite::POSY, 10.0);
+				spr->set(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, true);
+
+				txt = Text::getOrCreate(temp, true);
+				txt->set(Text::SETSTRING, "%entity_name% [HEALTH:%entity_health%]"); // TODO
+				txt->set(Text::MODE, Text::ALIGN_CENTER);
+				txt->set(Text::LAYER, 70);
+				txt->set(Text::SCALEG, 0.85);
+				txt->set(Text::POSY, -0.09);
+				txt->set(Text::SETFOLLOW, temp);
+				txt->set(Text::UPDATETIME, 0.5);
+
+				m.unlock();
 			}
 
 
@@ -261,18 +359,21 @@ namespace LSW {
 				d_entity_database ent_data;
 				//Camera::camera_g cam;
 
-				for (int u = 0; u < (int)ent_data.work().getMax(); u++)
+
+				ent_data.work().lock();
+				for (auto& i : ent_data.work().work())
 				{
-					switch (ent_data.work().get(u)->getType())
+					switch (i->getType())
 					{
 					case PLAYER:
-						((player*)(ent_data.work().get(u)))->tick();
+						((player*)i)->tick();
 						break;
 					case BADBOY:
-						((badboy*)(ent_data.work().get(u)))->tick();
+						((badboy*)i)->tick();
 						break;
 					}
 				}
+				ent_data.work().unlock();
 			}
 
 

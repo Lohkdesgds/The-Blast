@@ -8,6 +8,7 @@
 #include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_native_dialog.h>
 
 // C/C++
 #include <iostream>
@@ -21,6 +22,8 @@
 #include <limits>
 #include "..\_external\dirent.h"
 
+#include "..\tools\stacker\stacker.h"
+
 #include "..\safer\safer.h"
 
 #include "..\defaults\defaults.h"
@@ -28,7 +31,6 @@
 #include "..\tools\tools.h"
 #include "..\log_file\log.h"
 
-#include "..\tools\stacker\stacker.h"
 #include "..\download_manager\downloader_v2.h"
 
 #include "..\allegro\layerer\layerer.h"
@@ -44,3 +46,5 @@
 #include "..\entity\entity.h"
 
 #include "..\map\map_control.h"
+
+#include "..\main\sub_main\sub_main.h"

@@ -64,6 +64,9 @@
     <Filter Include="entity">
       <UniqueIdentifier>{e84f4d22-ed46-4850-9d49-cbe397b3d348}</UniqueIdentifier>
     </Filter>
+    <Filter Include="main\sub_main">
+      <UniqueIdentifier>{f501c6c9-1ca9-495f-be38-efd19521a856}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LSW\safer\safer.h">
@@ -123,6 +126,9 @@
     <ClInclude Include="LSW\entity\entity.h">
       <Filter>entity</Filter>
     </ClInclude>
+    <ClInclude Include="LSW\main\sub_main\sub_main.h">
+      <Filter>main\sub_main</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LSW\download_manager\downloader_v2.cpp">
@@ -166,6 +172,9 @@
     </ClCompile>
     <ClCompile Include="LSW\entity\entity.cpp">
       <Filter>entity</Filter>
+    </ClCompile>
+    <ClCompile Include="LSW\main\sub_main\sub_main.cpp">
+      <Filter>main\sub_main</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

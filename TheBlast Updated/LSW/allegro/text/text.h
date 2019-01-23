@@ -15,8 +15,8 @@ namespace LSW {
 
 			enum mode_int{ALIGN_LEFT = ALLEGRO_ALIGN_LEFT,ALIGN_CENTER = ALLEGRO_ALIGN_CENTER,ALIGN_RIGHT = ALLEGRO_ALIGN_RIGHT};
 			// 2
-			const std::string tags[] = { "%pos_x%", "%pos_y%", "%screen_pos_x%", "%screen_pos_y%","%is_following%", "%color_r%", "%color_g%", "%color_b%", "%color_a%", "%mode%", "%time%", "%is_using_buf%", "%g_b_res_x%", "%g_b_res_y%", "%base_refresh_rate%", "%fps%", "%tps%", "%tps_col%", "%tps_funcs%", "%tps_second%", "%tps_posupd%", "%sprite_frame%", "%cam_x%", "%cam_y%", "%cam_zoom%", "%curr_string%", "%last_string%", "%mouse_x%", "%mouse_y%", "%sprite_speed_x%", "%sprite_speed_y%", "%sprite_name%", "%entity_name%", "%entity_health%" };
-			enum tags_e{T_POSX,T_POSY,T_SCREEN_POSX, T_SCREEN_POSY,T_ISFOLLOWING,T_COLOR_R, T_COLOR_G, T_COLOR_B, T_COLOR_A,T_MODE,T_TIME,T_ISUSINGBUF,T_GB_RESX, T_GB_RESY,T_REFRESHRATE,T_FPS,T_TPS_COUNT, T_TPS_COLLISION, T_TPS_FUNCTIONS, T_TPS_SECOND_TAKEN, T_TPS_POSUPDATE,T_SPRITE_FRAME,T_CAM_X,T_CAM_Y,T_CAM_ZOOM,T_CURRSTRING,T_LASTSTRING,T_MOUSE_X,T_MOUSE_Y,T_SPRITE_SPEEDX,T_SPRITE_SPEEDY,T_SPRITE_NAME,T_SPRITE_ENTITY_NAME,T_SPRITE_ENTITY_HEALTH};
+			const std::string tags[] = { "%pos_x%", "%pos_y%", "%screen_pos_x%", "%screen_pos_y%","%is_following%", "%color_r%", "%color_g%", "%color_b%", "%color_a%", "%mode%", "%time%", "%is_using_buf%", "%g_b_res_x%", "%g_b_res_y%", "%base_refresh_rate%", "%fps%", "%tps%", "%tps_col%", "%tps_funcs%", "%tps_second%", "%tps_posupd%", "%sprite_frame%", "%cam_x%", "%cam_y%", "%cam_zoom%", "%curr_string%", "%last_string%", "%mouse_x%", "%mouse_y%", "%sprite_speed_x%", "%sprite_speed_y%", "%sprite_name%", "%entity_name%", "%entity_health%", "%num_images%", "%num_sprites%", "%num_texts%", "%num_tracks%", "%num_entities%" };
+			enum tags_e{T_POSX,T_POSY,T_SCREEN_POSX, T_SCREEN_POSY,T_ISFOLLOWING,T_COLOR_R, T_COLOR_G, T_COLOR_B, T_COLOR_A,T_MODE,T_TIME,T_ISUSINGBUF,T_GB_RESX, T_GB_RESY,T_REFRESHRATE,T_FPS,T_TPS_COUNT, T_TPS_COLLISION, T_TPS_FUNCTIONS, T_TPS_SECOND_TAKEN, T_TPS_POSUPDATE,T_SPRITE_FRAME,T_CAM_X,T_CAM_Y,T_CAM_ZOOM,T_CURRSTRING,T_LASTSTRING,T_MOUSE_X,T_MOUSE_Y,T_SPRITE_SPEEDX,T_SPRITE_SPEEDY,T_SPRITE_NAME,T_SPRITE_ENTITY_NAME,T_SPRITE_ENTITY_HEALTH,T_IMAGES_LOADED,T_SPRITES_LOADED,T_TEXTS_LOADED,T_TRACKS_LOADED,T_ENTITIES_LOADED};
 					   		
 
 			class text {
@@ -107,6 +107,10 @@ namespace LSW {
 
 			size_t _find(const Safer::safe_string, Safer::safe_vector<text*>&, bool&);
 			void _draw();
+
+
+			text* getOrCreate(const Safer::safe_string s, const bool = false); // create?
+			void easyRemove(const Safer::safe_string);
 
 		}
 	}

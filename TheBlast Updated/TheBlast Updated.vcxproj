@@ -77,6 +77,7 @@
     <Allegro_AddonAcodec>true</Allegro_AddonAcodec>
     <Allegro_AddonFont>true</Allegro_AddonFont>
     <Allegro_LibraryType>DynamicDebug</Allegro_LibraryType>
+    <Allegro_AddonDialog>true</Allegro_AddonDialog>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Allegro_AddonImage>true</Allegro_AddonImage>
@@ -86,6 +87,7 @@
     <Allegro_AddonAcodec>true</Allegro_AddonAcodec>
     <Allegro_AddonFont>true</Allegro_AddonFont>
     <Allegro_LibraryType>StaticMonolithRelease</Allegro_LibraryType>
+    <Allegro_AddonDialog>true</Allegro_AddonDialog>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Allegro_AddonImage>true</Allegro_AddonImage>
@@ -95,6 +97,7 @@
     <Allegro_AddonAcodec>true</Allegro_AddonAcodec>
     <Allegro_AddonFont>true</Allegro_AddonFont>
     <Allegro_LibraryType>DynamicDebug</Allegro_LibraryType>
+    <Allegro_AddonDialog>true</Allegro_AddonDialog>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Allegro_AddonImage>true</Allegro_AddonImage>
@@ -104,6 +107,7 @@
     <Allegro_AddonAcodec>true</Allegro_AddonAcodec>
     <Allegro_AddonFont>true</Allegro_AddonFont>
     <Allegro_LibraryType>StaticMonolithRelease</Allegro_LibraryType>
+    <Allegro_AddonDialog>true</Allegro_AddonDialog>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -180,6 +184,7 @@
     <ClInclude Include="LSW\download_manager\downloader_v2.h" />
     <ClInclude Include="LSW\entity\entity.h" />
     <ClInclude Include="LSW\log_file\log.h" />
+    <ClInclude Include="LSW\main\sub_main\sub_main.h" />
     <ClInclude Include="LSW\map\map_control.h" />
     <ClInclude Include="LSW\safer\safer.h" />
     <ClInclude Include="LSW\tools\stacker\stacker.h" />
@@ -199,6 +204,7 @@
     <ClCompile Include="LSW\download_manager\downloader_v2.cpp" />
     <ClCompile Include="LSW\entity\entity.cpp" />
     <ClCompile Include="LSW\main\main.cpp" />
+    <ClCompile Include="LSW\main\sub_main\sub_main.cpp" />
     <ClCompile Include="LSW\map\map_control.cpp" />
     <ClCompile Include="LSW\tools\stacker\stacker.cpp" />
   </ItemGroup>

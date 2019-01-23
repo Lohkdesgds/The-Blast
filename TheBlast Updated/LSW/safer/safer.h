@@ -17,7 +17,9 @@ namespace LSW {
 				std::mutex m;
 				bool locked_work = false;
 			public:
-				void push(T&, const bool = false);
+				safe_vector();
+
+				void push(T, const bool = false);
 				const T& get(const size_t, const bool = false);
 				const size_t getMax();
 
@@ -33,6 +35,7 @@ namespace LSW {
 
 				const T& operator[](const size_t&) const;
 				T& operator[](const size_t&);
+				//safe_vector& operator=(const safe_vector&);
 			};
 
 			class safe_string {
@@ -101,8 +104,23 @@ namespace LSW {
 				IMPLEMENTATION
 			*/
 
+			template<typename T>
+			inline safe_vector<T>::safe_vector()
+			{
+				// none needed
+			}
+
+			/*template<typename T>
+			inline safe_vector<T>::safe_vector(safe_vector& sv)
+			{
+				sv.lock();
+				v.clear();
+				v = sv.work();
+				sv.unlock();
+			}*/
+
 			template <typename T>
-			inline void safe_vector<T>::push(T& u, const bool skip)
+			inline void safe_vector<T>::push(T u, const bool skip)
 			{
 				if (!skip) m.lock();
 				v.push_back(u);
@@ -121,7 +139,13 @@ namespace LSW {
 					return i;
 				}
 				m.lock();
-				assert(s < getMax());
+				if (s >= getMax()) {
+					m.unlock();
+					if (s == 0) {
+						throw "SAFE_VECTOR::GET - S WAS NOT INTO VECTOR! Tried to fix, but it seems to be null/empty!";
+					}
+					return get(s - 1, skip);
+				}
 				T& i = v[s];
 				m.unlock();
 				return i;
@@ -211,6 +235,16 @@ namespace LSW {
 				if (locked) m.unlock();
 				return i;
 			}
+
+			/*template<typename T>
+			inline safe_vector<T> & safe_vector<T>::operator=(const safe_vector<T>& sv)
+			{
+				sv.lock();
+				v.clear();
+				v = sv.work();
+				sv.unlock();
+				return *this;
+			}*/
 
 
 
