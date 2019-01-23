@@ -763,6 +763,7 @@ namespace LSW {
 							}
 							if (b1) { // SETTINGS
 								data->playing = SETTINGS;
+								data->bev.g().getKey(Events::MOUSE_0, true);
 								keep = false;
 							}
 							if (b2) { // exit

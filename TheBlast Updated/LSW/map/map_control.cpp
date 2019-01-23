@@ -717,6 +717,7 @@ namespace LSW {
 					img_data.create(big_map_il);
 					big_map_il->create(-1, -1);
 					big_map_il->setID("__MAP_FRAME_FULL");
+					big_map_il->_setKeepOnMemory(true);
 
 					spr_data.create(big_map);
 					big_map->setID("__MAP_FRAME_FULL_S");
