@@ -26,11 +26,20 @@ namespace LSW {
 					txt_data.remove(str);
 					delete txt;
 				}
+				if (rgb)
+				{
+					d_images_database img_data;
+					Safer::safe_string str = rgb->whoAmI();
+					img_data.remove(str);
+					rgb->unload();
+					delete rgb;
+				}
 				spr = nullptr;
 				txt = nullptr;
+				rgb = nullptr;
 
 				name.clear();
-				health = 1.0;
+				//health = 1.0;
 			}
 			void entity::setMyName(const Safer::safe_string nam)
 			{
@@ -116,6 +125,37 @@ namespace LSW {
 				}
 			}
 
+			void badboy::load(const ALLEGRO_COLOR color, const int layer, const double siz)
+			{
+				if (spr) return;
+
+				Safer::safe_string temp = "_ENTITY_" + std::to_string(countt++);
+
+				rgb = Image::getOrCreate(temp, true);
+				rgb->create(32, 32);
+				rgb->paint(color);
+
+				spr = Sprite::getOrCreate(temp, true);
+				spr->add(temp);
+				spr->set(Sprite::LAYER, layer);
+				spr->set(Sprite::SCALEG, siz);
+				spr->set(Sprite::COLLIDE, true);
+				spr->set(Sprite::AFFECTED_BY_COLLISION, true);
+				spr->set(Sprite::ENTITY, (void*)this);
+				spr->set(Sprite::POSY, 10.0);
+				spr->set(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, true);
+
+				txt = Text::getOrCreate(temp, true);
+				//txt->set(Text::SETSTRING, "[BOT] %entity_name% [%entity_health%]"); // TODO
+				txt->set(Text::SETSTRING, "[BOT] %entity_name%");
+				txt->set(Text::MODE, Text::ALIGN_CENTER);
+				txt->set(Text::LAYER, 70);
+				txt->set(Text::SCALEG, 0.85);
+				txt->set(Text::POSY, -0.09);
+				txt->set(Text::SETFOLLOW, temp);
+				txt->set(Text::UPDATETIME, 0.5);
+			}
+
 			void badboy::load(const Safer::safe_string path, const int layer, const double siz)
 			{
 				if (spr) return;
@@ -125,25 +165,25 @@ namespace LSW {
 
 				Safer::safe_string temp = "_ENTITY_" + std::to_string(countt++);
 
-				spr_data.create(spr);
+				spr = Sprite::getOrCreate(temp, true);
 				spr->add(path);
-				spr->setID(temp);
 				spr->set(Sprite::LAYER, layer);
 				spr->set(Sprite::SCALEG, siz);
-				//spr->set(Sprite::FOLLOWKEYBOARD, true);
 				spr->set(Sprite::COLLIDE, true);
 				spr->set(Sprite::AFFECTED_BY_COLLISION, true);
 				spr->set(Sprite::ENTITY, (void*)this);
 				spr->set(Sprite::POSY, 10.0);
-				//spr->set(Sprite::AFFECTED_BY_GRAVITY, true);
+				spr->set(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, true);
 
-				txt_data.create(txt);
-				txt->set(Text::SETSTRING, "[BOT] %entity_name% [%entity_health%]");
+				txt = Text::getOrCreate(temp, true);
+				//txt->set(Text::SETSTRING, "[BOT] %entity_name% [%entity_health%]"); // TODO
+				txt->set(Text::SETSTRING, "[BOT] %entity_name%");
 				txt->set(Text::MODE, Text::ALIGN_CENTER);
 				txt->set(Text::LAYER, 70);
+				txt->set(Text::SCALEG, 0.85);
+				txt->set(Text::POSY, -0.09);
 				txt->set(Text::SETFOLLOW, temp);
 				txt->set(Text::UPDATETIME, 0.5);
-				txt->set(Text::SETID, temp);
 			}
 
 
@@ -155,6 +195,12 @@ namespace LSW {
 
 			void player::tick()
 			{
+				if (data.sleep) {
+					spr->set(Sprite::SPEEDY, 0.0);
+					spr->set(Sprite::SPEEDX, 0.0);
+					return;
+				}
+
 				m.lock();
 				if (!spr) {
 					m.unlock();
@@ -216,6 +262,11 @@ namespace LSW {
 				if (e != D_EPLAYERS_MAX)
 					v = data.dval[e];
 			}
+
+			void player::sleep(const bool b)
+			{
+				data.sleep = b;
+			}
 			
 			void player::set(const _eplayer_bvals e, const bool v)
 			{
@@ -224,36 +275,66 @@ namespace LSW {
 			}
 
 
+			void player::load(const ALLEGRO_COLOR color, const int layer, const double siz)
+			{
+				m.lock();
+
+				if (spr) reset();
+
+				Safer::safe_string temp = "_ENTITY_" + std::to_string(countt++);
+
+				rgb = Image::getOrCreate(temp, true);
+				rgb->create(32, 32);
+				rgb->paint(color);
+
+				spr = Sprite::getOrCreate(temp, true);
+				spr->add(temp);
+				spr->set(Sprite::LAYER, layer);
+				spr->set(Sprite::SCALEG, siz);
+				spr->set(Sprite::COLLIDE, true);
+				spr->set(Sprite::AFFECTED_BY_COLLISION, true);
+				spr->set(Sprite::ENTITY, (void*)this);
+				spr->set(Sprite::POSY, 10.0);
+				spr->set(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, true);
+
+				txt = Text::getOrCreate(temp, true);
+				txt->set(Text::SETSTRING, "%entity_name% [HEALTH:%entity_health%]"); // TODO
+				txt->set(Text::MODE, Text::ALIGN_CENTER);
+				txt->set(Text::LAYER, 70);
+				txt->set(Text::SCALEG, 0.85);
+				txt->set(Text::POSY, -0.09);
+				txt->set(Text::SETFOLLOW, temp);
+				txt->set(Text::UPDATETIME, 0.5);
+
+				m.unlock();
+			}
+
 			void player::load(const Safer::safe_string path, const int layer, const double siz)
 			{
 				m.lock();
 
 				if (spr) reset();
 
-				d_sprite_database spr_data;
-				d_texts_database txt_data;
-
 				Safer::safe_string temp = "_ENTITY_" + std::to_string(countt++);
 
-				spr_data.create(spr);
+				spr = Sprite::getOrCreate(temp, true);
 				spr->add(path);
-				spr->setID(temp);
 				spr->set(Sprite::LAYER, layer);
 				spr->set(Sprite::SCALEG, siz);
-				//spr->set(Sprite::FOLLOWKEYBOARD, true);
 				spr->set(Sprite::COLLIDE, true);
 				spr->set(Sprite::AFFECTED_BY_COLLISION, true);
 				spr->set(Sprite::ENTITY, (void*)this);
 				spr->set(Sprite::POSY, 10.0);
-				//spr->set(Sprite::AFFECTED_BY_GRAVITY, true);
+				spr->set(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, true);
 
-				txt_data.create(txt);
-				txt->set(Text::SETSTRING, "%entity_name% [%entity_health%]");
+				txt = Text::getOrCreate(temp, true);
+				txt->set(Text::SETSTRING, "%entity_name% [HEALTH:%entity_health%]"); // TODO
 				txt->set(Text::MODE, Text::ALIGN_CENTER);
 				txt->set(Text::LAYER, 70);
+				txt->set(Text::SCALEG, 0.85);
+				txt->set(Text::POSY, -0.09);
 				txt->set(Text::SETFOLLOW, temp);
 				txt->set(Text::UPDATETIME, 0.5);
-				txt->set(Text::SETID, temp);
 
 				m.unlock();
 			}

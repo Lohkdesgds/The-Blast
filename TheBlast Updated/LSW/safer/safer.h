@@ -139,7 +139,13 @@ namespace LSW {
 					return i;
 				}
 				m.lock();
-				assert(s < getMax());
+				if (s >= getMax()) {
+					m.unlock();
+					if (s == 0) {
+						throw "SAFE_VECTOR::GET - S WAS NOT INTO VECTOR! Tried to fix, but it seems to be null/empty!";
+					}
+					return get(s - 1, skip);
+				}
 				T& i = v[s];
 				m.unlock();
 				return i;

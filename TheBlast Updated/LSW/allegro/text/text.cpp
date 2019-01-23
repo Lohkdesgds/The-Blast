@@ -35,9 +35,15 @@ namespace LSW {
 				std::string local_t = s.gC();
 
 				std::vector<size_t> posicoes;
+				double timing = al_get_time();
 
 				for (size_t p = local_t.find('%'); (p != std::string::npos); p = local_t.find('%'))
 				{
+					if (al_get_time() - timing > Defaults::texts_timeout_interpret) {
+						throw "TEXT::_INTERPRETTAGS() FAILED INTERPRETING " + s.g() + "!";
+						return;
+					}
+
 					if (p == 0 || (local_t[p - 1] != '\\')) {
 						std::string elsee = local_t.substr(p);
 						Safer::safe_string substitute;
@@ -209,7 +215,7 @@ namespace LSW {
 								ent = (Entities::entity*)trash;
 
 								if (ent) {
-									sprintf_s(tempstr_c, "%.3lf", ent->getMyHealth());
+									sprintf_s(tempstr_c, "%.1lf", 10.0*ent->getMyHealth());
 								}
 								else sprintf_s(tempstr_c, "UNDEF");
 							}
@@ -229,6 +235,41 @@ namespace LSW {
 								else sprintf_s(tempstr_c, "UNDEF");
 							}
 							else sprintf_s(tempstr_c, "UNDEF");
+							break;
+						case T_IMAGES_LOADED:
+							{
+								d_images_database img_data;
+								size_t t = img_data.work().getMax();
+								sprintf_s(tempstr_c, "%lu", t);
+							}
+							break;
+						case T_SPRITES_LOADED:
+							{
+								d_sprite_database spr_data;
+								size_t t = spr_data.work().getMax();
+								sprintf_s(tempstr_c, "%lu", t);
+							}
+							break;
+						case T_TEXTS_LOADED:
+							{
+								d_texts_database txt_data;
+								size_t t = txt_data.work().getMax();
+								sprintf_s(tempstr_c, "%lu", t);
+							}
+							break;
+						case T_TRACKS_LOADED:
+							{
+								d_musics_database msk_data;
+								size_t t = msk_data.work().getMax();
+								sprintf_s(tempstr_c, "%lu", t);
+							}
+							break;
+						case T_ENTITIES_LOADED:
+							{
+								d_entity_database ent_data;
+								size_t t = ent_data.work().getMax();
+								sprintf_s(tempstr_c, "%lu", t);
+							}
 							break;
 						}
 
@@ -277,35 +318,6 @@ namespace LSW {
 			{
 				follow = u;
 			}
-
-			/*void text::loadInternalBMP()
-			{
-				if (!usebuf) return;
-
-				if (!local_paint)
-				{
-					ALLEGRO_BITMAP* d = al_get_target_bitmap();
-					if (!d) return;
-
-					d_sprite_database spr_data;
-					d_images_database img_data;
-
-					spr_data.create(local_paint);
-					img_data.create(local_paint_i);
-
-					local_paint_i->setID("_TEXT_" + text_count);
-					local_paint_i->create(al_get_bitmap_width(d), al_get_bitmap_height(d));
-
-					local_paint->add("_TEXT_" + text_count);
-					//local_paint->set(Sprite::AFFECTED_BY_CAM, false);
-					//local_paint->set(Sprite::DRAW, false);
-					local_paint->set(Sprite::SCALEG, 2.0);
-					local_paint->set(Sprite::LAYER, layer);
-					///local_paint->set(Sprite::SHOWBOX, true);
-
-					text_count++;
-				}
-			}*/
 
 			const bool text::load(const Safer::safe_string p, const bool raw, const double siz)
 			{
@@ -411,6 +423,7 @@ namespace LSW {
 				switch (o) {
 				case SETSTRING:
 					orig_str = e;
+					//str_upd = true;
 					break;
 				case SETID:
 					id = e;
@@ -598,8 +611,14 @@ namespace LSW {
 					//lastinterpret = al_get_time() - update_time;
 					return;
 				}
+				if (follow) {
+					bool k;
+					follow->get(Sprite::DRAW, k);
+					if (!k) return;
+				}
 
-				if (al_get_time() - lastinterpret > update_time) {
+				if (al_get_time() - lastinterpret > update_time/* || str_upd*/) {
+					//str_upd = false;
 					if(lastinterpret == 0) lastinterpret = al_get_time();
 					else {
 						if (al_get_time() - lastinterpret > update_time * 3) lastinterpret = al_get_time();
@@ -608,11 +627,11 @@ namespace LSW {
 
 					Safer::safe_string b4 = string;
 					string = orig_str;
-					_interpretTags(string);
+					_interpretTags(string);/*
 
 					if (string != b4) {
 						str_upd = true;
-					}
+					}*/
 				}
 
 				while (rot > 360.0) rot -= 360.0;
@@ -621,7 +640,7 @@ namespace LSW {
 				Camera::camera_g cam;
 				const int lastapply = cam.getLastApplyID();
 				ALLEGRO_BITMAP* d = al_get_target_bitmap();
-				assert(d);
+				if (!d) throw "TEXT::DRAW - NO DISPLAY!";
 
 				/*if (usebuf) {
 					
@@ -720,7 +739,7 @@ namespace LSW {
 				cam.apply(lastapply);
 				al_set_target_bitmap(d);
 				cam.apply(lastapply);
-
+				
 				//}
 			}
 			

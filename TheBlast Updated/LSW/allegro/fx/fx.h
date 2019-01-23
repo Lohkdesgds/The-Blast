@@ -38,7 +38,7 @@ namespace LSW {
 				void think();
 			};
 
-			const double maxone(double);
+			const double maxone(double, const double = 1.0);
 
 			class lines {
 				Image::image_low* imglw = nullptr;

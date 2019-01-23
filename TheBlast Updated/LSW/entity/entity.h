@@ -18,6 +18,7 @@ namespace LSW {
 				static size_t countt;
 
 				Sprite::sprite* spr = nullptr;
+				Image::image_low* rgb = nullptr;
 				Text::text* txt = nullptr;
 
 				Safer::safe_string name;
@@ -27,6 +28,7 @@ namespace LSW {
 				// chapeu
 			public:
 				~entity();
+				virtual void load(const ALLEGRO_COLOR, const int = Defaults::user_default_layer, const double = Defaults::user_default_size) = 0; // color, layer, size
 				virtual void load(const Safer::safe_string, const int = Defaults::user_default_layer, const double = Defaults::user_default_size) = 0; // path, layer, size
 				void reset();
 
@@ -49,6 +51,7 @@ namespace LSW {
 			struct _player_data {
 				double dval[D_EPLAYERS_MAX];
 				bool bval[MOVE_MAX];
+				bool sleep = false;
 			};
 
 			class player : public entity
@@ -64,7 +67,9 @@ namespace LSW {
 
 				void get(const _eplayer_dvals, double&);
 
+				void sleep(const bool);
 
+				void load(const ALLEGRO_COLOR, const int = Defaults::user_default_layer, const double = Defaults::user_default_size);
 				void load(const Safer::safe_string, const int = Defaults::user_default_layer, const double = Defaults::user_default_size);
 			};
 
@@ -76,6 +81,7 @@ namespace LSW {
 				void setFollowing(Sprite::sprite*);
 				void tick();
 
+				void load(const ALLEGRO_COLOR, const int = Defaults::user_default_layer, const double = Defaults::user_default_size);
 				void load(const Safer::safe_string, const int = Defaults::user_default_layer, const double = Defaults::user_default_size);
 			};
 

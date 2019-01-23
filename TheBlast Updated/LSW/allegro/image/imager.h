@@ -28,21 +28,24 @@ namespace LSW {
 				bool noOptimization = false;
 				std::mutex optimizing;
 
+				ALLEGRO_COLOR lastpaint = al_map_rgba_f(0.0, 0.0, 0.0, 0.0);
+
 				//double proportion = 1.0; // when resized for low memory usage if not using or when drawing is half or so
 				_img_mode mode = CREATED;
 				Log::gfile logg;
-				int orig_siz[2] = { 0,0 };
+				int orig_siz[2] = { -1, -1 };
 
 				const bool _load_NOADJUST(const Safer::safe_string);
 			public:
 				~image_low();
-				//const bool set(const Safer::safe_string);
+
 				const bool load(const Safer::safe_string);
 				void setToLoad(const Safer::safe_string);
-				//const bool loadFromDatabase(const Safer::safe_string);
-				//const bool loadFromURL(const Safer::safe_string, const Safer::safe_string); // url, name it as (THE FILE! NOT ID)
+
 				const bool create(int, int);
 				void setID(const Safer::safe_string);
+
+				void paint(const ALLEGRO_COLOR);
 
 				const bool amI(const Safer::safe_string);
 				const bool amI(const _img_mode);
@@ -55,8 +58,7 @@ namespace LSW {
 				const bool reload();
 
 				void shouldOptimize(const bool);
-				//void optimizeIt();
-
+				
 				void verify();
 				void checkMemory();
 				
@@ -68,8 +70,6 @@ namespace LSW {
 
 			size_t _find(const Safer::safe_string, Safer::safe_vector<image_low*>&, bool&);
 			void _draw();
-			/*void _start_thread();
-			void _draw_complex();*/
 
 			// its name, initial path, how many, how many 0's, end (format), perc, optimize those bitmaps?
 			void multipleLoad(const Safer::safe_string, Safer::safe_string, const size_t, const unsigned, Safer::safe_string, float* = nullptr, const bool = true);

@@ -7,7 +7,7 @@ namespace LSW {
 	namespace v2 {
 		namespace Defaults {
 
-			const Safer::safe_string version_app = "V0.3.0pre1";
+			const Safer::safe_string version_app = "V1.0.0";
 
 			const Safer::safe_string default_root_path = "%appdata%/Lohk's Studios/TheBlast/";
 			const Safer::safe_string default_global_path = "%appdata%/Lohk's Studios/TheBlast/logs/latest.log";
@@ -32,8 +32,11 @@ namespace LSW {
 			const int default_layer_backup = -9999;
 			const int default_map_layer_backup = -9998;
 			const int default_font_foreground_layer = -9997;
+			const int default_settings_layer = -23;
+			const int default_pauseonly_layer = -47;
 
 			const bool debug = false;
+			const double texts_timeout_interpret = 0.1;
 
 			const bool exp_veryfast = false;
 
@@ -61,11 +64,13 @@ namespace LSW {
 			const double fx_blur_timing = 1.0/32;
 
 			const double display_fullscreen_toggle_min_time = 2.0; // sec
+			const double display_osd_toggle_min_time = 1.0; // sec
 
 			const Safer::safe_string font_default_name = "font.ttf";
 			const Safer::safe_string font_altern_name_full = "C:\\Windows\\Fonts\\calibri.ttf";
 
 			const int default_display_settings = ALLEGRO_FULLSCREEN_WINDOW | ALLEGRO_OPENGL | ALLEGRO_RESIZABLE;
+			const int default_windowed_display_settings = ALLEGRO_OPENGL | ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE;
 
 			const double verify_imager_timer_created = 2.0;
 
@@ -103,6 +108,12 @@ namespace LSW {
 
 			const double map_load_max_time = 0.20;
 			const double map_resolve_max_time = 0.15;
+
+			const double corrosion_default_time = 0.8;
+			const double corrosion_default_time_start = 5.0;
+
+			const double music_prop_time = 1.0/75;
+			const double music_maxspeed = 1.25;
 		}
 	}
 }

@@ -100,128 +100,258 @@ namespace LSW {
 
 				if (!data->disp.flip(true, al_map_rgb_f(0.5*cos(ti*2.0)+0.1, 0.5*sin(ti*2.5 + 0.3) + 0.1, 0.5*cos(ti*1.7 + 0.5) + 0.1))) return false; // flip
 
-				// toggle fullscreen with F11
-				if (data->bev.g().getKey(Events::KEY_F11, true)) data->disp.toggleFS();
+				__internal_check_hotkeys();
 
 				return true;
 			}
 
+			const levels main::_rgb_pause_screen()
+			{
+				// CAMERA AND LAYER SET
+				__apply_layer_number(0);
+				__apply_cam_number(1);
+
+				// VARIABLES
+				levels return_val;
+				Fx::lines lines(-20);
+				Sprite::sprite* mouse;
+				Sprite::sprite* b00;
+				Sprite::sprite* b01;
+				Sprite::sprite* b02;
+				Text::text* x00;
+				Text::text* x01;
+
+				// SEARCHES
+				mouse = Sprite::getOrCreate("MOUSE");
+				b00 = Sprite::getOrCreate("BAR_00");
+				b01 = Sprite::getOrCreate("BAR_01");
+				b02 = Sprite::getOrCreate("BAR_02");
+				x00 = Text::getOrCreate("BAR_00_TEXT");
+				x01 = Text::getOrCreate("BAR_01_TEXT");
+
+				// SETTING VARIABLES VALUES
+				x00->set(Text::SETSTRING, "< CONTINUE >");
+				x01->set(Text::SETSTRING, "< MENU >");
+				b02->set(Sprite::DRAW, false);
+				return_val = PLAYING;
+
+				// THE WHILE
+				for (bool keep = true; keep;)
+				{
+					// INPUT
+					bool b0, b1;
+					b00->get(Sprite::_IS_COLLIDING, b0);
+					b01->get(Sprite::_IS_COLLIDING, b1);
+
+					if (b0) b00->set(Sprite::ANIMATIONTIME, -1);
+					else b00->set(Sprite::ANIMATIONTIME, 0);
+					if (b1) b01->set(Sprite::ANIMATIONTIME, -1);
+					else b01->set(Sprite::ANIMATIONTIME, 0);
+
+					if (data->bev.g().getKey(Events::MOUSE_0)) {
+						if (b0) { // test 1
+							return_val = data->playing;
+							keep = false;
+						}
+						if (b1) { // test 2
+							return_val = MENU;
+							keep = false;
+						}
+					}
+					if (data->bev.g().getKey(Events::KEY_ESCAPE))
+					{
+						return_val = data->playing;
+						keep = false;
+					}
+
+					// FX
+					mouse->set(Sprite::ROTATION, data->bev.g().getFunctionValNow(0));
+					mouse->set(Sprite::SCALEG, 0.07 * data->bev.g().getFunctionValNow(1));
+					lines.draw();
+
+					// FLIP AND STUFF
+					if (!__internal_task_level_common()) return MENU;
+				}
+				return return_val;
+			}
+
 			void main::init()
 			{
-				if (!check("init")) return;
+				Log::gfile logg;
 
-				{
-					Log::gfile logg;
-					logg.showOnConsole(data->setup.enable_console);
-					logg.longLog(data->setup.full_log);
+				try {
+					if (!check("init")) return;
+
+					{
+						logg.showOnConsole(data->setup.enable_console);
+						logg.longLog(data->setup.full_log);
+					}
+
+					// create display
+					if (data->setup.res[0] > 0 && data->setup.res[1] > 0) {
+						data->disp.custom_launch(data->setup.res[0], data->setup.res[1], data->setup.mode);
+					}
+					else data->disp.launch();
+
+					data->cam.setup(); // guarantee global camera instance
+					data->bev.initInstance(); // guarantee global event instance
+
+					// set events timing
+					data->bev.g().setMultiplierForUpdatingImg(data->disp._get().getMode(-1).hz);
+
+					// setup and start events thread
+					data->bev.initSetupAndRun();
+
+					// define events bool reference on display so then events can tell display to die when ended.
+					data->disp.setKeep(data->bev.g().getKeep());
+
+					// force display target just to be sure.
+					data->disp._get().setTarget();
+
+					// each config has its brackets for local usage. This bigger one is just to better reading (can minimize it)
+					// CAMERA
+					{
+						{   /* -------------------- PRESET #-2 -------------------- */
+							Main::__fast_cam_preset cam_p;
+							cam_p.config_number = -2;
+							cam_p.cam_settings.layers_enabled.push_back(-2);
+							cam_p.cam_settings.offset_y = 2.7;
+							cam_p.cam_settings.scale_g = 1.2;
+							cam_p.cam_settings.layers_enabled.push_back(-9999); // Early Access layer
+
+							__set_camera_quick(cam_p);
+						}
+						{   /* -------------------- PRESET #-1 -------------------- */
+							Main::__fast_cam_preset cam_p;
+							cam_p.config_number = -1;
+							cam_p.cam_settings.layers_enabled.push_back(Defaults::default_font_foreground_layer);
+							cam_p.cam_settings.layers_enabled.push_back(-1);
+							cam_p.cam_settings.layers_enabled.push_back(-9999); // Early Access layer
+							cam_p.cam_settings.scale_g = 1.15;
+
+							__set_camera_quick(cam_p);
+						}
+						{   /* -------------------- PRESET #0 -------------------- */
+							Main::__fast_cam_preset cam_p;
+							cam_p.config_number = 0;
+							cam_p.cam_settings.layers_enabled.push_back(Defaults::default_font_foreground_layer);
+							cam_p.cam_settings.layers_enabled.push_back(-20);
+							cam_p.cam_settings.layers_enabled.push_back(0);
+							cam_p.cam_settings.layers_enabled.push_back(1);
+							cam_p.cam_settings.layers_enabled.push_back(99);
+							cam_p.cam_settings.layers_enabled.push_back(100);
+							cam_p.cam_settings.layers_enabled.push_back(-9999); // Early Access layer
+
+							__set_camera_quick(cam_p);
+						}
+						{   /* -------------------- PRESET #1 -------------------- */ // PAUSE
+							Main::__fast_cam_preset cam_p;
+							cam_p.config_number = 1;
+							cam_p.cam_settings.layers_enabled.push_back(Defaults::default_font_foreground_layer);
+							cam_p.cam_settings.layers_enabled.push_back(-20);
+							cam_p.cam_settings.layers_enabled.push_back(0);
+							cam_p.cam_settings.layers_enabled.push_back(Defaults::default_pauseonly_layer);
+							cam_p.cam_settings.layers_enabled.push_back(99);
+							cam_p.cam_settings.layers_enabled.push_back(100);
+							cam_p.cam_settings.layers_enabled.push_back(-9999); // Early Access layer
+
+							__set_camera_quick(cam_p);
+						}
+						{   /* -------------------- PRESET #2 -------------------- */ // GAME
+							Main::__fast_cam_preset cam_p;
+							cam_p.config_number = 2;
+							cam_p.cam_settings.layers_enabled.push_back(Defaults::default_font_foreground_layer);
+							cam_p.cam_settings.layers_enabled.push_back(Defaults::map_default_layer);
+							cam_p.cam_settings.layers_enabled.push_back(Defaults::user_default_layer);
+							cam_p.cam_settings.layers_enabled.push_back(Defaults::badboys_default_layer);
+							cam_p.cam_settings.layers_enabled.push_back(-9999); // Early Access layer
+
+							__set_camera_quick(cam_p);
+						}
+						{   /* -------------------- PRESET #3 -------------------- */ // SETTINGS
+							Main::__fast_cam_preset cam_p;
+							cam_p.config_number = 3;
+							cam_p.cam_settings.layers_enabled.push_back(Defaults::default_settings_layer);
+							cam_p.cam_settings.layers_enabled.push_back(Defaults::default_font_foreground_layer);
+							cam_p.cam_settings.layers_enabled.push_back(100);
+							cam_p.cam_settings.layers_enabled.push_back(-9999); // Early Access layer
+
+							__set_camera_quick(cam_p);
+						}
+						{   /* -------------------- PRESET #4 -------------------- */ // DEAD
+							Main::__fast_cam_preset cam_p;
+							cam_p.config_number = 4;
+							cam_p.cam_settings.layers_enabled.push_back(-81);
+							cam_p.cam_settings.layers_enabled.push_back(100);
+							cam_p.cam_settings.layers_enabled.push_back(-9999); // Early Access layer
+
+							__set_camera_quick(cam_p);
+						}
+					}
+					// LAYERS
+					{
+						{   /* -------------------- PRESET #0 -------------------- */
+							Main::__fast_lyr_preset lyr_p;
+							lyr_p.config_number = 0;
+							lyr_p.layer_mode = Layer::STANDARD;
+							lyr_p.each_layer_settings[0].collides_with.push_back(100);
+
+							__set_layer_quick(lyr_p);
+						}
+						{   /* -------------------- PRESET #2 -------------------- */
+							Main::__fast_lyr_preset lyr_p;
+							lyr_p.config_number = 2;
+							lyr_p.layer_mode = Layer::USEMAP;
+
+							__set_layer_quick(lyr_p);
+						}
+						{   /* -------------------- PRESET #3 -------------------- */
+							Main::__fast_lyr_preset lyr_p;
+							lyr_p.config_number = 3;
+							lyr_p.layer_mode = Layer::STANDARD;
+							lyr_p.each_layer_settings[Defaults::default_settings_layer].collides_with.push_back(100);
+
+							__set_layer_quick(lyr_p);
+						}
+						{   /* -------------------- PRESET #3 -------------------- */
+							Main::__fast_lyr_preset lyr_p;
+							lyr_p.config_number = 4;
+							lyr_p.layer_mode = Layer::STANDARD;
+							lyr_p.each_layer_settings[-81].collides_with.push_back(100);
+
+							__set_layer_quick(lyr_p);
+						}
+					}
 				}
-
-				// create display
-				if (data->setup.res[0] > 0 && data->setup.res[1] > 0) {
-					data->disp.custom_launch(data->setup.res[0],data->setup.res[1], data->setup.mode);
-				}
-				else data->disp.launch();
-
-				data->cam.setup(); // guarantee global camera instance
-				data->bev.initInstance(); // guarantee global event instance
-
-				// set events timing
-				data->bev.g().setMultiplierForUpdatingImg(data->disp._get().getMode(-1).hz);
-
-				// setup and start events thread
-				data->bev.initSetupAndRun();
-
-				// define events bool reference on display so then events can tell display to die when ended.
-				data->disp.setKeep(data->bev.g().getKeep());
-
-				// force display target just to be sure.
-				data->disp._get().setTarget();
-
-				// each config has its brackets for local usage. This bigger one is just to better reading (can minimize it)
-				// CAMERA
+				catch (const Safer::safe_string& s)
 				{
-					{   /* -------------------- PRESET #-2 -------------------- */
-						Main::__fast_cam_preset cam_p;
-						cam_p.config_number = -2;
-						cam_p.cam_settings.layers_enabled.push_back(-9999); // Early Access layer
-						cam_p.cam_settings.layers_enabled.push_back(-2);
-						cam_p.cam_settings.offset_y = 2.7;
-						cam_p.cam_settings.scale_g = 1.2;
-
-						__set_camera_quick(cam_p);
-					}
-					{   /* -------------------- PRESET #-1 -------------------- */
-						Main::__fast_cam_preset cam_p;
-						cam_p.config_number = -1;
-						cam_p.cam_settings.layers_enabled.push_back(-9999); // Early Access layer
-						cam_p.cam_settings.layers_enabled.push_back(Defaults::default_font_foreground_layer);
-						cam_p.cam_settings.layers_enabled.push_back(-1);
-						cam_p.cam_settings.scale_g = 1.15;
-
-						__set_camera_quick(cam_p);
-					}
-					{   /* -------------------- PRESET #0 -------------------- */
-						Main::__fast_cam_preset cam_p;
-						cam_p.config_number = 0;
-						cam_p.cam_settings.layers_enabled.push_back(-9999); // Early Access layer
-						cam_p.cam_settings.layers_enabled.push_back(Defaults::default_font_foreground_layer);
-						cam_p.cam_settings.layers_enabled.push_back(-20);
-						cam_p.cam_settings.layers_enabled.push_back(0);
-						cam_p.cam_settings.layers_enabled.push_back(99);
-						cam_p.cam_settings.layers_enabled.push_back(100);
-
-						__set_camera_quick(cam_p);
-					}
-					{   /* -------------------- PRESET #2 -------------------- */
-						Main::__fast_cam_preset cam_p;
-						cam_p.config_number = 2;
-						cam_p.cam_settings.layers_enabled.push_back(-9999); // Early Access layer
-						cam_p.cam_settings.layers_enabled.push_back(100);
-						cam_p.cam_settings.layers_enabled.push_back(0);
-						cam_p.cam_settings.layers_enabled.push_back(1);
-						cam_p.cam_settings.layers_enabled.push_back(2);
-						cam_p.cam_settings.layers_enabled.push_back(3);
-						cam_p.cam_settings.layers_enabled.push_back(Defaults::default_font_foreground_layer);
-
-						__set_camera_quick(cam_p);
-					}
-					{   /* -------------------- PRESET #3 -------------------- */
-						Main::__fast_cam_preset cam_p;
-						cam_p.config_number = 3;
-						cam_p.cam_settings.layers_enabled.push_back(-9999); // Early Access layer
-						cam_p.cam_settings.layers_enabled.push_back(Defaults::default_font_foreground_layer);
-						cam_p.cam_settings.layers_enabled.push_back(Defaults::map_default_layer);
-						cam_p.cam_settings.layers_enabled.push_back(Defaults::user_default_layer);
-						cam_p.cam_settings.layers_enabled.push_back(Defaults::badboys_default_layer);
-
-						__set_camera_quick(cam_p);
-					}
+					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:INIT_][ERROR] Caught throw at main::init: " << s << Log::NEEDED_ENDL;
+					if (!data->disp.isOpen()) throw 0;
+					throw s;
 				}
-				// LAYERS
+				catch (const std::string& s)
 				{
-					{   /* -------------------- PRESET #0 -------------------- */
-						Main::__fast_lyr_preset lyr_p;
-						lyr_p.config_number = 0;
-						lyr_p.layer_mode = Layer::STANDARD;
-						lyr_p.each_layer_settings[0].collides_with.push_back(100);
-
-						__set_layer_quick(lyr_p);
-					}
-					{   /* -------------------- PRESET #2 -------------------- */
-						Main::__fast_lyr_preset lyr_p;
-						lyr_p.config_number = 2;
-						lyr_p.layer_mode = Layer::STANDARD;
-						lyr_p.each_layer_settings[2].collides_with.push_back(100);
-
-						__set_layer_quick(lyr_p);
-					}
-					{   /* -------------------- PRESET #3 -------------------- */
-						Main::__fast_lyr_preset lyr_p;
-						lyr_p.config_number = 3;
-						lyr_p.layer_mode = Layer::USEMAP;
-
-						__set_layer_quick(lyr_p);
-					}
+					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:INIT_][ERROR] Caught throw at main::init: " << s << Log::NEEDED_ENDL;
+					if (!data->disp.isOpen()) throw 0;
+					throw s;
+				}
+				catch (const char* s)
+				{
+					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:INIT_][ERROR] Caught throw at main::init: " << s << Log::NEEDED_ENDL;
+					if (!data->disp.isOpen()) throw 0;
+					throw s;
+				}
+				catch (const int i)
+				{
+					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:INIT_][ERROR] Caught throw at main::init: Error code #" << i << Log::NEEDED_ENDL;
+					if (!data->disp.isOpen()) throw 0;
+					throw i;
+				}
+				catch (...)
+				{
+					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:INIT_][ERROR] Caught throw at main::init: Unknown error." << Log::NEEDED_ENDL;
+					if (!data->disp.isOpen()) throw 0;
+					throw 1;
 				}
 
 				data->hasInit = true;
@@ -229,254 +359,288 @@ namespace LSW {
 
 			void main::load()
 			{
-				if (!check("load")) return;
+				Log::gfile logg;
 
-				Text::text* txt = nullptr;
+				try {
+					if (!check("load")) return;
 
-				// EARLY ACCESS
-				txt = Text::getOrCreate("EARLY_ACCESS_00", true);
-				// PRE-LOAD (shared)
-				txt->setMainDisplay(__getDisplay());
-				txt->set(Text::SETGLOBALPATH, Defaults::font_altern_name_full);
-				txt->set(Text::IS_GLOBALPATH_RAW, true);
-				// ENDOF PRE-LOAD (shared)
-				txt->set(Text::SETSTRING, ("Early Access ") + Defaults::version_app.g());
-				txt->set(Text::POSX, 1.0);
-				txt->set(Text::POSY, -1.0);
-				txt->set(Text::MODE, Text::ALIGN_RIGHT);
-				txt->set(Text::AFFECTED_BY_CAM, false);
-				txt->set(Text::COLOR, al_map_rgba_f(0.2, 0.2, 0.2, 0.2));
-				txt->set(Text::SCALEG, 1.05);
-				txt->set(Text::UPDATETIME, 0.05);
-				txt->set(Text::LAYER, -9999);
+					Text::text* txt = nullptr;
 
-				// EARLY ACCESS
-				txt = Text::getOrCreate("EARLY_ACCESS_01", true);
-				txt->set(Text::SETSTRING, "Lohk's Studios Works 2019");
-				txt->set(Text::POSX, 1.0);
-				txt->set(Text::POSY, -0.95);
-				txt->set(Text::MODE, Text::ALIGN_RIGHT);
-				txt->set(Text::AFFECTED_BY_CAM, false);
-				txt->set(Text::COLOR, al_map_rgba_f(0.15, 0.15, 0.15, 0.15));
-				txt->set(Text::SCALEG, 0.8);
-				txt->set(Text::UPDATETIME, 0.05);
-				txt->set(Text::LAYER, -9999);
+					// EARLY ACCESS
+					txt = Text::getOrCreate("EARLY_ACCESS_00", true);
+					// PRE-LOAD (shared)
+					txt->setMainDisplay(__getDisplay());
+					txt->set(Text::SETGLOBALPATH, Defaults::font_altern_name_full);
+					txt->set(Text::IS_GLOBALPATH_RAW, true);
+					// ENDOF PRE-LOAD (shared)
+					txt->set(Text::SETSTRING, ("Early Access ") + Defaults::version_app.g());
+					txt->set(Text::POSX, 1.0);
+					txt->set(Text::POSY, -1.0);
+					txt->set(Text::MODE, Text::ALIGN_RIGHT);
+					txt->set(Text::AFFECTED_BY_CAM, false);
+					txt->set(Text::COLOR, al_map_rgba_f(0.2, 0.2, 0.2, 0.2));
+					txt->set(Text::SCALEG, 1.05);
+					txt->set(Text::UPDATETIME, 0.05);
+					txt->set(Text::LAYER, -9999);
 
-				// LOADING SCREEN
-				txt = Text::getOrCreate("LOADING_0", true);
-				txt->set(Text::SETSTRING, "Loading...");
-				txt->set(Text::POSX, 0.0);
-				txt->set(Text::POSY, 3.20);
-				txt->set(Text::MODE, Text::ALIGN_CENTER);
-				txt->set(Text::UPDATETIME, 0.05);
-				txt->set(Text::LAYER, -2);
+					// EARLY ACCESS
+					txt = Text::getOrCreate("EARLY_ACCESS_01", true);
+					txt->set(Text::SETSTRING, "Lohk's Studios Works 2019");
+					txt->set(Text::POSX, 1.0);
+					txt->set(Text::POSY, -0.95);
+					txt->set(Text::MODE, Text::ALIGN_RIGHT);
+					txt->set(Text::AFFECTED_BY_CAM, false);
+					txt->set(Text::COLOR, al_map_rgba_f(0.15, 0.15, 0.15, 0.15));
+					txt->set(Text::SCALEG, 0.8);
+					txt->set(Text::UPDATETIME, 0.05);
+					txt->set(Text::LAYER, -9999);
 
-				// LOADING SCREEN
-				txt = Text::getOrCreate("LOADING_1", true);
-				txt->set(Text::SETSTRING, "Please don't close the game until full load!");
-				txt->set(Text::POSX, 0.0);
-				txt->set(Text::POSY, 3.26);
-				txt->set(Text::MODE, Text::ALIGN_CENTER);
-				txt->set(Text::UPDATETIME, 1.00);
-				txt->set(Text::LAYER, -2);
+					// LOADING SCREEN
+					txt = Text::getOrCreate("LOADING_0", true);
+					txt->set(Text::SETSTRING, "Loading...");
+					txt->set(Text::POSX, 0.0);
+					txt->set(Text::POSY, 3.20);
+					txt->set(Text::MODE, Text::ALIGN_CENTER);
+					txt->set(Text::UPDATETIME, 0.05);
+					txt->set(Text::LAYER, -2);
 
-				{
-					Text::text* title = nullptr;
-					Text::text* desc = nullptr;
+					// LOADING SCREEN
+					txt = Text::getOrCreate("LOADING_1", true);
+					txt->set(Text::SETSTRING, "Please don't close the game until full load!");
+					txt->set(Text::POSX, 0.0);
+					txt->set(Text::POSY, 3.26);
+					txt->set(Text::MODE, Text::ALIGN_CENTER);
+					txt->set(Text::UPDATETIME, 1.00);
+					txt->set(Text::LAYER, -2);
 
-					title = Text::getOrCreate("LOADING_0");
-					desc = Text::getOrCreate("LOADING_1");
-
-
-					data->disp.capFPS(60);
-					data->cam.apply(-2);
-
-					actual_perc = 0.00;
-					std::thread thr(__load, this);
-					double timer = al_get_time();
-					double local_timer = al_get_time();
-
-					while (actual_perc != 1.00)
 					{
-						data->cam.set(-2, Camera::ROTATION, cos(al_get_time())*0.04);
-						data->cam.apply();
+						Text::text* title = nullptr;
+						Text::text* desc = nullptr;
 
-						title->set(Text::SETSTRING, "Loading [" + std::to_string(100.0*actual_perc) + "\\%]");
+						title = Text::getOrCreate("LOADING_0");
+						desc = Text::getOrCreate("LOADING_1");
 
-						data->spr_data.draw();
-						data->txt_data.draw();
 
-						if (!data->disp.flip()) {
-							while (actual_perc != 1.00); // hold
-							continue;
-						}
+						data->disp.capFPS(60);
+						data->cam.apply(-2);
 
-						if (al_get_time() - local_timer > 7.0)
+						actual_perc = 0.00;
+						std::thread thr(__load, this);
+						double timer = al_get_time();
+						double local_timer = al_get_time();
+
+						while (actual_perc != 1.00)
 						{
-							local_timer = al_get_time();
-							switch (rand() % 12) {
-							case 0:
-								desc->set(Text::SETSTRING, "It may take a while! Please wait...");
-								break;
-							case 1:
-								desc->set(Text::SETSTRING, "Now this line is random!");
-								break;
-							case 2:
-								desc->set(Text::SETSTRING, "I'm just loading the entire game, please wait!");
-								break;
-							case 3:
-								desc->set(Text::SETSTRING, "Sure it's safe. Everything is saved at %appdata%/Lohk's Studios!");
-								break;
-							case 4:
-								desc->set(Text::SETSTRING, "Got questions? Ask @lohkdesgds!");
-								break;
-							case 5:
-								desc->set(Text::SETSTRING, "This game has been made for #gamejaaj2 in the first place!");
-								break;
-							case 6:
-								desc->set(Text::SETSTRING, "Hey yeah Lohk is a real cat!");
-								break;
-							case 7:
-								desc->set(Text::SETSTRING, "Subscribete to mei chanul on uTub!");
-								break;
-							case 8:
-								desc->set(Text::SETSTRING, "B*tch Lasagna & YouTube Rewind 2018 pewds edition are VERY NICE");
-								break;
-							case 9:
-								desc->set(Text::SETSTRING, "Sure it's about to end! Just wait a little bit more!");
-								break;
-							case 10:
-								desc->set(Text::SETSTRING, "THANOS CARRR");
-								break;
-							case 11:
-								desc->set(Text::SETSTRING, "Meaw OwO");
-								break;
-							}
-						}
-					}
+							data->cam.set(-2, Camera::ROTATION, cos(al_get_time())*0.04);
+							data->cam.apply();
 
-					actual_perc = 0.00;
+							title->set(Text::SETSTRING, "Loading [" + std::to_string(100.0*actual_perc) + "\\%]");
 
-					thr.join();
+							data->spr_data.draw();
+							data->txt_data.draw();
 
-					if (!data->disp.isOpen())
-						throw "MAIN::LOAD - DISPLAY GOT CLOSED, ABORT!";
-
-
-					// AFTER-LOAD (shared)
-					title->set(Text::SETGLOBALPATH, Defaults::font_default_name);
-					title->set(Text::IS_GLOBALPATH_RAW, false);
-					// ENDOF AFTER-LOAD (shared)
-
-					title->set(Text::SETSTRING, "Loaded! Time taken: " + std::to_string(al_get_time() - timer) + " seconds.");
-					desc->set(Text::SETSTRING, "-- YAY YOU'VE GOT THIS =P --");
-
-					for (double d = al_get_time(); (al_get_time() - d < 3.0);) {
-						data->cam.set(-2, Camera::ROTATION, cos(al_get_time())*0.04);
-						data->cam.apply();
-
-						title->set(Text::COLOR, al_map_rgba_f(1.0 - (al_get_time() - d) / 3.0, 1.0 - (al_get_time() - d) / 3.0, 1.0 - (al_get_time() - d) / 3.0, 1.0 - (al_get_time() - d) / 3.0));
-						desc->set(Text::COLOR, al_map_rgba_f(1.0 - (al_get_time() - d) / 3.0, 1.0 - (al_get_time() - d) / 3.0, 1.0 - (al_get_time() - d) / 3.0, 1.0 - (al_get_time() - d) / 3.0));
-
-						data->spr_data.draw();
-						data->txt_data.draw();
-
-						if (!data->disp.flip()) break;
-					}
-
-					if (!data->disp.isOpen())
-						throw "MAIN::LOAD - DISPLAY GOT CLOSED, ABORT!";
-
-					// quick checkup
-					data->disp.checkUpImages();
-
-					// reset rotation
-
-					if (data->setup.preload_textures) {
-						// ReSet literally
-						data->cam.set(-2, -2, true);
-						data->cam.set(-2, Camera::ZOOM, 1.0);
-						data->cam.set(-2, Camera::OFFY, 0.0);
-						data->cam.set(-2, Camera::ROTATION, 0.0);
-						data->cam.apply();
-
-						title->set(Text::SETSTRING, "Checking...");
-						title->set(Text::POSX, 0.95);
-						title->set(Text::POSY, 0.87);
-						title->set(Text::MODE, Text::ALIGN_RIGHT);
-						title->set(Text::COLOR, al_map_rgba_f(0.5, 0.5, 0.5, 0.5));
-						title->set(Text::UPDATETIME, 0.2);
-						data->disp.capFPS(30);
-
-						data->img_data.work().lock();
-						size_t nnow = 0, sizz = data->img_data.work().getMax();
-						for (auto& i : data->img_data.work().work())
-						{
-							if (data->disp.flip(false)) {
-								data->spr_data.draw();
-								data->txt_data.draw();
+							if (!data->disp.flip()) {
+								while (actual_perc != 1.00); // hold
+								continue;
 							}
 
-							i->reload();
-
-							title->set(Text::SETSTRING, std::string("Checking [") + std::to_string(nnow) + "/" + std::to_string(sizz) + "]: " + i->whoAmI().g());
-							nnow++;
+							if (al_get_time() - local_timer > 7.0)
+							{
+								local_timer = al_get_time();
+								switch (rand() % 12) {
+								case 0:
+									desc->set(Text::SETSTRING, "It may take a while! Please wait...");
+									break;
+								case 1:
+									desc->set(Text::SETSTRING, "Now this line is random!");
+									break;
+								case 2:
+									desc->set(Text::SETSTRING, "I'm just loading the entire game, please wait!");
+									break;
+								case 3:
+									desc->set(Text::SETSTRING, "Sure it's safe. Everything is saved at %appdata%/Lohk's Studios!");
+									break;
+								case 4:
+									desc->set(Text::SETSTRING, "Got questions? Ask @lohkdesgds!");
+									break;
+								case 5:
+									desc->set(Text::SETSTRING, "This game has been made for #gamejaaj2 in the first place!");
+									break;
+								case 6:
+									desc->set(Text::SETSTRING, "Hey yeah Lohk is a real cat!");
+									break;
+								case 7:
+									desc->set(Text::SETSTRING, "Subscribete to mei chanul on uTub!");
+									break;
+								case 8:
+									desc->set(Text::SETSTRING, "B*tch Lasagna & YouTube Rewind 2018 pewds edition are VERY NICE");
+									break;
+								case 9:
+									desc->set(Text::SETSTRING, "Sure it's about to end! Just wait a little bit more!");
+									break;
+								case 10:
+									desc->set(Text::SETSTRING, "THANOS CARRR");
+									break;
+								case 11:
+									desc->set(Text::SETSTRING, "Meaw OwO");
+									break;
+								}
+							}
 						}
-						data->img_data.work().unlock();
+
+						actual_perc = 0.00;
+
+						thr.join();
+
+						if (!data->disp.isOpen())
+							throw "MAIN::LOAD - DISPLAY GOT CLOSED, ABORT!";
+
+
+						// AFTER-LOAD (shared)
+						title->set(Text::SETGLOBALPATH, Defaults::font_default_name);
+						title->set(Text::IS_GLOBALPATH_RAW, false);
+						// ENDOF AFTER-LOAD (shared)
+
+						title->set(Text::SETSTRING, "Loaded! Time taken: " + std::to_string(al_get_time() - timer) + " seconds.");
+						desc->set(Text::SETSTRING, "-- YAY YOU'VE GOT THIS =P --");
+
+						for (double d = al_get_time(); (al_get_time() - d < 3.0);) {
+							data->cam.set(-2, Camera::ROTATION, cos(al_get_time())*0.04);
+							data->cam.apply();
+
+							title->set(Text::COLOR, al_map_rgba_f(1.0 - (al_get_time() - d) / 3.0, 1.0 - (al_get_time() - d) / 3.0, 1.0 - (al_get_time() - d) / 3.0, 1.0 - (al_get_time() - d) / 3.0));
+							desc->set(Text::COLOR, al_map_rgba_f(1.0 - (al_get_time() - d) / 3.0, 1.0 - (al_get_time() - d) / 3.0, 1.0 - (al_get_time() - d) / 3.0, 1.0 - (al_get_time() - d) / 3.0));
+
+							data->spr_data.draw();
+							data->txt_data.draw();
+
+							if (!data->disp.flip()) break;
+						}
+
+						if (!data->disp.isOpen())
+							throw "MAIN::LOAD - DISPLAY GOT CLOSED, ABORT!";
+
+						// quick checkup
+						data->disp.checkUpImages();
+
+						// reset rotation
+
+						if (data->setup.preload_textures) {
+							// ReSet literally
+							data->cam.set(-2, -2, true);
+							data->cam.set(-2, Camera::ZOOM, 1.0);
+							data->cam.set(-2, Camera::OFFY, 0.0);
+							data->cam.set(-2, Camera::ROTATION, 0.0);
+							data->cam.apply();
+
+							title->set(Text::SETSTRING, "Checking...");
+							title->set(Text::POSX, 0.95);
+							title->set(Text::POSY, 0.87);
+							title->set(Text::MODE, Text::ALIGN_RIGHT);
+							title->set(Text::COLOR, al_map_rgba_f(0.5, 0.5, 0.5, 0.5));
+							title->set(Text::UPDATETIME, 0.2);
+							data->disp.capFPS(30);
+
+							data->img_data.work().lock();
+							size_t nnow = 0, sizz = data->img_data.work().getMax();
+							for (auto& i : data->img_data.work().work())
+							{
+								if (data->disp.flip(false)) {
+									data->spr_data.draw();
+									data->txt_data.draw();
+								}
+
+								i->reload();
+
+								title->set(Text::SETSTRING, std::string("Checking [") + std::to_string(nnow) + "/" + std::to_string(sizz) + "]: " + i->whoAmI().g());
+								nnow++;
+							}
+							data->img_data.work().unlock();
+						}
+
+						// reload of the font to the new expected one
+						data->txt_data.work().lock();
+						for (auto& i : data->txt_data.work().work()) {
+							i->unload();
+							i->verify();
+						}
+						data->txt_data.work().unlock();
 					}
 
-					// reload of the font to the new expected one
-					data->txt_data.work().lock();
-					for (auto& i : data->txt_data.work().work()) {
-						i->unload();
-						i->verify();
+					// Some flags
+					{
+						if (data->setup.fixed_memory_flag) {
+							Image::image_low* nulp;
+							data->img_data.get(nulp, 0);
+							assert(nulp);
+							nulp->_setKeepOnMemory(data->setup.fixed_memory_flag);
+						}
 					}
-					data->txt_data.work().unlock();
+
+					Text::easyRemove("LOADING_0");
+					Text::easyRemove("LOADING_1");
+
+					// SETUP OF THE FUNCTIONS FOR MOUSE (maybe more later)
+
+					// start functions
+					data->bev.g().addFunction(NEWF(Events::add_t_s, 0), &Events::defaultfunction_add);
+					data->bev.g().addFunction(NEWF(Events::cos_t_s, 1), &Events::defaultfunction_cos);
+
+					// get instances
+					Events::add_t_s* a1 = nullptr;
+					Events::cos_t_s* b1 = nullptr;
+
+					a1 = (Events::add_t_s*)data->bev.g().getFVoidArg(0);
+					b1 = (Events::cos_t_s*)data->bev.g().getFVoidArg(1);
+
+					// verify
+					if (!a1 || !b1) {
+						throw "MAIN::LOAD - COULD NOT CREATE EVENTS FUNCTIONS!";
+					}
+
+					// real setup
+					a1->adding = 2.0;
+					data->bev.g().setTimerForF(1.0 / 90, 0);
+
+					b1->ampl = 0.2;
+					b1->default_val = 1.0;
+					b1->time_multiplier = 8.0;
+
+					srand(al_get_time());
+
+					if (data->setup.skip_intro_flag) data->playing = MENU;
+					else data->playing = INTRO;
 				}
-
-				// Some flags
+				catch (const Safer::safe_string& s)
 				{
-					if (data->setup.fixed_memory_flag) {
-						Image::image_low* nulp;
-						data->img_data.get(nulp, 0);
-						assert(nulp);
-						nulp->_setKeepOnMemory(data->setup.fixed_memory_flag);
-					}
+					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:LOAD_][ERROR] Caught throw at main::load: " << s << Log::NEEDED_ENDL;
+					if (!data->disp.isOpen()) throw 0;
+					throw s;
 				}
-				
-				Text::easyRemove("LOADING_0");
-				Text::easyRemove("LOADING_1");
-
-				// SETUP OF THE FUNCTIONS FOR MOUSE (maybe more later)
-
-				// start functions
-				data->bev.g().addFunction(NEWF(Events::add_t_s, 0), &Events::defaultfunction_add);
-				data->bev.g().addFunction(NEWF(Events::cos_t_s, 1), &Events::defaultfunction_cos);
-
-				// get instances
-				Events::add_t_s* a1 = nullptr;
-				Events::cos_t_s* b1 = nullptr;
-
-				a1 = (Events::add_t_s*)data->bev.g().getFVoidArg(0);
-				b1 = (Events::cos_t_s*)data->bev.g().getFVoidArg(1);
-
-				// verify
-				if (!a1 || !b1) {
-					throw "MAIN::LOAD - COULD NOT CREATE EVENTS FUNCTIONS!";
+				catch (const std::string& s)
+				{
+					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:LOAD_][ERROR] Caught throw at main::load: " << s << Log::NEEDED_ENDL;
+					if (!data->disp.isOpen()) throw 0;
+					throw s;
 				}
-
-				// real setup
-				a1->adding = 2.0;
-				data->bev.g().setTimerForF(1.0 / 90, 0);
-
-				b1->ampl = 0.2;
-				b1->default_val = 1.0;
-				b1->time_multiplier = 8.0;
-
-				srand(al_get_time());
-
-				if (data->setup.skip_intro_flag) data->playing = MENU;
-				else data->playing = INTRO;
+				catch (const char* s)
+				{
+					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:LOAD_][ERROR] Caught throw at main::load: " << s << Log::NEEDED_ENDL;
+					if (!data->disp.isOpen()) throw 0;
+					throw s;
+				}
+				catch (const int i)
+				{
+					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:LOAD_][ERROR] Caught throw at main::load: Error code #" << i << Log::NEEDED_ENDL;
+					if (!data->disp.isOpen()) throw 0;
+					throw i;
+				}
+				catch (...)
+				{
+					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:LOAD_][ERROR] Caught throw at main::load: Unknown error." << Log::NEEDED_ENDL;
+					if (!data->disp.isOpen()) throw 0;
+					throw 1;
+				}
 			}
 
 			const bool main::play()
@@ -541,6 +705,8 @@ namespace LSW {
 					Sound::track* t00;
 					Sound::track* t01;
 					Sound::track* t02;
+					Text::text* x00;
+					Text::text* x01;
 
 					// SEARCHES
 					mouse = Sprite::getOrCreate("MOUSE");
@@ -550,8 +716,15 @@ namespace LSW {
 					t00 = Sound::getOrCreate("MUSIC_0");
 					t01 = Sound::getOrCreate("MUSIC_1");
 					t02 = Sound::getOrCreate("MUSIC_2");
+					x00 = Text::getOrCreate("BAR_00_TEXT");
+					x01 = Text::getOrCreate("BAR_01_TEXT");
 
 					// SETTING VARIABLES VALUES
+					x00->set(Text::SETSTRING, "< START >");
+					x01->set(Text::SETSTRING, "< SETTINGS >");
+					b00->set(Sprite::DRAW, true);
+					b01->set(Sprite::DRAW, true);
+					b02->set(Sprite::DRAW, true);
 					return_false = false;
 					bubbles.init(300, 60.0, -20);
 					t00->set(Sound::PLAYING, false);
@@ -576,13 +749,20 @@ namespace LSW {
 						b01->get(Sprite::_IS_COLLIDING, b1);
 						b02->get(Sprite::_IS_COLLIDING, b2);
 
+						if (b0) b00->set(Sprite::ANIMATIONTIME, -1);
+						else b00->set(Sprite::ANIMATIONTIME, 0);
+						if (b1) b01->set(Sprite::ANIMATIONTIME, -1);
+						else b01->set(Sprite::ANIMATIONTIME, 0);
+						if (b2) b02->set(Sprite::ANIMATIONTIME, -1);
+						else b02->set(Sprite::ANIMATIONTIME, 0);
+
 						if (data->bev.g().getKey(Events::MOUSE_0, false)) {
-							if (b0) { // test 1
+							if (b0) { // PLAY
 								data->playing = PLAYING;
 								keep = false;
 							}
-							if (b1) { // test 2
-								data->playing = PLAYING;
+							if (b1) { // SETTINGS
+								data->playing = SETTINGS;
 								keep = false;
 							}
 							if (b2) { // exit
@@ -613,11 +793,15 @@ namespace LSW {
 					Sound::track *t00;
 					Sound::track *t01;
 					Sound::track *t02;
-					Text::text* txt;
+					Text::text* level;
+					//Text::text* txt;
 					double zoom = 1.0;
 					double pos_x = 0.0, pos_y = 0.0;
 					bool is_following_player = false;
 					int temprand = rand();
+					double corrosion;
+					double music_fx;
+					double level_now_fx;
 
 					// SEARCHES
 					map = nullptr;
@@ -629,16 +813,31 @@ namespace LSW {
 
 					// CAMERA (needed before)
 					data->disp.capFPS();
-					__apply_cam_number(3);
+					__apply_cam_number(2);
 					
 					// SETTING VARIABLES VALUES
+					level_now = 1;
 					if (!(map = new Map::map())) {
 						throw "MAIN::PLAY - COULD NOT CREATE MAP POINTER!";
 						return false;
 					}
-					map->launch_player("BAR_ON");
+
+					if (!player_settings) map->launch_player("BAR_ON");
+					else {
+						map->launch_player(player_settings->color);
+						map->setPlayerName(player_settings->nickname);
+					}
 					map->launch_badboys("BAR_OFF", 4);
 					map->setSeed(temprand);
+
+					level = Text::getOrCreate("LEVEL_SHOW", true);
+					level->set(Text::MODE, Text::ALIGN_CENTER);
+					level->set(Text::AFFECTED_BY_CAM, false);
+					level->set(Text::SETSTRING, (std::string("LEVEL #") + std::to_string(level_now)));
+					level->set(Text::COLOR, al_map_rgba_f(0.0,0.0,0.0,0.0));
+					level->set(Text::SCALEG, 1.5);
+					level->set(Text::UPDATETIME, 0.05);
+					level->set(Text::LAYER, Defaults::map_default_layer);
 
 					{
 						map->setCPULock(true);
@@ -671,22 +870,53 @@ namespace LSW {
 						map->setCPULock(false);
 					}
 
-					data->lyr.getOne(3).save_package(map);
+					data->lyr.getOne(2).save_package(map);
 					t00->set(Sound::PLAYING, false);
 					t01->set(Sound::PLAYING, false);
 					t02->set(Sound::PLAYING, true);
+					t02->set(Sound::SPEED, 1.0);
+					level_now_fx = al_get_time();
+					music_fx = corrosion = al_get_time() + Defaults::corrosion_default_time_start;
 
 					// LAYER CONFIGURATION
-					__apply_layer_number(3);
+					__apply_layer_number(2);
 
 					// THE WHILE
-					while (!data->bev.g().getKey(Events::KEY_ESCAPE)) {
+					for (bool k = true; k;) {
 
 						// TASKS
 						map->checkDraw();
-						map->checkPositionChange();
+						if (al_get_time() - corrosion > Defaults::corrosion_default_time) {
+							corrosion = al_get_time();
+							map->corruptWorldTick();
+						}
+						if (al_get_time() - music_fx > Defaults::corrosion_default_time)
+						{
+							double fx_amount = al_get_time() - music_fx - Defaults::corrosion_default_time; // speed
+							fx_amount *= Defaults::music_prop_time;
+							fx_amount += 1.0; // min 1.0
+							if (fx_amount > Defaults::music_maxspeed) fx_amount = Defaults::music_maxspeed;
+							t02->set(Sound::SPEED, fx_amount);
+						}
+						if (al_get_time() - level_now_fx < 5.0) {
+							double diff = al_get_time() - level_now_fx;
+							diff = 5.0 - diff;
+							diff /= 5.0;
+							diff *= 0.8;
+							level->set(Text::SETSTRING, (std::string("LEVEL #") + std::to_string(level_now)));
+							level->set(Text::COLOR, al_map_rgba_f(diff, diff, diff, diff));
+						}
+						else level->set(Text::COLOR, al_map_rgba_f(0.0, 0.0, 0.0, 0.0));
+						//map->checkPositionChange();
 
+						if (map->isDead()) {
+							level->set(Text::COLOR, al_map_rgba_f(0.0, 0.0, 0.0, 0.0));
+							data->playing = LOSER;
+							k = false;
+							continue;
+						}
 						if (map->hasReachedEnd()) {
+							level->set(Text::COLOR, al_map_rgba_f(0.0, 0.0, 0.0, 0.0));
 							map->setCPULock(true);
 
 							Text::text* txt = Text::getOrCreate("LOADING_SCREEN_MAP", true);
@@ -716,8 +946,33 @@ namespace LSW {
 							map->start_draw_thr();
 													   
 							Text::easyRemove("LOADING_SCREEN_MAP");
+							music_fx = corrosion = al_get_time() + Defaults::corrosion_default_time_start;
+							t02->set(Sound::SPEED, 1.0);
 
 							map->setCPULock(false);
+
+							// Level
+							level_now_fx = al_get_time();
+							level_now++;
+						}
+						if (data->bev.g().getKey(Events::KEY_ESCAPE)) {
+							level->set(Text::COLOR, al_map_rgba_f(0.0, 0.0, 0.0, 0.0));
+							map->Pause(true);
+							levels tl = _rgb_pause_screen();
+							map->Pause(false);
+
+							// reapply layer setup
+							__apply_cam_number(2);
+							__apply_layer_number(2);
+
+							// Level
+							level_now_fx = al_get_time();
+
+							if (tl != data->playing) { // end
+								data->playing = tl;
+								k = false;
+								continue;
+							}
 						}
 
 						// FLIP AND STUFF
@@ -735,9 +990,471 @@ namespace LSW {
 						delete map;
 					}
 
-					data->playing = MENU;
+					Text::easyRemove("LEVEL_SHOW");
 				}
 					break;
+				case SETTINGS:
+				{
+					// VARIABLES
+					Sprite::sprite* menu_00; // enable OSD													///
+					Sprite::sprite* menu_01; // set music volume (background fixed)							///
+					Sprite::sprite* menu_02; // set music volume (grap)										///
+					Sprite::sprite* menu_03; // create player settings, so then creates:					///
+					Sprite::sprite* menu_04; // Set Nickname (big block, enter saves)						///
+					Sprite::sprite* menu_05; // Set predefined color (RGB+CYM+BW)							///
+					Sprite::sprite* menu_06; // back														///
+					Text::text* menu_00_t;																	///
+					Text::text* menu_01_t;																	///
+					//Text::text* menu_02_t;																/// SHOULDN'T EXIST (now)
+					Text::text* menu_03_t;																	///
+					Text::text* menu_04_t;																	///
+					Text::text* menu_05_t;																	///
+					Text::text* menu_06_t;																	///
+					Fx::bubbles bubbles;
+						
+					Sprite::sprite* mouse;
+					Sound::track* t00;
+					float volume_got;
+					bool is_typing_name;
+
+					// SEARCHES
+					mouse = Sprite::getOrCreate("MOUSE");
+					t00 = Sound::getOrCreate("MUSIC_0");
+
+
+					// SETTING VARIABLES VALUES
+					is_typing_name = false;
+					t00->get(Sound::VOLUME, volume_got);
+					bubbles.init(300, 60.0, Defaults::default_settings_layer);
+					{
+						/** #00 - enable OSD
+						- Static pos
+						- Click: _setKey F3 (fake key)
+						*/
+						menu_00 = Sprite::getOrCreate("L_MENU_00", true);
+						menu_00->add("BAR_OFF");
+						menu_00->add("BAR_ON");
+						menu_00->set(Sprite::SCALEG, 0.6);
+						menu_00->set(Sprite::COLLIDE, true);
+						menu_00->set(Sprite::SHOWBOX, /*true*/false);
+						menu_00->set(Sprite::LAYER, Defaults::default_settings_layer);
+						menu_00->set(Sprite::SCALEY, 0.20);
+						menu_00->set(Sprite::SCALEX, 1.5);
+						menu_00->set(Sprite::POSX, 0.0);
+						menu_00->set(Sprite::POSY, -0.50);
+
+						menu_00_t = Text::getOrCreate("L_MENU_00", true);
+						menu_00_t->set(Text::SETSTRING, "Enable or disable OSD");
+						menu_00_t->set(Text::SETFOLLOW, "L_MENU_00");
+						menu_00_t->set(Text::MODE, Text::ALIGN_CENTER);
+						menu_00_t->set(Text::COLOR, al_map_rgb_f(1.0,1.0,1.0));
+						menu_00_t->set(Text::SCALEG, 1.3);
+						menu_00_t->set(Text::UPDATETIME, 0.5);
+						menu_00_t->set(Text::POSY, -0.053);
+						menu_00_t->set(Text::LAYER, Defaults::default_settings_layer);
+
+						/** #01 - set music volume (background fixed)
+						- Static
+						*/
+						menu_01 = Sprite::getOrCreate("L_MENU_01", true);
+						menu_01->add("BAR_OFF");
+						menu_01->set(Sprite::SCALEG, 0.6);
+						menu_01->set(Sprite::COLLIDE, false); // FIXED
+						menu_01->set(Sprite::SHOWBOX, false);
+						menu_01->set(Sprite::LAYER, Defaults::default_settings_layer);
+						menu_01->set(Sprite::SCALEY, 0.20);
+						menu_01->set(Sprite::SCALEX, 1.5);
+						menu_01->set(Sprite::POSX, 0.0);
+						menu_01->set(Sprite::POSY, -0.25);
+
+						menu_01_t = Text::getOrCreate("L_MENU_01", true);
+						menu_01_t->set(Text::SETSTRING, "Volume: 100\\%");
+						menu_01_t->set(Text::SETFOLLOW, "L_MENU_01");
+						menu_01_t->set(Text::MODE, Text::ALIGN_CENTER);
+						menu_01_t->set(Text::COLOR, al_map_rgb_f(1.0, 1.0, 1.0));
+						menu_01_t->set(Text::SCALEG, 1.3);
+						menu_01_t->set(Text::UPDATETIME, 0.02);
+						menu_01_t->set(Text::POSY, -0.053);
+						menu_01_t->set(Text::LAYER, Defaults::default_settings_layer);
+
+						/** #02 - set music volume
+						- Movable (x axis)
+						- Set all music volumes from 0.0 to 1.0 (from posx)
+						- Y FIXED
+						- X follow MOUSE when COLLISION && Mouse clicked
+						*/
+						menu_02 = Sprite::getOrCreate("L_MENU_02", true);
+						menu_02->add("BAR_ON");
+						menu_02->set(Sprite::SCALEG, 0.6);
+						menu_02->set(Sprite::COLLIDE, true);
+						menu_02->set(Sprite::SHOWBOX, /*true*/false);
+						menu_02->set(Sprite::LAYER, Defaults::default_settings_layer);
+						menu_02->set(Sprite::SCALEY, 0.20); // FORCE
+						menu_02->set(Sprite::SCALEX, 0.20); // IT'S A BAR
+						menu_02->set(Sprite::POSX, 0.39); // 100%
+						menu_02->set(Sprite::POSY, -0.25);
+
+						// EMPTY TEXT SPACE
+
+						/** #03 - create player settings (new player settings)
+						- Click: if !player_settings, new; else delete
+						*/
+						menu_03 = Sprite::getOrCreate("L_MENU_03", true);
+						menu_03->add("BAR_OFF");
+						menu_03->add("BAR_ON");
+						menu_03->set(Sprite::SCALEG, 0.6);
+						menu_03->set(Sprite::COLLIDE, true);
+						menu_03->set(Sprite::SHOWBOX, /*true*/false);
+						menu_03->set(Sprite::LAYER, Defaults::default_settings_layer);
+						menu_03->set(Sprite::SCALEY, 0.20); // FORCE
+						menu_03->set(Sprite::SCALEX, 1.5);
+						menu_03->set(Sprite::POSX, 0.0);
+						menu_03->set(Sprite::POSY, 0.0);
+
+						menu_03_t = Text::getOrCreate("L_MENU_03", true);
+						menu_03_t->set(Text::SETSTRING, "(Re)create player profile");
+						menu_03_t->set(Text::SETFOLLOW, "L_MENU_03");
+						menu_03_t->set(Text::MODE, Text::ALIGN_CENTER);
+						menu_03_t->set(Text::COLOR, al_map_rgb_f(1.0, 1.0, 1.0));
+						menu_03_t->set(Text::SCALEG, 1.3);
+						menu_03_t->set(Text::POSY, -0.053);
+						menu_03_t->set(Text::LAYER, Defaults::default_settings_layer);
+
+						/** #04 - Set Nickname (big block, enter saves)
+						- Click: clear and lock for text input
+						- <ENTER>: Saves and "leave"
+						*/
+						menu_04 = Sprite::getOrCreate("L_MENU_04", true);
+						menu_04->add("BAR_OFF");
+						menu_04->set(Sprite::SCALEG, 0.6);
+						menu_04->set(Sprite::COLLIDE, true);
+						menu_04->set(Sprite::SHOWBOX, /*true*/false);
+						menu_04->set(Sprite::LAYER, Defaults::default_settings_layer);
+						menu_04->set(Sprite::SCALEY, 0.18); // FORCE
+						menu_04->set(Sprite::SCALEX, 1.4);
+						menu_04->set(Sprite::POSX, 0.0);
+						menu_04->set(Sprite::POSY, 0.23);
+						menu_04->set(Sprite::DRAW, (player_settings));
+
+						menu_04_t = Text::getOrCreate("L_MENU_04", true);
+						menu_04_t->set(Text::SETSTRING, std::string("Nick: <NULL>"));
+						menu_04_t->set(Text::SETFOLLOW, "L_MENU_04");
+						menu_04_t->set(Text::MODE, Text::ALIGN_CENTER);
+						menu_04_t->set(Text::COLOR, al_map_rgb_f(1.0, 1.0, 1.0));
+						menu_04_t->set(Text::SCALEG, 1.05);
+						menu_04_t->set(Text::POSY, -0.03);
+						menu_04_t->set(Text::LAYER, Defaults::default_settings_layer);
+
+						/** #05 - Set predefined color (RGB+CYM+BW)
+						- Click: clear and lock for text input
+						- <ENTER>: Saves and "leave"
+						*/
+						menu_05 = Sprite::getOrCreate("L_MENU_05", true);
+						menu_05->add("BAR_OFF");
+						menu_05->add("BAR_ON");
+						menu_05->set(Sprite::SCALEG, 0.6);
+						menu_05->set(Sprite::COLLIDE, true);
+						menu_05->set(Sprite::SHOWBOX, /*true*/false);
+						menu_05->set(Sprite::LAYER, Defaults::default_settings_layer);
+						menu_05->set(Sprite::SCALEY, 0.18); // FORCE
+						menu_05->set(Sprite::SCALEX, 1.4);
+						menu_05->set(Sprite::POSX, 0.0);
+						menu_05->set(Sprite::POSY, 0.43);
+						menu_05->set(Sprite::DRAW, (player_settings));
+
+						menu_05_t = Text::getOrCreate("L_MENU_05", true);
+						menu_05_t->set(Text::SETSTRING, "Color: <NULL>");
+						menu_05_t->set(Text::SETFOLLOW, "L_MENU_05");
+						menu_05_t->set(Text::MODE, Text::ALIGN_CENTER);
+						menu_05_t->set(Text::COLOR, al_map_rgb_f(1.0, 1.0, 1.0));
+						menu_05_t->set(Text::SCALEG, 1.05);
+						menu_05_t->set(Text::POSY, -0.03);
+						menu_05_t->set(Text::LAYER, Defaults::default_settings_layer);
+
+						/** #06 - back
+						- Click: Same as <ESCAPE>
+						*/
+						menu_06 = Sprite::getOrCreate("L_MENU_06", true);
+						menu_06->add("BAR_OFF");
+						menu_06->add("BAR_ON");
+						menu_06->set(Sprite::SCALEG, 0.6);
+						menu_06->set(Sprite::COLLIDE, true);
+						menu_06->set(Sprite::SHOWBOX, /*true*/false);
+						menu_06->set(Sprite::LAYER, Defaults::default_settings_layer);
+						menu_06->set(Sprite::SCALEY, 0.20); // FORCE
+						menu_06->set(Sprite::SCALEX, 1.2);
+						menu_06->set(Sprite::POSX, 0.0);
+						menu_06->set(Sprite::POSY, 0.70);
+
+						menu_06_t = Text::getOrCreate("L_MENU_06", true);
+						menu_06_t->set(Text::SETSTRING, "<BACK>");
+						menu_06_t->set(Text::SETFOLLOW, "L_MENU_06");
+						menu_06_t->set(Text::MODE, Text::ALIGN_CENTER);
+						menu_06_t->set(Text::COLOR, al_map_rgb_f(1.0, 1.0, 1.0));
+						menu_06_t->set(Text::SCALEG, 1.3);
+						menu_06_t->set(Text::POSY, -0.053);
+						menu_06_t->set(Text::LAYER, Defaults::default_settings_layer);
+					}
+
+					// CAMERA AND LAYER SET
+					data->disp.capFPS();
+					__apply_cam_number(3);
+					__apply_layer_number(3);
+
+					// THE WHILE
+					for (bool keep = true; keep;)
+					{
+						// PRE-TASK
+						menu_04->set(Sprite::DRAW, (player_settings));
+						menu_05->set(Sprite::DRAW, (player_settings));
+						if (player_settings) {
+							menu_04_t->set(Text::SETSTRING, std::string("Nick: ") + player_settings->nickname.g());
+							menu_05_t->set(Text::SETSTRING, std::string("Color: ") + interpret_color(player_settings->color_interp).g());
+						}
+						if (is_typing_name) { // TODO: limit string size
+							if (player_settings) {
+								menu_04_t->set(Text::COLOR, al_map_rgb_f(1.0, 1.0, 0.0));
+								Safer::safe_string ss, ess;
+
+								data->bev.g().getCurrentString(ss);
+								data->bev.g().getLastString(ess, true);
+
+								if (ess.g().length() < 1) {
+									std::string ssf = ss.g();
+									if (ssf.length() > 22) ssf = ssf.substr(0, 22);
+
+									menu_04_t->set(Text::SETSTRING, std::string("Nick: ") + ssf);
+								}
+								else {
+									is_typing_name = false;
+									std::string ssf = ess.g();
+									if (ssf.length() > 22) ssf = ssf.substr(0, 22);
+
+									player_settings->nickname = ssf;
+								}
+							}
+							else {
+								is_typing_name = false;
+							}
+						}
+						else {
+							menu_04_t->set(Text::COLOR, al_map_rgb_f(1.0, 1.0, 1.0));
+						}
+
+						// INPUT
+						bool b00, b02, b03, b04, b05, b06;
+						menu_00->get(Sprite::_IS_COLLIDING, b00);
+						menu_02->get(Sprite::_IS_COLLIDING, b02);
+						menu_03->get(Sprite::_IS_COLLIDING, b03);
+						menu_04->get(Sprite::_IS_COLLIDING, b04);
+						menu_05->get(Sprite::_IS_COLLIDING, b05);
+						menu_06->get(Sprite::_IS_COLLIDING, b06);
+
+						// show on or off
+						if (b00) menu_00->set(Sprite::ANIMATIONTIME, -1);
+						else menu_00->set(Sprite::ANIMATIONTIME, 0);
+
+						// mouse fx
+						if (b03) menu_03->set(Sprite::ANIMATIONTIME, -1);
+						else menu_03->set(Sprite::ANIMATIONTIME, 0);
+						if (b04) menu_04->set(Sprite::ANIMATIONTIME, -1);
+						else menu_04->set(Sprite::ANIMATIONTIME, 0);
+						if (b05) menu_05->set(Sprite::ANIMATIONTIME, -1);
+						else menu_05->set(Sprite::ANIMATIONTIME, 0);
+						if (b06) menu_06->set(Sprite::ANIMATIONTIME, -1);
+						else menu_06->set(Sprite::ANIMATIONTIME, 0);
+
+						if (data->bev.g().getKey(Events::MOUSE_0, false)) {
+							if (b00) {
+								data->bev.g()._setKey(Events::KEY_F3, true); // MAYBE CHANGE LATER
+							}
+							else if (b02) {
+								float mx;
+								data->bev.g().getMouse(mx, Events::X);
+
+								if (mx > 0.390) mx = 0.390;
+								if (mx < -0.390) mx = -0.390;
+
+								menu_02->set(Sprite::POSX, mx);
+
+								float volume = ((mx + 0.390) / 0.780);
+
+								menu_01_t->set(Text::SETSTRING, "Volume: " + std::to_string((int)(100.0*volume)) + "\\%");
+
+								if (!t00->set(Sound::GLOBALVOLUME, volume)) menu_01_t->set(Text::SETSTRING, "Volume: (could not set volume)");
+							}
+							else if (b03) {
+								if (player_settings) {
+									delete player_settings;
+									player_settings = nullptr;
+								}
+								if (!player_settings) player_settings = new __player_settings();
+
+								data->bev.g().getKey(Events::MOUSE_0, true);
+							}
+							else if (b04) {
+								Safer::safe_string buf;
+
+								is_typing_name = !is_typing_name;
+								data->bev.g()._setKey(Events::CUSTOMEVENT_RESETCURRSTRING, true);
+
+								data->bev.g().getCurrentString(buf, true);
+								data->bev.g().getLastString(buf, true);
+
+								data->bev.g().getKey(Events::MOUSE_0, true);
+							}
+							else if (b05 && player_settings) {
+								int tempp = (int)player_settings->color_interp;
+								tempp++;
+								if (tempp > YELLOW) tempp = 0;
+								player_settings->color_interp = (colors)tempp;
+								player_settings->color = interpret_to_color(player_settings->color_interp);
+
+								data->bev.g().getKey(Events::MOUSE_0, true);
+							}
+							else if (b06) {
+								keep = false;
+
+								data->bev.g().getKey(Events::MOUSE_0, true);
+							}
+						}
+						if (data->bev.g().getKey(Events::KEY_ESCAPE)) keep = false;
+
+						// FX
+						mouse->set(Sprite::ROTATION, data->bev.g().getFunctionValNow(0));
+						mouse->set(Sprite::SCALEG, 0.07 * data->bev.g().getFunctionValNow(1));
+						bubbles.think();
+						bubbles.draw();
+
+						// FLIP AND STUFF
+						if (!__internal_task_level_common()) return false;
+					}
+
+					Sprite::easyRemove("L_MENU_00");
+					Sprite::easyRemove("L_MENU_01");
+					Sprite::easyRemove("L_MENU_02");
+					Sprite::easyRemove("L_MENU_03");
+					Sprite::easyRemove("L_MENU_04");
+					Sprite::easyRemove("L_MENU_05");
+					Sprite::easyRemove("L_MENU_06");
+					Text::easyRemove("L_MENU_00");
+					Text::easyRemove("L_MENU_01");
+					Text::easyRemove("L_MENU_03");
+					Text::easyRemove("L_MENU_04");
+					Text::easyRemove("L_MENU_05");
+					Text::easyRemove("L_MENU_06");
+
+					data->playing = MENU;
+				}
+				break;
+				case LOSER:
+				{
+					__apply_layer_number(4);
+					__apply_cam_number(4);
+
+					// VARIABLES
+					Fx::lines lines(-81);
+					Sprite::sprite* mouse;
+					Sprite::sprite* menu_00;
+					Sprite::sprite* menu_01;
+					Text::text* menu_00_t;
+					Text::text* menu_01_t;
+
+					// SEARCHES
+					mouse = Sprite::getOrCreate("MOUSE");
+
+					// SETTING VARIABLES VALUES
+					{
+
+						menu_00 = Sprite::getOrCreate("L_MENU_00", true);
+						menu_00->add("BAR_OFF");
+						menu_00->add("BAR_ON");
+						menu_00->set(Sprite::SCALEG, 0.6);
+						menu_00->set(Sprite::COLLIDE, true);
+						menu_00->set(Sprite::SHOWBOX, /*true*/false);
+						menu_00->set(Sprite::LAYER, -81);
+						menu_00->set(Sprite::SCALEY, 0.20);
+						menu_00->set(Sprite::SCALEX, 1.5);
+						menu_00->set(Sprite::POSX, 0.0);
+						menu_00->set(Sprite::POSY, -0.15);
+
+						menu_00_t = Text::getOrCreate("L_MENU_00", true);
+						menu_00_t->set(Text::SETSTRING, "YOU FAILED");
+						menu_00_t->set(Text::SETFOLLOW, "L_MENU_00");
+						menu_00_t->set(Text::MODE, Text::ALIGN_CENTER);
+						menu_00_t->set(Text::COLOR, al_map_rgb_f(1.0, 1.0, 1.0));
+						menu_00_t->set(Text::SCALEG, 1.3);
+						menu_00_t->set(Text::UPDATETIME, 0.5);
+						menu_00_t->set(Text::POSY, -0.053);
+						menu_00_t->set(Text::LAYER, -81);
+
+						menu_01 = Sprite::getOrCreate("L_MENU_01", true);
+						menu_01->add("BAR_OFF");
+						menu_01->add("BAR_ON");
+						menu_01->set(Sprite::SCALEG, 0.6);
+						menu_01->set(Sprite::COLLIDE, true);
+						menu_01->set(Sprite::SHOWBOX, /*true*/false);
+						menu_01->set(Sprite::LAYER, -81);
+						menu_01->set(Sprite::SCALEY, 0.20);
+						menu_01->set(Sprite::SCALEX, 1.5);
+						menu_01->set(Sprite::POSX, 0.0);
+						menu_01->set(Sprite::POSY, 0.15);
+
+						menu_01_t = Text::getOrCreate("L_MENU_01", true);
+						menu_01_t->set(Text::SETSTRING, "Back to Menu");
+						menu_01_t->set(Text::SETFOLLOW, "L_MENU_01");
+						menu_01_t->set(Text::MODE, Text::ALIGN_CENTER);
+						menu_01_t->set(Text::COLOR, al_map_rgb_f(1.0, 1.0, 1.0));
+						menu_01_t->set(Text::SCALEG, 1.3);
+						menu_01_t->set(Text::UPDATETIME, 0.5);
+						menu_01_t->set(Text::POSY, -0.053);
+						menu_01_t->set(Text::LAYER, -81);
+					}
+
+
+
+					// THE WHILE
+					for (bool keep = true; keep;)
+					{
+						// INPUT
+						bool b0, b1;
+						menu_00->get(Sprite::_IS_COLLIDING, b0);
+						menu_01->get(Sprite::_IS_COLLIDING, b1);
+
+						if (b0) menu_00->set(Sprite::ANIMATIONTIME, -1);
+						else menu_00->set(Sprite::ANIMATIONTIME, 0);
+						if (b1) menu_01->set(Sprite::ANIMATIONTIME, -1);
+						else menu_01->set(Sprite::ANIMATIONTIME, 0);
+
+						if (data->bev.g().getKey(Events::MOUSE_0)) {
+							if (b1) {
+								keep = false;
+								continue;
+							}
+						}
+						if (data->bev.g().getKey(Events::KEY_ESCAPE))
+						{
+							keep = false;
+							continue;
+						}
+
+						// FX
+						mouse->set(Sprite::ROTATION, data->bev.g().getFunctionValNow(0));
+						mouse->set(Sprite::SCALEG, 0.07 * data->bev.g().getFunctionValNow(1));
+						lines.draw();
+
+						// FLIP AND STUFF
+						if (!__internal_task_level_common()) return false;
+					}
+
+					Sprite::easyRemove("L_MENU_00");
+					Sprite::easyRemove("L_MENU_01");
+					Text::easyRemove("L_MENU_00");
+					Text::easyRemove("L_MENU_01");
+
+					data->playing = MENU;
+				}
+				break;
 				}
 
 				return true;
@@ -883,7 +1600,7 @@ namespace LSW {
 				ws->set(Sprite::POSY, -0.45);
 				ws->set(Sprite::SCALEG, 1.0);
 				ws->set(Sprite::SCALEY, 0.6);
-				ws->set(Sprite::LAYER, 0);
+				ws->set(Sprite::LAYER, 1);
 
 				actual_perc = 0.981;
 
@@ -895,7 +1612,7 @@ namespace LSW {
 				ws->set(Sprite::SCALEG, 0.6);
 				ws->set(Sprite::SCALEY, 0.22);
 				ws->set(Sprite::COLLIDE, true);
-				ws->set(Sprite::SHOWBOX, true);
+				ws->set(Sprite::SHOWBOX, /*true*/false);
 				ws->set(Sprite::LAYER, 0);
 
 				actual_perc = 0.982;
@@ -908,7 +1625,7 @@ namespace LSW {
 				ws->set(Sprite::SCALEG, 0.6);
 				ws->set(Sprite::SCALEY, 0.22);
 				ws->set(Sprite::COLLIDE, true);
-				ws->set(Sprite::SHOWBOX, true);
+				ws->set(Sprite::SHOWBOX, /*true*/false);
 				ws->set(Sprite::LAYER, 0);
 
 				actual_perc = 0.983;
@@ -921,50 +1638,20 @@ namespace LSW {
 				ws->set(Sprite::SCALEG, 0.6);
 				ws->set(Sprite::SCALEY, 0.22);
 				ws->set(Sprite::COLLIDE, true);
-				ws->set(Sprite::SHOWBOX, true);
+				ws->set(Sprite::SHOWBOX, /*true*/false);
 				ws->set(Sprite::LAYER, 0);
 
 				actual_perc = 0.984;
 
-				ws = Sprite::getOrCreate("DEFAULT", true);
+				ws = Sprite::getOrCreate("PAUSE", true);
 				ws->add("PAUSE", 29);
 				ws->set(Sprite::ANIMATIONTIME, 24.0);
-				ws->set(Sprite::POSX, 0.5);
-				ws->set(Sprite::POSY, 0.5);
-				ws->set(Sprite::SCALEG, 0.2);
-				ws->set(Sprite::COLLIDE, true);
-				ws->set(Sprite::AFFECTED_BY_COLLISION, true);
-				ws->set(Sprite::SHOWBOX, true);
-				ws->set(Sprite::LAYER, 2);
-
-				actual_perc = 0.986;
-
-				ws = Sprite::getOrCreate("DEFAULT3", true);
-				ws->add("PAUSE", 29);
-				ws->set(Sprite::ANIMATIONTIME, 40.0);
-				ws->set(Sprite::SCALEG, 0.4);
 				ws->set(Sprite::POSX, 0.0);
-				ws->set(Sprite::POSY, 0.7);
-				ws->set(Sprite::COLLIDE, true);
-				ws->set(Sprite::AFFECTED_BY_COLLISION, true);
-				ws->set(Sprite::SHOWBOX, true);
-				ws->set(Sprite::LAYER, 2);
+				ws->set(Sprite::POSY, -0.34);
+				ws->set(Sprite::SCALEG, 0.55);
+				ws->set(Sprite::LAYER, Defaults::default_pauseonly_layer);
 
-				actual_perc = 0.988;
-
-				ws = Sprite::getOrCreate("DEFAULT2", true);
-				ws->add("PAUSE", 29);
-				ws->set(Sprite::ANIMATIONTIME, 30.0);
-				ws->set(Sprite::LAYER, 100);
-				ws->set(Sprite::SCALEG, 0.6);
-				ws->set(Sprite::POSX, 0.0);
-				ws->set(Sprite::POSY, 0.0);
-				ws->set(Sprite::COLLIDE, true);
-				ws->set(Sprite::AFFECTED_BY_COLLISION, true);
-				ws->set(Sprite::SHOWBOX, true);
-				ws->set(Sprite::LAYER, 2);
-
-				actual_perc = 0.990;
+				actual_perc = 0.989;
 
 				ws = Sprite::getOrCreate("INTRO", true);
 				ws->add("LOGO", 115);
@@ -996,7 +1683,7 @@ namespace LSW {
 				wt->set(Text::MODE, Text::ALIGN_CENTER);
 				wt->set(Text::LAYER, 99);
 				wt->set(Text::SETFOLLOW, "BAR_00");
-				wt->set(Text::UPDATETIME, 1.0);
+				wt->set(Text::UPDATETIME, 0.02);
 				wt->set(Text::SCALEG, 1.35);
 				wt->set(Text::POSY, -0.053);
 				wt->set(Text::POSX, 0.002);
@@ -1008,7 +1695,7 @@ namespace LSW {
 				wt->set(Text::MODE, Text::ALIGN_CENTER);
 				wt->set(Text::LAYER, 99);
 				wt->set(Text::SETFOLLOW, "BAR_01");
-				wt->set(Text::UPDATETIME, 1.0);
+				wt->set(Text::UPDATETIME, 0.02);
 				wt->set(Text::SCALEG, 1.35);
 				wt->set(Text::POSY, -0.053);
 				wt->set(Text::POSX, 0.002);
@@ -1077,6 +1764,19 @@ namespace LSW {
 				wt->set(Text::UPDATETIME, 0.50);
 				wt->set(Text::AFFECTED_BY_CAM, false);
 
+				actual_perc = 0.9997;
+
+				wt = Text::getOrCreate("OSD_2", true);
+				wt->set(Text::SETSTRING,
+					"{IMG=%num_images%;SPR=%num_sprites%;TXT=%num_texts%;TCK=%num_tracks%;E=%num_entities%}");
+				wt->set(Text::POSX, -1.0);
+				wt->set(Text::POSY, -0.95);
+				wt->set(Text::SCALEG, 0.7);
+				wt->set(Text::MODE, Text::ALIGN_LEFT);
+				wt->set(Text::LAYER, Defaults::default_font_foreground_layer);
+				wt->set(Text::UPDATETIME, 1.0);
+				wt->set(Text::AFFECTED_BY_CAM, false);
+
 				actual_perc = 1.0;
 			}
 
@@ -1088,10 +1788,29 @@ namespace LSW {
 
 				if (!data->disp.flip()) return false; // flip
 
-				// toggle fullscreen with F11
-				if (data->bev.g().getKey(Events::KEY_F11, true)) data->disp.toggleFS();
+				__internal_check_hotkeys();
 
 				return true;
+			}
+
+			void main::__internal_check_hotkeys()
+			{
+				// toggle fullscreen with F11
+				if (data->bev.g().getKey(Events::KEY_F11, true)) data->disp.toggleFS();
+				// toggle OSD
+				if (data->bev.g().getKey(Events::KEY_F3, true)) {
+					int a = 0;
+					if (al_get_time() - lastF3switch >= Defaults::display_osd_toggle_min_time) {
+						lastF3switch = al_get_time();
+
+						Text::text* txt = Text::getOrCreate("OSD_2");
+						bool allas;
+						txt->get(Text::SHOW, allas);
+						Text::getOrCreate("OSD_0")->set(Text::SHOW, !allas);
+						Text::getOrCreate("OSD_1")->set(Text::SHOW, !allas);
+						Text::getOrCreate("OSD_2")->set(Text::SHOW, !allas);
+					}
+				}
 			}
 
 			const initialization interpret_console_entry(const int argc, char *argv[])
@@ -1123,7 +1842,7 @@ namespace LSW {
 						}
 						if (wrk == "-windowed")
 						{
-							init.mode = ALLEGRO_OPENGL | ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE;
+							init.mode = Defaults::default_windowed_display_settings;
 							continue;
 						}
 						if (wrk == "-skipdownload")
@@ -1182,6 +1901,51 @@ namespace LSW {
 				while ((temprand = rand()) == 0);
 				map->setSeed(temprand);
 				map->start_cpu_thr();
+			}
+			Safer::safe_string interpret_color(const colors c)
+			{
+				switch (c){
+				case WHITE:
+					return "WHITE";
+				case BLACK:
+					return "BLACK";
+				case RED:
+					return "RED";
+				case GREEN:
+					return "GREEN";
+				case BLUE:
+					return "BLUE";
+				case CYAN:
+					return "CYAN";
+				case MAGENTA:
+					return "MAGENTA";
+				case YELLOW:
+					return "YELLOW";
+				}
+				return "UNDEF";
+			}
+
+			ALLEGRO_COLOR interpret_to_color(const colors c)
+			{
+				switch (c) {
+				case WHITE:
+					return al_map_rgb(255, 255, 255);
+				case BLACK:
+					return al_map_rgb(0, 0, 0);
+				case RED:
+					return al_map_rgb(255, 0, 0);
+				case GREEN:
+					return al_map_rgb(0, 255, 0);
+				case BLUE:
+					return al_map_rgb(32, 164, 255);
+				case CYAN:
+					return al_map_rgb(35, 230, 255);
+				case MAGENTA:
+					return al_map_rgb(204, 0, 255);
+				case YELLOW:
+					return al_map_rgb(255, 209, 0);
+				}
+				return al_map_rgb(0, 0, 0);
 			}
 		}
 	}

@@ -4,9 +4,33 @@ namespace LSW {
 	namespace v2 {
 		namespace Sound {
 
+			_all_track_voiceNmixer track::vnm;
+
 			const bool track::load(const Safer::safe_string e_o)
 			{
+				if (!vnm.voice) {
+					vnm.voice = al_create_voice(44100, ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF_2);
+					if (!vnm.voice) {
+						throw "TRACK::LOAD - FAILED TO CREATE VOICE FOR TRACKS";
+						return false;
+					}
+					
+					vnm.mixer = al_create_mixer(44100, ALLEGRO_AUDIO_DEPTH_FLOAT32, ALLEGRO_CHANNEL_CONF_2);
+					if (!vnm.mixer) {
+						throw "TRACK::LOAD - FAILED TO CREATE MIXER FOR TRACKS";
+						return false;
+					}
+
+					if (!al_attach_mixer_to_voice(vnm.mixer, vnm.voice)) {
+						throw "TRACK::LOAD - FAILED TO SET MIXER INTO VOICE";
+						return false;
+					}
+
+				}
+
 				if (mse) al_destroy_sample(mse);
+
+
 
 				Safer::safe_string e = Defaults::default_data_path.g() + e_o.g();
 				Tools::interpret_path(e);
@@ -14,10 +38,12 @@ namespace LSW {
 				mse = al_load_sample(e.g().c_str());
 				if (!mse) return false;
 
-				instance = al_create_sample_instance(mse);
+				instance = al_create_sample_instance(nullptr);
 				if (!instance) return false;
 
-				al_attach_sample_instance_to_mixer(instance, al_get_default_mixer());
+				al_set_sample(instance, mse);
+
+				al_attach_sample_instance_to_mixer(instance, vnm.mixer);
 				al_set_sample_instance_playing(instance, false);
 
 				return true;
@@ -42,19 +68,21 @@ namespace LSW {
 					break;
 				}
 			}
-			void track::set(const track_f e, const float v)
+			const bool track::set(const track_f e, const float v)
 			{
-				if (!instance) return;
+				if (!instance) return false;
 
 				switch (e)
 				{
 				case VOLUME:
-					al_set_sample_instance_gain(instance, v);
-					break;
+					return al_set_sample_instance_gain(instance, v);
+				case GLOBALVOLUME:
+					if (!vnm.mixer) return false;
+					return al_set_mixer_gain(vnm.mixer, v);
 				case SPEED:
-					al_set_sample_instance_speed(instance, v);
-					break;
+					return al_set_sample_instance_speed(instance, v);
 				}
+				return false;
 			}
 			void track::set(const track_i e, const track_i_0 v)
 			{

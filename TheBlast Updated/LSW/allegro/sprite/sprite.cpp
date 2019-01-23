@@ -371,6 +371,9 @@ namespace LSW {
 						return false;
 					}
 					ALLEGRO_BITMAP* bmp = nullptr; // current bitmap
+					if (!bmps.get(frame, Defaults::exp_veryfast)) {
+						return false;
+					}
 					bmps.get(frame, Defaults::exp_veryfast)->get(bmp);
 					if (!bmp) {
 						replacing.unlock();
@@ -514,7 +517,7 @@ namespace LSW {
 			{
 				ALLEGRO_BITMAP* bmp = nullptr;
 				bmps.get(a, Defaults::exp_veryfast)->get(bmp);
-				assert(bmp);
+				if (!bmp) throw "SPRITE::_SETASTARG - Cannot set id #" + std::to_string((int)this) + " as target";
 
 				al_set_target_bitmap(bmp);
 			}
@@ -771,6 +774,7 @@ namespace LSW {
 				//u.bval[FOLLOWKEYBOARD] = false;
 				u.bval[USE_TINTED_DRAWING] = false;
 				//u.bval[AFFECTED_BY_GRAVITY] = false;
+				u.bval[_SKIP_DEFAULT_COLLISION_METHOD] = false;
 			}
 
 

@@ -14,15 +14,27 @@ namespace LSW {
 
 			enum levels {
 				VERYFIRST = -2,
-				INTRO = -1,
-				MENU = 0,
-				PLAYING = 1
+				INTRO,
+				MENU,
+				PLAYING,
+				SETTINGS,
+				LOSER
+			};
+			enum colors {
+				WHITE,
+				BLACK,
+				RED,
+				GREEN,
+				BLUE,
+				CYAN,
+				MAGENTA,
+				YELLOW
 			};
 
 			struct initialization {
 				int res[2] = { -1,-1 };
 				//int hz = -1;
-				int mode = Defaults::default_display_settings;
+				int mode = Defaults::default_windowed_display_settings;
 				bool fixed_memory_flag = false;
 				bool preload_textures = true;
 				bool skip_download_flag = false;
@@ -60,9 +72,19 @@ namespace LSW {
 				int config_number;
 			};
 
+			struct __player_settings {
+				Safer::safe_string nickname;
+				ALLEGRO_COLOR color = al_map_rgb(0,255,0);
+				colors color_interp = GREEN;
+			};
+
 			class main {
 				static _main_data* data;
 				float actual_perc = 0.0;
+				double lastF3switch = 0;
+				unsigned level_now = 0;
+				bool lastOSDstats = true;
+				__player_settings* player_settings;
 				//double rgb_start = 0;
 			public:
 				main();
@@ -84,6 +106,8 @@ namespace LSW {
 				Display::display* __getDisplay();
 
 				const bool _rgb_clear_screen_load();
+				const levels _rgb_pause_screen();
+				//void _dead_screen();
 
 				void init();
 				void load();
@@ -94,6 +118,8 @@ namespace LSW {
 				void __internal_thr_once_load();
 				// play()
 				const bool __internal_task_level_common();
+				// any draw
+				void __internal_check_hotkeys();
 			};
 
 			void __xtract_dis(void*, Safer::safe_string, Safer::safe_string);
@@ -102,6 +128,9 @@ namespace LSW {
 			const initialization interpret_console_entry(const int, char*[]);
 
 			void __random_map_load(Map::map*);
+
+			Safer::safe_string interpret_color(const colors);
+			ALLEGRO_COLOR interpret_to_color(const colors);
 		}
 	}
 }

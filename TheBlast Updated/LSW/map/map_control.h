@@ -30,6 +30,7 @@ namespace LSW {
 				Sprite::sprite* big_map = nullptr;
 				Image::image_low* big_map_il = nullptr;
 
+				int pausepos[2] {0,0};
 				double spawn[2] = { 0.0,0.0 };
 				int seed = 0;
 				int layerUsed = Defaults::map_default_layer;
@@ -53,13 +54,18 @@ namespace LSW {
 				bool set_cpu_lock = false;
 				bool cpu_tasking = false;
 
-				Safer::safe_string last_player_path;
+				bool was_player_rgb_instead;
+				ALLEGRO_COLOR last_player_color;
+				Safer::safe_string last_player_path, last_player_name;
 				double last_player_size = Defaults::user_default_size;
 				int last_player_layer = Defaults::user_default_layer;
 
 				Safer::safe_string last_badboys_path;
 				unsigned last_badboy_count = 4;
 				int last_badboys_layer = Defaults::badboys_default_layer;
+
+				bool paused = false;
+				bool game_ended_dead = false;
 
 				void randomizer(const int);
 				const bool workOnItAndAnswer(const int, const int);
@@ -76,6 +82,12 @@ namespace LSW {
 				void _checkBitmapsOnMapP();
 				void _checkBitmapsBigMap();
 				void _redraw();
+
+				void _getActualPos(int&, int&, const double, const double);
+				const bool _getPlayerPos(int&, int&);
+
+				void _savePlayerLastPos();
+				void _setPlayerAtLastPos();
 			public:
 				map();
 				~map();
@@ -94,8 +106,13 @@ namespace LSW {
 				//void setPlayer(Sprite::sprite*);
 				void corruptWorldTick();
 
+				void setPlayerName(const Safer::safe_string);
+				void launch_player(const ALLEGRO_COLOR, const double = Defaults::user_default_size, const int = Defaults::user_default_layer); // path
 				void launch_player(const Safer::safe_string, const double = Defaults::user_default_size, const int = Defaults::user_default_layer); // path
 				const bool launch_badboys(const Safer::safe_string, const unsigned, const int = Defaults::badboys_default_layer); // path, how many, layer
+
+				Entities::player& getPlayer();
+				Entities::badboy& getBB(const size_t);
 
 				void checkDraw();
 				void checkPositionChange();
@@ -103,11 +120,16 @@ namespace LSW {
 				const bool isCPUtasking();
 				void setCPULock(const bool);
 
+				void cpuTask();
 				void testCollisionPlayer();
 				//void testCollisionOther(Sprite::sprite&);
 
 				const bool hasReachedEnd();
+				const bool isDead();
 				const bool isMapLoaded();
+
+				void Pause(const bool);
+				const bool isPaused();
 
 				const bool try_lock();
 				void lock();

@@ -21,6 +21,9 @@ namespace LSW {
 				d_sprite_database spr_data;
 				img_data.remove("BKG_NULL");
 				spr_data.remove("BKG_NULL");
+				delete disguy;
+				imglw->unload();
+				delete imglw;
 				disguy = nullptr;
 				imglw = nullptr;
 			}
@@ -149,7 +152,7 @@ namespace LSW {
 				}
 			}
 
-			const double maxone(double gotten)
+			const double maxone(double gotten, const double prop)
 			{
 				while (gotten > 1.0) {
 					if (gotten > 1000.0) gotten -= 1000.0;
@@ -160,7 +163,7 @@ namespace LSW {
 						else gotten -= 1.0;
 					}
 				}
-				return gotten;
+				return gotten * prop;
 			}
 			lines::lines(const int layer)
 			{
@@ -191,6 +194,9 @@ namespace LSW {
 				d_sprite_database spr_data;
 				img_data.remove("LINES_NULL");
 				spr_data.remove("LINES_NULL");
+				delete disguy;
+				imglw->unload();
+				delete imglw;
 				disguy = nullptr;
 				imglw = nullptr;
 			}
@@ -203,7 +209,7 @@ namespace LSW {
 				imglw->get(bp);
 				al_set_target_bitmap(bp);
 
-				al_clear_to_color(al_map_rgb_f(maxone(al_get_time()*0.47), maxone(al_get_time()*0.65), maxone(al_get_time()*0.11)));
+				al_clear_to_color(al_map_rgb_f(maxone(0.5 + cos(al_get_time()*1.75), 0.6), maxone(0.5 + cos(al_get_time()*2.15), 0.6), maxone((0.5 + cos(al_get_time()*1.11)), 0.6)));
 
 				//int rad = 2;
 				int xpress = al_get_bitmap_width(bp);
@@ -218,7 +224,7 @@ namespace LSW {
 						double posx = rad * cos(radius + al_get_time() / 5.0);
 						double posy = rad * sin(radius + al_get_time() / 5.0);
 
-						al_draw_line((xpress / 2) + posx, (ypress / 2) + posy, (xpress / 2) - posx, (ypress / 2) - posy, al_map_rgb_f(maxone(al_get_time()*0.52), maxone(al_get_time()*0.15), maxone(al_get_time()*0.74)), 5.0);
+						al_draw_line((xpress / 2) + posx, (ypress / 2) + posy, (xpress / 2) - posx, (ypress / 2) - posy, al_map_rgb_f(maxone(0.5 + cos(al_get_time()*0.52), 0.7), maxone(0.5 + cos(al_get_time()*0.15), 0.7), maxone((0.5 + cos(al_get_time()*0.54)), 0.7)), 5.0);
 					}
 					else if (counter >= Defaults::amountof_linesperline_draw * 2) {
 						counter = 0;
