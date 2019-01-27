@@ -552,7 +552,9 @@ namespace LSW {
 
 								i->reload();
 
-								title->set(Text::SETSTRING, std::string("Checking [") + std::to_string(nnow) + "/" + std::to_string(sizz) + "]: " + i->whoAmI().g());
+								Safer::safe_string tempstr;
+								i->get(Image::ID, tempstr);
+								title->set(Text::SETSTRING, std::string("Checking [") + std::to_string(nnow) + "/" + std::to_string(sizz) + "]: " + tempstr.g());
 								nnow++;
 							}
 							data->img_data.work().unlock();
@@ -573,7 +575,7 @@ namespace LSW {
 							Image::image_low* nulp;
 							data->img_data.get(nulp, 0);
 							assert(nulp);
-							nulp->_setKeepOnMemory(data->setup.fixed_memory_flag);
+							nulp->set(Image::GLOBAL_SET_NO_OPTIMIZING_SETTING, data->setup.fixed_memory_flag);
 						}
 					}
 
@@ -1523,27 +1525,32 @@ namespace LSW {
 				// smaller chunks
 
 				wi = Image::getOrCreate("MOUSE", true);
-				wi->load("mouse.png");
+				wi->set(Image::PATH, "mouse.png");
+				wi->set(Image::LOAD_LATER, true);
 
 				actual_perc = 0.961;
 
 				wi = Image::getOrCreate("BLAST_LOGO", true);
-				wi->load("the_storm.png");
+				wi->set(Image::PATH, "the_storm.png");
+				wi->set(Image::LOAD_LATER, true);
 
 				actual_perc = 0.962;
 
 				wi = Image::getOrCreate("BAR_ON", true);
-				wi->load("bar_single_one_on.png");
+				wi->set(Image::PATH, "bar_single_one_on.png");
+				wi->set(Image::LOAD_LATER, true);
 
 				actual_perc = 0.963;
 
 				wi = Image::getOrCreate("BAR_OFF", true);
-				wi->load("bar_single_one.png");
+				wi->set(Image::PATH, "bar_single_one.png");
+				wi->set(Image::LOAD_LATER, true);
 
 				actual_perc = 0.964;
 
 				wi = Image::getOrCreate("BG_INTRO", true);
-				wi->load("background_gameplay_start.png");
+				wi->set(Image::PATH, "background_gameplay_start.png");
+				wi->set(Image::LOAD_LATER, true);
 
 				actual_perc = 0.965;
 

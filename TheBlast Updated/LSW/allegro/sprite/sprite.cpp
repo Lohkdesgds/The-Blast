@@ -166,7 +166,7 @@ namespace LSW {
 			{
 				for (size_t p = 0; p < bmps.getMax(); p++)
 				{
-					if (bmps[p]->amI(s)) {
+					if (bmps[p]->isEq(Image::ID, s)) {
 						bmps.erase(p);
 						break;
 					}
@@ -374,7 +374,7 @@ namespace LSW {
 					if (!bmps.get(frame, Defaults::exp_veryfast)) {
 						return false;
 					}
-					bmps.get(frame, Defaults::exp_veryfast)->get(bmp);
+					bmps.get(frame, Defaults::exp_veryfast)->get(Image::BMP, bmp);
 					if (!bmp) {
 						replacing.unlock();
 						return false;
@@ -516,7 +516,7 @@ namespace LSW {
 			void sprite::_setAsTarg(const size_t a)
 			{
 				ALLEGRO_BITMAP* bmp = nullptr;
-				bmps.get(a, Defaults::exp_veryfast)->get(bmp);
+				bmps.get(a, Defaults::exp_veryfast)->get(Image::BMP, bmp);
 				if (!bmp) throw "SPRITE::_SETASTARG - Cannot set id #" + std::to_string((int)this) + " as target";
 
 				al_set_target_bitmap(bmp);
@@ -656,9 +656,11 @@ namespace LSW {
 				bmps.lock();
 				size_t p = 0;
 				for (auto& i : bmps.work()) {
-					if (i->checkExistance()) {
-						logg.debug("#" + std::to_string(p) + " > ID: " + i->whoAmI().g());
-						logg.debug("#" + std::to_string(p) + " > ISLOADED: " + ((i->isLoaded()) ? "Y" : "N"));
+					if (i) {
+						Safer::safe_string tempstr;
+						i->get(Image::ID, tempstr);
+						logg.debug("#" + std::to_string(p) + " > ID: " + tempstr.g());
+						logg.debug("#" + std::to_string(p) + " > ISLOADED: " + ((i->isEq(Image::HAS_LOADED, true)) ? "Y" : "N"));
 					}
 					else {
 						logg.debug("#" + std::to_string(p) + " > FAILED TO CHECK EXISTANCE! SKIPPING...");

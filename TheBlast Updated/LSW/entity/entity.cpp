@@ -29,7 +29,8 @@ namespace LSW {
 				if (rgb)
 				{
 					d_images_database img_data;
-					Safer::safe_string str = rgb->whoAmI();
+					Safer::safe_string str;
+					rgb->get(Image::ID, str);
 					img_data.remove(str);
 					rgb->unload();
 					delete rgb;
@@ -95,7 +96,6 @@ namespace LSW {
 					int layer;
 
 					spr->get(Sprite::LAYER, layer);
-					//spr->get(Sprite::ACCELERATION_GRAVITY_SCALE, scale);
 
 					acceleration_gravity = lyr.getNow().getR(layer).gravity;
 
@@ -132,8 +132,10 @@ namespace LSW {
 				Safer::safe_string temp = "_ENTITY_" + std::to_string(countt++);
 
 				rgb = Image::getOrCreate(temp, true);
-				rgb->create(32, 32);
-				rgb->paint(color);
+				rgb->set(Image::CREATE_X, 32);
+				rgb->set(Image::CREATE_Y, 32);
+				rgb->set(Image::COLOR, color);
+				rgb->load();
 
 				spr = Sprite::getOrCreate(temp, true);
 				spr->add(temp);
@@ -284,8 +286,10 @@ namespace LSW {
 				Safer::safe_string temp = "_ENTITY_" + std::to_string(countt++);
 
 				rgb = Image::getOrCreate(temp, true);
-				rgb->create(32, 32);
-				rgb->paint(color);
+				rgb->set(Image::CREATE_X, 32);
+				rgb->set(Image::CREATE_Y, 32);
+				rgb->set(Image::COLOR, color);
+				rgb->load();
 
 				spr = Sprite::getOrCreate(temp, true);
 				spr->add(temp);

@@ -36,10 +36,12 @@ namespace LSW {
 					d_sprite_database spr_data;
 					ALLEGRO_BITMAP* bp;
 
-					img_data.create(imglw);
-					imglw->create(-1, -1);
-					imglw->setID("BKG_NULL");
-					imglw->get(bp);
+					imglw = Image::getOrCreate("BKG_NULL", true);
+					imglw->set(Image::CREATE_X, -1);
+					imglw->set(Image::CREATE_Y, -1);
+					imglw->set(Image::FORCE_ON_MEMORY, true);
+					imglw->load();
+					imglw->get(Image::BMP, bp);
 					siz[0] = al_get_bitmap_width(bp);
 					siz[1] = al_get_bitmap_height(bp);
 
@@ -99,7 +101,7 @@ namespace LSW {
 
 					ALLEGRO_BITMAP* lastpoint = al_get_target_bitmap();
 					ALLEGRO_BITMAP* dis;
-					imglw->get(dis);
+					imglw->get(Image::BMP, dis);
 
 					al_set_target_bitmap(dis);
 
@@ -128,7 +130,7 @@ namespace LSW {
 					alreadyreset = true;
 
 					ALLEGRO_BITMAP* bp;
-					imglw->get(bp);
+					imglw->get(Image::BMP, bp);
 
 					siz[0] = al_get_bitmap_width(bp);
 					siz[1] = al_get_bitmap_height(bp);
@@ -171,10 +173,13 @@ namespace LSW {
 				d_sprite_database spr_data;
 				ALLEGRO_BITMAP* bp;
 
-				img_data.create(imglw);
-				imglw->create(-1, -1);
-				imglw->setID("LINES_NULL");
-				imglw->get(bp);
+
+				imglw = Image::getOrCreate("LINES_NULL", true);
+				imglw->set(Image::CREATE_X, -1);
+				imglw->set(Image::CREATE_Y, -1);
+				imglw->set(Image::FORCE_ON_MEMORY, true);
+				imglw->load();
+				imglw->get(Image::BMP, bp);
 
 				rad = ((al_get_bitmap_width(bp) > al_get_bitmap_height(bp)) ? al_get_bitmap_width(bp) : al_get_bitmap_height(bp));
 
@@ -206,7 +211,7 @@ namespace LSW {
 				assert(g);
 
 				ALLEGRO_BITMAP* bp;
-				imglw->get(bp);
+				imglw->get(Image::BMP, bp);
 				al_set_target_bitmap(bp);
 
 				al_clear_to_color(al_map_rgb_f(maxone(0.5 + cos(al_get_time()*1.75), 0.6), maxone(0.5 + cos(al_get_time()*2.15), 0.6), maxone((0.5 + cos(al_get_time()*1.11)), 0.6)));

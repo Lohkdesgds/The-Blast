@@ -6,8 +6,8 @@
 namespace LSW {
 	namespace v2 {
 		namespace Defaults {
-
-			const Safer::safe_string version_app = "V1.0.1";
+			
+			const Safer::safe_string version_app = "V1.1.0A";
 
 			const Safer::safe_string default_root_path = "%appdata%/Lohk's Studios/TheBlast/";
 			const Safer::safe_string default_global_path = "%appdata%/Lohk's Studios/TheBlast/logs/latest.log";
@@ -17,12 +17,27 @@ namespace LSW {
 			//const Safer::safe_string initial_call_url = "https://tutoriais-de-prog.000webhostapp.com/files_apps/"; // change later?
 			const Safer::safe_string call_url_file = "https://www.dropbox.com/s/er912k5u5is8h42/package.lohkf?dl=1";//"https://tutoriais-de-prog.000webhostapp.com/files_apps/package.lohkf";
 
+			namespace Image {
+				const bool no_optimization = false;
+				const double timing_optimization = 3.0;
+			}
+
+
+
+
+
+
+
+
+
+			
+
 			const size_t max_lines_stored_by_memlog = 20;
 
 			const size_t possible_download_size = 41754703;
 
 			const int default_resolution_base[2] = { 1920,1080 };
-			const double timeout_image_unload = 3.0;
+			//const double timeout_image_unload = 3.0;
 			//const int max_images_reload_per_sec = 75;
 			const double sharpness_font = 2500.0;
 
@@ -72,7 +87,7 @@ namespace LSW {
 			const int default_display_settings = ALLEGRO_FULLSCREEN_WINDOW | ALLEGRO_OPENGL | ALLEGRO_RESIZABLE;
 			const int default_windowed_display_settings = ALLEGRO_OPENGL | ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE;
 
-			const double verify_imager_timer_created = 2.0;
+			//const double verify_imager_timer_created = 2.0;
 
 			const Safer::safe_string map_default_start = "BLOCK_";
 			const unsigned map_default_len_name_int = 2;
