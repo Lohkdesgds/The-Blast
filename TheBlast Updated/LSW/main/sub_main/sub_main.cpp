@@ -10,6 +10,7 @@ namespace LSW {
 			{
 				prepare_commom_templates;
 				data = new _main_data();
+				srand(time(0));
 			}
 			void main::unloadAll()
 			{
@@ -1071,7 +1072,7 @@ namespace LSW {
 						menu_01->set(Sprite::POSY, -0.25);
 
 						menu_01_t = Text::getOrCreate("L_MENU_01", true);
-						menu_01_t->set(Text::SETSTRING, "Volume: 100\\%");
+//						menu_01_t->set(Text::SETSTRING, "Volume: 100\\%"); // defined later
 						menu_01_t->set(Text::SETFOLLOW, "L_MENU_01");
 						menu_01_t->set(Text::MODE, Text::ALIGN_CENTER);
 						menu_01_t->set(Text::COLOR, al_map_rgb_f(1.0, 1.0, 1.0));
@@ -1094,7 +1095,27 @@ namespace LSW {
 						menu_02->set(Sprite::LAYER, Defaults::default_settings_layer);
 						menu_02->set(Sprite::SCALEY, 0.20); // FORCE
 						menu_02->set(Sprite::SCALEX, 0.20); // IT'S A BAR
-						menu_02->set(Sprite::POSX, 0.39); // 100%
+						//menu_02->set(Sprite::POSX, 0.39); // 100%
+						/* Special part*/
+						{
+							bool welldone = true;
+							float pos;
+							try {
+								t00->get(Sound::GLOBALVOLUME, pos);
+							}
+							catch (...)
+							{
+								welldone = false;
+								menu_02->set(Sprite::POSX, 0.39);
+								menu_01_t->set(Text::SETSTRING, "Volume: UNKNOWN\\%");
+							}
+							if (welldone) {
+								menu_01_t->set(Text::SETSTRING, "Volume: " + std::to_string((int)(100.0*pos)) + "\\%");
+								pos = (pos * 0.780 - 0.390);
+								menu_02->set(Sprite::POSX, pos);
+							}
+						}
+						// endof Special part
 						menu_02->set(Sprite::POSY, -0.25);
 
 						// EMPTY TEXT SPACE
@@ -1284,7 +1305,13 @@ namespace LSW {
 
 								menu_01_t->set(Text::SETSTRING, "Volume: " + std::to_string((int)(100.0*volume)) + "\\%");
 
-								if (!t00->set(Sound::GLOBALVOLUME, volume)) menu_01_t->set(Text::SETSTRING, "Volume: (could not set volume)");
+								try {
+									t00->set(Sound::GLOBALVOLUME, volume);
+								}
+								catch (...)
+								{
+									menu_01_t->set(Text::SETSTRING, "Volume: (FATAL ERROR PLEASE RESTART GAME!)");
+								}
 							}
 							else if (b03) {
 								if (player_settings) {
@@ -1566,35 +1593,40 @@ namespace LSW {
 				/* LOADING MUSICS...? */
 
 				wm = Sound::getOrCreate("MUSIC_0", true);
-				wm->load("musics/music_01.ogg");
+				wm->set(Sound::PATH, "musics/music_01.ogg");
+				wm->load();
 				wm->set(Sound::PLAYING, false);
 				wm->set(Sound::PLAYMODE, Sound::LOOP);
 
 				actual_perc = 0.972;
 
 				wm = Sound::getOrCreate("MUSIC_1", true);
-				wm->load("musics/music_02.ogg");
+				wm->set(Sound::PATH, "musics/music_02.ogg");
+				wm->load();
 				wm->set(Sound::PLAYING, false);
 				wm->set(Sound::PLAYMODE, Sound::LOOP);
 
 				actual_perc = 0.974;
 
 				wm = Sound::getOrCreate("MUSIC_2", true);
-				wm->load("musics/music_03.ogg");
+				wm->set(Sound::PATH, "musics/music_03.ogg");
+				wm->load();
 				wm->set(Sound::PLAYING, false);
 				wm->set(Sound::PLAYMODE, Sound::LOOP);
 
 				actual_perc = 0.976;
 
 				wm = Sound::getOrCreate("JUMP_FX", true);
-				wm->load("musics/jump_01.wav");
+				wm->set(Sound::PATH, "musics/jump_01.wav");
+				wm->load();
 				wm->set(Sound::PLAYING, false);
 				wm->set(Sound::PLAYMODE, Sound::ONCE);
 
 				actual_perc = 0.978;
 
 				wm = Sound::getOrCreate("WALK_FX", true);
-				wm->load("musics/walk_01.wav");
+				wm->set(Sound::PATH, "musics/walk_01.wav");
+				wm->load();
 				wm->set(Sound::PLAYING, false);
 				wm->set(Sound::PLAYMODE, Sound::ONCE);
 

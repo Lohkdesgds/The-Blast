@@ -9,7 +9,7 @@ namespace LSW {
 
 			void image_low::paint()
 			{
-				if (!using_color || mode != CREATED) throw "at image_low::paint [#" + std::to_string((size_t)this) + "]: Unexpected situation. It is not supposed to be painted!";
+				if (!using_color || mode != CREATED) throw "at image_low::paint [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Unexpected situation. It is not supposed to be painted!";
 
 				ALLEGRO_BITMAP* targ = al_get_target_bitmap();
 				if (!targ) {
@@ -30,10 +30,6 @@ namespace LSW {
 				unload();
 				logg << Log::START << "[IMGL:CONST][INFO] Registered despawn of image_low ID#" + std::to_string((size_t)this) << ";ID=" << id << Log::ENDL;
 			}
-
-
-
-
 
 
 
@@ -73,11 +69,11 @@ namespace LSW {
 				switch (e) {
 				case HAS_LOADED:
 					//is_loaded = v; // not meant to be used that way
-					throw "at image_low::set [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Tried to set a value \"read-only\" like.";
+					throw "at image_low::set [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Tried to set a value \"read-only\" like (HAS_LOADED).";
 					break;
 				case HAS_RELOADED:
 					//has_reloaded = v;
-					throw "at image_low::set [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Tried to set a value \"read-only\" like.";
+					throw "at image_low::set [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Tried to set a value \"read-only\" like (HAS_RELOADED)";
 					break;
 				case GLOBAL_SET_NO_OPTIMIZING_SETTING:
 					global_no_optimization = v;
@@ -115,7 +111,7 @@ namespace LSW {
 				switch (e) {
 				case BMP:
 					//bmp = v;
-					throw "at image_low::set [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Tried to set a value \"read-only\" like.";
+					throw "at image_low::set [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Tried to set a value \"read-only\" like (BMP).";
 					break;
 				}
 			}
@@ -347,7 +343,7 @@ namespace LSW {
 							if (!optimized) logg << Log::START << "image_low::load[#" << std::to_string((size_t)this) << ";ID=" << id << "]: Created successfully its image with size \"" << size[0] << "x" << size[1] << "\"" << Log::ENDL;
 							return true;
 						}
-						else throw "at image_low::initInstance [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Could not create valid bitmap address.";
+						else throw "at image_low::initInstance [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Could not create valid bitmap.";
 
 						return false;
 					}

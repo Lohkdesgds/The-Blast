@@ -52,13 +52,6 @@ namespace LSW {
 				bool no_optimization = false;
 				std::mutex optimizing;
 
-
-				//double proportion = 1.0; // when resized for low memory usage if not using or when drawing is half or so
-				
-				//Log::gfile logg;
-				//int orig_siz[2] = { -1, -1 };
-
-				//const bool _load_NOADJUST(const Safer::safe_string);
 				void paint();
 			public:
 				image_low();

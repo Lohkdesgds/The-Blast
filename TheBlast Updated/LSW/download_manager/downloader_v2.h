@@ -18,6 +18,7 @@ THIS IS AN ADAPTED VERSION OF DOWNLOADER_V2 MADE FOR THIS GAME!
 #include <algorithm>
 #include <mutex>
 #include <time.h>
+#include <sstream>
 
 #include "..\defaults\defaults.h"
 #include "..\tools\tools.h"
@@ -25,7 +26,7 @@ THIS IS AN ADAPTED VERSION OF DOWNLOADER_V2 MADE FOR THIS GAME!
 #pragma comment (lib, "wininet.lib")
 
 #define MAXDOWNLOADSTEPSIZE 8192
-#define USEDEFINEDVALIFUNKNOWN true
+//#define USEDEFINEDVALIFUNKNOWN true
 
 typedef LPCSTR LP;
 

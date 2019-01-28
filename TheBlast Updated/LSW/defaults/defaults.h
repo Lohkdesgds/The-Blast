@@ -7,7 +7,7 @@ namespace LSW {
 	namespace v2 {
 		namespace Defaults {
 			
-			const Safer::safe_string version_app = "V1.1.0A";
+			const Safer::safe_string version_app = "V1.1.0B";
 
 			const Safer::safe_string default_root_path = "%appdata%/Lohk's Studios/TheBlast/";
 			const Safer::safe_string default_global_path = "%appdata%/Lohk's Studios/TheBlast/logs/latest.log";
@@ -22,6 +22,9 @@ namespace LSW {
 				const double timing_optimization = 3.0;
 			}
 
+			namespace Sound {
+				const float global_volume = 0.50;
+			}
 
 
 

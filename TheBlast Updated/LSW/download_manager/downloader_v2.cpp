@@ -156,13 +156,9 @@ namespace LSW {
 
 				DWORD NumberOfBytesExpected = 0;
 				DWORD NumberNow = 0;
-				DWORD size = sizeof(DWORD);
-				DWORD index = 0;
-
-				if (!HttpQueryInfoA(OpenAddress, HTTP_QUERY_CONTENT_LENGTH, &NumberOfBytesExpected, &size, &index)) {
-					if (USEDEFINEDVALIFUNKNOWN) NumberOfBytesExpected = Defaults::possible_download_size;
-					else NumberOfBytesExpected = 0;
-				}
+				bool got_format = false;
+				bool done_format = false;
+				std::string working;
 
 				char DataReceived[MAXDOWNLOADSTEPSIZE];
 				DWORD NumberOfBytesRead = 0;
@@ -174,6 +170,36 @@ namespace LSW {
 				while (InternetReadFile(OpenAddress, DataReceived, MAXDOWNLOADSTEPSIZE, &NumberOfBytesRead) && NumberOfBytesRead) {
 					fwrite(DataReceived, 1, NumberOfBytesRead, fp);
 					NumberNow += NumberOfBytesRead;
+
+					if (!done_format)
+					{
+						if (!got_format) working = std::string(DataReceived);
+						else working += std::string(DataReceived);
+
+						if (working.find("%LSW_C") == 0)
+						{
+							got_format = true;
+						}
+						if ((NumberOfBytesExpected = working.find("%LSW_E")) != std::string::npos)
+						{
+							done_format = true;
+						}
+					}
+					if (done_format) {
+						std::stringstream ss(working);
+						std::string tt;
+						while (ss >> tt)
+						{
+							if (tt.length() == 0) continue;
+
+							if (tt[0] >= '0' && tt[1] <= '9') {
+								DWORD nuw = atoll(tt.c_str());
+								NumberOfBytesExpected += nuw;
+							}
+						}
+						working.clear();
+					}
+
 					if (NumberOfBytesExpected > 0 && pp) {
 						*pp = 1.0 * NumberNow / NumberOfBytesExpected;
 						if (*pp >= 1.0) {
@@ -221,13 +247,9 @@ namespace LSW {
 
 				DWORD NumberOfBytesExpected = 0;
 				DWORD NumberNow = 0;
-				DWORD size = sizeof(DWORD);
-				DWORD index = 0;
-
-				if (!HttpQueryInfoA(OpenAddress, HTTP_QUERY_CONTENT_LENGTH, &NumberOfBytesExpected, &size, &index)) {
-					if (USEDEFINEDVALIFUNKNOWN) NumberOfBytesExpected = Defaults::possible_download_size;
-					else NumberOfBytesExpected = 0;
-				}
+				bool got_format = false;
+				bool done_format = false;
+				std::string working;
 
 				char DataReceived[MAXDOWNLOADSTEPSIZE];
 				DWORD NumberOfBytesRead = 0;
@@ -240,6 +262,36 @@ namespace LSW {
 						wheree += DataReceived[a];
 					}
 					NumberNow += NumberOfBytesRead;
+
+					if (!done_format)
+					{
+						if (!got_format) working = std::string(DataReceived);
+						else working += std::string(DataReceived);
+
+						if (working.find("%LSW_C") == 0)
+						{
+							got_format = true;
+						}
+						if ((NumberOfBytesExpected = working.find("%LSW_E")) != std::string::npos)
+						{
+							done_format = true;
+						}
+					}
+					if (done_format) {
+						std::stringstream ss(working);
+						std::string tt;
+						while (ss >> tt)
+						{
+							if (tt.length() == 0) continue;
+
+							if (tt[0] >= '0' && tt[1] <= '9') {
+								DWORD nuw = atoll(tt.c_str());
+								NumberOfBytesExpected += nuw;
+							}
+						}
+						working.clear();
+					}
+
 					if (NumberOfBytesExpected > 0 && pp) {
 						*pp = 1.0 * NumberNow / NumberOfBytesExpected;
 						if (*pp >= 1.0) {
