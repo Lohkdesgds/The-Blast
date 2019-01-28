@@ -14,7 +14,7 @@ namespace LSW {
 			const Safer::safe_string default_data_path = "%appdata%/Lohk's Studios/TheBlast/data/";
 			const Safer::safe_string default_onefile_path = "%appdata%/Lohk's Studios/TheBlast/down.lohkf";
 
-			//const Safer::safe_string initial_call_url = "https://tutoriais-de-prog.000webhostapp.com/files_apps/"; // change later?
+			///const Safer::safe_string initial_call_url = "https://tutoriais-de-prog.000webhostapp.com/files_apps/"; // change later?
 			const Safer::safe_string call_url_file = "https://www.dropbox.com/s/er912k5u5is8h42/package.lohkf?dl=1";//"https://tutoriais-de-prog.000webhostapp.com/files_apps/package.lohkf";
 
 			namespace Image {
