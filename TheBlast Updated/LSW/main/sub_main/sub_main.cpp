@@ -981,16 +981,16 @@ namespace LSW {
 							}
 						}
 
-						__apply_layer_number(0);
-
 						// FLIP AND STUFF
 						if (!__internal_task_level_common()) {
 							map->setCPULock(true);
+							__apply_layer_number(0);
 							while (map->isCPUtasking());
 							delete map;
 							return false;
 						}
 					}
+					__apply_layer_number(0);
 
 					if (map){
 						map->setCPULock(true);
