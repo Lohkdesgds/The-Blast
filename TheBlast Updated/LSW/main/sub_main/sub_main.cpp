@@ -97,6 +97,8 @@ namespace LSW {
 			{
 				double ti = al_get_time();
 
+				if (!data->disp.isOpen()) return false;
+					
 				data->txt_data.draw(); // update and draw texts
 
 				if (!data->disp.flip(true, al_map_rgb_f(0.5*cos(ti*2.0)+0.1, 0.5*sin(ti*2.5 + 0.3) + 0.1, 0.5*cos(ti*1.7 + 0.5) + 0.1))) return false; // flip
@@ -979,6 +981,8 @@ namespace LSW {
 							}
 						}
 
+						__apply_layer_number(0);
+
 						// FLIP AND STUFF
 						if (!__internal_task_level_common()) {
 							map->setCPULock(true);
@@ -1822,6 +1826,8 @@ namespace LSW {
 
 			const bool main::__internal_task_level_common()
 			{
+				if (!data->disp.isOpen()) return false;
+
 				data->img_data.draw(); // check unload of textures and stuff
 				data->spr_data.draw(); // draw sprites
 				data->txt_data.draw(); // update and draw texts

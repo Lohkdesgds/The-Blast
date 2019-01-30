@@ -64,9 +64,7 @@ namespace LSW {
 
 				void push(const std::string);
 			public:
-				//bool download(LP, const char*);
 				bool download(const char*, const char*, float* const = nullptr);
-				//bool downloadAsString(LP, std::string&);
 				bool downloadAsString(const char*, std::string&, float* const = nullptr);
 				void setmainfolder(const std::string fold) { mainfolder = fold; }
 

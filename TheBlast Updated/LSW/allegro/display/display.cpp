@@ -152,8 +152,8 @@ namespace LSW {
 				d_images_database img_data;
 
 				img_low = Image::getOrCreate("_INTERNAL_BUFFER", true);
-				img_low->set(Image::CREATE_X, al_get_display_width(display));
-				img_low->set(Image::CREATE_Y, al_get_display_height(display));
+				img_low->set(Image::CREATE_X, -1);
+				img_low->set(Image::CREATE_Y, -1);
 				img_low->set(Image::FORCE_ON_MEMORY, true);
 				img_low->load();
 
@@ -166,8 +166,8 @@ namespace LSW {
 				spr_low->set(Sprite::SCALEG, 2.0);
 
 				img_low2 = Image::getOrCreate("_INTERNAL_BUFFER2", true);
-				img_low2->set(Image::CREATE_X, al_get_display_width(display));
-				img_low2->set(Image::CREATE_Y, al_get_display_height(display));
+				img_low2->set(Image::CREATE_X, -1);
+				img_low2->set(Image::CREATE_Y, -1);
 				img_low2->set(Image::FORCE_ON_MEMORY, true);
 				img_low2->load();
 

@@ -124,29 +124,6 @@ namespace LSW {
 				m.unlock();
 			}
 
-			/*bool downloader::download(LP singlefile, const char* to_where)
-			{
-				HINTERNET connect = InternetOpen((LPCSTR)connection_id.c_str(), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-				if (!connect) return false;
-				HINTERNET OpenAddress = InternetOpenUrl(connect, singlefile, NULL, 0, INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_KEEP_CONNECTION, 0);
-				if (!OpenAddress) return false;
-
-				char DataReceived[MAXDOWNLOADSTEPSIZE];
-				DWORD NumberOfBytesRead = 0;
-				FILE *fp;
-
-				fopen_s(&fp, (mainfolder + to_where).c_str(), "wb");
-				if (!fp) return false;
-
-				while (InternetReadFile(OpenAddress, DataReceived, MAXDOWNLOADSTEPSIZE, &NumberOfBytesRead) && NumberOfBytesRead) {
-					fwrite(DataReceived, 1, NumberOfBytesRead, fp);
-				}
-
-				InternetCloseHandle(OpenAddress);
-				InternetCloseHandle(connect);
-				fclose(fp);
-				return true;
-			}*/
 			bool downloader::download(const char* singlefile, const char* to_where, float* const pp)
 			{
 				HINTERNET connect = InternetOpen((LPCSTR)connection_id.c_str(), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
@@ -215,29 +192,6 @@ namespace LSW {
 				fclose(fp);
 				return true;
 			}
-			/*bool downloader::downloadAsString(LP singlefile, std::string& wheree)
-			{
-				HINTERNET connect = InternetOpen((LPCSTR)connection_id.c_str(), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-				if (!connect) return false;
-				HINTERNET OpenAddress = InternetOpenUrl(connect, singlefile, NULL, 0, INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_KEEP_CONNECTION, 0);
-				if (!OpenAddress) return false;
-
-				char DataReceived[MAXDOWNLOADSTEPSIZE];
-				DWORD NumberOfBytesRead = 0;
-
-				wheree.clear();
-
-				while (InternetReadFile(OpenAddress, DataReceived, MAXDOWNLOADSTEPSIZE, &NumberOfBytesRead) && NumberOfBytesRead) {
-					for (short a = 0; a < NumberOfBytesRead; a++)
-					{
-						wheree += DataReceived[a];
-					}
-				}
-
-				InternetCloseHandle(OpenAddress);
-				InternetCloseHandle(connect);
-				return true;
-			}*/
 			bool downloader::downloadAsString(const char* singlefile, std::string& wheree, float* const pp)
 			{
 				HINTERNET connect = InternetOpen((LPCSTR)connection_id.c_str(), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
