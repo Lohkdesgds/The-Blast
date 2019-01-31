@@ -28,10 +28,13 @@
 
 #include "..\safer\safer.h"
 
+
 #include "..\defaults\defaults.h"
 
 #include "..\tools\tools.h"
 #include "..\log_file\log.h"
+
+#include "..\config\config.h"
 
 #include "..\download_manager\downloader_v2.h"
 

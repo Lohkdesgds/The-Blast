@@ -14,7 +14,7 @@ namespace LSW {
 			track::~track()
 			{
 				unload();
-				logg << Log::START << "[IMGL:CONST][INFO] Registered despawn of image_low ID#" + std::to_string((size_t)this) << ";ID=" << id << Log::ENDL;
+				logg << Log::START << "[IMGL:DESTR][INFO] Registered despawn of image_low ID#" + std::to_string((size_t)this) << ";ID=" << id << Log::ENDL;
 			}
 
 			const bool track::load()
@@ -22,31 +22,40 @@ namespace LSW {
 				if (!vnm.voice) {
 					vnm.voice = al_create_voice(44100, ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF_2);
 					if (!vnm.voice) {
-						throw "TRACK::LOAD - FAILED TO CREATE VOICE FOR TRACKS";
+						throw "at track::load [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Failed to create voice.";
 						return false;
 					}
 					
 					vnm.mixer = al_create_mixer(44100, ALLEGRO_AUDIO_DEPTH_FLOAT32, ALLEGRO_CHANNEL_CONF_2);
 					if (!vnm.mixer) {
-						throw "TRACK::LOAD - FAILED TO CREATE MIXER FOR TRACKS";
+						throw "at track::load [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Failed to create mixer.";
 						return false;
 					}
 
 					if (!al_attach_mixer_to_voice(vnm.mixer, vnm.voice)) {
-						throw "TRACK::LOAD - FAILED TO SET MIXER INTO VOICE";
+						throw "at track::load [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Failed to set mixer in voice.";
 						return false;
 					}
 
-					set(Sound::GLOBALVOLUME, Defaults::Sound::global_volume);
+					float temp_vol_get;
+					Config::config conf;
+					conf.get(Config::LAST_VOLUME, temp_vol_get, Defaults::Sound::global_volume);
+					set(Sound::GLOBALVOLUME, temp_vol_get);
 				}
 
 				if (mse) al_destroy_sample(mse);
 
 				mse = al_load_sample(path.g().c_str());
-				if (!mse) return false;
+				if (!mse) {
+					throw "at track::load [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Failed to load sample.";
+					return false;
+				}
 
 				instance = al_create_sample_instance(nullptr);
-				if (!instance) return false;
+				if (!instance) {
+					throw "at track::load [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Failed to create instance.";
+					return false;
+				}
 
 				al_set_sample(instance, mse);
 

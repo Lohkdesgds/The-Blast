@@ -26,6 +26,11 @@ namespace LSW {
 				const float global_volume = 0.50;
 			}
 
+			namespace Config {
+				const Safer::safe_string config_file = "%appdata%/Lohk's Studios/TheBlast/config/config.lohk";
+				const Safer::safe_string strt_txt = "config";
+				const int screen_siz[2] = { 1280,720 };
+			}
 
 
 

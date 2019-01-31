@@ -84,7 +84,7 @@ namespace LSW {
 				double lastF3switch = 0;
 				unsigned level_now = 0;
 				bool lastOSDstats = true;
-				__player_settings* player_settings;
+				__player_settings player_settings;
 				//double rgb_start = 0;
 			public:
 				main();
@@ -130,6 +130,7 @@ namespace LSW {
 			void __random_map_load(Map::map*);
 
 			Safer::safe_string interpret_color(const colors);
+			colors interpret_from_color_name(const Safer::safe_string);
 			ALLEGRO_COLOR interpret_to_color(const colors);
 		}
 	}

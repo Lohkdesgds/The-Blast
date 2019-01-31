@@ -58,21 +58,6 @@ namespace LSW {
 				Log::gfile logg;
 				//Camera::camera_g cam;
 
-				bool b = al_init();
-				if (b) b = al_init_image_addon();
-				if (b) b = al_init_primitives_addon();
-				if (b) b = al_init_font_addon();
-				if (b) b = al_init_ttf_addon();
-				if (b) b = al_install_audio();
-				if (b) b = al_init_acodec_addon();
-				if (b) b = al_reserve_samples(4);
-				if (b) b = al_install_keyboard();
-				if (b) b = al_install_mouse();
-				if (!b) {
-					logg << Log::NEEDED_START << "[DRAW:LAUNC][ERRR] Failed to start graphics api" << Log::NEEDED_ENDL;
-					return false;
-				}
-
 				logg << Log::START << "[DRAW:LAUNC][INFO] Launching new display..." << Log::ENDL;
 
 				if (flags & ALLEGRO_FULLSCREEN)
@@ -94,13 +79,25 @@ namespace LSW {
 					{
 						for (auto& i : d_mods.modes)
 						{
-							if (i.x == x && i.y == y && i.hz >= mode_selected.hz)
-							{
-								mode_selected.x = x;
-								mode_selected.y = y;
-								mode_selected.hz = i.hz;
-								failed = false;
-								logg << Log::START << "[DRAW:LAUNC][INFO] Got a valid option for resolution: " << x << "x" << y << "@" << i.hz << Log::ENDL;
+							if (isFullscreen) {
+								if (i.x == x && i.y == y && i.hz >= mode_selected.hz)
+								{
+									mode_selected.x = x;
+									mode_selected.y = y;
+									mode_selected.hz = i.hz;
+									failed = false;
+									logg << Log::START << "[DRAW:LAUNC][INFO] Got a valid option for resolution: " << x << "x" << y << "@" << i.hz << Log::ENDL;
+								}
+							}
+							else {
+								if (i.hz >= mode_selected.hz)
+								{
+									mode_selected.x = x;
+									mode_selected.y = y;
+									mode_selected.hz = i.hz;
+									failed = false;
+									logg << Log::START << "[DRAW:LAUNC][INFO] Got a valid option for windowed option: " << x << "x" << y << "@" << i.hz << Log::ENDL;
+								}
 							}
 						}
 					}
@@ -302,9 +299,13 @@ namespace LSW {
 
 			void _display_raw::toggleFullscreen()
 			{
+				Config::config conf;
 				if (al_get_time() - lastToggleFS < Defaults::display_fullscreen_toggle_min_time) return;
 				lastToggleFS = al_get_time();
 				isFullscreen = !isFullscreen;
+
+				conf.set(Config::WAS_FULLSCREEN, isFullscreen);
+				
 				al_toggle_display_flag(display, ALLEGRO_FULLSCREEN_WINDOW, isFullscreen);
 				al_acknowledge_resize(display);
 
