@@ -124,29 +124,6 @@ namespace LSW {
 				m.unlock();
 			}
 
-			/*bool downloader::download(LP singlefile, const char* to_where)
-			{
-				HINTERNET connect = InternetOpen((LPCSTR)connection_id.c_str(), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-				if (!connect) return false;
-				HINTERNET OpenAddress = InternetOpenUrl(connect, singlefile, NULL, 0, INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_KEEP_CONNECTION, 0);
-				if (!OpenAddress) return false;
-
-				char DataReceived[MAXDOWNLOADSTEPSIZE];
-				DWORD NumberOfBytesRead = 0;
-				FILE *fp;
-
-				fopen_s(&fp, (mainfolder + to_where).c_str(), "wb");
-				if (!fp) return false;
-
-				while (InternetReadFile(OpenAddress, DataReceived, MAXDOWNLOADSTEPSIZE, &NumberOfBytesRead) && NumberOfBytesRead) {
-					fwrite(DataReceived, 1, NumberOfBytesRead, fp);
-				}
-
-				InternetCloseHandle(OpenAddress);
-				InternetCloseHandle(connect);
-				fclose(fp);
-				return true;
-			}*/
 			bool downloader::download(const char* singlefile, const char* to_where, float* const pp)
 			{
 				HINTERNET connect = InternetOpen((LPCSTR)connection_id.c_str(), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
@@ -156,13 +133,9 @@ namespace LSW {
 
 				DWORD NumberOfBytesExpected = 0;
 				DWORD NumberNow = 0;
-				DWORD size = sizeof(DWORD);
-				DWORD index = 0;
-
-				if (!HttpQueryInfoA(OpenAddress, HTTP_QUERY_CONTENT_LENGTH, &NumberOfBytesExpected, &size, &index)) {
-					if (USEDEFINEDVALIFUNKNOWN) NumberOfBytesExpected = Defaults::possible_download_size;
-					else NumberOfBytesExpected = 0;
-				}
+				bool got_format = false;
+				bool done_format = false;
+				std::string working;
 
 				char DataReceived[MAXDOWNLOADSTEPSIZE];
 				DWORD NumberOfBytesRead = 0;
@@ -174,6 +147,36 @@ namespace LSW {
 				while (InternetReadFile(OpenAddress, DataReceived, MAXDOWNLOADSTEPSIZE, &NumberOfBytesRead) && NumberOfBytesRead) {
 					fwrite(DataReceived, 1, NumberOfBytesRead, fp);
 					NumberNow += NumberOfBytesRead;
+
+					if (!done_format)
+					{
+						if (!got_format) working = std::string(DataReceived);
+						else working += std::string(DataReceived);
+
+						if (working.find("%LSW_C") == 0)
+						{
+							got_format = true;
+						}
+						if ((NumberOfBytesExpected = working.find("%LSW_E")) != std::string::npos)
+						{
+							done_format = true;
+						}
+					}
+					if (done_format) {
+						std::stringstream ss(working);
+						std::string tt;
+						while (ss >> tt)
+						{
+							if (tt.length() == 0) continue;
+
+							if (tt[0] >= '0' && tt[1] <= '9') {
+								DWORD nuw = atoll(tt.c_str());
+								NumberOfBytesExpected += nuw;
+							}
+						}
+						working.clear();
+					}
+
 					if (NumberOfBytesExpected > 0 && pp) {
 						*pp = 1.0 * NumberNow / NumberOfBytesExpected;
 						if (*pp >= 1.0) {
@@ -189,29 +192,6 @@ namespace LSW {
 				fclose(fp);
 				return true;
 			}
-			/*bool downloader::downloadAsString(LP singlefile, std::string& wheree)
-			{
-				HINTERNET connect = InternetOpen((LPCSTR)connection_id.c_str(), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-				if (!connect) return false;
-				HINTERNET OpenAddress = InternetOpenUrl(connect, singlefile, NULL, 0, INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_KEEP_CONNECTION, 0);
-				if (!OpenAddress) return false;
-
-				char DataReceived[MAXDOWNLOADSTEPSIZE];
-				DWORD NumberOfBytesRead = 0;
-
-				wheree.clear();
-
-				while (InternetReadFile(OpenAddress, DataReceived, MAXDOWNLOADSTEPSIZE, &NumberOfBytesRead) && NumberOfBytesRead) {
-					for (short a = 0; a < NumberOfBytesRead; a++)
-					{
-						wheree += DataReceived[a];
-					}
-				}
-
-				InternetCloseHandle(OpenAddress);
-				InternetCloseHandle(connect);
-				return true;
-			}*/
 			bool downloader::downloadAsString(const char* singlefile, std::string& wheree, float* const pp)
 			{
 				HINTERNET connect = InternetOpen((LPCSTR)connection_id.c_str(), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
@@ -221,13 +201,9 @@ namespace LSW {
 
 				DWORD NumberOfBytesExpected = 0;
 				DWORD NumberNow = 0;
-				DWORD size = sizeof(DWORD);
-				DWORD index = 0;
-
-				if (!HttpQueryInfoA(OpenAddress, HTTP_QUERY_CONTENT_LENGTH, &NumberOfBytesExpected, &size, &index)) {
-					if (USEDEFINEDVALIFUNKNOWN) NumberOfBytesExpected = Defaults::possible_download_size;
-					else NumberOfBytesExpected = 0;
-				}
+				bool got_format = false;
+				bool done_format = false;
+				std::string working;
 
 				char DataReceived[MAXDOWNLOADSTEPSIZE];
 				DWORD NumberOfBytesRead = 0;
@@ -240,6 +216,36 @@ namespace LSW {
 						wheree += DataReceived[a];
 					}
 					NumberNow += NumberOfBytesRead;
+
+					if (!done_format)
+					{
+						if (!got_format) working = std::string(DataReceived);
+						else working += std::string(DataReceived);
+
+						if (working.find("%LSW_C") == 0)
+						{
+							got_format = true;
+						}
+						if ((NumberOfBytesExpected = working.find("%LSW_E")) != std::string::npos)
+						{
+							done_format = true;
+						}
+					}
+					if (done_format) {
+						std::stringstream ss(working);
+						std::string tt;
+						while (ss >> tt)
+						{
+							if (tt.length() == 0) continue;
+
+							if (tt[0] >= '0' && tt[1] <= '9') {
+								DWORD nuw = atoll(tt.c_str());
+								NumberOfBytesExpected += nuw;
+							}
+						}
+						working.clear();
+					}
+
 					if (NumberOfBytesExpected > 0 && pp) {
 						*pp = 1.0 * NumberNow / NumberOfBytesExpected;
 						if (*pp >= 1.0) {

@@ -147,27 +147,15 @@ namespace LSW {
 					return false;
 				}
 				al_hide_mouse_cursor(display);
-					/*if (!(buffer = al_create_bitmap(mode_selected.x, mode_selected.y)))
-					{
-						_clearUp();
-						
-						logg << Log::ERRDV;
-						logg << Log::START << "[ERROR][Graphics] Failed creating buffer for display." << Log::ENDL;
-						logg.flush();
-						return false;
-					}
-					al_set_target_bitmap(buffer);*/
-				///}
-
-				/*cam.set(Camera::BUF_X, mode_selected.x);
-				cam.set(Camera::BUF_Y, mode_selected.y);*/
 
 				d_sprite_database spr_data; // ya, does need to draw!
 				d_images_database img_data;
 
-				img_data.create(img_low);
-				img_low->create(al_get_display_width(display), al_get_display_height(display));
-				img_low->setID("_INTERNAL_BUFFER");
+				img_low = Image::getOrCreate("_INTERNAL_BUFFER", true);
+				img_low->set(Image::CREATE_X, -1);
+				img_low->set(Image::CREATE_Y, -1);
+				img_low->set(Image::FORCE_ON_MEMORY, true);
+				img_low->load();
 
 				spr_data.create(spr_low);
 				spr_low->add("_INTERNAL_BUFFER");
@@ -177,9 +165,11 @@ namespace LSW {
 				spr_low->set(Sprite::TINT, al_map_rgba_f(Defaults::blur_buf_display, Defaults::blur_buf_display, Defaults::blur_buf_display, Defaults::blur_buf_display));
 				spr_low->set(Sprite::SCALEG, 2.0);
 
-				img_data.create(img_low2);
-				img_low2->create(al_get_display_width(display), al_get_display_height(display));
-				img_low2->setID("_INTERNAL_BUFFER2");
+				img_low2 = Image::getOrCreate("_INTERNAL_BUFFER2", true);
+				img_low2->set(Image::CREATE_X, -1);
+				img_low2->set(Image::CREATE_Y, -1);
+				img_low2->set(Image::FORCE_ON_MEMORY, true);
+				img_low2->load();
 
 				spr_data.create(spr_low2);
 				spr_low2->add("_INTERNAL_BUFFER2");
@@ -199,7 +189,7 @@ namespace LSW {
 				if (!usebuf) al_set_target_backbuffer(display);
 				else {
 					ALLEGRO_BITMAP* b;
-					img_low->get(b);
+					img_low->get(Image::BMP, b);
 					al_set_target_bitmap(b);
 				}
 			}
@@ -254,14 +244,14 @@ namespace LSW {
 
 						lastrastro = al_get_time();
 
-						img_low2->get(b);
+						img_low2->get(Image::BMP, b);
 						al_set_target_bitmap(b);
 
 						//al_clear_to_color(al_map_rgba_f(Defaults::blur_buf_frame_droppin, Defaults::blur_buf_frame_droppin, Defaults::blur_buf_frame_droppin, Defaults::blur_buf_frame_droppin));
 
 						//spr_low->forceDraw();
 
-						img_low->get(b2);
+						img_low->get(Image::BMP, b2);
 						//al_draw_bitmap(b2, 0, 0, 0);
 						al_draw_tinted_bitmap(b2, blur, 0, 0, 0);
 
@@ -298,7 +288,7 @@ namespace LSW {
 					
 					
 
-					img_low->get(b);
+					img_low->get(Image::BMP, b);
 					al_set_target_bitmap(b);
 					al_clear_to_color(al_map_rgb(0, 0, 0));
 

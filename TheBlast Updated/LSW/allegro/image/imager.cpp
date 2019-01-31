@@ -4,328 +4,440 @@ namespace LSW {
 	namespace v2 {
 		namespace Image {
 
-			bool image_low::keep_on_memory_always = false;
-			//double image_low::lastimagereload = 0.0;
-			//Safer::safe_vector<image_low*> images_database::imgs;
+			bool image_low::global_no_optimization = Defaults::Image::no_optimization;
+			double image_low::global_timing_optimization = Defaults::Image::timing_optimization;
 
-			const bool image_low::_load_NOADJUST(const Safer::safe_string s)
+			void image_low::paint()
 			{
-				Log::gfile logg;
-
-				logg << Log::START << "[IMGL:LOADN][INFO] Registered load of \"" << s << "\"... " << Log::ENDL;
-
-				bmp = al_load_bitmap(s.g().c_str());
-				if (bmp)
-				{
-					//proportion = 1.0;
-					lastcall = GetTickCount64();
-					orig_siz[0] = al_get_bitmap_width(bmp);
-					orig_siz[1] = al_get_bitmap_height(bmp);
-					mode = LOADED;
-					path = s;
-
-					
-					logg << Log::START << "[IMGL:LOADN][INFO] LOADED Successfully: \"" << s << "\"." << Log::ENDL;
-					
-					return true;
-				}
-
-				logg << Log::ERRDV << Log::NEEDED_START << "[IMGL:LOADN][ERRR] ERROR LOADING \"" << s << "\"! Skipping!" << Log::NEEDED_ENDL;
-				logg.flush();
-
-				return false;
-			}
-
-			image_low::~image_low()
-			{
-				unload();
-			}
-
-			/*const bool image_low::set(const Safer::safe_string s_o)
-			{
-				unload();
-
-				Safer::safe_string s = Defaults::default_data_path.g() + s_o.g();
-				Tools::interpret_path(s);
-
-				if (Tools::getFileSize(s) > 0) {
-					path = s;
-					lastcall = 0;
-					return true;
-				}
-				return false;
-			}*/
-
-			const bool image_low::load(const Safer::safe_string s_o)
-			{
-				unload();
-				Safer::safe_string s = Defaults::default_data_path.g() + s_o.g();
-				Tools::interpret_path(s);
-
-				return _load_NOADJUST(s);
-			}
-			void image_low::setToLoad(const Safer::safe_string s_o)
-			{
-				unload();
-				Safer::safe_string s = Defaults::default_data_path.g() + s_o.g();
-				Tools::interpret_path(s);
-
-				path = s;
-				mode = Image::LOADED;
-				optimized = true;
-			}
-
-			/*const bool image_low::loadFromDatabase(const Safer::safe_string newname)
-			{
-				Safer::safe_string s = Defaults::initial_call_url.g() + newname.g();
-				Tools::clearPath(s, true);
-				return loadFromURL(s, newname);
-			}
-			
-			const bool image_low::loadFromURL(const Safer::safe_string url, Safer::safe_string s_o)
-			{
-				if (!load(s_o)) assert(Tools::saveFromCloud(url, s_o));
-				else return true;
-				return load(s_o);
-			}*/
-			const bool image_low::create(int x, int y)
-			{
-				Log::gfile logg;
-
-				orig_siz[0] = x;
-				orig_siz[1] = y;
-
-				if (x <= 0 || y <= 0) {
-					ALLEGRO_DISPLAY *d = al_get_current_display();
-					if (!d) throw "IMAGE_LOW::CREATE - CURRENT DISPLAY NOT FOUND!";
-					x = al_get_display_width(d);
-					y = al_get_display_height(d);
-					created_itself = true;
-				}
-
-				logg << Log::START << "[IMGL:NEWBP][INFO] Registered creation of a bitmap with size " << x << "x" << y << "... " << Log::ENDL;
-
-				unload();
-				bmp = al_create_bitmap(x, y);
-				if (bmp)
-				{
-					logg << Log::START << "[IMGL:NEWBP][INFO] CREATED Successfully a bitmap with size " << x << "x" << y << "... " << Log::ENDL;
-					//proportion = 1.0;
-					lastcall = GetTickCount64();
-					mode = CREATED;
-					return true;
-				}
-
-				logg << Log::ERRDV << Log::NEEDED_START << "[IMGL:NEWBP][ERRR] FAILED CREATING a bitmap with size " << x << "x" << y << "... " << Log::NEEDED_ENDL;
-
-				return false;
-			}
-			void image_low::setID(const Safer::safe_string i)
-			{
-				id = i;
-			}
-			void image_low::paint(const ALLEGRO_COLOR c)
-			{
-				if (mode != CREATED) return;
-				lastpaint = c;
+				if (!using_color || mode != CREATED) throw "at image_low::paint [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Unexpected situation. It is not supposed to be painted!";
 
 				ALLEGRO_BITMAP* targ = al_get_target_bitmap();
 				if (!targ) {
-					throw "IMAGE_LOW::PAINT EXPECTED TARGET BITMAP, BUT NO ONE HAS BEEN FOUND!";
+					throw "at image_low::paint [#" + std::to_string((size_t)this) + "]: Could not get current target bitmap for swap.";
 					return;
 				}
 				al_set_target_bitmap(bmp);
-				al_clear_to_color(c);
+				al_clear_to_color(color);
 				al_set_target_bitmap(targ);
 			}
-			const bool image_low::amI(const Safer::safe_string o)
+
+			image_low::image_low()
 			{
-				return (id == o);
+				logg << Log::START << "[IMGL:CONST][INFO] Registered spawn of image_low ID#" + std::to_string((size_t)this) << Log::ENDL;
+			}
+			image_low::~image_low()
+			{
+				unload();
+				logg << Log::START << "[IMGL:CONST][INFO] Registered despawn of image_low ID#" + std::to_string((size_t)this) << ";ID=" << id << Log::ENDL;
 			}
 
-			const bool image_low::amI(const _img_mode m)
+
+
+			void image_low::set(const vals_string e, const Safer::safe_string v)
 			{
-				return (m == mode);
+				switch (e) {
+				case RAW_PATH:
+					path_raw = v;
+					path = path_raw;
+					mode = LOADED;
+					break;
+				case PATH:
+					path = Defaults::default_data_path.g() + v.g();
+					Tools::interpret_path(path);
+					mode = LOADED;
+					break;
+				case ID:
+					id = v;
+					break;
+				}
+			}
+			void image_low::set(const vals_int e, const int v)
+			{
+				switch (e) {
+				case CREATE_X:
+					mode = CREATED;
+					size_for_creation[0] = v;
+					break;
+				case CREATE_Y:
+					mode = CREATED;
+					size_for_creation[1] = v;
+					break;
+				}
+			}
+			void image_low::set(const vals_bool e, const bool v)
+			{
+				switch (e) {
+				case HAS_LOADED:
+					//is_loaded = v; // not meant to be used that way
+					throw "at image_low::set [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Tried to set a value \"read-only\" like (HAS_LOADED).";
+					break;
+				case HAS_RELOADED:
+					//has_reloaded = v;
+					throw "at image_low::set [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Tried to set a value \"read-only\" like (HAS_RELOADED)";
+					break;
+				case GLOBAL_SET_NO_OPTIMIZING_SETTING:
+					global_no_optimization = v;
+					break;
+				case FORCE_ON_MEMORY:
+					no_optimization = v;
+					break;
+				case USE_COLOR:
+					using_color = v;
+					break;
+				case LOAD_LATER:
+					load_later = v;
+					break;
+				}
+			}
+			void image_low::set(const vals_double e, const double v)
+			{
+				switch (e) {
+				case GLOBAL_OPTIMIZATION_TIMING:
+					global_timing_optimization = v;
+					break;
+				}
+			}
+			void image_low::set(const vals_color e, const ALLEGRO_COLOR v)
+			{
+				switch (e) {
+				case COLOR:
+					using_color = true;
+					color = v;
+					break;
+				}
+			}
+			void image_low::set(const vals_bmpp e, ALLEGRO_BITMAP* const v)
+			{
+				switch (e) {
+				case BMP:
+					//bmp = v;
+					throw "at image_low::set [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Tried to set a value \"read-only\" like (BMP).";
+					break;
+				}
+			}
+			void image_low::set(const vals_x_enum1 e, const _img_mode v)
+			{
+				switch (e) {
+				case MODE:
+					mode = v;
+					break;
+				}
 			}
 
-			const Safer::safe_string image_low::whoAmI()
+			void image_low::get(const vals_string e, Safer::safe_string& v)
 			{
-				return id;
+				switch (e) {
+				case RAW_PATH:
+					v = path_raw;
+					break;
+				case PATH:
+					v = path;
+					break;
+				case ID:
+					v = id;
+					break;
+				}
+			}
+			void image_low::get(const vals_int e, int& v)
+			{
+				switch (e) {
+				case CREATE_X:
+					v = size_for_creation[0];
+					break;
+				case CREATE_Y:
+					v = size_for_creation[1];
+					break;
+				}
+			}
+			void image_low::get(const vals_bool e, bool& v)
+			{
+				switch (e) {
+				case HAS_LOADED:
+					v = is_loaded;
+					break;
+				case HAS_RELOADED:
+					v = has_reloaded;
+					has_reloaded = false;
+					break;
+				case GLOBAL_SET_NO_OPTIMIZING_SETTING:
+					v = global_no_optimization;
+					break;
+				case FORCE_ON_MEMORY:
+					v = no_optimization;
+					break;
+				case USE_COLOR:
+					v = using_color;
+					break;
+				case LOAD_LATER:
+					v = load_later;
+					break;
+				}
+			}
+			void image_low::get(const vals_double e, double& v)
+			{
+				switch (e) {
+				case GLOBAL_OPTIMIZATION_TIMING:
+					v = global_timing_optimization;
+					break;
+				}
+			}
+			void image_low::get(const vals_color e, ALLEGRO_COLOR& v)
+			{
+				switch (e) {
+				case COLOR:
+					v = color;
+					break;
+				}
+			}
+			void image_low::get(const vals_bmpp e, ALLEGRO_BITMAP*& v)
+			{
+				switch (e) {
+				case BMP:
+					if (!bmp) verify();
+					v = bmp;
+					break;
+				}
+			}
+			void image_low::get(const vals_x_enum1 e, _img_mode& v)
+			{
+				switch (e) {
+				case MODE:
+					v = mode;
+					break;
+				}
 			}
 
-			const bool image_low::isLoaded()
+			const bool image_low::isEq(const vals_string e, const Safer::safe_string v)
 			{
-				return (bmp);
+				bool result = false;
+
+				switch (e) {
+				case RAW_PATH:
+					result = (path_raw == v);
+					break;
+				case PATH:
+					result = (path == v);
+					break;
+				case ID:
+					result = (id == v);
+					break;
+				}
+
+				return result;
+			}
+			const bool image_low::isEq(const vals_int e, const int v)
+			{
+				bool result = false;
+
+				switch (e) {
+				case CREATE_X:
+					result = (size_for_creation[0] == v);
+					break;
+				case CREATE_Y:
+					result = (size_for_creation[1] == v);
+					break;
+				}
+
+				return result;
+			}
+			const bool image_low::isEq(const vals_bool e, const bool v)
+			{
+				bool result = false;
+
+				switch (e) {
+				case HAS_LOADED:
+					result = (is_loaded == v);
+					break;
+				case HAS_RELOADED:
+					result = (has_reloaded == v);
+					break;
+				case GLOBAL_SET_NO_OPTIMIZING_SETTING:
+					result = (global_no_optimization == v);
+					break;
+				case FORCE_ON_MEMORY:
+					result = (no_optimization == v);
+					break;
+				case USE_COLOR:
+					result = (using_color == v);
+					break;
+				case LOAD_LATER:
+					result = (load_later == v);
+					break;
+				}
+
+				return result;
+			}
+			const bool image_low::isEq(const vals_double e, const double v)
+			{
+				bool result = false;
+
+				switch (e) {
+				case GLOBAL_OPTIMIZATION_TIMING:
+					result = (global_timing_optimization == v);
+					break;
+				}
+
+				return result;
+			}
+			const bool image_low::isEq(const vals_color e, const ALLEGRO_COLOR v)
+			{
+				bool result = false;
+
+				switch (e) {
+				case COLOR:
+					result = ((color.r == v.r) && (color.g == v.g) && (color.b == v.b) && (color.a == v.a));
+					break;
+				}
+
+				return result;
+			}
+			const bool image_low::isEq(const vals_bmpp e, const ALLEGRO_BITMAP* v)
+			{
+				bool result = false;
+
+				switch (e) {
+				case BMP:
+					result = (bmp == v);
+					break;
+				}
+
+				return result;
+			}
+			const bool image_low::isEq(const vals_x_enum1 e, const _img_mode v)
+			{
+				bool result = false;
+
+				switch (e) {
+				case MODE:
+					result = (mode == v);
+					break;
+				}
+
+				return result;
+			}
+
+
+
+			const bool image_low::load()
+			{
+				switch (mode) {
+				case CREATED:
+					if (size_for_creation[0] == 0 || size_for_creation[1] == 0) return false;
+					else {
+						if (size_for_creation[0] < 0 || size_for_creation[1] < 0) {
+							ALLEGRO_DISPLAY *d = al_get_current_display();
+							if (!d) throw "at image_low::initInstance [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Could not get current display for creation of display size based bitmap.";
+							size[0] = al_get_display_width(d);
+							size[1] = al_get_display_height(d);
+						}
+						else {
+							size[0] = size_for_creation[0];
+							size[1] = size_for_creation[1];
+						}
+						bmp = al_create_bitmap(size[0], size[1]);
+						if (bmp)
+						{
+							lastcall = GetTickCount64();
+							is_loaded = true;
+							if (using_color) paint();
+							if (!optimized) logg << Log::START << "image_low::load[#" << std::to_string((size_t)this) << ";ID=" << id << "]: Created successfully its image with size \"" << size[0] << "x" << size[1] << "\"" << Log::ENDL;
+							return true;
+						}
+						else throw "at image_low::initInstance [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Could not create valid bitmap.";
+
+						return false;
+					}
+					break;
+				case LOADED:
+					{
+						bmp = al_load_bitmap(path.g().c_str());
+						if (bmp)
+						{
+							lastcall = GetTickCount64();
+							size[0] = al_get_bitmap_width(bmp);
+							size[1] = al_get_bitmap_height(bmp);
+							is_loaded = true;
+							if (!optimized) logg << Log::START << "image_low::load[#" << std::to_string((size_t)this) << ";ID=" << id << "]: Loaded successfully its image with path \"" << path << "\"" << Log::ENDL;
+							return true;
+						}
+						throw "at image_low::initInstance [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Cannot load texture \"" + path.g() + "\"";
+					}
+					break;
+				}
+				return false;
+			}
+
+			const bool image_low::reload()
+			{
+				unload();
+				return (has_reloaded = load());
 			}
 
 			void image_low::unload()
 			{
-				Log::gfile logg;
-
-				if (path.g().length() > 0) logg << Log::START << "[IMGL:NLOAD][INFO] Registering unload of texture named \"" << path.g() << "\"." << Log::ENDL;
-				else logg << Log::START << "[IMGL:NLOAD][INFO] Registering unload of texture with size " << orig_siz[0] << "x" << orig_siz[1] << "." << Log::ENDL;
-
-				//proportion = 1.0;
-				//orig_siz[0] = orig_siz[1] = 0;
 				lastcall = 0;
-				//path.clear();
+				is_loaded = false;
 
 				if (bmp) {
 					al_destroy_bitmap(bmp);
 					bmp = nullptr;
 				}
 			}
-
-			const bool image_low::hasReloaded(const bool b)
-			{
-				bool d = has_Reloaded;
-				if (b) has_Reloaded = false;
-				return d;
-			}
-
-			const bool image_low::reload()
-			{
-				if (bmp) unload();
-
-				has_Reloaded = true;
-				al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR);
-
-				if (created_itself)
-				{
-					if (orig_siz[0] == -1 || orig_siz[1] == -1) {
-						unload();
-						return create(-1, -1);
-					}
-					else {
-						bool cr = create(orig_siz[0], orig_siz[1]);
-						paint(lastpaint);
-						return cr;
-					}
-				}
-				else if (path.g().length() == 0 && orig_siz[0] > 0)
-				{
-					int backup[2];
-					backup[0] = orig_siz[0];
-					backup[1] = orig_siz[1];
-					unload();
-					return create(backup[0], backup[1]);
-				}
-				else if (path.g().length() > 0)
-				{
-					unload();
-					return _load_NOADJUST(path);
-				}
-				return false;
-			}
-
-			void image_low::shouldOptimize(const bool b)
-			{
-				noOptimization = !b;
-			}
-
-			/*void image_low::optimizeIt()
-			{
-				int new_x, new_y;
-				new_x = al_get_bitmap_width(bmp) * 0.25 + 1;
-				new_y = al_get_bitmap_height(bmp) * 0.25 + 1;
-
-				ALLEGRO_BITMAP * newbmp = al_create_bitmap(new_x, new_y);
-				ALLEGRO_BITMAP * targ = al_get_target_bitmap();
-
-				al_set_target_bitmap(newbmp);
-
-				al_draw_scaled_bitmap(bmp, 0, 0, al_get_bitmap_width(bmp), al_get_bitmap_height(bmp), 0, 0, new_x, new_y, 0);
-				ALLEGRO_BITMAP* ref = bmp;
-				bmp = newbmp;
-				al_destroy_bitmap(ref);
-				ref = nullptr;
-
-				al_set_target_bitmap(targ);
-				optimized = true;
-			}*/
-
+			
 			void image_low::verify()
 			{
-				Log::gfile logg;
-
-				if (!bmp && !optimized) return;
-
-				if (created_itself && al_get_time() - check_time > Defaults::verify_imager_timer_created) { // right size for fullscreen bitmaps (not loaded)
-					if (!bmp) return;
-
-					check_time = al_get_time();
-
-					ALLEGRO_DISPLAY *d = al_get_current_display();
-					assert(d);
-					int x, y;
-					x = al_get_display_width(d);
-					y = al_get_display_height(d);
-					orig_siz[0] = al_get_bitmap_width(bmp);
-					orig_siz[1] = al_get_bitmap_height(bmp);
-					if (x != orig_siz[0] || y != orig_siz[1])
-					{
-						reload();
-					}
+				//if (!bmp && !optimized) return;
+				if (!is_loaded) {
+					if (load_later) load();
+					return;
 				}
-				
-				else if (optimized)
-				{
-					optimizing.lock();
-					
-					reload();
 
-					lastcall = GetTickCount64();
-					orig_siz[0] = al_get_bitmap_width(bmp);
-					orig_siz[1] = al_get_bitmap_height(bmp);
-
-					logg << Log::START << "[IMGL:VERIF][INFO] Reloaded " << id << Log::ENDL;
-
-					optimized = false;
-
-					optimizing.unlock();
+				switch (mode) {
+				case CREATED:
+					{
+						ALLEGRO_DISPLAY *d = al_get_current_display();
+						if (!d) throw "at image_low::verify [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Could not get current display for verification of bitmap's size.";
+						int x, y;
+						x = al_get_display_width(d);
+						y = al_get_display_height(d);
+						if (x != size[0] || y != size[1])
+						{
+							reload();
+							logg << Log::START << "image_low::verify[#" << std::to_string((size_t)this) << ";ID=" << id << "]: Reallocated." << Log::ENDL;
+						}
+					}
+					break;
+				case LOADED:
+					if (optimized)
+					{
+						optimizing.lock();
+						reload();
+						logg << Log::START << "image_low::verify[#" << std::to_string((size_t)this) << ";ID=" << id << "]: Reallocated." << Log::ENDL;
+						optimized = false;
+						optimizing.unlock();
+					}
+					break;
 				}
 			}
 
 			void image_low::checkMemory()
 			{
-				Log::gfile logg;
-				if (keep_on_memory_always || noOptimization) return;
+				if (global_no_optimization || no_optimization) return;
 
-				//if (al_get_time() - lastimagereload < 1.0 / Defaults::max_images_reload_per_sec) return;
-				if (al_get_time() - lastcall > Defaults::timeout_image_unload && !optimized)
+				if (al_get_time() - lastcall > global_timing_optimization && !optimized)
 				{
 					optimizing.lock();
-
-					//optimizeIt();
 					unload();
-
-					logg << Log::START << "[IMGL:CHKMM][INFO] Optimized " << id << Log::ENDL;
-
+					logg << Log::START << "image_low::checkMemory[#" << std::to_string((size_t)this) << ";ID=" << id << "]: Optimized." << Log::ENDL;
 					optimized = true;
-
-					//lastimagereload = al_get_time();
 					optimizing.unlock();
 				}
 			}
 
-			void image_low::get(ALLEGRO_BITMAP*& b)
-			{
-				lastcall = al_get_time();
 
-				if (!bmp) verify();
 
-				b = bmp;
-			}
 
-			const bool image_low::checkExistance()
-			{
-				return (this);
-			}
 
-			void image_low::_setKeepOnMemory(const bool b)
-			{
-				keep_on_memory_always = b;
-			}
 
 			
 			size_t _find(const Safer::safe_string s, Safer::safe_vector<image_low*>& v, bool& u)
@@ -333,7 +445,7 @@ namespace LSW {
 				u = false;
 				for (size_t p = 0; p < v.getMax(); p++)
 				{
-					if (v[p]->amI(s)) {
+					if (v[p]->isEq(Image::ID, s)) {
 						u = true;
 						return p;
 					}
@@ -351,36 +463,11 @@ namespace LSW {
 				img_data.work().lock();
 				for (auto& i : img_data.work().work())
 				{
-					if (hasChanged && i->amI(Image::CREATED)) i->reload();
+					if (hasChanged && i->isEq(Image::MODE, Image::CREATED)) i->reload();
 					else i->checkMemory();
 				}
 				img_data.work().unlock();
 			}
-
-			/*void _start_thread()
-			{
-				d_images_database img_data;
-				img_data.getArg() = new std::thread(_draw_complex);
-			}
-
-			void _draw_complex()
-			{
-				d_images_database img_data;
-				Safer::safe_vector<Image::image_low*>& imgs = img_data.work();
-
-				while (imgs.getMax() == 0);
-
-				while (imgs.getMax() > 0) {
-
-					Sleep(0.5*Defaults::timeout_image_unload);
-
-					for (size_t p = 0; p < imgs.getMax(); p++)
-					{
-						imgs[p]->verify();
-					}
-				}
-				
-			}*/
 
 			void multipleLoad(const Safer::safe_string nickname, Safer::safe_string start, const size_t max, const unsigned format, Safer::safe_string end, float *perc, const bool optimizethem)
 			{
@@ -410,72 +497,16 @@ namespace LSW {
 					sprintf_s(newname, format_ch, p);
 					sprintf_s(newnick, format_nick, p);
 
-					//log << Log::START << "[multipleLoad] Registered load of \"" << newname << "\" named \"" << newnick << "\"... " << Log::ENDL;
-
 					img_data.create(wi);
-					wi->setID(newnick);
-					wi->setToLoad(newname);
-					wi->shouldOptimize(optimizethem);
-					/*if (!)
-					{
-						//log << Log::ERRDV << Log::START << "[multipleLoad] ERROR LOADING \"" << newname << "\" named \"" << newnick << "\"! Skipping!" << Log::ENDL;
-						//log.flush();
-					}
-					else {
-						log << Log::START << "[multipleLoad] LOADED Successfully: \"" << newname << "\" named \"" << newnick << "\"." << Log::ENDL;
-					}*/
-
-					//log << "(" << ((wi->isLoaded()) ? "LOADED" : "FAILED_TO_LOAD") << ")" << Log::ENDL;
+					wi->set(Image::ID, newnick);
+					wi->set(Image::PATH, newname);
+					wi->set(Image::FORCE_ON_MEMORY, !optimizethem);
 					wi = nullptr;
 				}
 
 				if (perc) *perc = 1.0;
 			}
-			/*void multipleCloudLoad(const Safer::safe_string nickname, Safer::safe_string start, const size_t max, const unsigned format, Safer::safe_string end, const Safer::safe_string* urls, float* perc)
-			{
-				Tools::interpret_path(start);
-				Tools::interpret_path(end);
-
-				Tools::clearPath(start);
-				Tools::clearPath(end);
-
-				d_images_database img_data;
-				Image::image_low* wi = nullptr;
-
-				char format_ch[256];
-				char format_nick[128];
-
-				sprintf_s(format_ch, "%s%c0%ulu%s", start.g().c_str(), '%', format, end.g().c_str());
-				sprintf_s(format_nick, "%s%clu", nickname.g().c_str(), '%');
-
-				for (size_t p = 0; p < max; p++) {
-					if (perc) {
-						*perc = 1.0f * p / max;
-					}
-
-					char newname[276];
-					char newnick[148];
-
-					sprintf_s(newname, format_ch, p);
-					sprintf_s(newnick, format_nick, p);
-
-					log << "[multipleLoad] Registered download and load of \"" << newname << "\" named \"" << newnick << "\"... ";
-
-					img_data.create(wi);
-					wi->setID(newnick);
-					if (!wi->load(newname)) {
-						if (urls) wi->loadFromURL(urls[p], newname);
-						else {
-							wi->loadFromDatabase(newname);
-						}
-					}
-
-					log << "(" << ((wi->isLoaded()) ? "READY" : "FAILED_TO_LOAD_OR_DOWNLOAD!") << ")" << Log::ENDL;
-					wi = nullptr;
-				}
-				if (perc) *perc = 1.0;
-			}*/
-
+			
 
 
 			image_low* getOrCreate(const Safer::safe_string s, const bool create)
@@ -485,11 +516,11 @@ namespace LSW {
 				if (img_data.get(ref, s)) return ref;
 				if (create){
 					img_data.create(ref);
-					ref->setID(s);
+					ref->set(Image::ID, s);
 					return ref;
 				}
 				else {
-					throw "EXCEPTION AT IMAGE_LOW GETORCREATE: NOT FOUND AND NOT SUPPOSED TO CREATE!";
+					throw "at Image::getOrCreate(): Could not find \"" + s.g() + "\".";
 					return nullptr;
 				}
 			}

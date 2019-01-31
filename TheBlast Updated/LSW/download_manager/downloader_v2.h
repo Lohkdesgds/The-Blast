@@ -18,6 +18,7 @@ THIS IS AN ADAPTED VERSION OF DOWNLOADER_V2 MADE FOR THIS GAME!
 #include <algorithm>
 #include <mutex>
 #include <time.h>
+#include <sstream>
 
 #include "..\defaults\defaults.h"
 #include "..\tools\tools.h"
@@ -25,7 +26,7 @@ THIS IS AN ADAPTED VERSION OF DOWNLOADER_V2 MADE FOR THIS GAME!
 #pragma comment (lib, "wininet.lib")
 
 #define MAXDOWNLOADSTEPSIZE 8192
-#define USEDEFINEDVALIFUNKNOWN true
+//#define USEDEFINEDVALIFUNKNOWN true
 
 typedef LPCSTR LP;
 
@@ -63,9 +64,7 @@ namespace LSW {
 
 				void push(const std::string);
 			public:
-				//bool download(LP, const char*);
 				bool download(const char*, const char*, float* const = nullptr);
-				//bool downloadAsString(LP, std::string&);
 				bool downloadAsString(const char*, std::string&, float* const = nullptr);
 				void setmainfolder(const std::string fold) { mainfolder = fold; }
 

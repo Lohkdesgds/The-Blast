@@ -883,11 +883,16 @@ namespace LSW {
 						}
 						break;
 					case Layer::USEMAP:
+						try
 						{
 							Map::map* map = ((Map::map*)lyr.getNow().get_package());
 							if (map) {
 								map->cpuTask();
 							}
+						}
+						catch (...)
+						{
+							logg << Log::NEEDED_START << "[THR3:COLLD][WARN] _i_thr_collisionTimed got an exception. Trying to leave it as is (skippable)" << Log::NEEDED_ENDL;
 						}
 						break;
 					}
@@ -1046,13 +1051,19 @@ namespace LSW {
 
 					Layer::layerer lyr;
 					if (lyr.getNow().getMode() == Layer::USEMAP) {
-						Map::map* map = ((Map::map*)lyr.getNow().get_package());
-						if (map) {
-							if (!map->isPaused())
-							{
-								d_entity_database ent_data;
-								ent_data.draw();
+						try {
+							Map::map* map = ((Map::map*)lyr.getNow().get_package());
+							if (map) {
+								if (!map->isPaused())
+								{
+									d_entity_database ent_data;
+									ent_data.draw();
+								}
 							}
+						}
+						catch (...)
+						{
+							logg << Log::NEEDED_START << "[THR5:UPPLR][WARN] _i_thr_updatePosTimed got an exception. Trying to leave it as is (skippable)" << Log::NEEDED_ENDL;
 						}
 					}
 

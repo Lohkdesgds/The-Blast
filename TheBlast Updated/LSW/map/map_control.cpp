@@ -715,9 +715,11 @@ namespace LSW {
 					}
 
 					img_data.create(big_map_il);
-					big_map_il->create(-1, -1);
-					big_map_il->setID("__MAP_FRAME_FULL");
-					big_map_il->_setKeepOnMemory(true);
+					big_map_il->set(Image::CREATE_X, -1);
+					big_map_il->set(Image::CREATE_Y, -1);
+					big_map_il->set(Image::ID, "__MAP_FRAME_FULL");
+					big_map_il->set(Image::FORCE_ON_MEMORY, true);
+					big_map_il->load();
 
 					spr_data.create(big_map);
 					big_map->setID("__MAP_FRAME_FULL_S");
@@ -733,6 +735,8 @@ namespace LSW {
 			void map::_redraw()
 			{
 				Log::gfile logg;
+				Camera::camera_g cam;
+				bool redrawall = false;
 
 				if (!big_map) { //return;
 					logg << Log::ERRDV << Log::NEEDED_START << "[MAP:_REDRW][ERRR] Big_map is unreachable! Trying to fix this..." << Log::NEEDED_ENDL;
@@ -743,6 +747,8 @@ namespace LSW {
 						logg << Log::ERRDV << Log::NEEDED_START << "[MAP:_REDRW][ERRR] Big_map STILL unreachable! Aborting _REDRAW!" << Log::NEEDED_ENDL;
 						return;
 					}
+
+					redrawall = true;
 				}
 				if (!big_map_il) {
 					logg << Log::ERRDV << Log::NEEDED_START << "[MAP:_REDRW][ERRR] Big_map_il is unreachable! Trying to fix this..." << Log::NEEDED_ENDL;
@@ -753,10 +759,10 @@ namespace LSW {
 						logg << Log::ERRDV << Log::NEEDED_START << "[MAP:_REDRW][ERRR] Big_map_il STILL unreachable! Aborting _REDRAW!" << Log::NEEDED_ENDL;
 						return;
 					}
+
+					redrawall = true;
 				}
 
-				Camera::camera_g cam;
-				bool redrawall = false;
 				
 				ALLEGRO_BITMAP* targ = al_get_target_bitmap();
 				if (!targ) {
@@ -764,10 +770,7 @@ namespace LSW {
 					hasToUpdate = true;
 					return;
 				}
-				else if (big_map_il->hasReloaded(true))
-				{
-					redrawall = true;
-				}
+				big_map_il->get(Image::HAS_RELOADED, redrawall);
 
 				big_map->_setAsTarg();
 
@@ -1126,12 +1129,21 @@ namespace LSW {
 			void map::corruptWorldTick()
 			{
 				Log::gfile logg;
-				logg << Log::START << "[MAP:CORRPT][INFO] Changing some random blocks..." << Log::ENDL;
 
-				int posx = rand() % (Defaults::map_size_default_x);
-				int posy = rand() % (Defaults::map_size_default_y);
+				int posx = rand() % (Defaults::map_size_default_x-2) + 1;
+				int posy = rand() % (Defaults::map_size_default_y-2) + 1;
+
+				for (unsigned tries = 0; tries < 50 && map_i[posx][posy] != BLOCKID; tries++)
+				{
+					posx = rand() % (Defaults::map_size_default_x-2) + 1;
+					posy = rand() % (Defaults::map_size_default_y-2) + 1;
+				}
+
+				logg.debug("Changing some random blocks...");
+
 
 				if (map_i[posx][posy] == BLOCKID) {
+					logg.debug("Corrupted " + std::to_string(posx) + ":" + std::to_string(posy));
 					map_i[posx][posy] = BLOCKID_C00;
 
 					Safer::safe_string id_path = interpretIntToBlockName(BLOCKID_C00);
@@ -1160,7 +1172,7 @@ namespace LSW {
 				}
 				hasToUpdate_a_block = true;
 
-				logg << Log::START << "[MAP:CORRPT][INFO] Done processing blocks." << Log::ENDL;
+				logg.debug("Done processing blocks.");
 			}
 			void map::setPlayerName(const Safer::safe_string s)
 			{
@@ -1303,7 +1315,9 @@ namespace LSW {
 				}
 
 				Log::gfile logg;
-				if (hasToUpdate || big_map_il->hasReloaded() || hasToUpdate_a_block/* || is_new_Map*/) {
+				bool has_img_reload;
+				has_img_reload = big_map_il->isEq(Image::HAS_RELOADED, true);
+				if (hasToUpdate || has_img_reload || hasToUpdate_a_block/* || is_new_Map*/) {
 
 					_redraw();
 					hasToUpdate = hasToUpdate_a_block = false;
@@ -1312,6 +1326,8 @@ namespace LSW {
 			}
 			void map::checkPositionChange()
 			{
+				if (!this) return; // quick fix
+
 				if (!is_player_enabled || paused) return;
 
 				int posx, posy;
@@ -1357,6 +1373,7 @@ namespace LSW {
 			}
 			void map::cpuTask()
 			{
+				if (!this) return; // quick fix
 				cpu_tasking = true;
 				testCollisionPlayer();
 				checkPositionChange();
@@ -1364,6 +1381,7 @@ namespace LSW {
 			}
 			void map::testCollisionPlayer()
 			{
+				if (!this) return; // quick fix
 				if (set_cpu_lock) return;
 
 				Log::gfile logg;
@@ -1405,10 +1423,6 @@ namespace LSW {
 
 				unlock();
 			}
-			/*void map::testCollisionOther(Sprite::sprite & s)
-			{
-				verifyCollision(s);
-			}*/
 			const bool map::hasReachedEnd()
 			{
 				return has_reachedEnd;
@@ -1435,6 +1449,7 @@ namespace LSW {
 			}
 			const bool map::isPaused()
 			{
+				if (!this) return true; // quick fix
 				return paused;
 			}
 			const bool map::try_lock()

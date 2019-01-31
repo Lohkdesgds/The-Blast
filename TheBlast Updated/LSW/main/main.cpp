@@ -8,7 +8,8 @@ using namespace LSW::v2;
 
 int main(int argc, char* argv[])
 {
-	/*int button = al_show_native_message_box(
+#ifdef _DEBUG
+	int button = al_show_native_message_box(
 		nullptr,
 		"Hey!",
 		"This is a pre-release version! (useful warn)",
@@ -19,7 +20,8 @@ int main(int argc, char* argv[])
 		NULL,
 		ALLEGRO_MESSAGEBOX_YES_NO
 	);
-	if (button != 1) return 0;*/
+	if (button != 1) return 0;
+#endif
 
 	Log::gfile logg;
 	logg << Log::NEEDED_START << "[MAIN:_____][INFO] Initializing..." << Log::NEEDED_ENDL;

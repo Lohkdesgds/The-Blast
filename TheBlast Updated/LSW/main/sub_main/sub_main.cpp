@@ -10,6 +10,7 @@ namespace LSW {
 			{
 				prepare_commom_templates;
 				data = new _main_data();
+				srand(time(0));
 			}
 			void main::unloadAll()
 			{
@@ -96,6 +97,8 @@ namespace LSW {
 			{
 				double ti = al_get_time();
 
+				if (!data->disp.isOpen()) return false;
+					
 				data->txt_data.draw(); // update and draw texts
 
 				if (!data->disp.flip(true, al_map_rgb_f(0.5*cos(ti*2.0)+0.1, 0.5*sin(ti*2.5 + 0.3) + 0.1, 0.5*cos(ti*1.7 + 0.5) + 0.1))) return false; // flip
@@ -552,7 +555,9 @@ namespace LSW {
 
 								i->reload();
 
-								title->set(Text::SETSTRING, std::string("Checking [") + std::to_string(nnow) + "/" + std::to_string(sizz) + "]: " + i->whoAmI().g());
+								Safer::safe_string tempstr;
+								i->get(Image::ID, tempstr);
+								title->set(Text::SETSTRING, std::string("Checking [") + std::to_string(nnow) + "/" + std::to_string(sizz) + "]: " + tempstr.g());
 								nnow++;
 							}
 							data->img_data.work().unlock();
@@ -573,7 +578,7 @@ namespace LSW {
 							Image::image_low* nulp;
 							data->img_data.get(nulp, 0);
 							assert(nulp);
-							nulp->_setKeepOnMemory(data->setup.fixed_memory_flag);
+							nulp->set(Image::GLOBAL_SET_NO_OPTIMIZING_SETTING, data->setup.fixed_memory_flag);
 						}
 					}
 
@@ -979,11 +984,13 @@ namespace LSW {
 						// FLIP AND STUFF
 						if (!__internal_task_level_common()) {
 							map->setCPULock(true);
+							__apply_layer_number(0);
 							while (map->isCPUtasking());
 							delete map;
 							return false;
 						}
 					}
+					__apply_layer_number(0);
 
 					if (map){
 						map->setCPULock(true);
@@ -1069,7 +1076,7 @@ namespace LSW {
 						menu_01->set(Sprite::POSY, -0.25);
 
 						menu_01_t = Text::getOrCreate("L_MENU_01", true);
-						menu_01_t->set(Text::SETSTRING, "Volume: 100\\%");
+//						menu_01_t->set(Text::SETSTRING, "Volume: 100\\%"); // defined later
 						menu_01_t->set(Text::SETFOLLOW, "L_MENU_01");
 						menu_01_t->set(Text::MODE, Text::ALIGN_CENTER);
 						menu_01_t->set(Text::COLOR, al_map_rgb_f(1.0, 1.0, 1.0));
@@ -1092,7 +1099,27 @@ namespace LSW {
 						menu_02->set(Sprite::LAYER, Defaults::default_settings_layer);
 						menu_02->set(Sprite::SCALEY, 0.20); // FORCE
 						menu_02->set(Sprite::SCALEX, 0.20); // IT'S A BAR
-						menu_02->set(Sprite::POSX, 0.39); // 100%
+						//menu_02->set(Sprite::POSX, 0.39); // 100%
+						/* Special part*/
+						{
+							bool welldone = true;
+							float pos;
+							try {
+								t00->get(Sound::GLOBALVOLUME, pos);
+							}
+							catch (...)
+							{
+								welldone = false;
+								menu_02->set(Sprite::POSX, 0.39);
+								menu_01_t->set(Text::SETSTRING, "Volume: UNKNOWN\\%");
+							}
+							if (welldone) {
+								menu_01_t->set(Text::SETSTRING, "Volume: " + std::to_string((int)(100.0*pos)) + "\\%");
+								pos = (pos * 0.780 - 0.390);
+								menu_02->set(Sprite::POSX, pos);
+							}
+						}
+						// endof Special part
 						menu_02->set(Sprite::POSY, -0.25);
 
 						// EMPTY TEXT SPACE
@@ -1282,7 +1309,13 @@ namespace LSW {
 
 								menu_01_t->set(Text::SETSTRING, "Volume: " + std::to_string((int)(100.0*volume)) + "\\%");
 
-								if (!t00->set(Sound::GLOBALVOLUME, volume)) menu_01_t->set(Text::SETSTRING, "Volume: (could not set volume)");
+								try {
+									t00->set(Sound::GLOBALVOLUME, volume);
+								}
+								catch (...)
+								{
+									menu_01_t->set(Text::SETSTRING, "Volume: (FATAL ERROR PLEASE RESTART GAME!)");
+								}
 							}
 							else if (b03) {
 								if (player_settings) {
@@ -1523,27 +1556,32 @@ namespace LSW {
 				// smaller chunks
 
 				wi = Image::getOrCreate("MOUSE", true);
-				wi->load("mouse.png");
+				wi->set(Image::PATH, "mouse.png");
+				wi->set(Image::LOAD_LATER, true);
 
 				actual_perc = 0.961;
 
 				wi = Image::getOrCreate("BLAST_LOGO", true);
-				wi->load("the_storm.png");
+				wi->set(Image::PATH, "the_storm.png");
+				wi->set(Image::LOAD_LATER, true);
 
 				actual_perc = 0.962;
 
 				wi = Image::getOrCreate("BAR_ON", true);
-				wi->load("bar_single_one_on.png");
+				wi->set(Image::PATH, "bar_single_one_on.png");
+				wi->set(Image::LOAD_LATER, true);
 
 				actual_perc = 0.963;
 
 				wi = Image::getOrCreate("BAR_OFF", true);
-				wi->load("bar_single_one.png");
+				wi->set(Image::PATH, "bar_single_one.png");
+				wi->set(Image::LOAD_LATER, true);
 
 				actual_perc = 0.964;
 
 				wi = Image::getOrCreate("BG_INTRO", true);
-				wi->load("background_gameplay_start.png");
+				wi->set(Image::PATH, "background_gameplay_start.png");
+				wi->set(Image::LOAD_LATER, true);
 
 				actual_perc = 0.965;
 
@@ -1559,35 +1597,40 @@ namespace LSW {
 				/* LOADING MUSICS...? */
 
 				wm = Sound::getOrCreate("MUSIC_0", true);
-				wm->load("musics/music_01.ogg");
+				wm->set(Sound::PATH, "musics/music_01.ogg");
+				wm->load();
 				wm->set(Sound::PLAYING, false);
 				wm->set(Sound::PLAYMODE, Sound::LOOP);
 
 				actual_perc = 0.972;
 
 				wm = Sound::getOrCreate("MUSIC_1", true);
-				wm->load("musics/music_02.ogg");
+				wm->set(Sound::PATH, "musics/music_02.ogg");
+				wm->load();
 				wm->set(Sound::PLAYING, false);
 				wm->set(Sound::PLAYMODE, Sound::LOOP);
 
 				actual_perc = 0.974;
 
 				wm = Sound::getOrCreate("MUSIC_2", true);
-				wm->load("musics/music_03.ogg");
+				wm->set(Sound::PATH, "musics/music_03.ogg");
+				wm->load();
 				wm->set(Sound::PLAYING, false);
 				wm->set(Sound::PLAYMODE, Sound::LOOP);
 
 				actual_perc = 0.976;
 
 				wm = Sound::getOrCreate("JUMP_FX", true);
-				wm->load("musics/jump_01.wav");
+				wm->set(Sound::PATH, "musics/jump_01.wav");
+				wm->load();
 				wm->set(Sound::PLAYING, false);
 				wm->set(Sound::PLAYMODE, Sound::ONCE);
 
 				actual_perc = 0.978;
 
 				wm = Sound::getOrCreate("WALK_FX", true);
-				wm->load("musics/walk_01.wav");
+				wm->set(Sound::PATH, "musics/walk_01.wav");
+				wm->load();
 				wm->set(Sound::PLAYING, false);
 				wm->set(Sound::PLAYMODE, Sound::ONCE);
 
@@ -1783,6 +1826,8 @@ namespace LSW {
 
 			const bool main::__internal_task_level_common()
 			{
+				if (!data->disp.isOpen()) return false;
+
 				data->img_data.draw(); // check unload of textures and stuff
 				data->spr_data.draw(); // draw sprites
 				data->txt_data.draw(); // update and draw texts

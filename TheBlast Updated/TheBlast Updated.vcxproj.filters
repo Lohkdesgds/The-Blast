@@ -180,4 +180,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="to_do_list.txt" />
+  </ItemGroup>
 </Project>

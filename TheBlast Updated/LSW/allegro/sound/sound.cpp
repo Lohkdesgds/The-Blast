@@ -6,7 +6,18 @@ namespace LSW {
 
 			_all_track_voiceNmixer track::vnm;
 
-			const bool track::load(const Safer::safe_string e_o)
+
+			track::track()
+			{
+				logg << Log::START << "[IMGL:CONST][INFO] Registered spawn of image_low ID#" + std::to_string((size_t)this) << Log::ENDL;
+			}
+			track::~track()
+			{
+				unload();
+				logg << Log::START << "[IMGL:CONST][INFO] Registered despawn of image_low ID#" + std::to_string((size_t)this) << ";ID=" << id << Log::ENDL;
+			}
+
+			const bool track::load()
 			{
 				if (!vnm.voice) {
 					vnm.voice = al_create_voice(44100, ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF_2);
@@ -26,16 +37,12 @@ namespace LSW {
 						return false;
 					}
 
+					set(Sound::GLOBALVOLUME, Defaults::Sound::global_volume);
 				}
 
 				if (mse) al_destroy_sample(mse);
 
-
-
-				Safer::safe_string e = Defaults::default_data_path.g() + e_o.g();
-				Tools::interpret_path(e);
-
-				mse = al_load_sample(e.g().c_str());
+				mse = al_load_sample(path.g().c_str());
 				if (!mse) return false;
 
 				instance = al_create_sample_instance(nullptr);
@@ -59,98 +66,140 @@ namespace LSW {
 			
 			void track::set(const track_p e, const bool v)
 			{
-				if (!instance) return;
-
 				switch (e)
 				{
 				case PLAYING:
+					if (!instance) {
+						throw "at track::set [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: No instance loaded. Invalid operation (PLAYING).";
+						return;
+					}
 					al_set_sample_instance_playing(instance, v);
 					break;
 				}
 			}
-			const bool track::set(const track_f e, const float v)
+			void track::set(const track_f e, const float v)
 			{
-				if (!instance) return false;
-
 				switch (e)
 				{
 				case VOLUME:
-					return al_set_sample_instance_gain(instance, v);
+					if (!instance) {
+						throw "at track::set [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: No instance loaded. Invalid operation (VOLUME).";
+						return;
+					}
+					al_set_sample_instance_gain(instance, v);
+					break;
 				case GLOBALVOLUME:
-					if (!vnm.mixer) return false;
-					return al_set_mixer_gain(vnm.mixer, v);
+					if (!vnm.mixer) {
+						throw "at track::set [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: No mixer loaded. Invalid operation (GLOBALVOLUME).";
+						return;
+					}
+					al_set_mixer_gain(vnm.mixer, v);
+					break;
 				case SPEED:
-					return al_set_sample_instance_speed(instance, v);
+					if (!instance) {
+						throw "at track::set [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: No instance loaded. Invalid operation (SPEED).";
+						return;
+					}
+					al_set_sample_instance_speed(instance, v);
+					break;
 				}
-				return false;
 			}
 			void track::set(const track_i e, const track_i_0 v)
 			{
-				if (!instance) return;
-
 				switch (e)
 				{
 				case PLAYMODE:
+					if (!instance) {
+						throw "at track::set [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: No instance loaded. Invalid operation (PLAYMODE).";
+						return;
+					}
 					al_set_sample_instance_playmode(instance, (ALLEGRO_PLAYMODE)v);
 					break;
 				}
 			}
 			void track::set(const track_s e, const Safer::safe_string v)
 			{
-				//if (!instance) return;
-
 				switch (e)
 				{
 				case ID:
-					my_nick = v;
+					id = v;
+					break;
+				case RAW_PATH:
+					path_raw = v;
+					path = path_raw;
+					break;
+				case PATH:
+					path = Defaults::default_data_path.g() + v.g();
+					Tools::interpret_path(path);
 					break;
 				}
 			}
 
 			void track::get(const track_p e, bool& v)
 			{
-				if (!instance) return;
-
 				switch (e)
 				{
 				case PLAYING:
+					if (!instance) {
+						throw "at track::get [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: No instance loaded. Invalid operation (PLAYING).";
+						return;
+					}
 					v = al_get_sample_instance_playing(instance);
 					break;
 				}
 			}
 			void track::get(const track_f e, float& v)
 			{
-				if (!instance) return;
-
 				switch (e)
 				{
 				case VOLUME:
+					if (!instance) {
+						throw "at track::get [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: No instance loaded. Invalid operation (VOLUME).";
+						return;
+					}
 					v = al_get_sample_instance_gain(instance);
 					break;
+				case GLOBALVOLUME:
+					if (!vnm.mixer) {
+						throw "at track::get [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: No mixer loaded. Invalid operation (GLOBALVOLUME).";
+						return;
+					}
+					v = al_get_mixer_gain(vnm.mixer);
+					break;
 				case SPEED:
+					if (!instance) {
+						throw "at track::get [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: No instance loaded. Invalid operation (SPEED).";
+						return;
+					}
 					v = al_get_sample_instance_speed(instance);
 					break;
 				}
 			}
 			void track::get(const track_i e, int& v)
 			{
-				if (!instance) return;
-
 				switch (e)
 				{
 				case PLAYMODE:
+					if (!instance) {
+						throw "at track::get [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: No instance loaded. Invalid operation (PLAYMODE).";
+						return;
+					}
 					v = al_get_sample_instance_playmode(instance);
 					break;
 				}
 			}
 			void track::get(const track_s e, Safer::safe_string& v)
 			{
-				//if (!instance) return;
-
 				switch (e)
 				{
 				case ID:
-					v = my_nick;
+					v = id;
+					break;
+				case RAW_PATH:
+					v = path_raw;
+					break;
+				case PATH:
+					v = path;
 					break;
 				}
 			}
@@ -185,7 +234,7 @@ namespace LSW {
 					return ref;
 				}
 				else {
-					throw "EXCEPTION AT TRACK GETORCREATE: NOT FOUND AND NOT SUPPOSED TO CREATE!";
+					throw "at Sound::getOrCreate(): Could not find \"" + s.g() + "\".";
 					return nullptr;
 				}
 			}
