@@ -190,6 +190,7 @@
     <ClInclude Include="LSW\tools\stacker\stacker.h" />
     <ClInclude Include="LSW\tools\tools.h" />
     <ClInclude Include="LSW\_external\dirent.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LSW\allegro\camera\camera.cpp" />
@@ -213,6 +214,9 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="to_do_list.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="TheBlast Updated.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

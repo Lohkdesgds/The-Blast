@@ -129,6 +129,7 @@
     <ClInclude Include="LSW\main\sub_main\sub_main.h">
       <Filter>main\sub_main</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LSW\download_manager\downloader_v2.cpp">
@@ -182,5 +183,8 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="to_do_list.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="TheBlast Updated.rc" />
   </ItemGroup>
 </Project>
