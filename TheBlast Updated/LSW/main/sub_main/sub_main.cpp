@@ -460,7 +460,6 @@ namespace LSW {
 						actual_perc = 0.00;
 						std::thread thr(__load, this);
 						double timer = al_get_time();
-						double still_timer = 0;
 						double local_timer = al_get_time() - 7.0;
 						Config::config conf;
 						long long runs;
@@ -468,9 +467,6 @@ namespace LSW {
 
 						while (actual_perc != 1.00 || al_get_time() - timer < 4.0)
 						{
-							if (still_timer == 0 && actual_perc == 1.00) {
-								still_timer = al_get_time();
-							}
 							data->cam.set(-2, Camera::ROTATION, cos(al_get_time())*0.04);
 							data->cam.apply();
 
@@ -530,7 +526,7 @@ namespace LSW {
 									break;
 								default:
 									{
-										switch (rand() % 12) {
+										switch (rand() % 14) {
 										case 0:
 											desc->set(Text::SETSTRING, "It may take a while! Please wait...");
 											break;
@@ -567,6 +563,9 @@ namespace LSW {
 										case 11:
 											desc->set(Text::SETSTRING, "Meaw OwO");
 											break;
+										case 12: case 13:
+											desc->set(Text::SETSTRING, "Dropbox is just slow sometimes. Sorry!");
+											break;
 										}
 									}
 								break;
@@ -587,7 +586,7 @@ namespace LSW {
 						title->set(Text::IS_GLOBALPATH_RAW, false);
 						// ENDOF AFTER-LOAD (shared)
 
-						title->set(Text::SETSTRING, "Loaded! Time taken: " + std::to_string((al_get_time() - timer) - (al_get_time() - still_timer)) + " seconds.");
+						title->set(Text::SETSTRING, "Loaded! Time taken: " + std::to_string((al_get_time() - timer)) + " seconds.");
 						desc->set(Text::SETSTRING, "-- Ready? --");
 
 						for (double d = al_get_time(); (al_get_time() - d < 3.0);) {
