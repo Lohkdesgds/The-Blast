@@ -180,6 +180,7 @@
     <ClInclude Include="LSW\allegro\sprite\sprite.h" />
     <ClInclude Include="LSW\allegro\text\text.h" />
     <ClInclude Include="LSW\all\enable_all.h" />
+    <ClInclude Include="LSW\config\config.h" />
     <ClInclude Include="LSW\defaults\defaults.h" />
     <ClInclude Include="LSW\download_manager\downloader_v2.h" />
     <ClInclude Include="LSW\entity\entity.h" />
@@ -190,6 +191,7 @@
     <ClInclude Include="LSW\tools\stacker\stacker.h" />
     <ClInclude Include="LSW\tools\tools.h" />
     <ClInclude Include="LSW\_external\dirent.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LSW\allegro\camera\camera.cpp" />
@@ -201,18 +203,23 @@
     <ClCompile Include="LSW\allegro\sound\sound.cpp" />
     <ClCompile Include="LSW\allegro\sprite\sprite.cpp" />
     <ClCompile Include="LSW\allegro\text\text.cpp" />
+    <ClCompile Include="LSW\config\config.cpp" />
     <ClCompile Include="LSW\download_manager\downloader_v2.cpp" />
     <ClCompile Include="LSW\entity\entity.cpp" />
     <ClCompile Include="LSW\main\main.cpp" />
     <ClCompile Include="LSW\main\sub_main\sub_main.cpp" />
     <ClCompile Include="LSW\map\map_control.cpp" />
     <ClCompile Include="LSW\tools\stacker\stacker.cpp" />
+    <ClCompile Include="LSW\tools\tools.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="to_do_list.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="TheBlast Updated.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

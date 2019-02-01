@@ -8,6 +8,20 @@ namespace LSW {
 
 			main::main()
 			{
+				bool b = al_init();
+				if (b) b = al_init_image_addon();
+				if (b) b = al_init_primitives_addon();
+				if (b) b = al_init_font_addon();
+				if (b) b = al_init_ttf_addon();
+				if (b) b = al_install_audio();
+				if (b) b = al_init_acodec_addon();
+				if (b) b = al_reserve_samples(4);
+				if (b) b = al_install_keyboard();
+				if (b) b = al_install_mouse();
+				if (!b) {
+					throw "at main::main [#" + std::to_string((size_t)this) + "]: Failed to start graphics!";
+				}
+
 				prepare_commom_templates;
 				data = new _main_data();
 				srand(time(0));
@@ -181,6 +195,7 @@ namespace LSW {
 			void main::init()
 			{
 				Log::gfile logg;
+				Config::config conf;
 
 				try {
 					if (!check("init")) return;
@@ -188,13 +203,28 @@ namespace LSW {
 					{
 						logg.showOnConsole(data->setup.enable_console);
 						logg.longLog(data->setup.full_log);
+
+						bool full;
+						conf.get(Config::WAS_FULLSCREEN, full, true);
+
+						if (full) data->setup.mode = Defaults::default_display_settings;
+						else {
+							data->setup.mode = Defaults::default_windowed_display_settings;
+
+							conf.get(Config::SCREEN_X, data->setup.res[0], Defaults::Config::screen_siz[0]);
+							conf.get(Config::SCREEN_Y, data->setup.res[1], Defaults::Config::screen_siz[1]);
+						}
+
+
+						if ((data->setup.res[0] < 0 && data->setup.res[1] >= 0) || (data->setup.res[0] >= 0 && data->setup.res[1] < 0))
+						{
+							logg << Log::NEEDED_START << "[MAIN:INIT_][WARN] One of the resolutions was set, but the other one wasn't. Please set both or none!" << Log::NEEDED_ENDL;
+							data->setup.res[0] = data->setup.res[1] = -1;
+						}
 					}
 
 					// create display
-					if (data->setup.res[0] > 0 && data->setup.res[1] > 0) {
-						data->disp.custom_launch(data->setup.res[0], data->setup.res[1], data->setup.mode);
-					}
-					else data->disp.launch();
+					data->disp.custom_launch(data->setup.res[0], data->setup.res[1], data->setup.mode);
 
 					data->cam.setup(); // guarantee global camera instance
 					data->bev.initInstance(); // guarantee global event instance
@@ -409,7 +439,7 @@ namespace LSW {
 
 					// LOADING SCREEN
 					txt = Text::getOrCreate("LOADING_1", true);
-					txt->set(Text::SETSTRING, "Please don't close the game until full load!");
+					//txt->set(Text::SETSTRING, "Please don't close the game until full load!");
 					txt->set(Text::POSX, 0.0);
 					txt->set(Text::POSY, 3.26);
 					txt->set(Text::MODE, Text::ALIGN_CENTER);
@@ -430,9 +460,12 @@ namespace LSW {
 						actual_perc = 0.00;
 						std::thread thr(__load, this);
 						double timer = al_get_time();
-						double local_timer = al_get_time();
+						double local_timer = al_get_time() - 7.0;
+						Config::config conf;
+						long long runs;
+						conf.get(Config::_TIMES_LIT, runs, 0LL);
 
-						while (actual_perc != 1.00)
+						while (actual_perc != 1.00 || al_get_time() - timer < 4.0)
 						{
 							data->cam.set(-2, Camera::ROTATION, cos(al_get_time())*0.04);
 							data->cam.apply();
@@ -450,43 +483,92 @@ namespace LSW {
 							if (al_get_time() - local_timer > 7.0)
 							{
 								local_timer = al_get_time();
-								switch (rand() % 12) {
-								case 0:
-									desc->set(Text::SETSTRING, "It may take a while! Please wait...");
-									break;
+
+								switch (runs) {
 								case 1:
-									desc->set(Text::SETSTRING, "Now this line is random!");
+									desc->set(Text::SETSTRING, "YAY YOU'VE COME BACK :33");
 									break;
 								case 2:
-									desc->set(Text::SETSTRING, "I'm just loading the entire game, please wait!");
-									break;
-								case 3:
-									desc->set(Text::SETSTRING, "Sure it's safe. Everything is saved at %appdata%/Lohk's Studios!");
+									desc->set(Text::SETSTRING, "It's you, again! XD");
 									break;
 								case 4:
-									desc->set(Text::SETSTRING, "Got questions? Ask @lohkdesgds!");
-									break;
-								case 5:
-									desc->set(Text::SETSTRING, "This game has been made for #gamejaaj2 in the first place!");
-									break;
-								case 6:
-									desc->set(Text::SETSTRING, "Hey yeah Lohk is a real cat!");
-									break;
-								case 7:
-									desc->set(Text::SETSTRING, "Subscribete to mei chanul on uTub!");
-									break;
-								case 8:
-									desc->set(Text::SETSTRING, "B*tch Lasagna & YouTube Rewind 2018 pewds edition are VERY NICE");
+									desc->set(Text::SETSTRING, "This is your 5th time opening this game! Awesome!");
 									break;
 								case 9:
-									desc->set(Text::SETSTRING, "Sure it's about to end! Just wait a little bit more!");
+									desc->set(Text::SETSTRING, "Your 10th time here! Wow!");
 									break;
-								case 10:
-									desc->set(Text::SETSTRING, "THANOS CARRR");
+								case 19:
+									desc->set(Text::SETSTRING, "Looks like you're enjoying this game! Thanks!");
 									break;
-								case 11:
-									desc->set(Text::SETSTRING, "Meaw OwO");
+								case 49:
+									desc->set(Text::SETSTRING, "Did you know there has been 50 times since your first play?");
 									break;
+								case 99:
+									desc->set(Text::SETSTRING, "You should get a bonus just because this is your 100th time here!");
+									break;
+								case 199:
+									desc->set(Text::SETSTRING, "200th time?! You're kidding me ;P");
+									break;
+								case 499:
+									desc->set(Text::SETSTRING, "There were 499 other times before this one! Oh man thanks!");
+									break;
+								case 999:
+									desc->set(Text::SETSTRING, "NO WAY YOU'VE BEEN PLAYING THIS LONG! 1000th TIME!");
+									break;
+								case 1999:
+									desc->set(Text::SETSTRING, "Pffft! 2000th time? O M G YOU'RE AWESOME!");
+									break;
+								case 4999:
+									desc->set(Text::SETSTRING, "Don't you know there's probably a new game somewhere? I don't know, 5000th time is too long OwO");
+									break;
+								case 9999:
+									desc->set(Text::SETSTRING, "Last message: HUGE THANKS for playing 10 thousand times this game. Really.");
+									break;
+								default:
+									{
+										switch (rand() % 14) {
+										case 0:
+											desc->set(Text::SETSTRING, "It may take a while! Please wait...");
+											break;
+										case 1:
+											desc->set(Text::SETSTRING, "Now this line is random!");
+											break;
+										case 2:
+											desc->set(Text::SETSTRING, "I'm just loading the entire game, please wait!");
+											break;
+										case 3:
+											desc->set(Text::SETSTRING, "Sure it's safe. Everything is saved at \\%appdata\\%/Lohk's Studios!");
+											break;
+										case 4:
+											desc->set(Text::SETSTRING, "Got questions? Ask @lohkdesgds!");
+											break;
+										case 5:
+											desc->set(Text::SETSTRING, "This game has been made for #gamejaaj2 in the first place!");
+											break;
+										case 6:
+											desc->set(Text::SETSTRING, "Hey yeah Lohk is a real cat!");
+											break;
+										case 7:
+											desc->set(Text::SETSTRING, "Subscribete to mei chanul on uTub!");
+											break;
+										case 8:
+											desc->set(Text::SETSTRING, "B*tch Lasagna & YouTube Rewind 2018 pewds edition are VERY NICE");
+											break;
+										case 9:
+											desc->set(Text::SETSTRING, "Sure it's about to end! Just wait a little bit more!");
+											break;
+										case 10:
+											desc->set(Text::SETSTRING, "THANOS CARRR");
+											break;
+										case 11:
+											desc->set(Text::SETSTRING, "Meaw OwO");
+											break;
+										case 12: case 13:
+											desc->set(Text::SETSTRING, "Dropbox is just slow sometimes. Sorry!");
+											break;
+										}
+									}
+								break;
 								}
 							}
 						}
@@ -504,8 +586,8 @@ namespace LSW {
 						title->set(Text::IS_GLOBALPATH_RAW, false);
 						// ENDOF AFTER-LOAD (shared)
 
-						title->set(Text::SETSTRING, "Loaded! Time taken: " + std::to_string(al_get_time() - timer) + " seconds.");
-						desc->set(Text::SETSTRING, "-- YAY YOU'VE GOT THIS =P --");
+						title->set(Text::SETSTRING, "Loaded! Time taken: " + std::to_string((al_get_time() - timer)) + " seconds.");
+						desc->set(Text::SETSTRING, "-- Ready? --");
 
 						for (double d = al_get_time(); (al_get_time() - d < 3.0);) {
 							data->cam.set(-2, Camera::ROTATION, cos(al_get_time())*0.04);
@@ -800,7 +882,7 @@ namespace LSW {
 					Sound::track *t01;
 					Sound::track *t02;
 					Text::text* level;
-					//Text::text* txt;
+					Config::config conf;
 					double zoom = 1.0;
 					double pos_x = 0.0, pos_y = 0.0;
 					bool is_following_player = false;
@@ -808,6 +890,14 @@ namespace LSW {
 					double corrosion;
 					double music_fx;
 					double level_now_fx;
+
+					{
+						Safer::safe_string temporary_color;
+						conf.get(Config::LAST_PLAYERNAME, player_settings.nickname, "");
+						conf.get(Config::LAST_COLOR, temporary_color, "GREEN");
+						player_settings.color_interp = interpret_from_color_name(temporary_color);
+						player_settings.color = interpret_to_color(player_settings.color_interp);
+					}
 
 					// SEARCHES
 					map = nullptr;
@@ -828,11 +918,9 @@ namespace LSW {
 						return false;
 					}
 
-					if (!player_settings) map->launch_player("BAR_ON");
-					else {
-						map->launch_player(player_settings->color);
-						map->setPlayerName(player_settings->nickname);
-					}
+					map->launch_player(player_settings.color);
+					map->setPlayerName(player_settings.nickname);
+
 					map->launch_badboys("BAR_OFF", 4);
 					map->setSeed(temprand);
 
@@ -1019,7 +1107,7 @@ namespace LSW {
 					Text::text* menu_05_t;																	///
 					Text::text* menu_06_t;																	///
 					Fx::bubbles bubbles;
-						
+					Config::config conf;
 					Sprite::sprite* mouse;
 					Sound::track* t00;
 					float volume_got;
@@ -1034,6 +1122,13 @@ namespace LSW {
 					is_typing_name = false;
 					t00->get(Sound::VOLUME, volume_got);
 					bubbles.init(300, 60.0, Defaults::default_settings_layer);
+					{
+						Safer::safe_string temporary_color;
+						conf.get(Config::LAST_PLAYERNAME, player_settings.nickname, "");
+						conf.get(Config::LAST_COLOR, temporary_color, "GREEN");
+						player_settings.color_interp = interpret_from_color_name(temporary_color);
+						player_settings.color = interpret_to_color(player_settings.color_interp);
+					}
 					{
 						/** #00 - enable OSD
 						- Static pos
@@ -1112,6 +1207,8 @@ namespace LSW {
 								welldone = false;
 								menu_02->set(Sprite::POSX, 0.39);
 								menu_01_t->set(Text::SETSTRING, "Volume: UNKNOWN\\%");
+
+								conf.set(Config::HAD_ERROR, true);
 							}
 							if (welldone) {
 								menu_01_t->set(Text::SETSTRING, "Volume: " + std::to_string((int)(100.0*pos)) + "\\%");
@@ -1162,7 +1259,6 @@ namespace LSW {
 						menu_04->set(Sprite::SCALEX, 1.4);
 						menu_04->set(Sprite::POSX, 0.0);
 						menu_04->set(Sprite::POSY, 0.23);
-						menu_04->set(Sprite::DRAW, (player_settings));
 
 						menu_04_t = Text::getOrCreate("L_MENU_04", true);
 						menu_04_t->set(Text::SETSTRING, std::string("Nick: <NULL>"));
@@ -1188,7 +1284,6 @@ namespace LSW {
 						menu_05->set(Sprite::SCALEX, 1.4);
 						menu_05->set(Sprite::POSX, 0.0);
 						menu_05->set(Sprite::POSY, 0.43);
-						menu_05->set(Sprite::DRAW, (player_settings));
 
 						menu_05_t = Text::getOrCreate("L_MENU_05", true);
 						menu_05_t->set(Text::SETSTRING, "Color: <NULL>");
@@ -1233,36 +1328,30 @@ namespace LSW {
 					for (bool keep = true; keep;)
 					{
 						// PRE-TASK
-						menu_04->set(Sprite::DRAW, (player_settings));
-						menu_05->set(Sprite::DRAW, (player_settings));
-						if (player_settings) {
-							menu_04_t->set(Text::SETSTRING, std::string("Nick: ") + player_settings->nickname.g());
-							menu_05_t->set(Text::SETSTRING, std::string("Color: ") + interpret_color(player_settings->color_interp).g());
-						}
+						menu_04_t->set(Text::SETSTRING, std::string("Nick: ") + player_settings.nickname.g());
+						menu_05_t->set(Text::SETSTRING, std::string("Color: ") + interpret_color(player_settings.color_interp).g());
+
 						if (is_typing_name) { // TODO: limit string size
-							if (player_settings) {
-								menu_04_t->set(Text::COLOR, al_map_rgb_f(1.0, 1.0, 0.0));
-								Safer::safe_string ss, ess;
+							menu_04_t->set(Text::COLOR, al_map_rgb_f(1.0, 1.0, 0.0));
+							Safer::safe_string ss, ess;
 
-								data->bev.g().getCurrentString(ss);
-								data->bev.g().getLastString(ess, true);
+							data->bev.g().getCurrentString(ss);
+							data->bev.g().getLastString(ess, true);
 
-								if (ess.g().length() < 1) {
-									std::string ssf = ss.g();
-									if (ssf.length() > 22) ssf = ssf.substr(0, 22);
+							if (ess.g().length() < 1) {
+								std::string ssf = ss.g();
+								if (ssf.length() > 22) ssf = ssf.substr(0, 22);
 
-									menu_04_t->set(Text::SETSTRING, std::string("Nick: ") + ssf);
-								}
-								else {
-									is_typing_name = false;
-									std::string ssf = ess.g();
-									if (ssf.length() > 22) ssf = ssf.substr(0, 22);
-
-									player_settings->nickname = ssf;
-								}
+								menu_04_t->set(Text::SETSTRING, std::string("Nick: ") + ssf);
 							}
 							else {
 								is_typing_name = false;
+								std::string ssf = ess.g();
+								if (ssf.length() > 22) ssf = ssf.substr(0, 22);
+
+								player_settings.nickname = ssf;
+
+								conf.set(Config::LAST_PLAYERNAME, ssf);
 							}
 						}
 						else {
@@ -1309,20 +1398,23 @@ namespace LSW {
 
 								menu_01_t->set(Text::SETSTRING, "Volume: " + std::to_string((int)(100.0*volume)) + "\\%");
 
+								Config::config conf;
+								conf.set(Config::LAST_VOLUME, volume);
+
 								try {
 									t00->set(Sound::GLOBALVOLUME, volume);
 								}
 								catch (...)
 								{
 									menu_01_t->set(Text::SETSTRING, "Volume: (FATAL ERROR PLEASE RESTART GAME!)");
+									conf.set(Config::HAD_ERROR, true);
 								}
 							}
 							else if (b03) {
-								if (player_settings) {
-									delete player_settings;
-									player_settings = nullptr;
-								}
-								if (!player_settings) player_settings = new __player_settings();
+								player_settings = __player_settings();
+
+								conf.set(Config::LAST_PLAYERNAME, player_settings.nickname);
+								conf.set(Config::LAST_COLOR, interpret_color(player_settings.color_interp));
 
 								data->bev.g().getKey(Events::MOUSE_0, true);
 							}
@@ -1337,12 +1429,14 @@ namespace LSW {
 
 								data->bev.g().getKey(Events::MOUSE_0, true);
 							}
-							else if (b05 && player_settings) {
-								int tempp = (int)player_settings->color_interp;
+							else if (b05) {
+								int tempp = (int)player_settings.color_interp;
 								tempp++;
 								if (tempp > YELLOW) tempp = 0;
-								player_settings->color_interp = (colors)tempp;
-								player_settings->color = interpret_to_color(player_settings->color_interp);
+								player_settings.color_interp = (colors)tempp;
+								player_settings.color = interpret_to_color(player_settings.color_interp);
+
+								conf.set(Config::LAST_COLOR, interpret_color((colors)tempp));
 
 								data->bev.g().getKey(Events::MOUSE_0, true);
 							}
@@ -1498,330 +1592,362 @@ namespace LSW {
 			/* --------------- INTERNAL ONES (not meant to be used anywhere than inside threads from the main class) --------------- */
 			void main::__internal_thr_once_load()
 			{
-				if (!check("__thr_once_load")) return;
+				Log::gfile logg;
+				try {
+					if (!check("__thr_once_load")) return;
 
-				Sprite::sprite*   ws = nullptr;
-				Image::image_low* wi = nullptr;
-				Text::text*       wt = nullptr;
-				Sound::track*	  wm = nullptr;
+					Sprite::sprite*   ws = nullptr;
+					Image::image_low* wi = nullptr;
+					Text::text*       wt = nullptr;
+					Sound::track*	  wm = nullptr;
 
-				float o = 0.00;
-				actual_perc = 0.00;
+					Config::config conf;
 
-				// download file
+					float o = 0.00;
+					actual_perc = 0.00;
 
-				if (!data->setup.skip_download_flag) {
+					// download file
 
-					Safer::safe_string path_d = Defaults::default_onefile_path;
-					Tools::interpret_path(path_d);
+					if (!data->setup.skip_download_flag && conf.isEq(Config::HAD_ERROR, true)) {
 
-					std::thread thr0(Downloader::easyDownload, Defaults::call_url_file.g().c_str(), path_d.g().c_str(), &o);
+						Safer::safe_string path_d = Defaults::default_onefile_path;
+						Tools::interpret_path(path_d);
 
+						std::thread thr0(Downloader::easyDownload, Defaults::call_url_file.g().c_str(), path_d.g().c_str(), &o);
+
+						while (o != 1.0 && data->disp.isOpen()) {
+							actual_perc = o * 0.90;
+						}
+
+						o = 0.0;
+						thr0.join();
+
+						Stacker::extractor ext;
+						std::thread thr3(__xtract_dis, (void*)&ext, path_d, Defaults::default_root_path);
+
+						while ((o = ext.getPerc()) != 1.0 && data->disp.isOpen()) {
+							actual_perc = o * 0.05 + 0.90;
+						}
+						thr3.join();
+
+						std::experimental::filesystem::remove(path_d.g());
+						conf.set(Config::HAD_ERROR, false);
+					}
+
+					// big chunks
+
+					std::thread thr1(Image::multipleLoad, "PAUSE", "pause/pause_", 29, 2, ".png", &o, true);
 					while (o != 1.0 && data->disp.isOpen()) {
-						actual_perc = o * 0.90;
+						actual_perc = 0.95 + o * 0.005;
 					}
 
 					o = 0.0;
-					thr0.join();
+					thr1.join();
 
-					Stacker::extractor ext;
-					std::thread thr3(__xtract_dis, (void*)&ext, path_d, Defaults::default_root_path);
-
-					while ((o = ext.getPerc()) != 1.0 && data->disp.isOpen()) {
-						actual_perc = o * 0.05 + 0.90;
+					std::thread thr2(Image::multipleLoad, "LOGO", "logo/frame", 115, 2, ".png", &o, true);
+					while (o != 1.0 && data->disp.isOpen()) {
+						actual_perc = 0.955 + o * 0.005;
 					}
-					thr3.join();
 
-					std::experimental::filesystem::remove(path_d.g());
+					thr2.join();
+					actual_perc = 0.96;
+
+					// smaller chunks
+
+					wi = Image::getOrCreate("MOUSE", true);
+					wi->set(Image::PATH, "mouse.png");
+					wi->set(Image::LOAD_LATER, true);
+
+					actual_perc = 0.961;
+
+					wi = Image::getOrCreate("BLAST_LOGO", true);
+					wi->set(Image::PATH, "the_storm.png");
+					wi->set(Image::LOAD_LATER, true);
+
+					actual_perc = 0.962;
+
+					wi = Image::getOrCreate("BAR_ON", true);
+					wi->set(Image::PATH, "bar_single_one_on.png");
+					wi->set(Image::LOAD_LATER, true);
+
+					actual_perc = 0.963;
+
+					wi = Image::getOrCreate("BAR_OFF", true);
+					wi->set(Image::PATH, "bar_single_one.png");
+					wi->set(Image::LOAD_LATER, true);
+
+					actual_perc = 0.964;
+
+					wi = Image::getOrCreate("BG_INTRO", true);
+					wi->set(Image::PATH, "background_gameplay_start.png");
+					wi->set(Image::LOAD_LATER, true);
+
+					actual_perc = 0.965;
+
+					std::thread thr4(Image::multipleLoad, Defaults::map_default_start, "anim/bloco", 10, Defaults::map_default_len_name_int, ".png", &o, false);
+					while (o != 1.0 && data->disp.isOpen()) {
+						actual_perc = 0.965 + o * 0.005;
+					}
+
+					thr4.join();
+
+					actual_perc = 0.97;
+
+					/* LOADING MUSICS...? */
+
+					wm = Sound::getOrCreate("MUSIC_0", true);
+					wm->set(Sound::PATH, "musics/music_01.ogg");
+					wm->load();
+					wm->set(Sound::PLAYING, false);
+					wm->set(Sound::PLAYMODE, Sound::LOOP);
+
+					actual_perc = 0.972;
+
+					wm = Sound::getOrCreate("MUSIC_1", true);
+					wm->set(Sound::PATH, "musics/music_02.ogg");
+					wm->load();
+					wm->set(Sound::PLAYING, false);
+					wm->set(Sound::PLAYMODE, Sound::LOOP);
+
+					actual_perc = 0.974;
+
+					wm = Sound::getOrCreate("MUSIC_2", true);
+					wm->set(Sound::PATH, "musics/music_03.ogg");
+					wm->load();
+					wm->set(Sound::PLAYING, false);
+					wm->set(Sound::PLAYMODE, Sound::LOOP);
+
+					actual_perc = 0.976;
+
+					wm = Sound::getOrCreate("JUMP_FX", true);
+					wm->set(Sound::PATH, "musics/jump_01.wav");
+					wm->load();
+					wm->set(Sound::PLAYING, false);
+					wm->set(Sound::PLAYMODE, Sound::ONCE);
+
+					actual_perc = 0.978;
+
+					wm = Sound::getOrCreate("WALK_FX", true);
+					wm->set(Sound::PATH, "musics/walk_01.wav");
+					wm->load();
+					wm->set(Sound::PLAYING, false);
+					wm->set(Sound::PLAYMODE, Sound::ONCE);
+
+					actual_perc = 0.98;
+
+					/* CREATING SPRITES...? */
+
+					ws = Sprite::getOrCreate("BLAST_LOGO", true);
+					ws->add("BLAST_LOGO");
+					ws->set(Sprite::POSX, 0.0);
+					ws->set(Sprite::POSY, -0.45);
+					ws->set(Sprite::SCALEG, 1.0);
+					ws->set(Sprite::SCALEY, 0.6);
+					ws->set(Sprite::LAYER, 1);
+
+					actual_perc = 0.981;
+
+					ws = Sprite::getOrCreate("BAR_00", true);
+					ws->add("BAR_OFF");
+					ws->add("BAR_ON");
+					ws->set(Sprite::POSX, 0.0);
+					ws->set(Sprite::POSY, 0.4);
+					ws->set(Sprite::SCALEG, 0.6);
+					ws->set(Sprite::SCALEY, 0.22);
+					ws->set(Sprite::COLLIDE, true);
+					ws->set(Sprite::SHOWBOX, /*true*/false);
+					ws->set(Sprite::LAYER, 0);
+
+					actual_perc = 0.982;
+
+					ws = Sprite::getOrCreate("BAR_01", true);
+					ws->add("BAR_OFF");
+					ws->add("BAR_ON");
+					ws->set(Sprite::POSX, 0.0);
+					ws->set(Sprite::POSY, 0.60);
+					ws->set(Sprite::SCALEG, 0.6);
+					ws->set(Sprite::SCALEY, 0.22);
+					ws->set(Sprite::COLLIDE, true);
+					ws->set(Sprite::SHOWBOX, /*true*/false);
+					ws->set(Sprite::LAYER, 0);
+
+					actual_perc = 0.983;
+
+					ws = Sprite::getOrCreate("BAR_02", true);
+					ws->add("BAR_OFF");
+					ws->add("BAR_ON");
+					ws->set(Sprite::POSX, 0.0);
+					ws->set(Sprite::POSY, 0.8);
+					ws->set(Sprite::SCALEG, 0.6);
+					ws->set(Sprite::SCALEY, 0.22);
+					ws->set(Sprite::COLLIDE, true);
+					ws->set(Sprite::SHOWBOX, /*true*/false);
+					ws->set(Sprite::LAYER, 0);
+
+					actual_perc = 0.984;
+
+					ws = Sprite::getOrCreate("PAUSE", true);
+					ws->add("PAUSE", 29);
+					ws->set(Sprite::ANIMATIONTIME, 24.0);
+					ws->set(Sprite::POSX, 0.0);
+					ws->set(Sprite::POSY, -0.34);
+					ws->set(Sprite::SCALEG, 0.55);
+					ws->set(Sprite::LAYER, Defaults::default_pauseonly_layer);
+
+					actual_perc = 0.989;
+
+					ws = Sprite::getOrCreate("INTRO", true);
+					ws->add("LOGO", 115);
+					ws->set(Sprite::ANIMATIONTIME, 0.0);
+					ws->set(Sprite::SCALEX, 1.6);
+					ws->set(Sprite::SCALEY, 0.7);
+					ws->set(Sprite::SCALEG, 0.6);
+					ws->set(Sprite::LAYER, -1);
+					ws->set(Sprite::LOOPING_IMAGES, false);
+					ws->set(Sprite::USE_TINTED_DRAWING, true);
+
+					actual_perc = 0.994;
+
+					ws = Sprite::getOrCreate("MOUSE", true);
+					ws->add("MOUSE");
+					ws->set(Sprite::LAYER, 100);
+					ws->set(Sprite::SCALEX, 0.60);
+					ws->set(Sprite::SCALEG, 0.07);
+					ws->set(Sprite::FOLLOWMOUSE, true);
+					ws->set(Sprite::COLLIDE, true);
+
+					actual_perc = 0.995;
+
+					/* CREATING A TEXT...? */
+
+					wt = Text::getOrCreate("BAR_00_TEXT", true);
+					wt->setMainDisplay(&data->disp);
+					wt->set(Text::SETSTRING, "< TEST 1 >");
+					wt->set(Text::MODE, Text::ALIGN_CENTER);
+					wt->set(Text::LAYER, 99);
+					wt->set(Text::SETFOLLOW, "BAR_00");
+					wt->set(Text::UPDATETIME, 0.02);
+					wt->set(Text::SCALEG, 1.35);
+					wt->set(Text::POSY, -0.053);
+					wt->set(Text::POSX, 0.002);
+
+					actual_perc = 0.9957;
+
+					wt = Text::getOrCreate("BAR_01_TEXT", true);
+					wt->set(Text::SETSTRING, "< TEST 2 >");
+					wt->set(Text::MODE, Text::ALIGN_CENTER);
+					wt->set(Text::LAYER, 99);
+					wt->set(Text::SETFOLLOW, "BAR_01");
+					wt->set(Text::UPDATETIME, 0.02);
+					wt->set(Text::SCALEG, 1.35);
+					wt->set(Text::POSY, -0.053);
+					wt->set(Text::POSX, 0.002);
+
+					actual_perc = 0.9963;
+
+					wt = Text::getOrCreate("BAR_02_TEXT", true);
+					wt->set(Text::SETSTRING, "< EXIT >");
+					wt->set(Text::MODE, Text::ALIGN_CENTER);
+					wt->set(Text::LAYER, 99);
+					wt->set(Text::SETFOLLOW, "BAR_02");
+					wt->set(Text::UPDATETIME, 1.0);
+					wt->set(Text::SCALEG, 1.35);
+					wt->set(Text::POSY, -0.053);
+					wt->set(Text::POSX, 0.002);
+
+					actual_perc = 0.9970;
+
+					wt = Text::getOrCreate("FOLLOW_0", true);
+					wt->set(Text::SETSTRING, "0 [%pos_x% %pos_y%] at XY %sprite_speed_x% : %sprite_speed_y%");
+					wt->set(Text::MODE, Text::ALIGN_CENTER);
+					wt->set(Text::LAYER, 2);
+					wt->set(Text::SETFOLLOW, "DEFAULT");
+
+					actual_perc = 0.9977;
+
+					wt = Text::getOrCreate("FOLLOW_1", true);
+					wt->set(Text::SETSTRING, "1 [%pos_x% %pos_y%] at XY %sprite_speed_x% : %sprite_speed_y%");
+					wt->set(Text::MODE, Text::ALIGN_CENTER);
+					wt->set(Text::LAYER, 2);
+					wt->set(Text::SETFOLLOW, "DEFAULT2");
+
+					actual_perc = 0.9983;
+
+					wt = Text::getOrCreate("FOLLOW_2", true);
+					wt->set(Text::SETSTRING, "2 [%pos_x% %pos_y%] at XY %sprite_speed_x% : %sprite_speed_y%");
+					wt->set(Text::MODE, Text::ALIGN_CENTER);
+					wt->set(Text::LAYER, 2);
+					wt->set(Text::SETFOLLOW, "DEFAULT3");
+
+					actual_perc = 0.9989;
+
+					bool temp_osd_on;
+					conf.get(Config::WAS_OSD_ON, temp_osd_on, true);
+
+					wt = Text::getOrCreate("OSD_0", true);
+					wt->set(Text::SETSTRING, "%fps%/%tps% | CAM: %cam_x% : %cam_y% @ %cam_zoom% | %curr_string% | %mouse_x%x%mouse_y%");
+					wt->set(Text::POSX, -1.0);
+					wt->set(Text::POSY, -1.0);
+					wt->set(Text::SCALEG, 0.8);
+					wt->set(Text::MODE, Text::ALIGN_LEFT);
+					wt->set(Text::LAYER, Defaults::default_font_foreground_layer);
+					wt->set(Text::UPDATETIME, 0.20);
+					wt->set(Text::AFFECTED_BY_CAM, false);
+					wt->set(Text::SHOW, temp_osd_on);
+
+					actual_perc = 0.9995;
+
+					wt = Text::getOrCreate("OSD_1", true);
+					wt->set(Text::SETSTRING,
+						"{COL=[%tps_col%/" + std::to_string((int)(1.0 / Defaults::collision_timer)) +
+						"];FUNC=[%tps_funcs%/" + std::to_string((int)(1.0 / Defaults::functions_timer)) +
+						"];SEC=[%tps_second%/" + std::to_string((int)(1.0 / Defaults::calcLoops_timer)) +
+						"];POSUPD=[%tps_posupd%/" + std::to_string((int)(1.0 / Defaults::updatepos_timer)) + "]}");
+					wt->set(Text::POSX, -1.0);
+					wt->set(Text::POSY, -0.97);
+					wt->set(Text::SCALEG, 0.7);
+					wt->set(Text::MODE, Text::ALIGN_LEFT);
+					wt->set(Text::LAYER, Defaults::default_font_foreground_layer);
+					wt->set(Text::UPDATETIME, 0.50);
+					wt->set(Text::AFFECTED_BY_CAM, false);
+					wt->set(Text::SHOW, temp_osd_on);
+
+					actual_perc = 0.9997;
+
+					wt = Text::getOrCreate("OSD_2", true);
+					wt->set(Text::SETSTRING,
+						"{IMG=%num_images%;SPR=%num_sprites%;TXT=%num_texts%;TCK=%num_tracks%;E=%num_entities%}");
+					wt->set(Text::POSX, -1.0);
+					wt->set(Text::POSY, -0.95);
+					wt->set(Text::SCALEG, 0.7);
+					wt->set(Text::MODE, Text::ALIGN_LEFT);
+					wt->set(Text::LAYER, Defaults::default_font_foreground_layer);
+					wt->set(Text::UPDATETIME, 1.0);
+					wt->set(Text::AFFECTED_BY_CAM, false);
+					wt->set(Text::SHOW, temp_osd_on);
+
+					actual_perc = 1.0;
 				}
-
-				// big chunks
-
-				std::thread thr1(Image::multipleLoad, "PAUSE", "pause/pause_", 29, 2, ".png", &o, true);
-				while (o != 1.0 && data->disp.isOpen()) {
-					actual_perc = 0.95 + o * 0.005;
+				catch (const Safer::safe_string& s)
+				{
+					Tools::throw_at_screen(s);
 				}
-
-				o = 0.0;
-				thr1.join();
-
-				std::thread thr2(Image::multipleLoad, "LOGO", "logo/frame", 115, 2, ".png", &o, true);
-				while (o != 1.0 && data->disp.isOpen()) {
-					actual_perc = 0.955 + o * 0.005;
+				catch (const std::string& s)
+				{
+					Tools::throw_at_screen(s);
 				}
-
-				thr2.join();
-				actual_perc = 0.96;
-
-				// smaller chunks
-
-				wi = Image::getOrCreate("MOUSE", true);
-				wi->set(Image::PATH, "mouse.png");
-				wi->set(Image::LOAD_LATER, true);
-
-				actual_perc = 0.961;
-
-				wi = Image::getOrCreate("BLAST_LOGO", true);
-				wi->set(Image::PATH, "the_storm.png");
-				wi->set(Image::LOAD_LATER, true);
-
-				actual_perc = 0.962;
-
-				wi = Image::getOrCreate("BAR_ON", true);
-				wi->set(Image::PATH, "bar_single_one_on.png");
-				wi->set(Image::LOAD_LATER, true);
-
-				actual_perc = 0.963;
-
-				wi = Image::getOrCreate("BAR_OFF", true);
-				wi->set(Image::PATH, "bar_single_one.png");
-				wi->set(Image::LOAD_LATER, true);
-
-				actual_perc = 0.964;
-
-				wi = Image::getOrCreate("BG_INTRO", true);
-				wi->set(Image::PATH, "background_gameplay_start.png");
-				wi->set(Image::LOAD_LATER, true);
-
-				actual_perc = 0.965;
-
-				std::thread thr4(Image::multipleLoad, Defaults::map_default_start, "anim/bloco", 10, Defaults::map_default_len_name_int, ".png", &o, false);
-				while (o != 1.0 && data->disp.isOpen()) {
-					actual_perc = 0.965 + o * 0.005;
+				catch (const char* s)
+				{
+					Tools::throw_at_screen(s);
 				}
-
-				thr4.join();
-
-				actual_perc = 0.97;
-
-				/* LOADING MUSICS...? */
-
-				wm = Sound::getOrCreate("MUSIC_0", true);
-				wm->set(Sound::PATH, "musics/music_01.ogg");
-				wm->load();
-				wm->set(Sound::PLAYING, false);
-				wm->set(Sound::PLAYMODE, Sound::LOOP);
-
-				actual_perc = 0.972;
-
-				wm = Sound::getOrCreate("MUSIC_1", true);
-				wm->set(Sound::PATH, "musics/music_02.ogg");
-				wm->load();
-				wm->set(Sound::PLAYING, false);
-				wm->set(Sound::PLAYMODE, Sound::LOOP);
-
-				actual_perc = 0.974;
-
-				wm = Sound::getOrCreate("MUSIC_2", true);
-				wm->set(Sound::PATH, "musics/music_03.ogg");
-				wm->load();
-				wm->set(Sound::PLAYING, false);
-				wm->set(Sound::PLAYMODE, Sound::LOOP);
-
-				actual_perc = 0.976;
-
-				wm = Sound::getOrCreate("JUMP_FX", true);
-				wm->set(Sound::PATH, "musics/jump_01.wav");
-				wm->load();
-				wm->set(Sound::PLAYING, false);
-				wm->set(Sound::PLAYMODE, Sound::ONCE);
-
-				actual_perc = 0.978;
-
-				wm = Sound::getOrCreate("WALK_FX", true);
-				wm->set(Sound::PATH, "musics/walk_01.wav");
-				wm->load();
-				wm->set(Sound::PLAYING, false);
-				wm->set(Sound::PLAYMODE, Sound::ONCE);
-
-				actual_perc = 0.98;
-
-				/* CREATING SPRITES...? */
-
-				ws = Sprite::getOrCreate("BLAST_LOGO", true);
-				ws->add("BLAST_LOGO");
-				ws->set(Sprite::POSX, 0.0);
-				ws->set(Sprite::POSY, -0.45);
-				ws->set(Sprite::SCALEG, 1.0);
-				ws->set(Sprite::SCALEY, 0.6);
-				ws->set(Sprite::LAYER, 1);
-
-				actual_perc = 0.981;
-
-				ws = Sprite::getOrCreate("BAR_00", true);
-				ws->add("BAR_OFF");
-				ws->add("BAR_ON");
-				ws->set(Sprite::POSX, 0.0);
-				ws->set(Sprite::POSY, 0.4);
-				ws->set(Sprite::SCALEG, 0.6);
-				ws->set(Sprite::SCALEY, 0.22);
-				ws->set(Sprite::COLLIDE, true);
-				ws->set(Sprite::SHOWBOX, /*true*/false);
-				ws->set(Sprite::LAYER, 0);
-
-				actual_perc = 0.982;
-
-				ws = Sprite::getOrCreate("BAR_01", true);
-				ws->add("BAR_OFF");
-				ws->add("BAR_ON");
-				ws->set(Sprite::POSX, 0.0);
-				ws->set(Sprite::POSY, 0.60);
-				ws->set(Sprite::SCALEG, 0.6);
-				ws->set(Sprite::SCALEY, 0.22);
-				ws->set(Sprite::COLLIDE, true);
-				ws->set(Sprite::SHOWBOX, /*true*/false);
-				ws->set(Sprite::LAYER, 0);
-
-				actual_perc = 0.983;
-
-				ws = Sprite::getOrCreate("BAR_02", true);
-				ws->add("BAR_OFF");
-				ws->add("BAR_ON");
-				ws->set(Sprite::POSX, 0.0);
-				ws->set(Sprite::POSY, 0.8);
-				ws->set(Sprite::SCALEG, 0.6);
-				ws->set(Sprite::SCALEY, 0.22);
-				ws->set(Sprite::COLLIDE, true);
-				ws->set(Sprite::SHOWBOX, /*true*/false);
-				ws->set(Sprite::LAYER, 0);
-
-				actual_perc = 0.984;
-
-				ws = Sprite::getOrCreate("PAUSE", true);
-				ws->add("PAUSE", 29);
-				ws->set(Sprite::ANIMATIONTIME, 24.0);
-				ws->set(Sprite::POSX, 0.0);
-				ws->set(Sprite::POSY, -0.34);
-				ws->set(Sprite::SCALEG, 0.55);
-				ws->set(Sprite::LAYER, Defaults::default_pauseonly_layer);
-
-				actual_perc = 0.989;
-
-				ws = Sprite::getOrCreate("INTRO", true);
-				ws->add("LOGO", 115);
-				ws->set(Sprite::ANIMATIONTIME, 0.0);
-				ws->set(Sprite::SCALEX, 1.6);
-				ws->set(Sprite::SCALEY, 0.7);
-				ws->set(Sprite::SCALEG, 0.6);
-				ws->set(Sprite::LAYER, -1);
-				ws->set(Sprite::LOOPING_IMAGES, false);
-				ws->set(Sprite::USE_TINTED_DRAWING, true);
-
-				actual_perc = 0.994;
-
-				ws = Sprite::getOrCreate("MOUSE", true);
-				ws->add("MOUSE");
-				ws->set(Sprite::LAYER, 100);
-				ws->set(Sprite::SCALEX, 0.60);
-				ws->set(Sprite::SCALEG, 0.07);
-				ws->set(Sprite::FOLLOWMOUSE, true);
-				ws->set(Sprite::COLLIDE, true);
-
-				actual_perc = 0.995;
-
-				/* CREATING A TEXT...? */
-
-				wt = Text::getOrCreate("BAR_00_TEXT", true);
-				wt->setMainDisplay(&data->disp);
-				wt->set(Text::SETSTRING, "< TEST 1 >");
-				wt->set(Text::MODE, Text::ALIGN_CENTER);
-				wt->set(Text::LAYER, 99);
-				wt->set(Text::SETFOLLOW, "BAR_00");
-				wt->set(Text::UPDATETIME, 0.02);
-				wt->set(Text::SCALEG, 1.35);
-				wt->set(Text::POSY, -0.053);
-				wt->set(Text::POSX, 0.002);
-
-				actual_perc = 0.9957;
-
-				wt = Text::getOrCreate("BAR_01_TEXT", true);
-				wt->set(Text::SETSTRING, "< TEST 2 >");
-				wt->set(Text::MODE, Text::ALIGN_CENTER);
-				wt->set(Text::LAYER, 99);
-				wt->set(Text::SETFOLLOW, "BAR_01");
-				wt->set(Text::UPDATETIME, 0.02);
-				wt->set(Text::SCALEG, 1.35);
-				wt->set(Text::POSY, -0.053);
-				wt->set(Text::POSX, 0.002);
-
-				actual_perc = 0.9963;
-
-				wt = Text::getOrCreate("BAR_02_TEXT", true);
-				wt->set(Text::SETSTRING, "< EXIT >");
-				wt->set(Text::MODE, Text::ALIGN_CENTER);
-				wt->set(Text::LAYER, 99);
-				wt->set(Text::SETFOLLOW, "BAR_02");
-				wt->set(Text::UPDATETIME, 1.0);
-				wt->set(Text::SCALEG, 1.35);
-				wt->set(Text::POSY, -0.053);
-				wt->set(Text::POSX, 0.002);
-
-				actual_perc = 0.9970;
-
-				wt = Text::getOrCreate("FOLLOW_0", true);
-				wt->set(Text::SETSTRING, "0 [%pos_x% %pos_y%] at XY %sprite_speed_x% : %sprite_speed_y%");
-				wt->set(Text::MODE, Text::ALIGN_CENTER);
-				wt->set(Text::LAYER, 2);
-				wt->set(Text::SETFOLLOW, "DEFAULT");
-
-				actual_perc = 0.9977;
-
-				wt = Text::getOrCreate("FOLLOW_1", true);
-				wt->set(Text::SETSTRING, "1 [%pos_x% %pos_y%] at XY %sprite_speed_x% : %sprite_speed_y%");
-				wt->set(Text::MODE, Text::ALIGN_CENTER);
-				wt->set(Text::LAYER, 2);
-				wt->set(Text::SETFOLLOW, "DEFAULT2");
-
-				actual_perc = 0.9983;
-
-				wt = Text::getOrCreate("FOLLOW_2", true);
-				wt->set(Text::SETSTRING, "2 [%pos_x% %pos_y%] at XY %sprite_speed_x% : %sprite_speed_y%");
-				wt->set(Text::MODE, Text::ALIGN_CENTER);
-				wt->set(Text::LAYER, 2);
-				wt->set(Text::SETFOLLOW, "DEFAULT3");
-
-				actual_perc = 0.9989;
-
-				wt = Text::getOrCreate("OSD_0", true);
-				wt->set(Text::SETSTRING, "%fps%/%tps% | CAM: %cam_x% : %cam_y% @ %cam_zoom% | %curr_string% | %mouse_x%x%mouse_y%");
-				wt->set(Text::POSX, -1.0);
-				wt->set(Text::POSY, -1.0);
-				wt->set(Text::SCALEG, 0.8);
-				wt->set(Text::MODE, Text::ALIGN_LEFT);
-				wt->set(Text::LAYER, Defaults::default_font_foreground_layer);
-				wt->set(Text::UPDATETIME, 0.20);
-				wt->set(Text::AFFECTED_BY_CAM, false);
-
-				actual_perc = 0.9995;
-
-				wt = Text::getOrCreate("OSD_1", true);
-				wt->set(Text::SETSTRING,
-					"{COL=[%tps_col%/" + std::to_string((int)(1.0 / Defaults::collision_timer)) +
-					"];FUNC=[%tps_funcs%/" + std::to_string((int)(1.0 / Defaults::functions_timer)) +
-					"];SEC=[%tps_second%/" + std::to_string((int)(1.0 / Defaults::calcLoops_timer)) +
-					"];POSUPD=[%tps_posupd%/" + std::to_string((int)(1.0 / Defaults::updatepos_timer)) + "]}");
-				wt->set(Text::POSX, -1.0);
-				wt->set(Text::POSY, -0.97);
-				wt->set(Text::SCALEG, 0.7);
-				wt->set(Text::MODE, Text::ALIGN_LEFT);
-				wt->set(Text::LAYER, Defaults::default_font_foreground_layer);
-				wt->set(Text::UPDATETIME, 0.50);
-				wt->set(Text::AFFECTED_BY_CAM, false);
-
-				actual_perc = 0.9997;
-
-				wt = Text::getOrCreate("OSD_2", true);
-				wt->set(Text::SETSTRING,
-					"{IMG=%num_images%;SPR=%num_sprites%;TXT=%num_texts%;TCK=%num_tracks%;E=%num_entities%}");
-				wt->set(Text::POSX, -1.0);
-				wt->set(Text::POSY, -0.95);
-				wt->set(Text::SCALEG, 0.7);
-				wt->set(Text::MODE, Text::ALIGN_LEFT);
-				wt->set(Text::LAYER, Defaults::default_font_foreground_layer);
-				wt->set(Text::UPDATETIME, 1.0);
-				wt->set(Text::AFFECTED_BY_CAM, false);
-
-				actual_perc = 1.0;
+				catch (const int i)
+				{
+					Tools::throw_at_screen(std::to_string(i));
+				}
+				catch (...)
+				{
+					Tools::throw_at_screen("UNKNOWN at __internal_thr_once_load");
+				}
 			}
 
 			const bool main::__internal_task_level_common()
@@ -1855,6 +1981,9 @@ namespace LSW {
 						Text::getOrCreate("OSD_0")->set(Text::SHOW, !allas);
 						Text::getOrCreate("OSD_1")->set(Text::SHOW, !allas);
 						Text::getOrCreate("OSD_2")->set(Text::SHOW, !allas);
+
+						Config::config conf;
+						conf.set(Config::WAS_OSD_ON, !allas);
 					}
 				}
 			}
@@ -1862,6 +1991,7 @@ namespace LSW {
 			const initialization interpret_console_entry(const int argc, char *argv[])
 			{
 				initialization init;
+				Config::config conf;
 
 				if (argc > 1)
 				{
@@ -1873,22 +2003,26 @@ namespace LSW {
 							if (wrk == "-w")
 							{
 								init.res[0] = atoi(argv[++u]);
+								conf.set(Config::SCREEN_X, init.res[0]); // forced
 								continue;
 							}
 							if (wrk == "-h")
 							{
 								init.res[1] = atoi(argv[++u]);
+								conf.set(Config::SCREEN_Y, init.res[1]); // forced
 								continue;
 							}
 						}
 						if (wrk == "-fullscreen")
 						{
-							init.mode = Defaults::default_display_settings;
+							//init.mode = Defaults::default_display_settings;
+							conf.set(Config::WAS_FULLSCREEN, true); // forced
 							continue;
 						}
 						if (wrk == "-windowed")
 						{
-							init.mode = Defaults::default_windowed_display_settings;
+							//init.mode = Defaults::default_windowed_display_settings;
+							conf.set(Config::WAS_FULLSCREEN, false); // forced
 							continue;
 						}
 						if (wrk == "-skipdownload")
@@ -1969,6 +2103,18 @@ namespace LSW {
 					return "YELLOW";
 				}
 				return "UNDEF";
+			}
+
+			colors interpret_from_color_name(const Safer::safe_string c)
+			{
+				if (c.g() == "WHITE") return WHITE;
+				if (c.g() == "BLACK") return BLACK;
+				if (c.g() == "RED") return RED;
+				if (c.g() == "BLUE") return BLUE;
+				if (c.g() == "CYAN") return CYAN;
+				if (c.g() == "MAGENTA") return MAGENTA;
+				if (c.g() == "YELLOW") return YELLOW;
+				return GREEN;
 			}
 
 			ALLEGRO_COLOR interpret_to_color(const colors c)

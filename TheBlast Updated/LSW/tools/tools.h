@@ -177,6 +177,8 @@ d_entity_database ent_data(LSW::v2::Entities::_find, LSW::v2::Entities::_draw); 
 		namespace Tools{
 
 			const std::string paths_known[] = { "%appdata%", "%win_fonts%", "%win_photos_path%" }; //CSIDL_APPDATA, CSIDL_FONTS, CSIDL_MYPICTURES
+			
+			void throw_at_screen(const Safer::safe_string, const bool = true); // on tools.cpp
 
 			template <template<class, class, class...> class C, typename K, typename V, typename... Args>
 			V GetWithDef(const C<K, V, Args...>& m, K const& key, const V & defval)

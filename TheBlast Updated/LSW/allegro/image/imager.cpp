@@ -28,7 +28,7 @@ namespace LSW {
 			image_low::~image_low()
 			{
 				unload();
-				logg << Log::START << "[IMGL:CONST][INFO] Registered despawn of image_low ID#" + std::to_string((size_t)this) << ";ID=" << id << Log::ENDL;
+				logg << Log::START << "[IMGL:DESTR][INFO] Registered despawn of image_low ID#" + std::to_string((size_t)this) << ";ID=" << id << Log::ENDL;
 			}
 
 

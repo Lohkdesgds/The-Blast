@@ -673,7 +673,15 @@ namespace LSW {
 						else if (ev.type == ALLEGRO_EVENT_DISPLAY_RESIZE)
 						{
 							e->_setKey(CUSTOMEVENT_DISPLAY_RESIZED, true);
-							al_acknowledge_resize(e->_getTargD());
+							ALLEGRO_DISPLAY* d = e->_getTargD();
+							if (d) {
+								al_acknowledge_resize(d);
+
+								Config::config conf;
+
+								conf.set(Config::SCREEN_X, al_get_display_width(d));
+								conf.set(Config::SCREEN_Y, al_get_display_height(d));
+							}
 						}
 						else if (ev.type == ALLEGRO_EVENT_MOUSE_AXES)
 						{

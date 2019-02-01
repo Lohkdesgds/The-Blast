@@ -67,6 +67,9 @@
     <Filter Include="main\sub_main">
       <UniqueIdentifier>{f501c6c9-1ca9-495f-be38-efd19521a856}</UniqueIdentifier>
     </Filter>
+    <Filter Include="config">
+      <UniqueIdentifier>{4e5611b9-ebb6-4f4d-899f-2ab7333bc475}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LSW\safer\safer.h">
@@ -129,6 +132,10 @@
     <ClInclude Include="LSW\main\sub_main\sub_main.h">
       <Filter>main\sub_main</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="LSW\config\config.h">
+      <Filter>config</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LSW\download_manager\downloader_v2.cpp">
@@ -176,11 +183,20 @@
     <ClCompile Include="LSW\main\sub_main\sub_main.cpp">
       <Filter>main\sub_main</Filter>
     </ClCompile>
+    <ClCompile Include="LSW\config\config.cpp">
+      <Filter>config</Filter>
+    </ClCompile>
+    <ClCompile Include="LSW\tools\tools.cpp">
+      <Filter>tools</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="to_do_list.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="TheBlast Updated.rc" />
   </ItemGroup>
 </Project>

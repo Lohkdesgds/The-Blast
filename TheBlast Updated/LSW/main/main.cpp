@@ -27,6 +27,7 @@ int main(int argc, char* argv[])
 	logg << Log::NEEDED_START << "[MAIN:_____][INFO] Initializing..." << Log::NEEDED_ENDL;
 
 	Main::main cmain;
+	Config::config conf; // has to be after cmain (allegro initialization)
 
 	try {
 		Main::initialization init = Main::interpret_console_entry(argc, argv);
@@ -50,50 +51,25 @@ int main(int argc, char* argv[])
 	}
 	catch (const Safer::safe_string& s)
 	{
-		logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:_____][ERROR] Caught throw at main: " << s << Log::NEEDED_ENDL;
-		al_show_native_message_box(nullptr, "ERROR", "Error: ",
-			s.g().c_str(),
-			NULL,
-			ALLEGRO_MESSAGEBOX_ERROR
-		);
+		Tools::throw_at_screen(s, false);
 	}
 	catch (const std::string& s)
 	{
-		logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:_____][ERROR] Caught throw at main: " << s << Log::NEEDED_ENDL;
-		al_show_native_message_box(nullptr, "ERROR", "Error: ",
-			s.c_str(),
-			NULL,
-			ALLEGRO_MESSAGEBOX_ERROR
-		);
+		Tools::throw_at_screen(s, false);
 	}
 	catch (const char* s)
 	{
-		logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:_____][ERROR] Caught throw at main: " << s << Log::NEEDED_ENDL;
-		al_show_native_message_box(nullptr, "ERROR", "Error: ",
-			s,
-			NULL,
-			ALLEGRO_MESSAGEBOX_ERROR
-		);
+		Tools::throw_at_screen(s, false);
 	}
 	catch (const int i)
 	{
 		if (i != 0) {
-			logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:_____][ERROR] Caught throw at main: Error code #" << i << Log::NEEDED_ENDL;
-			al_show_native_message_box(nullptr, "ERROR", "Error: ",
-				("Returned: " + std::to_string(i)).c_str(),
-				NULL,
-				ALLEGRO_MESSAGEBOX_ERROR
-			);
+			Tools::throw_at_screen(std::to_string(i), false);
 		}
 	}
 	catch (...)
 	{
-		logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:_____][ERROR] Caught throw at main: Unknown error." << Log::NEEDED_ENDL;
-		al_show_native_message_box(nullptr, "ERROR", "Error: ",
-			"UNKNOWN?",
-			NULL,
-			ALLEGRO_MESSAGEBOX_ERROR
-		);
+		Tools::throw_at_screen("UNKNOWN at MAIN", false);
 	}
 	logg.flush();
 	try{
