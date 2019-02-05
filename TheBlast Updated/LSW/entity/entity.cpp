@@ -145,7 +145,7 @@ namespace LSW {
 				spr->set(Sprite::AFFECTED_BY_COLLISION, true);
 				spr->set(Sprite::ENTITY, (void*)this);
 				spr->set(Sprite::POSY, 10.0);
-				spr->set(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, true);
+				//spr->set(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, true);
 
 				txt = Text::getOrCreate(temp, true);
 				//txt->set(Text::SETSTRING, "[BOT] %entity_name% [%entity_health%]"); // TODO
@@ -175,7 +175,7 @@ namespace LSW {
 				spr->set(Sprite::AFFECTED_BY_COLLISION, true);
 				spr->set(Sprite::ENTITY, (void*)this);
 				spr->set(Sprite::POSY, 10.0);
-				spr->set(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, true);
+				//spr->set(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, true);
 
 				txt = Text::getOrCreate(temp, true);
 				//txt->set(Text::SETSTRING, "[BOT] %entity_name% [%entity_health%]"); // TODO
@@ -299,7 +299,7 @@ namespace LSW {
 				spr->set(Sprite::AFFECTED_BY_COLLISION, true);
 				spr->set(Sprite::ENTITY, (void*)this);
 				spr->set(Sprite::POSY, 10.0);
-				spr->set(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, true);
+				//spr->set(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, true);
 
 				txt = Text::getOrCreate(temp, true);
 				txt->set(Text::SETSTRING, "%entity_name% [HEALTH:%entity_health%]"); // TODO
@@ -329,7 +329,7 @@ namespace LSW {
 				spr->set(Sprite::AFFECTED_BY_COLLISION, true);
 				spr->set(Sprite::ENTITY, (void*)this);
 				spr->set(Sprite::POSY, 10.0);
-				spr->set(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, true);
+				//spr->set(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, true);
 
 				txt = Text::getOrCreate(temp, true);
 				txt->set(Text::SETSTRING, "%entity_name% [HEALTH:%entity_health%]"); // TODO

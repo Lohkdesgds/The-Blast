@@ -38,11 +38,11 @@ namespace LSW {
 
 					Safer::safe_vector<T*>& work();
 				};
-							   
 
-				template<class T, typename U> Safer::safe_vector<T*> manager<T,U>::data;
-				template<class T, typename U> size_t (* manager<T,U>::f) (const Safer::safe_string, Safer::safe_vector<T*> &, bool &);
-				template<class T, typename U> void (* manager<T,U>::drw) ();
+
+				template<class T, typename U> Safer::safe_vector<T*> manager<T, U>::data;
+				template<class T, typename U> size_t(*manager<T, U>::f) (const Safer::safe_string, Safer::safe_vector<T*> &, bool &);
+				template<class T, typename U> void(*manager<T, U>::drw) ();
 				template<class T, typename U> U manager<T, U>::arg;
 
 
@@ -91,7 +91,7 @@ namespace LSW {
 						remove(pos);
 					}
 				}
-				
+
 
 				template <class T, typename U>
 				inline void manager<T, U>::remove(const size_t pos)
@@ -173,11 +173,11 @@ d_entity_database ent_data(LSW::v2::Entities::_find, LSW::v2::Entities::_draw); 
 
 			}
 		}
-		
-		namespace Tools{
+
+		namespace Tools {
 
 			const std::string paths_known[] = { "%appdata%", "%win_fonts%", "%win_photos_path%" }; //CSIDL_APPDATA, CSIDL_FONTS, CSIDL_MYPICTURES
-			
+
 			void throw_at_screen(const Safer::safe_string, const bool = true); // on tools.cpp
 
 			template <template<class, class, class...> class C, typename K, typename V, typename... Args>
@@ -246,7 +246,7 @@ d_entity_database ent_data(LSW::v2::Entities::_find, LSW::v2::Entities::_draw); 
 						if (!rfound) {
 							if (p > 0)
 							{
-								change = local_t.substr(0, p-1);
+								change = local_t.substr(0, p - 1);
 							}
 							change += "\\";
 							change += local_t.substr(p);
@@ -335,277 +335,43 @@ d_entity_database ent_data(LSW::v2::Entities::_find, LSW::v2::Entities::_draw); 
 				CloseHandle(hFile);
 				return size.QuadPart;
 			}
-			
-			/*inline const bool saveFromCloud(const Safer::safe_string url, const Safer::safe_string wher)
+
+			template<typename Func, typename... Args>
+			inline bool try_call(Func func, Args&&... args)
 			{
-				downloader down;
-				Safer::safe_string wher_actual = Defaults::default_data_path.g() + wher.g();
-				interpret_path(wher_actual);
-				createPath(wher_actual);
-				FILE* fp = nullptr;
-				if (fopen_s(&fp, wher_actual.g().c_str(), "wb") == 0)
+				return try_call(nullptr, func, args);
+			}
+
+			template<typename Func, typename... Args>
+			inline bool try_call(Safer::safe_string* err, Func func, Args&&... args)//	-> typename std::result_of<Func(Args...)>::type
+			{
+				try {
+					func(std::forward<Args>(args)...);
+					return true;
+				}
+				catch (const Safer::safe_string& s)
 				{
-					std::string buf;
-					if (down.downloadAsString(url.g().c_str(), buf))
-					{
-						fwrite(buf.c_str(), sizeof(char), buf.length(), fp);
-						fclose(fp);
-						return true;
-					}
-					fclose(fp);
+					if (err) *err = s;
+				}
+				catch (const std::string& s)
+				{
+					if (err) *err = s;
+				}
+				catch (const char* s)
+				{
+					if (err) *err = s;
+				}
+				catch (const int i)
+				{
+					if (err) *err = std::to_string(i);
+				}
+				catch (...)
+				{
+					if (err) *err = "unknown";
 				}
 				return false;
-			}*/
+			}
+			
 		}
-		/*namespace Tools_experimental {
-
-			const int  amount_of_hashtg = 4;
-
-			struct extraction {
-				std::string radd;
-				unsigned long sizz = 0;
-			};
-
-			inline void create_directory(const std::string guy)
-			{
-				std::string folders;
-				unsigned working = 2;
-				unsigned poss = guy.rfind("/");
-				if (poss == std::string::npos) return;
-
-				folders = guy.substr(0, poss);
-
-				while (working < folders.length())
-				{
-					std::string next_folder;
-					poss = folders.find("/", working + 1);
-					next_folder = folders.substr(0, poss);
-					working = poss;
-
-					//std::cout << next_folder.c_str() << std::endl;
-					CreateDirectory(next_folder.c_str(), NULL);
-				}
-			}
-			inline int extractEPIC(const char* opath, const long epicc)
-			{
-				FILE *filee = nullptr;
-				FILE *outfp = nullptr;
-
-				if (fopen_s(&filee, opath, "rb")) {
-					return false;
-				}
-
-				char *ch = new char;
-				char reading[amount_of_hashtg];
-				char temporary[LIMIT_CHARL];
-
-				unsigned amount_of_files,
-					actual_file = 1;
-
-				std::list<extraction> megan;
-				extraction onee;
-
-				onee.sizz = 0;
-				onee.radd = "";
-
-				for (int a = 0; a < amount_of_hashtg; a++)
-					reading[a] = '-';
-				reading[amount_of_hashtg - 1] = '\0';
-				*ch = '-';
-
-				fseek(filee, epicc + 1, SEEK_SET);
-
-				while (actual_file == 1 && *ch != EOF)
-				{
-					actual_file = fread(ch, 1, 1, filee);
-
-					if (*ch == '#') {
-						fseek(filee, -1, SEEK_CUR);
-
-						if (fread(reading, 1, (amount_of_hashtg - 1), filee) == amount_of_hashtg - 1)
-						{
-							if (strcmp(reading, "#TT") == 0) // total
-							{
-								temporary[0] = '\0';
-								for (int b = 0; b < LIMIT_CHARL && *ch != '\n'; b++) {
-									if (fread(ch, 1, 1, filee) == 1) {
-										temporary[b] = *ch;
-										temporary[b + 1] = '\0';
-									}
-									else {
-										return false;
-									}
-								}
-								amount_of_files = atoi(temporary);
-							}
-							if (strcmp(reading, "#RD") == 0) // road
-							{
-								for (int b = 0; b < LIMIT_CHARL && *ch != '\n'; b++) {
-									if (fread(ch, 1, 1, filee) == 1) {
-										temporary[b] = *ch;
-										temporary[b + 1] = '\0';
-									}
-									else {
-										return false;
-									}
-								}
-
-								for (unsigned c = 0; c < std::string(temporary).length(); c++)
-								{
-									if (temporary[c] == '\\') temporary[c] = '/';
-									if (temporary[c] == '\n') temporary[c] = '\0';
-								}
-								onee.radd = temporary;
-							}
-							if (strcmp(reading, "#SZ") == 0) // size
-							{
-								for (int b = 0; b < LIMIT_CHARL && *ch != '\n'; b++) {
-									if (fread(ch, 1, 1, filee) == 1) {
-										temporary[b] = *ch;
-										temporary[b + 1] = '\0';
-									}
-									else {
-										return false;
-									}
-								}
-								onee.sizz = atoi(temporary);
-							}
-							if (strcmp(reading, "#ND") == 0) // send
-							{
-								fseek(filee, 1, SEEK_CUR);
-
-								megan.push_back(onee);
-
-								onee.sizz = 0;
-								onee.radd = "";
-							}
-						}
-						else {
-							return false;
-						}
-					}
-					else {
-						if (megan.size() != amount_of_files)
-						{
-							return false;
-						}
-						actual_file = 0;
-					}
-				}
-
-				POINT p;
-				if (!GetCursorPos(&p))
-				{
-					p.x = 0;
-					p.y = 0;
-				}
-
-				fseek(filee, -1, SEEK_CUR);
-
-				for (auto var : megan)
-				{
-					actual_file++;
-
-					create_directory(var.radd);
-
-					while (fopen_s(&outfp, var.radd.c_str(), "wb+"));
-
-					char *logoeu = new char[var.sizz];
-					if (logoeu) {
-						long aa = fread(logoeu, 1, var.sizz, filee);
-						fwrite(logoeu, 1, aa, outfp);
-
-						if ((unsigned long)aa != var.sizz) {
-							return false;
-						}
-					}
-					delete[] logoeu;
-
-					fclose(outfp);
-				}
-
-				fclose(filee);
-
-				return 0;
-			}
-			inline int writee(const std::string from_, const int forced, FILE* file_to)
-			{
-				setlocale(LC_ALL, "");
-
-				FILE *file_from;
-				std::string innn;
-				char *work = new char[1000];
-				int test = 1000;
-
-				file_from = NULL;
-
-
-				if (fopen_s(&file_from, from_.c_str(), "rb") != 0 || file_to == NULL)
-				{
-					return -1;
-				}
-
-				//test = fread(work,1,1000,file_from);
-				char content[512];
-				char *poinn;
-				std::string tuhts = "";
-
-				if (forced == 1)
-				{
-					snprintf(content, 512, "%s%s%s%s\n", "\n####", "####", "####", from_.c_str());
-					tuhts = content;
-					for (unsigned u = 0; u < tuhts.length(); u++)
-					{
-						poinn = &tuhts[u];
-						fwrite(poinn, 1, 1, file_to);
-					}
-				}
-
-				while (!feof(file_from) && test == 1000) {
-					//std::cout << *work;
-					test = fread(work, 1, 1000, file_from);
-					fwrite(work, 1, test, file_to);
-				}
-
-				if (forced == 1)
-				{
-					snprintf(content, 512, "%s%s%s", "\n****", "****", "****\n");
-					tuhts = content;
-					for (unsigned u = 0; u < tuhts.length(); u++)
-					{
-						poinn = &tuhts[u];
-						fwrite(poinn, 1, 1, file_to);
-					}
-				}
-				if (forced == 0) {
-					snprintf(content, 512, "%s%s%s", "\nYOUWILLFIND", "FILESHERE", "FORSURE!\n");
-					tuhts = content;
-					for (unsigned u = 0; u < tuhts.length(); u++)
-					{
-						poinn = &tuhts[u];
-						fwrite(poinn, 1, 1, file_to);
-					}
-				}
-
-				delete[] work;
-				fclose(file_from);
-
-				return 0;
-			}
-			inline int writee(const std::string what_to_write, FILE* file_to)
-			{
-				setlocale(LC_ALL, "");
-
-				if (file_to == NULL)
-				{
-					return -1;
-				}
-
-				if (fwrite(what_to_write.c_str(), 1, what_to_write.length(), file_to) != what_to_write.length())
-					return -1;
-
-				return 0;
-			}
-		}*/
 	}
 }

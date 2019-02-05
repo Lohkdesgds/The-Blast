@@ -14,8 +14,8 @@ int main(int argc, char* argv[])
 		"Hey!",
 		"This is a pre-release version! (useful warn)",
 		"Keep in mind that pre-releases normally are incomplete.\n\n"
-		"Some features are not available in this version:\n"
-		"- \"Configuration file (save configuration)\"\n\n"
+		"Some features are not stable in this version:\n"
+		"- \"Map loading / collision\"\n\n"
 		"If you want to continue (people does that), please click YES.",
 		NULL,
 		ALLEGRO_MESSAGEBOX_YES_NO

@@ -68,12 +68,12 @@ namespace LSW {
 			{
 				switch (e) {
 				case HAS_LOADED:
-					//is_loaded = v; // not meant to be used that way
-					throw "at image_low::set [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Tried to set a value \"read-only\" like (HAS_LOADED).";
+					if (!Defaults::enable_all_possible_setget) throw "at image_low::set [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Tried to set a value \"read-only\" like (HAS_LOADED).";
+					is_loaded = v; // not meant to be used that way
 					break;
 				case HAS_RELOADED:
-					//has_reloaded = v;
-					throw "at image_low::set [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Tried to set a value \"read-only\" like (HAS_RELOADED)";
+					if (!Defaults::enable_all_possible_setget) throw "at image_low::set [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Tried to set a value \"read-only\" like (HAS_RELOADED)";
+					has_reloaded = v;
 					break;
 				case GLOBAL_SET_NO_OPTIMIZING_SETTING:
 					global_no_optimization = v;
@@ -110,8 +110,8 @@ namespace LSW {
 			{
 				switch (e) {
 				case BMP:
-					//bmp = v;
-					throw "at image_low::set [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Tried to set a value \"read-only\" like (BMP).";
+					if (!Defaults::enable_all_possible_setget) throw "at image_low::set [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Tried to set a value \"read-only\" like (BMP).";
+					bmp = v;
 					break;
 				}
 			}
@@ -458,7 +458,7 @@ namespace LSW {
 				d_images_database img_data;
 				Events::big_event bev;
 
-				bool hasChanged = bev.g().getKey(Events::CUSTOMEVENT_DISPLAY_TOGGLED) || bev.g().getKey(Events::CUSTOMEVENT_DISPLAY_RESIZED);
+				bool hasChanged = bev.g().getKey(Events::CUSTOMEVENT_BITMAPS_RELOAD);
 
 				img_data.work().lock();
 				for (auto& i : img_data.work().work())

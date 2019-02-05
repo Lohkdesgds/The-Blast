@@ -70,6 +70,7 @@ namespace LSW {
 				unsigned jump_times = 0;
 
 				const _sprite_collision_info _doesCollideWith(const _sprite_area, const _sprite_area);
+				const bool __quick_is_it_collision_possible(const _sprite_area, const _sprite_area);
 				//const _sprite_collision_info _doTheyIntersect(const _sprite_area, const _sprite_area); // TODO
 			public:
 				sprite();

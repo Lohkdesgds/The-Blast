@@ -8,13 +8,13 @@ namespace LSW {
 
 			enum conf_b{HAD_ERROR,WAS_OSD_ON,WAS_FULLSCREEN};
 			enum conf_f{LAST_VOLUME};
-			enum conf_i{SCREEN_X,SCREEN_Y};
+			enum conf_i{SCREEN_X,SCREEN_Y,KEY_FULLSCREEN,KEY_OSD};
 			enum conf_ll{_TIMES_LIT};
 			enum conf_s{LAST_VERSION,LAST_PLAYERNAME,LAST_COLOR};
 
 			const Safer::safe_string conf_b_str[] = { "had_error", "was_osd_on", "fullscreen" };
 			const Safer::safe_string conf_f_str[] = { "last_volume" };
-			const Safer::safe_string conf_i_str[] = { "screen_width","screen_height" };
+			const Safer::safe_string conf_i_str[] = { "screen_width","screen_height","key_fullscreen","key_osd" };
 			const Safer::safe_string conf_ll_str[] = { "times_open" };
 			const Safer::safe_string conf_s_str[] = { "last_version","playername","playercolor" };
 

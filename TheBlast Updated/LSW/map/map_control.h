@@ -57,8 +57,8 @@ namespace LSW {
 				bool was_player_rgb_instead;
 				ALLEGRO_COLOR last_player_color;
 				Safer::safe_string last_player_path, last_player_name;
-				double last_player_size = Defaults::user_default_size;
-				int last_player_layer = Defaults::user_default_layer;
+				double last_player_size = Defaults::Entity::size;
+				int last_player_layer = Defaults::Entity::common_layer;
 
 				Safer::safe_string last_badboys_path;
 				unsigned last_badboy_count = 4;
@@ -107,8 +107,8 @@ namespace LSW {
 				void corruptWorldTick();
 
 				void setPlayerName(const Safer::safe_string);
-				void launch_player(const ALLEGRO_COLOR, const double = Defaults::user_default_size, const int = Defaults::user_default_layer); // path
-				void launch_player(const Safer::safe_string, const double = Defaults::user_default_size, const int = Defaults::user_default_layer); // path
+				void launch_player(const ALLEGRO_COLOR, const double = Defaults::Entity::size, const int = Defaults::Entity::common_layer); // path
+				void launch_player(const Safer::safe_string, const double = Defaults::Entity::size, const int = Defaults::Entity::common_layer); // path
 				const bool launch_badboys(const Safer::safe_string, const unsigned, const int = Defaults::badboys_default_layer); // path, how many, layer
 
 				Entities::player& getPlayer();

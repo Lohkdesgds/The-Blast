@@ -343,7 +343,7 @@ namespace LSW {
 				}
 				return -1;
 			}
-			
+
 			const bool map::isthereanySEMSAIDA(int to_work[Defaults::map_size_default_x][Defaults::map_size_default_y], const int posx, const int posy)
 			{
 				bool isthere = false;
@@ -537,7 +537,7 @@ namespace LSW {
 					{
 						if (a >= 0 && a < Defaults::map_size_default_x && b >= 0 && b < Defaults::map_size_default_y)
 						{
-							
+
 							if (map_p[a][b] && !isBlockTransparent((blockstats)map_i[a][b])) {
 								map_p[a][b]->_resetCollision();
 								s._resetCollision();
@@ -687,7 +687,7 @@ namespace LSW {
 						if (ouu < SPACEID) ouu = SPACEID;
 						if (ouu > BLOCKID_C03) ouu = BLOCKID_C03;
 						Safer::safe_string id_path = interpretIntToBlockName((blockstats)ouu);
-							
+
 						each->replaceAllWith(id_path);
 
 						logg.debug("Generated bitmap at " + std::to_string(a) + ":" + std::to_string(b));
@@ -763,7 +763,7 @@ namespace LSW {
 					redrawall = true;
 				}
 
-				
+
 				ALLEGRO_BITMAP* targ = al_get_target_bitmap();
 				if (!targ) {
 					logg << Log::ERRDV << Log::START << "[MAP:_REDRW][WARN] Could not get target bitmap! Skipping map update for now..." << Log::ENDL;
@@ -872,7 +872,7 @@ namespace LSW {
 				d_images_database img_data;
 
 				Log::gfile logg;
-				
+
 				if (big_map)
 				{
 					spr_data.remove("__MAP_FRAME_FULL_S");
@@ -906,7 +906,7 @@ namespace LSW {
 			void map::reset_draw_thr()
 			{
 				/* ---------------| IMAGES & SPRITES |--------------- */
-				
+
 
 				/*lock();
 				d_entity_database ent_data;
@@ -939,7 +939,7 @@ namespace LSW {
 				}
 				//vec.unlock();
 				vec.clearSomehow();
-				
+
 				clone.lock();
 				for (auto& i : clone.work())
 				{
@@ -1130,13 +1130,13 @@ namespace LSW {
 			{
 				Log::gfile logg;
 
-				int posx = rand() % (Defaults::map_size_default_x-2) + 1;
-				int posy = rand() % (Defaults::map_size_default_y-2) + 1;
+				int posx = rand() % (Defaults::map_size_default_x - 2) + 1;
+				int posy = rand() % (Defaults::map_size_default_y - 2) + 1;
 
 				for (unsigned tries = 0; tries < 50 && map_i[posx][posy] != BLOCKID; tries++)
 				{
-					posx = rand() % (Defaults::map_size_default_x-2) + 1;
-					posy = rand() % (Defaults::map_size_default_y-2) + 1;
+					posx = rand() % (Defaults::map_size_default_x - 2) + 1;
+					posy = rand() % (Defaults::map_size_default_y - 2) + 1;
 				}
 
 				logg.debug("Changing some random blocks...");
@@ -1150,9 +1150,9 @@ namespace LSW {
 					map_p[posx][posy]->replaceAllWith(id_path);
 				}
 
-				for (int a = 1; a < Defaults::map_size_default_x-1; a++)
+				for (int a = 1; a < Defaults::map_size_default_x - 1; a++)
 				{
-					for (int b = 1; b < Defaults::map_size_default_y-1; b++)
+					for (int b = 1; b < Defaults::map_size_default_y - 1; b++)
 					{
 						if (map_i[a][b] == BLOCKID_C03) {
 							map_i[a][b] = INVISID;
@@ -1354,13 +1354,13 @@ namespace LSW {
 					if (plr.getMyHealth() > 1.0) plr.setMyHealth(1.0);
 					break;
 				case INVISID:
-					{
-						map_i[posx][posy] = NOEXTID;
-						Safer::safe_string id_path = interpretIntToBlockName(NOEXTID);
-						map_p[posx][posy]->replaceAllWith(id_path);
-						hasToUpdate_a_block = true;
-					}
-					break;
+				{
+					map_i[posx][posy] = NOEXTID;
+					Safer::safe_string id_path = interpretIntToBlockName(NOEXTID);
+					map_p[posx][posy]->replaceAllWith(id_path);
+					hasToUpdate_a_block = true;
+				}
+				break;
 				}
 			}
 			const bool map::isCPUtasking()
@@ -1495,6 +1495,6 @@ namespace LSW {
 
 				return "NULL";
 			}
-}
+		}
 	}
 }

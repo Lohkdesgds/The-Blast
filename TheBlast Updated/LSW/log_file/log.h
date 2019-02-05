@@ -8,6 +8,7 @@ namespace LSW {
 
 			enum mode{LOCAL,GLOBAL};
 			enum bruk{ENDL,START,ERRDV,NEEDED_START,NEEDED_ENDL};
+			enum sevr{INFO,WARN,ERRR};
 
 			struct _log {
 				FILE* f = nullptr;
@@ -18,6 +19,10 @@ namespace LSW {
 				bool is_needed_lock = false;
 				Safer::safe_string now;
 				Safer::safe_vector<Safer::safe_string> lines;
+			};
+
+			struct _custom_call_0 {
+				Safer::safe_string str;
 			};
 
 			template <mode N>
@@ -38,6 +43,7 @@ namespace LSW {
 				void saveOnMemory(const bool); // global only
 				void debug(const Safer::safe_string&);
 
+				_file& operator<<(const _custom_call_0&);
 				_file& operator<<(const Safer::safe_string&);
 				_file& operator<<(const bruk&);
 				_file& operator<<(const int&);
@@ -233,6 +239,13 @@ namespace LSW {
 			}
 
 			template<mode N>
+			inline _file<N>& _file<N>::operator<<(const _custom_call_0& u)
+			{
+				push(u.str);
+				return *this;
+			}
+
+			template<mode N>
 			inline _file<N>& _file<N>::operator<<(const Safer::safe_string& u)
 			{
 				push(u);
@@ -255,6 +268,7 @@ namespace LSW {
 					break;
 				case ERRDV:
 					push("\n---------- ERROR ----------\n");
+					flush();
 					break;
 				case NEEDED_START:
 					if (N == GLOBAL) {
@@ -272,6 +286,7 @@ namespace LSW {
 						push("\n");
 						g.is_needed_lock = false;
 						g.each_call.unlock();
+						flush();
 					}
 					else {
 						l.is_needed_lock = false;
@@ -322,6 +337,55 @@ namespace LSW {
 				return *this;
 			}
 
+			inline const _custom_call_0 _func(const Safer::safe_string a, const Safer::safe_string b, const sevr e = INFO) // Function class, function name, type
+			{
+				std::string aa, bb;
+				aa = a.g();
+				bb = b.g();
+
+				if (aa.length() < Defaults::Log::len_class) {
+					for (size_t p = aa.length(); p < Defaults::Log::len_class; p++)
+					{
+						aa += '_';
+					}
+				}
+				else {
+					for (size_t p = aa.length(); p > Defaults::Log::len_class; p--)
+					{
+						aa.pop_back();
+					}
+				}
+
+				if (bb.length() < Defaults::Log::len_class) {
+					for (size_t p = bb.length(); p < Defaults::Log::len_class; p++)
+					{
+						bb += '_';
+					}
+				}
+				else {
+					for (size_t p = bb.length(); p > Defaults::Log::len_class; p--)
+					{
+						bb.pop_back();
+					}
+				}
+
+				_custom_call_0 cc;
+				cc.str = "[" + aa + ":" + bb + "]";
+
+				switch (e) {
+				case INFO:
+					cc.str += "[INFO]";
+					break;
+				case WARN:
+					cc.str += "[WARN]";
+					break;
+				case ERRR:
+					cc.str += "[ERRR]";
+					break;
+				}
+
+				return cc;
+			}
 		}
 	}
 }

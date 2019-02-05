@@ -673,15 +673,7 @@ namespace LSW {
 						else if (ev.type == ALLEGRO_EVENT_DISPLAY_RESIZE)
 						{
 							e->_setKey(CUSTOMEVENT_DISPLAY_RESIZED, true);
-							ALLEGRO_DISPLAY* d = e->_getTargD();
-							if (d) {
-								al_acknowledge_resize(d);
-
-								Config::config conf;
-
-								conf.set(Config::SCREEN_X, al_get_display_width(d));
-								conf.set(Config::SCREEN_Y, al_get_display_height(d));
-							}
+							e->_setKey(CUSTOMEVENT_BITMAPS_RELOAD, true);
 						}
 						else if (ev.type == ALLEGRO_EVENT_MOUSE_AXES)
 						{
@@ -716,6 +708,21 @@ namespace LSW {
 						{
 							e->_setKey((events_keys)ev.keyboard.keycode, true);
 							glog << Log::START << "[THR2:EVENT][INFO] Detected keyboard pressed: N" << ev.keyboard.keycode << Log::ENDL;
+
+							{ // interpret
+								Config::config conf;
+								int t;
+
+								conf.get(Config::KEY_FULLSCREEN, t, Defaults::Events::key_fullscreen);
+								if (ev.keyboard.keycode == t) {
+									e->_setKey(CUSTOMEVENT_DISPLAY_TOGGLED, true);
+									e->_setKey(CUSTOMEVENT_BITMAPS_RELOAD, true);
+								}
+								conf.get(Config::KEY_OSD, t, Defaults::Events::key_osd);
+								if (ev.keyboard.keycode == t) {
+									e->_setKey(CUSTOMEVENT_TOGGLE_OSD, true);
+								}
+							}
 						}
 						else if (ev.type == ALLEGRO_EVENT_KEY_UP)
 						{
@@ -812,6 +819,8 @@ namespace LSW {
 			void _i_thr_collisionTimed(_event_log* evl, events* e, double min_timer, bool* amIRunning)
 			{
 				Log::gfile logg;
+				int error_count = 0;
+
 				if (!evl || !e || !amIRunning) {
 					logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: NULL POINTER AT START!" << Log::NEEDED_ENDL;
 					logg.flush();
@@ -850,46 +859,6 @@ namespace LSW {
 
 					switch (lyr.getNow().getMode())
 					{
-					case Layer::STANDARD:
-						for (auto& i : lyr.getNow().work())
-						{
-							spr_data.work().lock();
-							for (auto& spr : spr_data.work().work())
-							{
-								bool skip;
-								spr->get(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, skip);
-								if (skip) continue;
-
-								//spr_data.get(spr, p);
-								int u, m;
-								spr->get(Sprite::LAYER, u);
-
-								if (u == i.first) {
-
-									spr->_resetCollision();
-
-									for (auto& spr2 : spr_data.work().work())
-									{
-										if (spr != spr2) {
-											spr2->get(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, skip);
-											if (skip) continue;
-
-											spr2->get(Sprite::LAYER, m);
-
-											for(auto& a : i.second.collides_with)
-											{
-												if (a == m) {
-													spr->_verifyCollision(*spr2);
-													break;
-												}
-											}
-										}
-									}
-								}
-							}
-							spr_data.work().unlock();
-						}
-						break;
 					case Layer::USEMAP:
 						try
 						{
@@ -900,7 +869,92 @@ namespace LSW {
 						}
 						catch (...)
 						{
-							logg << Log::NEEDED_START << "[THR3:COLLD][WARN] _i_thr_collisionTimed got an exception. Trying to leave it as is (skippable)" << Log::NEEDED_ENDL;
+							if (++error_count < 10) {
+								logg << Log::NEEDED_START << "[THR3:COLLD][WARN] _i_thr_collisionTimed got an exception. Trying to leave it as is (skippable)" << Log::NEEDED_ENDL;
+								logg.flush();
+							}
+						}
+						break;
+					case Layer::STANDARD:
+						try {
+							for (auto& i : lyr.getNow().work())
+							{
+								spr_data.work().lock();
+								for (auto& spr : spr_data.work().work())
+								{
+									bool skip;
+									spr->get(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, skip);
+									if (skip) continue;
+
+									//spr_data.get(spr, p);
+									int u, m;
+									spr->get(Sprite::LAYER, u);
+
+									if (u == i.first) {
+
+										spr->_resetCollision();
+
+										for (auto& spr2 : spr_data.work().work())
+										{
+											if (spr != spr2) {
+												spr2->get(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, skip);
+												if (skip) continue;
+
+												spr2->get(Sprite::LAYER, m);
+
+												for (auto& a : i.second.collides_with)
+												{
+													if (a == m) {
+														spr->_verifyCollision(*spr2);
+														break;
+													}
+												}
+											}
+										}
+									}
+								}
+								spr_data.work().unlock();
+							}
+						}
+						catch (const Safer::safe_string& s)
+						{
+							logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][WARN] Caught throw at _i_thr_collisionTimed: " << s << Log::NEEDED_ENDL;
+							logg.flush();
+							spr_data.work().unlock();
+							if (!al_get_current_display()) throw 0;
+							throw s;
+						}
+						catch (const std::string& s)
+						{
+							logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][WARN] Caught throw at _i_thr_collisionTimed: " << s << Log::NEEDED_ENDL;
+							logg.flush();
+							spr_data.work().unlock();
+							if (!al_get_current_display()) throw 0;
+							throw s;
+						}
+						catch (const char* s)
+						{
+							logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][WARN] Caught throw at _i_thr_collisionTimed: " << s << Log::NEEDED_ENDL;
+							logg.flush();
+							spr_data.work().unlock();
+							if (!al_get_current_display()) throw 0;
+							throw s;
+						}
+						catch (const int i)
+						{
+							logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][WARN] Caught throw at _i_thr_collisionTimed: Error code #" << i << Log::NEEDED_ENDL;
+							logg.flush();
+							spr_data.work().unlock();
+							if (!al_get_current_display()) throw 0;
+							throw i;
+						}
+						catch (...)
+						{
+							logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][WARN] Caught throw at _i_thr_collisionTimed: Unknown error." << Log::NEEDED_ENDL;
+							logg.flush();
+							spr_data.work().unlock();
+							if (!al_get_current_display()) throw 0;
+							throw 1;
 						}
 						break;
 					}

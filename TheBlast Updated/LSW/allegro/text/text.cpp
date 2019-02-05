@@ -4,30 +4,11 @@ namespace LSW {
 	namespace v2 {
 		namespace Text {
 
-			//ALLEGRO_FONT* text::default_font = nullptr;
-			Display::display* text::ref_disp = nullptr;
-			//unsigned text::text_count = 0;
 			bool text::is_gpath_raw = false;
 			Safer::safe_string text::gpath;
-			//Sprite::sprite* text::global_paint = nullptr;
-			//size_t text::counter = 0;
 
 			void text::_draw(const double targ_draw_xy[2])
 			{
-				//Camera::camera_g cam;
-
-				
-				/*}
-				else {
-					targ_draw_xy[0] = targ_draw_xy[1] = 0.0;
-					loadInternalBMP();
-					if (local_paint)
-					{
-						local_paint->set(Sprite::POSX, (pos[0] + off_plr[0]));
-						local_paint->set(Sprite::POSY, (pos[1] + off_plr[1]));
-					}
-				}*/
-
 				al_draw_text(default_font, color, 1.0 * targ_draw_xy[0] / (scale), 1.0 * targ_draw_xy[1] / (scale), mode, string.g().c_str());
 			}
 			void text::_interpretTags(Safer::safe_string& s)
@@ -124,8 +105,12 @@ namespace LSW {
 							sprintf_s(tempstr_c, "%d", ((d) ? al_get_display_refresh_rate(d) : -1));
 							break;
 						case T_FPS:
-							if (ref_disp) sprintf_s(tempstr_c, "%.2f", ref_disp->getFPS());
-							else sprintf_s(tempstr_c, "NOT_AVAILABLE");
+							{
+								Display::big_display disp;
+								double t;
+								disp.get(Display::FPS, t);
+								sprintf_s(tempstr_c, "%.2lf", t);
+							}							
 							break;
 
 						case T_TPS_COUNT:
@@ -395,20 +380,6 @@ namespace LSW {
 				_verify();
 			}
 
-			/*const bool text::loadFromDatabase(const Safer::safe_string newname)
-			{
-				Safer::safe_string s = Defaults::initial_call_url.g() + newname.g();
-				Tools::clearPath(s, true);
-				return loadFromURL(s, newname);
-			}
-
-			const bool text::loadFromURL(const Safer::safe_string url, Safer::safe_string s_o)
-			{
-				if (!load(s_o)) assert(Tools::saveFromCloud(url, s_o));
-				else return true;
-				return load(s_o);
-			}*/
-
 			void text::unload()
 			{
 				if (default_font) {
@@ -423,7 +394,6 @@ namespace LSW {
 				switch (o) {
 				case SETSTRING:
 					orig_str = e;
-					//str_upd = true;
 					break;
 				case SETID:
 					id = e;
@@ -446,10 +416,6 @@ namespace LSW {
 				case SHOW:
 					show = e;
 					break;
-				/*case USEBUFOPT:
-					usebuf = e;
-					if (usebuf) loadInternalBMP();
-					break;*/
 				case AFFECTED_BY_CAM:
 					affected_by_camera = e;
 					break;
@@ -477,6 +443,9 @@ namespace LSW {
 				case SCALEG:
 					scale = e;
 					break;
+				case ROTATION:
+					rot = e;
+					break;
 				case UPDATETIME:
 					update_time = e;
 					break;
@@ -498,10 +467,6 @@ namespace LSW {
 					break;
 				case LAYER:
 					layer = e;
-					/*if (usebuf) {
-						loadInternalBMP();
-						local_paint->set(Sprite::LAYER, layer);
-					}*/
 					break;
 				}
 			}
@@ -518,6 +483,12 @@ namespace LSW {
 				case SETFOLLOW:
 					if (follow) follow->getID(e);
 					break;
+				case SETGLOBALPATH:
+					e = gpath;
+					break;
+				case SETLOCALPATH:
+					e = path;
+					break;					
 				}
 			}
 			void text::get(const _text_opt_bool o, bool& e)
@@ -526,9 +497,6 @@ namespace LSW {
 				case SHOW:
 					e = show;
 					break;
-				/*case USEBUFOPT:
-					e = usebuf;
-					break;*/
 				case AFFECTED_BY_CAM:
 					e = affected_by_camera;
 					break;
@@ -552,6 +520,9 @@ namespace LSW {
 				case SCALEG:
 					e = scale;
 					break;
+				case ROTATION:
+					e = rot;
+					break;
 				case UPDATETIME:
 					e = update_time;
 					break;
@@ -565,20 +536,9 @@ namespace LSW {
 					break;
 				case LAYER:
 					e = layer;
-					/*if (local_paint) {
-						local_paint->set(Sprite::LAYER, layer);
-					}*/
 					break;
 				}
 			}
-			/*void text::get(const _text_opt_sprite o, Sprite::sprite *& e)
-			{
-				switch (o) {
-				case SPRITE:
-					if (usebuf && this->local_paint) e = local_paint;
-					break;
-				}
-			}*/
 			void text::get(const _text_opt_color o, ALLEGRO_COLOR& e)
 			{
 				switch (o) {
@@ -587,20 +547,35 @@ namespace LSW {
 					break;
 				}
 			}
-
-			/*void text::setID(const Safer::safe_string u)
+			const bool text::isEq(const _text_opt_color e, const ALLEGRO_COLOR v)
 			{
-				set(Text::SETID, u);
-			}*/
-
-			const bool text::amI(const Safer::safe_string o)
-			{
-				return (id == o);
+				ALLEGRO_COLOR g;
+				get(e, g);
+				return ((g.r == v.r) && (g.g == v.g) && (g.b == v.b) && (g.a == v.a));
 			}
-
-			void text::setMainDisplay(Display::display* d)
+			const bool text::isEq(const _text_opt_str e, const Safer::safe_string v)
 			{
-				ref_disp = d;
+				Safer::safe_string g;
+				get(e, g);
+				return g == v;
+			}
+			const bool text::isEq(const _text_opt_bool e, const bool v)
+			{
+				bool g;
+				get(e, g);
+				return g == v;
+			}
+			const bool text::isEq(const _text_opt_db e, const double v)
+			{
+				double g;
+				get(e, g);
+				return g == v;
+			}
+			const bool text::isEq(const _text_opt_int e, const int v)
+			{
+				int g;
+				get(e, g);
+				return g == v;
 			}
 
 			
@@ -753,7 +728,7 @@ namespace LSW {
 				u = false;
 				for (size_t p = 0; p < v.getMax(); p++)
 				{
-					if (v[p]->amI(s)) {
+					if (v[p]->isEq(Text::SETID, s)) {
 						u = true;
 						return p;
 					}

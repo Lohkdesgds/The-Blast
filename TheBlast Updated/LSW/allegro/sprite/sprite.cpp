@@ -44,6 +44,10 @@ namespace LSW {
 				}
 				return spi;
 			}
+			const bool sprite::__quick_is_it_collision_possible(const _sprite_area a, const _sprite_area b)
+			{
+				return ((fabs(b.cx - a.cx) - (a.sx + b.sx)) < 0.01 && (fabs(b.cy - a.cy) - (a.sy + b.sy)) < 0.01);
+			}
 /*#undef max()
 #undef min()
 			const _sprite_collision_info sprite::_doTheyIntersect(const _sprite_area aa, const _sprite_area bb)
@@ -556,13 +560,16 @@ namespace LSW {
 				_sprite_area ths = _getArea();
 
 				if (ths.sx < 0 || mse.sx < 0) return;
+				if (!__quick_is_it_collision_possible(ths, mse)) return;
 
 				_sprite_collision_info col = _doesCollideWith(ths, mse);
 				if (saveit) *saveit = col.colliding;
 				Layer::layerer lyr;
 				Layer::each_layer& e = lyr.getNow();
 
-				if ((data.bval[_IS_COLLIDING] = ((data.bval[_IS_COLLIDING]) ? true : col.colliding)))
+				data.bval[_IS_COLLIDING] = ((data.bval[_IS_COLLIDING]) ? true : col.colliding);
+
+				if (col.colliding)
 				{
 					if (data.bval[AFFECTED_BY_COLLISION]) {
 						switch (col.way) { // col veio de

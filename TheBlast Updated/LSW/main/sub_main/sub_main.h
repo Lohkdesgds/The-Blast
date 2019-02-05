@@ -50,7 +50,7 @@ namespace LSW {
 				d_musics_database msk_data; // there's no way to draw.
 				d_entity_database ent_data;
 
-				Display::display disp;
+				Display::big_display disp;
 				Camera::camera_g cam; // cam stuff
 				Layer::layerer lyr; // layering stuff
 				Events::big_event bev;
@@ -103,8 +103,6 @@ namespace LSW {
 				void __apply_cam_number(const int);
 				void __apply_layer_number(const int);
 
-				Display::display* __getDisplay();
-
 				const bool _rgb_clear_screen_load();
 				const levels _rgb_pause_screen();
 				//void _dead_screen();
@@ -119,7 +117,7 @@ namespace LSW {
 				// play()
 				const bool __internal_task_level_common();
 				// any draw
-				void __internal_check_hotkeys();
+				//void __internal_check_hotkeys();
 			};
 
 			void __xtract_dis(void*, Safer::safe_string, Safer::safe_string);

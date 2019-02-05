@@ -97,27 +97,17 @@ namespace LSW {
 				data->lyr.setUsingNow(n);
 			}
 
-			Display::display* main::__getDisplay()
-			{
-				if (!check("__getDisplay")) return nullptr;
-
-				if (!data->hasInit) {
-					throw "MAIN::__GETDISPLAY() EXPECTED TO BE INITIALIZED! BOOL WAS FALSE!";
-				}
-				return &data->disp;
-			}
-
 			const bool main::_rgb_clear_screen_load()
 			{
 				double ti = al_get_time();
 
-				if (!data->disp.isOpen()) return false;
+				if (data->disp.isEq(Display::RUNNING_P, false)) return false;
 					
 				data->txt_data.draw(); // update and draw texts
 
-				if (!data->disp.flip(true, al_map_rgb_f(0.5*cos(ti*2.0)+0.1, 0.5*sin(ti*2.5 + 0.3) + 0.1, 0.5*cos(ti*1.7 + 0.5) + 0.1))) return false; // flip
+				if (!data->disp.work(true, al_map_rgb_f(0.5*cos(ti*2.0)+0.1, 0.5*sin(ti*2.5 + 0.3) + 0.1, 0.5*cos(ti*1.7 + 0.5) + 0.1))) return false; // flip
 
-				__internal_check_hotkeys();
+				//__internal_check_hotkeys();
 
 				return true;
 			}
@@ -224,22 +214,23 @@ namespace LSW {
 					}
 
 					// create display
-					data->disp.custom_launch(data->setup.res[0], data->setup.res[1], data->setup.mode);
+					data->disp.launch(data->setup.res[0], data->setup.res[1], data->setup.mode);
 
 					data->cam.setup(); // guarantee global camera instance
 					data->bev.initInstance(); // guarantee global event instance
 
 					// set events timing
-					data->bev.g().setMultiplierForUpdatingImg(data->disp._get().getMode(-1).hz);
+					{
+						int t;
+						data->disp.get(Display::REFRESHRATE, t);
+						data->bev.g().setMultiplierForUpdatingImg(t);
+					}
 
 					// setup and start events thread
 					data->bev.initSetupAndRun();
 
 					// define events bool reference on display so then events can tell display to die when ended.
-					data->disp.setKeep(data->bev.g().getKeep());
-
-					// force display target just to be sure.
-					data->disp._get().setTarget();
+					data->disp.set(Display::RUNNING_P, data->bev.g().getKeep());
 
 					// each config has its brackets for local usage. This bigger one is just to better reading (can minimize it)
 					// CAMERA
@@ -295,7 +286,7 @@ namespace LSW {
 							cam_p.config_number = 2;
 							cam_p.cam_settings.layers_enabled.push_back(Defaults::default_font_foreground_layer);
 							cam_p.cam_settings.layers_enabled.push_back(Defaults::map_default_layer);
-							cam_p.cam_settings.layers_enabled.push_back(Defaults::user_default_layer);
+							cam_p.cam_settings.layers_enabled.push_back(Defaults::Entity::common_layer);
 							cam_p.cam_settings.layers_enabled.push_back(Defaults::badboys_default_layer);
 							cam_p.cam_settings.layers_enabled.push_back(-9999); // Early Access layer
 
@@ -335,6 +326,7 @@ namespace LSW {
 							Main::__fast_lyr_preset lyr_p;
 							lyr_p.config_number = 2;
 							lyr_p.layer_mode = Layer::USEMAP;
+							//lyr_p.each_layer_settings[Defaults::Entity::common_layer].collides_with.push_back(Defaults::map_default_layer);
 
 							__set_layer_quick(lyr_p);
 						}
@@ -346,7 +338,7 @@ namespace LSW {
 
 							__set_layer_quick(lyr_p);
 						}
-						{   /* -------------------- PRESET #3 -------------------- */
+						{   /* -------------------- PRESET #4 -------------------- */
 							Main::__fast_lyr_preset lyr_p;
 							lyr_p.config_number = 4;
 							lyr_p.layer_mode = Layer::STANDARD;
@@ -359,31 +351,31 @@ namespace LSW {
 				catch (const Safer::safe_string& s)
 				{
 					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:INIT_][ERROR] Caught throw at main::init: " << s << Log::NEEDED_ENDL;
-					if (!data->disp.isOpen()) throw 0;
+					if (data->disp.isEq(Display::RUNNING_P, false)) throw 0;
 					throw s;
 				}
 				catch (const std::string& s)
 				{
 					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:INIT_][ERROR] Caught throw at main::init: " << s << Log::NEEDED_ENDL;
-					if (!data->disp.isOpen()) throw 0;
+					if (data->disp.isEq(Display::RUNNING_P, false)) throw 0;
 					throw s;
 				}
 				catch (const char* s)
 				{
 					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:INIT_][ERROR] Caught throw at main::init: " << s << Log::NEEDED_ENDL;
-					if (!data->disp.isOpen()) throw 0;
+					if (data->disp.isEq(Display::RUNNING_P, false)) throw 0;
 					throw s;
 				}
 				catch (const int i)
 				{
 					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:INIT_][ERROR] Caught throw at main::init: Error code #" << i << Log::NEEDED_ENDL;
-					if (!data->disp.isOpen()) throw 0;
+					if (data->disp.isEq(Display::RUNNING_P, false)) throw 0;
 					throw i;
 				}
 				catch (...)
 				{
 					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:INIT_][ERROR] Caught throw at main::init: Unknown error." << Log::NEEDED_ENDL;
-					if (!data->disp.isOpen()) throw 0;
+					if (data->disp.isEq(Display::RUNNING_P, false)) throw 0;
 					throw 1;
 				}
 
@@ -402,7 +394,6 @@ namespace LSW {
 					// EARLY ACCESS
 					txt = Text::getOrCreate("EARLY_ACCESS_00", true);
 					// PRE-LOAD (shared)
-					txt->setMainDisplay(__getDisplay());
 					txt->set(Text::SETGLOBALPATH, Defaults::font_altern_name_full);
 					txt->set(Text::IS_GLOBALPATH_RAW, true);
 					// ENDOF PRE-LOAD (shared)
@@ -454,7 +445,7 @@ namespace LSW {
 						desc = Text::getOrCreate("LOADING_1");
 
 
-						data->disp.capFPS(60);
+						data->disp.set(Display::LOCK_FPS_TO, 60);
 						data->cam.apply(-2);
 
 						actual_perc = 0.00;
@@ -475,7 +466,7 @@ namespace LSW {
 							data->spr_data.draw();
 							data->txt_data.draw();
 
-							if (!data->disp.flip()) {
+							if (!data->disp.work()) {
 								while (actual_perc != 1.00); // hold
 								continue;
 							}
@@ -577,7 +568,7 @@ namespace LSW {
 
 						thr.join();
 
-						if (!data->disp.isOpen())
+						if (data->disp.isEq(Display::RUNNING_P, false))
 							throw "MAIN::LOAD - DISPLAY GOT CLOSED, ABORT!";
 
 
@@ -599,14 +590,15 @@ namespace LSW {
 							data->spr_data.draw();
 							data->txt_data.draw();
 
-							if (!data->disp.flip()) break;
+							if (!data->disp.work()) break;
 						}
 
-						if (!data->disp.isOpen())
+						if (data->disp.isEq(Display::RUNNING_P,false))
 							throw "MAIN::LOAD - DISPLAY GOT CLOSED, ABORT!";
 
 						// quick checkup
-						data->disp.checkUpImages();
+						//data->disp.checkUpImages();
+						al_convert_bitmaps();
 
 						// reset rotation
 
@@ -624,13 +616,13 @@ namespace LSW {
 							title->set(Text::MODE, Text::ALIGN_RIGHT);
 							title->set(Text::COLOR, al_map_rgba_f(0.5, 0.5, 0.5, 0.5));
 							title->set(Text::UPDATETIME, 0.2);
-							data->disp.capFPS(30);
+							data->disp.set(Display::LOCK_FPS_TO, 30);
 
 							data->img_data.work().lock();
 							size_t nnow = 0, sizz = data->img_data.work().getMax();
 							for (auto& i : data->img_data.work().work())
 							{
-								if (data->disp.flip(false)) {
+								if (data->disp.work(false)) {
 									data->spr_data.draw();
 									data->txt_data.draw();
 								}
@@ -701,31 +693,31 @@ namespace LSW {
 				catch (const Safer::safe_string& s)
 				{
 					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:LOAD_][ERROR] Caught throw at main::load: " << s << Log::NEEDED_ENDL;
-					if (!data->disp.isOpen()) throw 0;
+					if (data->disp.isEq(Display::RUNNING_P, false)) throw 0;
 					throw s;
 				}
 				catch (const std::string& s)
 				{
 					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:LOAD_][ERROR] Caught throw at main::load: " << s << Log::NEEDED_ENDL;
-					if (!data->disp.isOpen()) throw 0;
+					if (data->disp.isEq(Display::RUNNING_P, false)) throw 0;
 					throw s;
 				}
 				catch (const char* s)
 				{
 					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:LOAD_][ERROR] Caught throw at main::load: " << s << Log::NEEDED_ENDL;
-					if (!data->disp.isOpen()) throw 0;
+					if (data->disp.isEq(Display::RUNNING_P, false)) throw 0;
 					throw s;
 				}
 				catch (const int i)
 				{
 					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:LOAD_][ERROR] Caught throw at main::load: Error code #" << i << Log::NEEDED_ENDL;
-					if (!data->disp.isOpen()) throw 0;
+					if (data->disp.isEq(Display::RUNNING_P, false)) throw 0;
 					throw i;
 				}
 				catch (...)
 				{
 					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:LOAD_][ERROR] Caught throw at main::load: Unknown error." << Log::NEEDED_ENDL;
-					if (!data->disp.isOpen()) throw 0;
+					if (data->disp.isEq(Display::RUNNING_P, false)) throw 0;
 					throw 1;
 				}
 			}
@@ -752,7 +744,7 @@ namespace LSW {
 					start_point = al_get_time();
 
 					// CAMERA AND LAYER SET
-					data->disp.capFPS(60);
+					data->disp.set(Display::LOCK_FPS_TO, 60);
 					__apply_cam_number(-1);
 					__apply_layer_number(-1);
 
@@ -823,7 +815,7 @@ namespace LSW {
 						t01->set(Sound::PLAYING, true);
 					
 					// CAMERA AND LAYER SET
-					data->disp.capFPS();
+					data->disp.set(Display::LOCK_FPS_TO, 0);
 					__apply_cam_number(0);
 					__apply_layer_number(0);
 
@@ -908,7 +900,7 @@ namespace LSW {
 					t02 = Sound::getOrCreate("MUSIC_2");
 
 					// CAMERA (needed before)
-					data->disp.capFPS();
+					data->disp.set(Display::LOCK_FPS_TO, 0);
 					__apply_cam_number(2);
 					
 					// SETTING VARIABLES VALUES
@@ -1320,7 +1312,7 @@ namespace LSW {
 					}
 
 					// CAMERA AND LAYER SET
-					data->disp.capFPS();
+					data->disp.set(Display::LOCK_FPS_TO, 0);
 					__apply_cam_number(3);
 					__apply_layer_number(3);
 
@@ -1383,7 +1375,17 @@ namespace LSW {
 
 						if (data->bev.g().getKey(Events::MOUSE_0, false)) {
 							if (b00) {
-								data->bev.g()._setKey(Events::KEY_F3, true); // MAYBE CHANGE LATER
+								//data->bev.g()._setKey(Events::KEY_F3, true); // MAYBE CHANGE LATER
+
+								Text::text* txt = Text::getOrCreate("OSD_2");
+								bool allas;
+								txt->get(Text::SHOW, allas);
+								Text::getOrCreate("OSD_0")->set(Text::SHOW, !allas);
+								Text::getOrCreate("OSD_1")->set(Text::SHOW, !allas);
+								Text::getOrCreate("OSD_2")->set(Text::SHOW, !allas);
+
+								//Config::config conf;
+								conf.set(Config::WAS_OSD_ON, !allas);
 							}
 							else if (b02) {
 								float mx;
@@ -1398,7 +1400,6 @@ namespace LSW {
 
 								menu_01_t->set(Text::SETSTRING, "Volume: " + std::to_string((int)(100.0*volume)) + "\\%");
 
-								Config::config conf;
 								conf.set(Config::LAST_VOLUME, volume);
 
 								try {
@@ -1615,7 +1616,7 @@ namespace LSW {
 
 						std::thread thr0(Downloader::easyDownload, Defaults::call_url_file.g().c_str(), path_d.g().c_str(), &o);
 
-						while (o != 1.0 && data->disp.isOpen()) {
+						while (o != 1.0 && data->disp.isEq(Display::RUNNING_P, true)) {
 							actual_perc = o * 0.90;
 						}
 
@@ -1625,7 +1626,7 @@ namespace LSW {
 						Stacker::extractor ext;
 						std::thread thr3(__xtract_dis, (void*)&ext, path_d, Defaults::default_root_path);
 
-						while ((o = ext.getPerc()) != 1.0 && data->disp.isOpen()) {
+						while ((o = ext.getPerc()) != 1.0 && data->disp.isEq(Display::RUNNING_P, true)) {
 							actual_perc = o * 0.05 + 0.90;
 						}
 						thr3.join();
@@ -1637,7 +1638,7 @@ namespace LSW {
 					// big chunks
 
 					std::thread thr1(Image::multipleLoad, "PAUSE", "pause/pause_", 29, 2, ".png", &o, true);
-					while (o != 1.0 && data->disp.isOpen()) {
+					while (o != 1.0 && data->disp.isEq(Display::RUNNING_P, true)) {
 						actual_perc = 0.95 + o * 0.005;
 					}
 
@@ -1645,7 +1646,7 @@ namespace LSW {
 					thr1.join();
 
 					std::thread thr2(Image::multipleLoad, "LOGO", "logo/frame", 115, 2, ".png", &o, true);
-					while (o != 1.0 && data->disp.isOpen()) {
+					while (o != 1.0 && data->disp.isEq(Display::RUNNING_P, true)) {
 						actual_perc = 0.955 + o * 0.005;
 					}
 
@@ -1685,7 +1686,7 @@ namespace LSW {
 					actual_perc = 0.965;
 
 					std::thread thr4(Image::multipleLoad, Defaults::map_default_start, "anim/bloco", 10, Defaults::map_default_len_name_int, ".png", &o, false);
-					while (o != 1.0 && data->disp.isOpen()) {
+					while (o != 1.0 && data->disp.isEq(Display::RUNNING_P, true)) {
 						actual_perc = 0.965 + o * 0.005;
 					}
 
@@ -1821,7 +1822,6 @@ namespace LSW {
 					/* CREATING A TEXT...? */
 
 					wt = Text::getOrCreate("BAR_00_TEXT", true);
-					wt->setMainDisplay(&data->disp);
 					wt->set(Text::SETSTRING, "< TEST 1 >");
 					wt->set(Text::MODE, Text::ALIGN_CENTER);
 					wt->set(Text::LAYER, 99);
@@ -1952,20 +1952,20 @@ namespace LSW {
 
 			const bool main::__internal_task_level_common()
 			{
-				if (!data->disp.isOpen()) return false;
+				if (data->disp.isEq(Display::RUNNING_P, false)) return false;
 
 				data->img_data.draw(); // check unload of textures and stuff
 				data->spr_data.draw(); // draw sprites
 				data->txt_data.draw(); // update and draw texts
 
-				if (!data->disp.flip()) return false; // flip
+				if (!data->disp.work()) return false; // flip
 
-				__internal_check_hotkeys();
+				//__internal_check_hotkeys();
 
 				return true;
 			}
 
-			void main::__internal_check_hotkeys()
+			/*void main::__internal_check_hotkeys()
 			{
 				// toggle fullscreen with F11
 				if (data->bev.g().getKey(Events::KEY_F11, true)) data->disp.toggleFS();
@@ -1986,7 +1986,7 @@ namespace LSW {
 						conf.set(Config::WAS_OSD_ON, !allas);
 					}
 				}
-			}
+			}*/
 
 			const initialization interpret_console_entry(const int argc, char *argv[])
 			{

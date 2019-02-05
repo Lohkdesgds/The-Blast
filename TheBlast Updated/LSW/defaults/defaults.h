@@ -7,7 +7,7 @@ namespace LSW {
 	namespace v2 {
 		namespace Defaults {
 			
-			const Safer::safe_string version_app = "V1.0.3";
+			const Safer::safe_string version_app = "V1.1.0D";
 
 			const Safer::safe_string default_root_path = "%appdata%/Lohk's Studios/TheBlast/";
 			const Safer::safe_string default_global_path = "%appdata%/Lohk's Studios/TheBlast/logs/latest.log";
@@ -16,6 +16,13 @@ namespace LSW {
 
 			///const Safer::safe_string initial_call_url = "https://tutoriais-de-prog.000webhostapp.com/files_apps/"; // change later?
 			const Safer::safe_string call_url_file = "https://www.dropbox.com/s/er912k5u5is8h42/package.lohkf?dl=1";//"https://tutoriais-de-prog.000webhostapp.com/files_apps/package.lohkf";
+
+			const bool enable_all_possible_setget = false; // security reasons
+
+			namespace Log {
+				const size_t len_func = 15;
+				const size_t len_class = 12;
+			}
 
 			namespace Image {
 				const bool no_optimization = false;
@@ -30,6 +37,20 @@ namespace LSW {
 				const Safer::safe_string config_file = "%appdata%/Lohk's Studios/TheBlast/config/config.lohk";
 				const Safer::safe_string strt_txt = "config";
 				const int screen_siz[2] = { 1280,720 };
+			}
+
+			namespace Entity {
+				const int common_layer = 70;
+				const double size = 0.08;
+			}
+
+			namespace Events {
+				const int key_fullscreen = 57; // from Events::KEY_F11
+				const int key_osd = 49; //from Events::KEY_F3;
+			}
+
+			namespace Display {
+				const double fullscreen_toggle_time = 2.0;
 			}
 
 
@@ -69,7 +90,7 @@ namespace LSW {
 			const unsigned max_loops_for_tps = 480;
 
 			// thr
-			const double collision_timer = 1.0 / 240;
+			const double collision_timer = 1.0 / 30;
 			const int max_delayed_times = 90;
 			const double functions_timer = 1.0 / 240;
 			//const double checkEnd_timer = 1.0 / 2;
@@ -86,7 +107,6 @@ namespace LSW {
 			//const float blur_buf_frame_droppin = 0.1; // 0 < x <= 1.0 // al_clear frame
 			const double fx_blur_timing = 1.0/32;
 
-			const double display_fullscreen_toggle_min_time = 2.0; // sec
 			const double display_osd_toggle_min_time = 1.0; // sec
 
 			const Safer::safe_string font_default_name = "font.ttf";
@@ -105,8 +125,8 @@ namespace LSW {
 			const double diff_time_show_last_resetCollision = 0.5;
 
 			// game control
-			const double user_default_size = 0.08;
-			const int user_default_layer = 70;
+			//const double user_default_size = 0.08;			
+			//const int user_default_layer = 70;
 			const int badboys_default_layer = 71;
 			const int map_default_layer = 50;
 

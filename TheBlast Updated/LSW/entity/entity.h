@@ -28,8 +28,8 @@ namespace LSW {
 				// chapeu
 			public:
 				~entity();
-				virtual void load(const ALLEGRO_COLOR, const int = Defaults::user_default_layer, const double = Defaults::user_default_size) = 0; // color, layer, size
-				virtual void load(const Safer::safe_string, const int = Defaults::user_default_layer, const double = Defaults::user_default_size) = 0; // path, layer, size
+				virtual void load(const ALLEGRO_COLOR, const int, const double) = 0; // color, layer, size
+				virtual void load(const Safer::safe_string, const int, const double) = 0; // path, layer, size
 				void reset();
 
 				//void setType(const type);
@@ -69,8 +69,8 @@ namespace LSW {
 
 				void sleep(const bool);
 
-				void load(const ALLEGRO_COLOR, const int = Defaults::user_default_layer, const double = Defaults::user_default_size);
-				void load(const Safer::safe_string, const int = Defaults::user_default_layer, const double = Defaults::user_default_size);
+				void load(const ALLEGRO_COLOR, const int = Defaults::Entity::common_layer, const double = Defaults::Entity::size);
+				void load(const Safer::safe_string, const int = Defaults::Entity::common_layer, const double = Defaults::Entity::size);
 			};
 
 			class badboy : public entity
@@ -81,8 +81,8 @@ namespace LSW {
 				void setFollowing(Sprite::sprite*);
 				void tick();
 
-				void load(const ALLEGRO_COLOR, const int = Defaults::user_default_layer, const double = Defaults::user_default_size);
-				void load(const Safer::safe_string, const int = Defaults::user_default_layer, const double = Defaults::user_default_size);
+				void load(const ALLEGRO_COLOR, const int = Defaults::Entity::common_layer, const double = Defaults::Entity::size);
+				void load(const Safer::safe_string, const int = Defaults::Entity::common_layer, const double = Defaults::Entity::size);
 			};
 
 

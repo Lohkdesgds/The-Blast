@@ -7,7 +7,7 @@ namespace LSW {
 		namespace Text {
 
 			enum _text_opt_str {SETSTRING, SETID, SETFOLLOW, SETGLOBALPATH, SETLOCALPATH};
-			enum _text_opt_bool{SHOW/*,USEBUFOPT*/,AFFECTED_BY_CAM,IS_LOCALPATH_RAW,IS_GLOBALPATH_RAW};
+			enum _text_opt_bool{SHOW,AFFECTED_BY_CAM,IS_LOCALPATH_RAW,IS_GLOBALPATH_RAW};
 			enum _text_opt_db  {POSX,POSY,SCALEG,ROTATION,UPDATETIME};
 			enum _text_opt_int {MODE, LAYER};
 			enum _text_opt_color {COLOR};
@@ -54,7 +54,6 @@ namespace LSW {
 				double lastinterpret = 0;
 				double update_time = 0.05; // sec
 
-				static Display::display* ref_disp;
 				//static unsigned text_count;
 
 				//Sprite::sprite* local_paint = nullptr;
@@ -93,15 +92,13 @@ namespace LSW {
 				void get(const _text_opt_db, double&);
 				void get(const _text_opt_color, ALLEGRO_COLOR&);
 				void get(const _text_opt_int, int&);
-				//void get(const _text_opt_sprite, Sprite::sprite*&);
 
-
-				//void setID(const Safer::safe_string);
-
-				const bool amI(const Safer::safe_string);
-
-				void setMainDisplay(Display::display*);
-
+				const bool isEq(const _text_opt_str, const Safer::safe_string);
+				const bool isEq(const _text_opt_bool, const bool);
+				const bool isEq(const _text_opt_db, const double);
+				const bool isEq(const _text_opt_color, const ALLEGRO_COLOR);
+				const bool isEq(const _text_opt_int, const int);
+								
 				void draw(const int);
 			};
 
