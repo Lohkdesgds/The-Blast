@@ -7,7 +7,7 @@ namespace LSW {
 	namespace v2 {
 		namespace Defaults {
 			
-			const Safer::safe_string version_app = "V1.1.0D";
+			const Safer::safe_string version_app = "V1.1.0E 201902101503NUS";
 
 			const Safer::safe_string default_root_path = "%appdata%/Lohk's Studios/TheBlast/";
 			const Safer::safe_string default_global_path = "%appdata%/Lohk's Studios/TheBlast/logs/latest.log";
@@ -51,6 +51,9 @@ namespace LSW {
 
 			namespace Display {
 				const double fullscreen_toggle_time = 2.0;
+				const int layer_fx = 9999999;
+				const double fx_timer = 1.0 / 85; // 85 fps
+				const double flush_time = 10.0; // sec
 			}
 
 
@@ -90,7 +93,7 @@ namespace LSW {
 			const unsigned max_loops_for_tps = 480;
 
 			// thr
-			const double collision_timer = 1.0 / 30;
+			const double collision_timer = 1.0 / 240;
 			const int max_delayed_times = 90;
 			const double functions_timer = 1.0 / 240;
 			//const double checkEnd_timer = 1.0 / 2;

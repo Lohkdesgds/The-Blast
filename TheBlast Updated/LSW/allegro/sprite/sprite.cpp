@@ -416,6 +416,7 @@ namespace LSW {
 
 					if (data.bval[USE_TINTED_DRAWING]) al_draw_tinted_scaled_rotated_bitmap(bmp, data.tint, bmp_s_center[0], bmp_s_center[1], targ_draw_xy[0], targ_draw_xy[1], targ_distortion_xy[0], targ_distortion_xy[1], rotation_rad, 0);
 					else al_draw_scaled_rotated_bitmap(bmp, bmp_s_center[0], bmp_s_center[1], targ_draw_xy[0], targ_draw_xy[1], targ_distortion_xy[0], targ_distortion_xy[1], 0.0 /*rotation_rad*/, 0);
+					//al_draw_scaled_rotated_bitmap(bmp, al_get_bitmap_width(bmp) * 0.5, al_get_bitmap_height(bmp) * 0.5, 0, 0, 1.0 / al_get_bitmap_width(bmp), 1.0 / al_get_bitmap_height(bmp), 0.0, 0); // for display.cpp (copy)
 
 					replacing.unlock();
 
@@ -741,12 +742,15 @@ namespace LSW {
 				std::vector<int> v = cam.getLayers(cam.getLastApplyID());
 
 				for (auto& i : v) {
-					spr_data.work().lock();
-					for (auto& u : spr_data.work().work())
+
+					for (size_t p = 0; p < spr_data.work().getMax(); p++)
 					{
-						u->drawIfLayer(i);
+						Sprite::sprite* spr;
+						spr_data.get(spr, p);
+						if (spr) {
+							spr->drawIfLayer(i);
+						}
 					}
-					spr_data.work().unlock();
 				}
 			}
 

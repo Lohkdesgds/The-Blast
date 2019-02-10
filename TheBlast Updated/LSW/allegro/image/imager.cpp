@@ -460,13 +460,13 @@ namespace LSW {
 
 				bool hasChanged = bev.g().getKey(Events::CUSTOMEVENT_BITMAPS_RELOAD);
 
-				img_data.work().lock();
-				for (auto& i : img_data.work().work())
+				for (size_t p = 0; p < img_data.work().getMax(); p++)
 				{
-					if (hasChanged && i->isEq(Image::MODE, Image::CREATED)) i->reload();
-					else i->checkMemory();
+					Image::image_low* imglw;
+					img_data.get(imglw, p);
+					if (hasChanged && imglw->isEq(Image::MODE, Image::CREATED)) imglw->reload();
+					else imglw->checkMemory();
 				}
-				img_data.work().unlock();
 			}
 
 			void multipleLoad(const Safer::safe_string nickname, Safer::safe_string start, const size_t max, const unsigned format, Safer::safe_string end, float *perc, const bool optimizethem)

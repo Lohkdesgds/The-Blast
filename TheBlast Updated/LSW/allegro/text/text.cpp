@@ -744,13 +744,15 @@ namespace LSW {
 				std::vector<int> v = cam.getLayers(cam.getLastApplyID());
 
 				for (auto& j : v) {
-					txt_data.work().lock();
-					for (auto& i : txt_data.work().work())
+					for (size_t p = 0; p < txt_data.work().getMax(); p++)
 					{
-						i->verify();
-						i->draw(j);
+						Text::text* txt;
+						txt_data.get(txt, p);
+						if (txt) {
+							txt->verify();
+							txt->draw(j);
+						}
 					}
-					txt_data.work().unlock();
 				}
 
 			}

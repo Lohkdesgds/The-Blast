@@ -35,7 +35,6 @@ namespace LSW {
 				float offset_x = 0.0;
 				float offset_y = 0.0;
 				float rotation = 0.0;
-				//int limits[2] = { 0,3 };
 				std::vector<int> layers_enabled;
 			};
 

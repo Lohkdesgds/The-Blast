@@ -6,7 +6,141 @@ namespace LSW {
 
 			_big_display_data big_display::data;
 			long long big_display::instance_count = 0;
-			
+
+
+			void big_display::_realDraw(const ALLEGRO_COLOR c)
+			{
+				if (data.color_shift) {
+
+					if (!data.spr[0]) {
+
+						for (size_t p = 0; p < 3; p++) {
+							data.spr[p] = Sprite::getOrCreate("__INTERNAL_FX_" + std::to_string(p), true);
+							data.img_lw[p] = Image::getOrCreate("__INTERNAL_FX_" + std::to_string(p), true);
+							data.img_lw[p]->set(Image::CREATE_X, -1);
+							data.img_lw[p]->set(Image::CREATE_Y, -1);
+							data.img_lw[p]->load();
+
+							data.spr[p]->add("__INTERNAL_FX_" + std::to_string(p));
+
+							data.spr[p]->set(Sprite::SCALEG, 2.007);
+							data.spr[p]->set(Sprite::USE_TINTED_DRAWING, true);
+							data.spr[p]->set(Sprite::DRAW, false); // does not work if true (not as expected)
+							data.spr[p]->set(Sprite::LAYER, Defaults::Display::layer_fx);
+							data.spr[p]->set(Sprite::AFFECTED_BY_CAM, false);
+						}
+
+						data.spr[0]->set(Sprite::TINT, al_map_rgba_f(0.45, 0.0, 0.0, 0.45));
+						data.spr[1]->set(Sprite::TINT, al_map_rgba_f(0.0, 0.45, 0.0, 0.45));
+						data.spr[2]->set(Sprite::TINT, al_map_rgba_f(0.0, 0.0, 0.45, 0.45));
+					}
+
+					if (al_get_time() - data.last_color_shift_FX > Defaults::Display::fx_timer) { // update RGB layer
+						data.last_color_shift_FX = al_get_time();
+
+						for (auto& i : data.img_lw) i->verify();
+
+						ALLEGRO_BITMAP* orig = al_get_backbuffer(data.md);
+						ALLEGRO_BITMAP* tbmp = nullptr;
+
+						Image::image_low* il = Image::getOrCreate("__INTERNAL_FX_0");
+						if (il) {
+							il->get(Image::BMP, tbmp);
+							if (tbmp) {
+								al_set_target_bitmap(tbmp);
+								//al_draw_scaled_bitmap(orig, 0, 0, al_get_bitmap_width(orig), al_get_bitmap_height(orig), 0, 0, al_get_bitmap_width(tbmp), al_get_bitmap_height(tbmp), 0);
+								al_draw_bitmap(orig, 0, 0, 0);
+							}
+						}
+						il = nullptr;
+
+						il = Image::getOrCreate("__INTERNAL_FX_1");
+						if (il) {
+							il->get(Image::BMP, tbmp);
+							if (tbmp) {
+								al_set_target_bitmap(tbmp);
+								//al_draw_scaled_bitmap(orig, 0, 0, al_get_bitmap_width(orig), al_get_bitmap_height(orig), 0, 0, al_get_bitmap_width(tbmp), al_get_bitmap_height(tbmp), 0);
+								al_draw_bitmap(orig, 0, 0, 0);
+							}
+						}
+						il = nullptr;
+
+						il = Image::getOrCreate("__INTERNAL_FX_2");
+						if (il) {
+							il->get(Image::BMP, tbmp);
+							if (tbmp) {
+								al_set_target_bitmap(tbmp);
+								//al_draw_scaled_bitmap(orig, 0, 0, al_get_bitmap_width(orig), al_get_bitmap_height(orig), 0, 0, al_get_bitmap_width(tbmp), al_get_bitmap_height(tbmp), 0);
+								al_draw_bitmap(orig, 0, 0, 0);
+							}
+						}
+						il = nullptr;
+
+						al_set_target_backbuffer(data.md);
+					}
+
+					Events::big_event bev;
+					double v = bev.g().getFunctionValNow(2), v2 = bev.g().getFunctionValNow(3);
+
+					data.spr[0]->set(Sprite::POSX, v + v2);
+					data.spr[0]->set(Sprite::POSY, -v + v2);
+
+					data.spr[1]->set(Sprite::POSX, v - v2);
+					data.spr[1]->set(Sprite::POSY, v + v2);
+
+					data.spr[2]->set(Sprite::POSX, -v + v2);
+					data.spr[2]->set(Sprite::POSY, -v - v2);
+
+					// apply fx
+					Camera::camera_g cam;
+					double x, y;
+					x = cam.get(cam.getLastApplyID(), Camera::OFFX);
+					y = cam.get(cam.getLastApplyID(), Camera::OFFY);
+
+					al_draw_filled_rectangle(-1 + x, -1 + y, al_get_display_width(data.md) * (1.0 + x), al_get_display_height(data.md) * (1.0 + y), al_map_rgba_f(0.0, 0.0, 0.0, 0.5));
+					{
+						al_set_blender(ALLEGRO_ADD, ALLEGRO_ONE, ALLEGRO_ONE);
+						for (size_t p = 0; p < 3; p++) {
+							data.spr[p]->forceDraw();
+						}
+						al_set_blender(ALLEGRO_ADD, ALLEGRO_ONE, ALLEGRO_INVERSE_ALPHA);
+					}
+				}
+
+				// draw
+				al_flip_display();
+
+				// clear
+				al_clear_to_color(c);
+
+				// flush
+				if (al_get_time() - data.last_flush > Defaults::Display::flush_time) {
+					data.last_flush = al_get_time();
+					__flushCache();
+				}
+			}
+			void big_display::__flushCache()
+			{
+				d_entity_database ent_data;
+				d_images_database img_data;
+				d_musics_database msk_data;
+				d_sprite_database spr_data;
+				d_texts_database txt_data;
+				Log::gfile logg;
+
+				size_t sprs = spr_data.work().flush();
+				size_t imgs = img_data.work().flush();
+				size_t txts = txt_data.work().flush();
+				size_t msks = msk_data.work().flush();
+				size_t ents = ent_data.work().flush();
+
+				// NEEDED FOR NOW
+				if (sprs > 0) logg << Log::NEEDED_START << Log::_func("main", "__flushCache") << sprs << " sprites have been cleaned." << Log::NEEDED_ENDL;
+				if (imgs > 0) logg << Log::NEEDED_START << Log::_func("main", "__flushCache") << imgs << " images have been cleaned." << Log::NEEDED_ENDL;
+				if (txts > 0) logg << Log::NEEDED_START << Log::_func("main", "__flushCache") << txts << " texts have been cleaned." << Log::NEEDED_ENDL;
+				if (msks > 0) logg << Log::NEEDED_START << Log::_func("main", "__flushCache") << msks << " tracks have been cleaned." << Log::NEEDED_ENDL;
+				if (ents > 0) logg << Log::NEEDED_START << Log::_func("main", "__flushCache") << ents << " entities have been cleaned." << Log::NEEDED_ENDL;
+			}
 
 			big_display::big_display()
 			{
@@ -16,7 +150,7 @@ namespace LSW {
 					if (!al_init_image_addon()) throw "at big_display::big_display [#" + std::to_string((size_t)this) + "]: Failed initializing Allegro (image)!";
 					if (!al_init_primitives_addon()) throw "at big_display::big_display [#" + std::to_string((size_t)this) + "]: Failed initializing Allegro (primitives)!";
 
-					logg << Log::NEEDED_START << Log::_func("big_display", "~big_display") << "Display is ready to be created!" << Log::NEEDED_ENDL;					
+					logg << Log::NEEDED_START << Log::_func("big_display", "~big_display") << "Display is ready to be created!" << Log::NEEDED_ENDL;
 				}
 			}
 
@@ -29,6 +163,8 @@ namespace LSW {
 						data.md = nullptr;
 
 						logg << Log::NEEDED_START << Log::_func("big_display", "~big_display", Log::WARN) << "Display has been disabled!" << Log::NEEDED_ENDL;
+
+						__flushCache();
 					}
 					else {
 						logg << Log::NEEDED_START << Log::_func("big_display", "~big_display", Log::WARN) << "DISPLAY WAS NOT FOUND BY LAST BIG_DISPLAY INSTANCE! This can be an error, or not. Hmm." << Log::NEEDED_ENDL;
@@ -79,6 +215,15 @@ namespace LSW {
 				}
 			}
 
+			void big_display::set(const vals_b e, const bool v)
+			{
+				switch (e) {
+				case COLOR_SHIFTED:
+					data.color_shift = v;
+					break;
+				}
+			}
+
 			void big_display::set(const vals_dp e, ALLEGRO_DISPLAY* v)
 			{
 				switch (e) {
@@ -91,7 +236,7 @@ namespace LSW {
 
 			void big_display::set(const vals_d e, const double v)
 			{
-				switch(e) {
+				switch (e) {
 				case FPS:
 					if (!Defaults::enable_all_possible_setget) throw "at big_display::set [#" + std::to_string((size_t)this) + "]: Tried to set a value \"read-only\" like (FPS).";
 					data.last_fps = v;
@@ -120,7 +265,16 @@ namespace LSW {
 			{
 				switch (e) {
 				case RUNNING_P:
-					v = data.ext_isRunning;
+					*v = data.ext_isRunning;
+					break;
+				}
+			}
+
+			void big_display::get(const vals_b e, bool& v)
+			{
+				switch (e) {
+				case COLOR_SHIFTED:
+					v = data.color_shift;
 					break;
 				}
 			}
@@ -177,6 +331,12 @@ namespace LSW {
 				bool* g;
 				get(e, g);
 				return (*g == *v);
+			}
+			const bool big_display::isEq(const vals_b e, const bool v)
+			{
+				bool g;
+				get(e, g);
+				return (g == v);
 			}
 			const bool big_display::isEq(const vals_dp e, ALLEGRO_DISPLAY* v)
 			{
@@ -291,8 +451,16 @@ namespace LSW {
 				}
 
 				data.frames_count++;
-				
+
 				if (!wait_for_fps && (temp < 1.0 / data.lock_fps_to)) return true;
+
+
+				// wait
+				for (; (temp < 1.0 / data.lock_fps_to) && (data.lock_fps_to > 0); temp = al_get_time() - data.last_fps_set) Sleep(0.2 / data.last_fps_set);
+
+				// easier read
+				_realDraw(c);
+
 
 				// TOOLS
 				if (bev.g().getKey(Events::CUSTOMEVENT_DISPLAY_RESIZED)) {
@@ -322,15 +490,6 @@ namespace LSW {
 					data.last_fps = 1.0 * data.frames_count / temp;
 					data.frames_count = 0;
 				}
-
-				// wait
-				for (; (temp < 1.0 / data.lock_fps_to) && (data.lock_fps_to > 0); temp = al_get_time() - data.last_fps_set) Sleep(0.2 / data.last_fps_set);
-
-				// draw
-				al_flip_display();
-
-				// clear
-				al_clear_to_color(c);
 
 				return true;
 			}

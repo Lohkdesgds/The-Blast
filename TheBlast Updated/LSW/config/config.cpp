@@ -34,6 +34,7 @@ namespace LSW {
 						set(Config::SCREEN_X, Defaults::Config::screen_siz[0]);
 						set(Config::SCREEN_Y, Defaults::Config::screen_siz[1]);
 						set(Config::_TIMES_LIT, 0LL);
+						set(Config::WAS_FX_ON, true);
 
 						if (!al_save_config_file(temporary.g().c_str(), c)) {
 							throw "at config::config [#" + std::to_string((size_t)this) + "]: Cannot save config file!";

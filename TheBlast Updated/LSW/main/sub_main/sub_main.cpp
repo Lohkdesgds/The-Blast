@@ -6,6 +6,8 @@ namespace LSW {
 
 			_main_data* main::data = nullptr;
 
+			
+
 			main::main()
 			{
 				bool b = al_init();
@@ -216,6 +218,12 @@ namespace LSW {
 					// create display
 					data->disp.launch(data->setup.res[0], data->setup.res[1], data->setup.mode);
 
+					{
+						bool b;
+						conf.get(Config::WAS_FX_ON, b, true);
+						data->disp.set(Display::COLOR_SHIFTED, b);
+					}
+
 					data->cam.setup(); // guarantee global camera instance
 					data->bev.initInstance(); // guarantee global event instance
 
@@ -251,6 +259,7 @@ namespace LSW {
 							cam_p.cam_settings.layers_enabled.push_back(Defaults::default_font_foreground_layer);
 							cam_p.cam_settings.layers_enabled.push_back(-1);
 							cam_p.cam_settings.layers_enabled.push_back(-9999); // Early Access layer
+							//cam_p.cam_settings.layers_enabled.push_back(Defaults::Display::layer_fx); // Display RGB offset
 							cam_p.cam_settings.scale_g = 1.15;
 
 							__set_camera_quick(cam_p);
@@ -265,6 +274,7 @@ namespace LSW {
 							cam_p.cam_settings.layers_enabled.push_back(99);
 							cam_p.cam_settings.layers_enabled.push_back(100);
 							cam_p.cam_settings.layers_enabled.push_back(-9999); // Early Access layer
+							//cam_p.cam_settings.layers_enabled.push_back(Defaults::Display::layer_fx); // Display RGB offset
 
 							__set_camera_quick(cam_p);
 						}
@@ -278,6 +288,7 @@ namespace LSW {
 							cam_p.cam_settings.layers_enabled.push_back(99);
 							cam_p.cam_settings.layers_enabled.push_back(100);
 							cam_p.cam_settings.layers_enabled.push_back(-9999); // Early Access layer
+							//cam_p.cam_settings.layers_enabled.push_back(Defaults::Display::layer_fx); // Display RGB offset
 
 							__set_camera_quick(cam_p);
 						}
@@ -289,6 +300,7 @@ namespace LSW {
 							cam_p.cam_settings.layers_enabled.push_back(Defaults::Entity::common_layer);
 							cam_p.cam_settings.layers_enabled.push_back(Defaults::badboys_default_layer);
 							cam_p.cam_settings.layers_enabled.push_back(-9999); // Early Access layer
+							//cam_p.cam_settings.layers_enabled.push_back(Defaults::Display::layer_fx); // Display RGB offset
 
 							__set_camera_quick(cam_p);
 						}
@@ -299,6 +311,7 @@ namespace LSW {
 							cam_p.cam_settings.layers_enabled.push_back(Defaults::default_font_foreground_layer);
 							cam_p.cam_settings.layers_enabled.push_back(100);
 							cam_p.cam_settings.layers_enabled.push_back(-9999); // Early Access layer
+							//cam_p.cam_settings.layers_enabled.push_back(Defaults::Display::layer_fx); // Display RGB offset
 
 							__set_camera_quick(cam_p);
 						}
@@ -308,6 +321,7 @@ namespace LSW {
 							cam_p.cam_settings.layers_enabled.push_back(-81);
 							cam_p.cam_settings.layers_enabled.push_back(100);
 							cam_p.cam_settings.layers_enabled.push_back(-9999); // Early Access layer
+							//cam_p.cam_settings.layers_enabled.push_back(Defaults::Display::layer_fx); // Display RGB offset
 
 							__set_camera_quick(cam_p);
 						}
@@ -662,18 +676,24 @@ namespace LSW {
 					// SETUP OF THE FUNCTIONS FOR MOUSE (maybe more later)
 
 					// start functions
-					data->bev.g().addFunction(NEWF(Events::add_t_s, 0), &Events::defaultfunction_add);
-					data->bev.g().addFunction(NEWF(Events::cos_t_s, 1), &Events::defaultfunction_cos);
+					data->bev.g().addFunction(NEWF(Events::add_t_s, 0), &Events::defaultfunction_add); // mouse
+					data->bev.g().addFunction(NEWF(Events::cos_t_s, 1), &Events::defaultfunction_cos); // mouse
+					data->bev.g().addFunction(NEWF(Events::cos_t_s, 2), &Events::defaultfunction_cos); // fx background
+					data->bev.g().addFunction(NEWF(Events::cos_t_s, 3), &Events::defaultfunction_cos); // fx background
 
 					// get instances
 					Events::add_t_s* a1 = nullptr;
 					Events::cos_t_s* b1 = nullptr;
+					Events::cos_t_s* b2 = nullptr;
+					Events::cos_t_s* b3 = nullptr;
 
 					a1 = (Events::add_t_s*)data->bev.g().getFVoidArg(0);
 					b1 = (Events::cos_t_s*)data->bev.g().getFVoidArg(1);
+					b2 = (Events::cos_t_s*)data->bev.g().getFVoidArg(2);
+					b3 = (Events::cos_t_s*)data->bev.g().getFVoidArg(3);
 
 					// verify
-					if (!a1 || !b1) {
+					if (!a1 || !b1 || !b2) {
 						throw "MAIN::LOAD - COULD NOT CREATE EVENTS FUNCTIONS!";
 					}
 
@@ -684,6 +704,14 @@ namespace LSW {
 					b1->ampl = 0.2;
 					b1->default_val = 1.0;
 					b1->time_multiplier = 8.0;
+
+					b2->ampl = 0.0007;
+					b2->default_val = 0.0;
+					b2->time_multiplier = 2.9;
+
+					b3->ampl = 0.0007;
+					b3->default_val = 0.0;
+					b3->time_multiplier = 1.7;
 
 					srand(al_get_time());
 
@@ -1090,7 +1118,8 @@ namespace LSW {
 					Sprite::sprite* menu_03; // create player settings, so then creates:					///
 					Sprite::sprite* menu_04; // Set Nickname (big block, enter saves)						///
 					Sprite::sprite* menu_05; // Set predefined color (RGB+CYM+BW)							///
-					Sprite::sprite* menu_06; // back														///
+					Sprite::sprite* menu_06; // Set Blur FX On/Off											///
+					Sprite::sprite* menu_07; // back														///
 					Text::text* menu_00_t;																	///
 					Text::text* menu_01_t;																	///
 					//Text::text* menu_02_t;																/// SHOULDN'T EXIST (now)
@@ -1098,12 +1127,14 @@ namespace LSW {
 					Text::text* menu_04_t;																	///
 					Text::text* menu_05_t;																	///
 					Text::text* menu_06_t;																	///
+					Text::text* menu_07_t;																	///
 					Fx::bubbles bubbles;
 					Config::config conf;
 					Sprite::sprite* mouse;
 					Sound::track* t00;
 					float volume_got;
 					bool is_typing_name;
+					bool was_fx_enabled;
 
 					// SEARCHES
 					mouse = Sprite::getOrCreate("MOUSE");
@@ -1133,19 +1164,19 @@ namespace LSW {
 						menu_00->set(Sprite::COLLIDE, true);
 						menu_00->set(Sprite::SHOWBOX, /*true*/false);
 						menu_00->set(Sprite::LAYER, Defaults::default_settings_layer);
-						menu_00->set(Sprite::SCALEY, 0.20);
+						menu_00->set(Sprite::SCALEY, 0.15);
 						menu_00->set(Sprite::SCALEX, 1.5);
 						menu_00->set(Sprite::POSX, 0.0);
-						menu_00->set(Sprite::POSY, -0.50);
+						menu_00->set(Sprite::POSY, -0.60);
 
 						menu_00_t = Text::getOrCreate("L_MENU_00", true);
 						menu_00_t->set(Text::SETSTRING, "Enable or disable OSD");
 						menu_00_t->set(Text::SETFOLLOW, "L_MENU_00");
 						menu_00_t->set(Text::MODE, Text::ALIGN_CENTER);
 						menu_00_t->set(Text::COLOR, al_map_rgb_f(1.0,1.0,1.0));
-						menu_00_t->set(Text::SCALEG, 1.3);
+						menu_00_t->set(Text::SCALEG, 1.25);
 						menu_00_t->set(Text::UPDATETIME, 0.5);
-						menu_00_t->set(Text::POSY, -0.053);
+						menu_00_t->set(Text::POSY, -0.045);
 						menu_00_t->set(Text::LAYER, Defaults::default_settings_layer);
 
 						/** #01 - set music volume (background fixed)
@@ -1157,19 +1188,19 @@ namespace LSW {
 						menu_01->set(Sprite::COLLIDE, false); // FIXED
 						menu_01->set(Sprite::SHOWBOX, false);
 						menu_01->set(Sprite::LAYER, Defaults::default_settings_layer);
-						menu_01->set(Sprite::SCALEY, 0.20);
+						menu_01->set(Sprite::SCALEY, 0.15);
 						menu_01->set(Sprite::SCALEX, 1.5);
 						menu_01->set(Sprite::POSX, 0.0);
-						menu_01->set(Sprite::POSY, -0.25);
+						menu_01->set(Sprite::POSY, -0.35);
 
 						menu_01_t = Text::getOrCreate("L_MENU_01", true);
 //						menu_01_t->set(Text::SETSTRING, "Volume: 100\\%"); // defined later
 						menu_01_t->set(Text::SETFOLLOW, "L_MENU_01");
 						menu_01_t->set(Text::MODE, Text::ALIGN_CENTER);
 						menu_01_t->set(Text::COLOR, al_map_rgb_f(1.0, 1.0, 1.0));
-						menu_01_t->set(Text::SCALEG, 1.3);
+						menu_01_t->set(Text::SCALEG, 1.25);
 						menu_01_t->set(Text::UPDATETIME, 0.02);
-						menu_01_t->set(Text::POSY, -0.053);
+						menu_01_t->set(Text::POSY, -0.045);
 						menu_01_t->set(Text::LAYER, Defaults::default_settings_layer);
 
 						/** #02 - set music volume
@@ -1184,7 +1215,7 @@ namespace LSW {
 						menu_02->set(Sprite::COLLIDE, true);
 						menu_02->set(Sprite::SHOWBOX, /*true*/false);
 						menu_02->set(Sprite::LAYER, Defaults::default_settings_layer);
-						menu_02->set(Sprite::SCALEY, 0.20); // FORCE
+						menu_02->set(Sprite::SCALEY, 0.15); // FORCE
 						menu_02->set(Sprite::SCALEX, 0.20); // IT'S A BAR
 						//menu_02->set(Sprite::POSX, 0.39); // 100%
 						/* Special part*/
@@ -1209,7 +1240,7 @@ namespace LSW {
 							}
 						}
 						// endof Special part
-						menu_02->set(Sprite::POSY, -0.25);
+						menu_02->set(Sprite::POSY, -0.35);
 
 						// EMPTY TEXT SPACE
 
@@ -1223,18 +1254,18 @@ namespace LSW {
 						menu_03->set(Sprite::COLLIDE, true);
 						menu_03->set(Sprite::SHOWBOX, /*true*/false);
 						menu_03->set(Sprite::LAYER, Defaults::default_settings_layer);
-						menu_03->set(Sprite::SCALEY, 0.20); // FORCE
+						menu_03->set(Sprite::SCALEY, 0.15); // FORCE
 						menu_03->set(Sprite::SCALEX, 1.5);
 						menu_03->set(Sprite::POSX, 0.0);
-						menu_03->set(Sprite::POSY, 0.0);
+						menu_03->set(Sprite::POSY, -0.10);
 
 						menu_03_t = Text::getOrCreate("L_MENU_03", true);
 						menu_03_t->set(Text::SETSTRING, "(Re)create player profile");
 						menu_03_t->set(Text::SETFOLLOW, "L_MENU_03");
 						menu_03_t->set(Text::MODE, Text::ALIGN_CENTER);
 						menu_03_t->set(Text::COLOR, al_map_rgb_f(1.0, 1.0, 1.0));
-						menu_03_t->set(Text::SCALEG, 1.3);
-						menu_03_t->set(Text::POSY, -0.053);
+						menu_03_t->set(Text::SCALEG, 1.25);
+						menu_03_t->set(Text::POSY, -0.045);
 						menu_03_t->set(Text::LAYER, Defaults::default_settings_layer);
 
 						/** #04 - Set Nickname (big block, enter saves)
@@ -1247,10 +1278,10 @@ namespace LSW {
 						menu_04->set(Sprite::COLLIDE, true);
 						menu_04->set(Sprite::SHOWBOX, /*true*/false);
 						menu_04->set(Sprite::LAYER, Defaults::default_settings_layer);
-						menu_04->set(Sprite::SCALEY, 0.18); // FORCE
+						menu_04->set(Sprite::SCALEY, 0.14); // FORCE
 						menu_04->set(Sprite::SCALEX, 1.4);
 						menu_04->set(Sprite::POSX, 0.0);
-						menu_04->set(Sprite::POSY, 0.23);
+						menu_04->set(Sprite::POSY, 0.10);
 
 						menu_04_t = Text::getOrCreate("L_MENU_04", true);
 						menu_04_t->set(Text::SETSTRING, std::string("Nick: <NULL>"));
@@ -1258,7 +1289,7 @@ namespace LSW {
 						menu_04_t->set(Text::MODE, Text::ALIGN_CENTER);
 						menu_04_t->set(Text::COLOR, al_map_rgb_f(1.0, 1.0, 1.0));
 						menu_04_t->set(Text::SCALEG, 1.05);
-						menu_04_t->set(Text::POSY, -0.03);
+						menu_04_t->set(Text::POSY, -0.033);
 						menu_04_t->set(Text::LAYER, Defaults::default_settings_layer);
 
 						/** #05 - Set predefined color (RGB+CYM+BW)
@@ -1272,10 +1303,10 @@ namespace LSW {
 						menu_05->set(Sprite::COLLIDE, true);
 						menu_05->set(Sprite::SHOWBOX, /*true*/false);
 						menu_05->set(Sprite::LAYER, Defaults::default_settings_layer);
-						menu_05->set(Sprite::SCALEY, 0.18); // FORCE
+						menu_05->set(Sprite::SCALEY, 0.14); // FORCE
 						menu_05->set(Sprite::SCALEX, 1.4);
 						menu_05->set(Sprite::POSX, 0.0);
-						menu_05->set(Sprite::POSY, 0.43);
+						menu_05->set(Sprite::POSY, 0.30);
 
 						menu_05_t = Text::getOrCreate("L_MENU_05", true);
 						menu_05_t->set(Text::SETSTRING, "Color: <NULL>");
@@ -1283,7 +1314,7 @@ namespace LSW {
 						menu_05_t->set(Text::MODE, Text::ALIGN_CENTER);
 						menu_05_t->set(Text::COLOR, al_map_rgb_f(1.0, 1.0, 1.0));
 						menu_05_t->set(Text::SCALEG, 1.05);
-						menu_05_t->set(Text::POSY, -0.03);
+						menu_05_t->set(Text::POSY, -0.033);
 						menu_05_t->set(Text::LAYER, Defaults::default_settings_layer);
 
 						/** #06 - back
@@ -1296,23 +1327,52 @@ namespace LSW {
 						menu_06->set(Sprite::COLLIDE, true);
 						menu_06->set(Sprite::SHOWBOX, /*true*/false);
 						menu_06->set(Sprite::LAYER, Defaults::default_settings_layer);
-						menu_06->set(Sprite::SCALEY, 0.20); // FORCE
+						menu_06->set(Sprite::SCALEY, 0.15); // FORCE
 						menu_06->set(Sprite::SCALEX, 1.2);
 						menu_06->set(Sprite::POSX, 0.0);
-						menu_06->set(Sprite::POSY, 0.70);
+						menu_06->set(Sprite::POSY, 0.55);
 
 						menu_06_t = Text::getOrCreate("L_MENU_06", true);
-						menu_06_t->set(Text::SETSTRING, "<BACK>");
+						{
+							conf.get(Config::WAS_FX_ON, was_fx_enabled, true);
+							if (was_fx_enabled) menu_06_t->set(Text::SETSTRING, "FX: Enabled");
+							else menu_06_t->set(Text::SETSTRING, "FX: Disabled");
+						}
 						menu_06_t->set(Text::SETFOLLOW, "L_MENU_06");
 						menu_06_t->set(Text::MODE, Text::ALIGN_CENTER);
 						menu_06_t->set(Text::COLOR, al_map_rgb_f(1.0, 1.0, 1.0));
-						menu_06_t->set(Text::SCALEG, 1.3);
-						menu_06_t->set(Text::POSY, -0.053);
+						menu_06_t->set(Text::SCALEG, 1.25);
+						menu_06_t->set(Text::POSY, -0.045);
 						menu_06_t->set(Text::LAYER, Defaults::default_settings_layer);
+
+						/** #07 - back
+						- Click: Same as <ESCAPE>
+						*/
+						menu_07 = Sprite::getOrCreate("L_MENU_07", true);
+						menu_07->add("BAR_OFF");
+						menu_07->add("BAR_ON");
+						menu_07->set(Sprite::SCALEG, 0.6);
+						menu_07->set(Sprite::COLLIDE, true);
+						menu_07->set(Sprite::SHOWBOX, /*true*/false);
+						menu_07->set(Sprite::LAYER, Defaults::default_settings_layer);
+						menu_07->set(Sprite::SCALEY, 0.15); // FORCE
+						menu_07->set(Sprite::SCALEX, 1.2);
+						menu_07->set(Sprite::POSX, 0.0);
+						menu_07->set(Sprite::POSY, 0.75);
+
+						menu_07_t = Text::getOrCreate("L_MENU_07", true);
+						menu_07_t->set(Text::SETSTRING, "<BACK>");
+						menu_07_t->set(Text::SETFOLLOW, "L_MENU_07");
+						menu_07_t->set(Text::MODE, Text::ALIGN_CENTER);
+						menu_07_t->set(Text::COLOR, al_map_rgb_f(1.0, 1.0, 1.0));
+						menu_07_t->set(Text::SCALEG, 1.25);
+						menu_07_t->set(Text::POSY, -0.045);
+						menu_07_t->set(Text::LAYER, Defaults::default_settings_layer);
 					}
 
 					// CAMERA AND LAYER SET
 					data->disp.set(Display::LOCK_FPS_TO, 0);
+					data->cam.set(3, Camera::ZOOMY, 2.0);
 					__apply_cam_number(3);
 					__apply_layer_number(3);
 
@@ -1351,13 +1411,14 @@ namespace LSW {
 						}
 
 						// INPUT
-						bool b00, b02, b03, b04, b05, b06;
+						bool b00, b02, b03, b04, b05, b06, b07;
 						menu_00->get(Sprite::_IS_COLLIDING, b00);
 						menu_02->get(Sprite::_IS_COLLIDING, b02);
 						menu_03->get(Sprite::_IS_COLLIDING, b03);
 						menu_04->get(Sprite::_IS_COLLIDING, b04);
 						menu_05->get(Sprite::_IS_COLLIDING, b05);
 						menu_06->get(Sprite::_IS_COLLIDING, b06);
+						menu_07->get(Sprite::_IS_COLLIDING, b07);
 
 						// show on or off
 						if (b00) menu_00->set(Sprite::ANIMATIONTIME, -1);
@@ -1372,6 +1433,8 @@ namespace LSW {
 						else menu_05->set(Sprite::ANIMATIONTIME, 0);
 						if (b06) menu_06->set(Sprite::ANIMATIONTIME, -1);
 						else menu_06->set(Sprite::ANIMATIONTIME, 0);
+						if (b07) menu_07->set(Sprite::ANIMATIONTIME, -1);
+						else menu_07->set(Sprite::ANIMATIONTIME, 0);
 
 						if (data->bev.g().getKey(Events::MOUSE_0, false)) {
 							if (b00) {
@@ -1386,6 +1449,8 @@ namespace LSW {
 
 								//Config::config conf;
 								conf.set(Config::WAS_OSD_ON, !allas);
+
+								data->bev.g().getKey(Events::MOUSE_0, true);
 							}
 							else if (b02) {
 								float mx;
@@ -1442,6 +1507,16 @@ namespace LSW {
 								data->bev.g().getKey(Events::MOUSE_0, true);
 							}
 							else if (b06) {
+								was_fx_enabled = !was_fx_enabled;
+
+								if (was_fx_enabled) menu_06_t->set(Text::SETSTRING, "FX: Enabled");
+								else menu_06_t->set(Text::SETSTRING, "FX: Disabled");
+
+								data->disp.set(Display::COLOR_SHIFTED, was_fx_enabled);
+
+								data->bev.g().getKey(Events::MOUSE_0, true);
+							}
+							else if (b07) {
 								keep = false;
 
 								data->bev.g().getKey(Events::MOUSE_0, true);
@@ -1452,6 +1527,16 @@ namespace LSW {
 						// FX
 						mouse->set(Sprite::ROTATION, data->bev.g().getFunctionValNow(0));
 						mouse->set(Sprite::SCALEG, 0.07 * data->bev.g().getFunctionValNow(1));
+
+						// MOUSE POSITIONING
+						{
+							float y;
+							data->bev.g().getMouse(y, Events::Y);
+
+							data->cam.set(data->cam.getLastApplyID(), Camera::OFFY, 0.53 * y);
+							__apply_cam_number(3);
+						}
+
 						bubbles.think();
 						bubbles.draw();
 
@@ -1466,12 +1551,18 @@ namespace LSW {
 					Sprite::easyRemove("L_MENU_04");
 					Sprite::easyRemove("L_MENU_05");
 					Sprite::easyRemove("L_MENU_06");
+					Sprite::easyRemove("L_MENU_07");
 					Text::easyRemove("L_MENU_00");
 					Text::easyRemove("L_MENU_01");
 					Text::easyRemove("L_MENU_03");
 					Text::easyRemove("L_MENU_04");
 					Text::easyRemove("L_MENU_05");
 					Text::easyRemove("L_MENU_06");
+					Text::easyRemove("L_MENU_07");
+
+					data->cam.set(data->cam.getLastApplyID(), Camera::ZOOMY, 1.0);
+					data->cam.set(data->cam.getLastApplyID(), Camera::OFFY, 0);
+					__apply_cam_number(data->cam.getLastApplyID());
 
 					data->playing = MENU;
 				}

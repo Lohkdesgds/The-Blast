@@ -180,7 +180,7 @@ namespace LSW {
 				char temp[24];
 				SYSTEMTIME t;
 				GetLocalTime(&t);
-				sprintf_s(temp, "[%02d-%02d-%02d_%02d-%02d]", t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute);
+				sprintf_s(temp, "[%02d-%02d-%02d_%02d-%02d-%02d]", t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond);
 				push(temp);
 			}
 			template<mode N>

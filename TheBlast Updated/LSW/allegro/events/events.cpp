@@ -879,9 +879,11 @@ namespace LSW {
 						try {
 							for (auto& i : lyr.getNow().work())
 							{
-								spr_data.work().lock();
-								for (auto& spr : spr_data.work().work())
+								for (size_t p = 0; p < spr_data.work().getMax(); p++)//(auto& spr : spr_data.work().work())
 								{
+									Sprite::sprite* spr;
+									spr_data.get(spr, p);
+
 									bool skip;
 									spr->get(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, skip);
 									if (skip) continue;
@@ -894,8 +896,11 @@ namespace LSW {
 
 										spr->_resetCollision();
 
-										for (auto& spr2 : spr_data.work().work())
+										for (size_t q = 0; q < spr_data.work().getMax(); q++)//(auto& spr2 : spr_data.work().work())
 										{
+											Sprite::sprite* spr2;
+											spr_data.get(spr2, q);
+
 											if (spr != spr2) {
 												spr2->get(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, skip);
 												if (skip) continue;

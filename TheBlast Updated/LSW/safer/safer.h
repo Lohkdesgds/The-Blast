@@ -5,16 +5,33 @@
 #include <mutex>
 #include <thread>
 #include <cassert>
+#include <Windows.h>
+
+#define NOT_SAFE_RIGHT_NOW
+#define TIMER_KILL_POINTERS 2000 // ms
 
 namespace LSW {
 	namespace v2 {
 		namespace Safer {
 
+			template<typename T> struct __is_pointer { static const bool is_pointer = false; };
+			template<typename T> struct __is_pointer<T*> { static const bool is_pointer = true; };
+
+			template<typename T>
+			struct __safe_erasing {
+				ULONGLONG timer = 0;
+				T* pointer = nullptr;
+				__is_pointer<T> isptr;
+			};
+
 			// multiple read/writes can be hard.
 			template <typename T>
 			class safe_vector {
 				std::vector<T> v;
+				static std::vector<__safe_erasing<T>> v_drop;
+#ifndef NOT_SAFE_RIGHT_NOW
 				std::mutex m;
+#endif
 				bool locked_work = false;
 			public:
 				safe_vector();
@@ -27,7 +44,7 @@ namespace LSW {
 				T pop();
 				T fpop();
 				void clear();
-				void clearSomehow();
+				size_t flush();
 
 				void lock();
 				const std::vector<T>& work();
@@ -35,7 +52,6 @@ namespace LSW {
 
 				const T& operator[](const size_t&) const;
 				T& operator[](const size_t&);
-				//safe_vector& operator=(const safe_vector&);
 			};
 
 			class safe_string {
@@ -104,27 +120,24 @@ namespace LSW {
 				IMPLEMENTATION
 			*/
 
+			template <typename T> std::vector<__safe_erasing<T>> safe_vector<T>::v_drop;
+
 			template<typename T>
 			inline safe_vector<T>::safe_vector()
 			{
 				// none needed
 			}
 
-			/*template<typename T>
-			inline safe_vector<T>::safe_vector(safe_vector& sv)
-			{
-				sv.lock();
-				v.clear();
-				v = sv.work();
-				sv.unlock();
-			}*/
-
 			template <typename T>
 			inline void safe_vector<T>::push(T u, const bool skip)
 			{
+#ifndef NOT_SAFE_RIGHT_NOW
 				if (!skip) m.lock();
+#endif
 				v.push_back(u);
+#ifndef NOT_SAFE_RIGHT_NOW
 				if (!skip) m.unlock();
+#endif
 			}
 
 			template <typename T>
@@ -132,22 +145,26 @@ namespace LSW {
 			{
 				if (skip)
 				{
-					bool locked = m.try_lock();
 					assert(s < getMax());
 					T& i = v[s];
-					if (locked) m.unlock();
 					return i;
 				}
+#ifndef NOT_SAFE_RIGHT_NOW
 				m.lock();
+#endif
 				if (s >= getMax()) {
+#ifndef NOT_SAFE_RIGHT_NOW
 					m.unlock();
+#endif
 					if (s == 0) {
 						throw "SAFE_VECTOR::GET - S WAS NOT INTO VECTOR! Tried to fix, but it seems to be null/empty!";
 					}
 					return get(s - 1, skip);
 				}
 				T& i = v[s];
+#ifndef NOT_SAFE_RIGHT_NOW
 				m.unlock();
+#endif
 				return i;
 			}
 
@@ -160,64 +177,129 @@ namespace LSW {
 			template <typename T>
 			inline void safe_vector<T>::erase(size_t p)
 			{
+#ifndef NOT_SAFE_RIGHT_NOW
 				m.lock();
+#endif
 				assert(p < getMax());
+				{
+					__safe_erasing<T> se;
+					se.pointer = &v[p];
+					se.timer = GetTickCount64() + TIMER_KILL_POINTERS;
+					v_drop.push_back(se);
+				}
 				v.erase(v.begin() + p);
+#ifndef NOT_SAFE_RIGHT_NOW
 				m.unlock();
+#endif
 			}
 			template <typename T>
 			inline T safe_vector<T>::pop()
 			{
+#ifndef NOT_SAFE_RIGHT_NOW
 				m.lock();
+#endif
 				assert(!v.empty());
 				T t = v.back();
+				{
+					__safe_erasing<T> se;
+					se.pointer = &v.back();
+					se.timer = GetTickCount64() + TIMER_KILL_POINTERS;
+					v_drop.push_back(se);
+				}
 				v.pop_back();
+#ifndef NOT_SAFE_RIGHT_NOW
 				m.unlock();
+#endif
 				return t;
 			}
 			template <typename T>
 			inline T safe_vector<T>::fpop()
 			{
+#ifndef NOT_SAFE_RIGHT_NOW
 				m.lock();
+#endif
 				assert(!v.empty());
 				T t = v.front();
+				{
+					__safe_erasing<T> se;
+					se.pointer = &v.front();
+					se.timer = GetTickCount64() + TIMER_KILL_POINTERS;
+					v_drop.push_back(se);
+				}
 				v.erase(v.begin());
+#ifndef NOT_SAFE_RIGHT_NOW
 				m.unlock();
+#endif
 				return t;
 			}
 			template <typename T>
 			inline void safe_vector<T>::clear()
 			{
+#ifndef NOT_SAFE_RIGHT_NOW
 				m.lock();
+#endif
+				for(auto& i : v)
+				{
+					__safe_erasing<T> se;
+					se.pointer = &i;
+					se.timer = GetTickCount64() + TIMER_KILL_POINTERS;
+					v_drop.push_back(se);
+				}
 				v.clear();
+#ifndef NOT_SAFE_RIGHT_NOW
 				m.unlock();
+#endif
 			}
 			template <typename T>
-			inline void safe_vector<T>::clearSomehow()
+			inline size_t safe_vector<T>::flush()
 			{
-				bool b = m.try_lock();
-				v.clear();
-				if (b) m.unlock();
+#ifndef NOT_SAFE_RIGHT_NOW
+				m.lock();
+#endif
+				size_t howmany = 0;
+
+				for (size_t p = 0; v_drop.size() > p;)
+				{
+					__safe_erasing<T>& t = v_drop[p];
+					if (t.timer - GetTickCount64() < 0) {
+						if (t.isptr.is_pointer) delete t.pointer;
+						v_drop.erase(v_drop.begin());
+						howmany++;
+					}
+					else {
+						p++;
+					}
+				}
+#ifndef NOT_SAFE_RIGHT_NOW
+				m.unlock();
+#endif
+				return howmany;
 			}
 			template <typename T>
 			inline void safe_vector<T>::lock()
 			{
+#ifndef NOT_SAFE_RIGHT_NOW
 				m.lock();
 				locked_work = true;
+#endif
 			}
 
 			template <typename T>
 			inline const std::vector<T>& safe_vector<T>::work()
 			{
+#ifndef NOT_SAFE_RIGHT_NOW
 				assert(locked_work);
+#endif
 				return v;
 			}
 
 			template <typename T>
 			inline void safe_vector<T>::unlock()
 			{
+#ifndef NOT_SAFE_RIGHT_NOW
 				locked_work = false;
 				m.unlock();
+#endif
 			}
 
 			template<typename T>
@@ -229,22 +311,16 @@ namespace LSW {
 			template<typename T>
 			inline T & safe_vector<T>::operator[](const size_t& s)
 			{
-				bool locked = m.try_lock();
-				assert(s < getMax());
+#ifndef NOT_SAFE_RIGHT_NOW
+				m.lock();
+#endif
+				//assert(s < getMax());
 				T& i = v[s];
-				if (locked) m.unlock();
+#ifndef NOT_SAFE_RIGHT_NOW
+				m.unlock();
+#endif
 				return i;
 			}
-
-			/*template<typename T>
-			inline safe_vector<T> & safe_vector<T>::operator=(const safe_vector<T>& sv)
-			{
-				sv.lock();
-				v.clear();
-				v = sv.work();
-				sv.unlock();
-				return *this;
-			}*/
 
 
 

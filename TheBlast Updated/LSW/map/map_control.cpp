@@ -938,7 +938,7 @@ namespace LSW {
 					clone.push(tempp);
 				}
 				//vec.unlock();
-				vec.clearSomehow();
+				vec.clear();
 
 				clone.lock();
 				for (auto& i : clone.work())
@@ -962,7 +962,7 @@ namespace LSW {
 					break;
 					}
 				}
-				clone.clearSomehow();
+				clone.clear();
 				clone.unlock();
 
 				ent_data.work().unlock();
