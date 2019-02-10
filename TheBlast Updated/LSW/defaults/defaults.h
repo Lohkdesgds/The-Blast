@@ -7,7 +7,7 @@ namespace LSW {
 	namespace v2 {
 		namespace Defaults {
 			
-			const Safer::safe_string version_app = "V1.1.0E 201902101503NUS";
+			const Safer::safe_string version_app = "V1.1.0E-201902104603NUS";
 
 			const Safer::safe_string default_root_path = "%appdata%/Lohk's Studios/TheBlast/";
 			const Safer::safe_string default_global_path = "%appdata%/Lohk's Studios/TheBlast/logs/latest.log";

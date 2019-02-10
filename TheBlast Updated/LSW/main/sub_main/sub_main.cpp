@@ -1513,6 +1513,7 @@ namespace LSW {
 								else menu_06_t->set(Text::SETSTRING, "FX: Disabled");
 
 								data->disp.set(Display::COLOR_SHIFTED, was_fx_enabled);
+								conf.set(Config::WAS_FX_ON, was_fx_enabled);
 
 								data->bev.g().getKey(Events::MOUSE_0, true);
 							}
