@@ -278,7 +278,7 @@ namespace LSW {
 			enum event_xy{X,Y};
 
 // ARG TYPE, ID NUMBER (FOR SEARCH LATER)
-#define NEWF(x,y) (LSW::v2::Events::_functionThr*)new LSW::v2::Events::functionC<x>(y)
+#define NEWF(x,y) Events::_cast(new LSW::v2::Events::functionC<x>(y))
 
 			class _functionThr {
 			protected:
@@ -376,7 +376,7 @@ namespace LSW {
 
 				Safer::safe_string lastString, currString;
 
-				Safer::safe_vector<_functionThr*> funcs;
+				Safer::safer_vector<_functionThr> funcs;
 
 				std::map<events_keys, bool> keys;
 				std::map<int, ALLEGRO_TIMER*> timers;
@@ -389,7 +389,7 @@ namespace LSW {
 
 				_event_log last_log;
 
-				_functionThr* _get(const int);
+				Safer::safe_pointer<_functionThr> _get(const int);
 			public:
 				const bool setup();
 				void stop();
@@ -397,7 +397,7 @@ namespace LSW {
 				bool* getKeep();
 				void setMultiplierForUpdatingImg(const double); // like 144 for 144 hz, has to be before everything
 
-				const bool addFunction(_functionThr*, void(*)(void*, double&)); // IF BOOL = TRUE, RUN, else id
+				const bool addFunction(Safer::safe_pointer<_functionThr>, void(*)(void*, double&)); // IF BOOL = TRUE, RUN, else id
 				void delFunction(const int);
 				void delAllFunctions();
 				double getFunctionValNow(const int);
@@ -456,6 +456,19 @@ namespace LSW {
 			void _i_thr_collisionTimed(_event_log*, events*, double, bool*);
 			void _i_thr_functionsTimed(_event_log*, events*, double, bool*);
 			void _i_thr_updatePosTimed(_event_log*, events*, double, bool*);
+
+
+			// helpers
+
+			template <typename T>
+			inline Safer::safe_pointer<_functionThr> _cast(LSW::v2::Events::functionC<T>* p)
+			{
+				Safer::safe_pointer<_functionThr> i((_functionThr*)p);
+				return i;
+			}
+			//{ Safer::safe_pointer<LSW::v2::Events::functionC<Events::add_t_s>> ptrr(new LSW::v2::Events::functionC<Events::add_t_s>(0)); return std::dynamic_pointer_cast<LSW::v2::Events::_functionThr>(ptrr); }
 		}
+
+
 	}
 }

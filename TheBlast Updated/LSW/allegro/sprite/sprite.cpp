@@ -104,20 +104,21 @@ namespace LSW {
 			{
 				reset_sprite_data(data);
 				Log::gfile logg;
-				logg.debug(" -> CREATED NEW SPRITE ID#" + std::to_string((int)this) + " <- ");
+				logg << Log::START << Log::_func("sprite", "sprite") << "Registered spawn of sprite #" + std::to_string((size_t)this) << Log::ENDL;
+				logg.flush();
 			}
 
 			sprite::~sprite()
 			{
-				Log::gfile logg;
-				logg.debug(" -> DELETED SPRITE ID#" + std::to_string((int)this) + "(" + id_g.g() + ") <- ");
+				Log::gfile* loggi = new Log::gfile();
+				*loggi << Log::START << Log::_func("sprite", "~sprite") << "Registered despawn of sprite #" + std::to_string((size_t)this) /*<< ";ID=" << id_g */<< Log::ENDL;
+				loggi->flush();
+				delete loggi;
 			}
 
 			void sprite::add(Safer::safe_string s, const size_t amount) // search in database
 			{
-				Image::image_low* img = nullptr;
-				//				Image::images_database dbs;
-
+				Safer::safe_pointer<Image::image_low> img;
 				d_images_database dbs;
 
 				if (amount > 1)
@@ -136,8 +137,7 @@ namespace LSW {
 								assert(img);
 								exit(-1);
 							}
-							bmps.push(img);
-							img = nullptr;
+							bmps.push_back(img);
 							hasChangedSomehow = true;
 						}
 					}
@@ -150,7 +150,7 @@ namespace LSW {
 							assert(img);
 							exit(-1);
 						}
-						bmps.push(img);
+						bmps.push_back(img);
 						hasChangedSomehow = true;
 					}
 				}
@@ -168,10 +168,10 @@ namespace LSW {
 			}
 			void sprite::remove(const Safer::safe_string s) // ids from images
 			{
-				for (size_t p = 0; p < bmps.getMax(); p++)
+				for (size_t p = 0; p < bmps.size(); p++)
 				{
 					if (bmps[p]->isEq(Image::ID, s)) {
-						bmps.erase(p);
+						bmps.erase(bmps.begin() + p);
 						break;
 					}
 				}
@@ -205,7 +205,7 @@ namespace LSW {
 				if (data.dval[ANIMATIONTIME] <= 0.0)
 				{
 					lastcall_opt = (int)(-data.dval[ANIMATIONTIME]);
-					if (lastcall_opt > bmps.getMax()) lastcall_opt = bmps.getMax() - 1;
+					if (lastcall_opt > bmps.size()) lastcall_opt = bmps.size() - 1;
 					lastcall = al_get_time();
 					got_to_end_one_time_at_least = false;
 					hasChangedSomehow = true;
@@ -219,7 +219,7 @@ namespace LSW {
 				if (data.dval[ANIMATIONTIME] <= 0.0)
 				{
 					lastcall_opt = (int)(-data.dval[ANIMATIONTIME]);
-					if (lastcall_opt > bmps.getMax()) lastcall_opt = bmps.getMax() - 1;
+					if (lastcall_opt > bmps.size()) lastcall_opt = bmps.size() - 1;
 					lastcall = al_get_time();
 					got_to_end_one_time_at_least = false;
 					hasChangedSomehow = true;
@@ -275,7 +275,7 @@ namespace LSW {
 			{
 				switch (e) {
 				case SIZE:
-					v = bmps.getMax();
+					v = bmps.size();
 					break;
 				case FRAME:
 					v = lastcall_opt;
@@ -347,7 +347,7 @@ namespace LSW {
 
 					replacing.lock();
 
-					if (bmps.getMax() == 0) {
+					if (bmps.size() == 0) {
 						replacing.unlock();
 						return false;
 					}
@@ -359,7 +359,7 @@ namespace LSW {
 						while (al_get_time() - lastcall > 1.0 / data.dval[ANIMATIONTIME]) {
 							lastcall += /*al_get_time();*/ 1.0 / data.dval[ANIMATIONTIME];
 							lastcall_opt++;
-							if (lastcall_opt >= bmps.getMax()) {
+							if (lastcall_opt >= bmps.size()) {
 								got_to_end_one_time_at_least = true;
 								if (data.bval[LOOPING_IMAGES]) lastcall_opt = 0;
 								else lastcall_opt--;
@@ -375,10 +375,13 @@ namespace LSW {
 						return false;
 					}
 					ALLEGRO_BITMAP* bmp = nullptr; // current bitmap
-					if (!bmps.get(frame, Defaults::exp_veryfast)) {
+					/*if (!bmps[frame]) {
 						return false;
-					}
-					bmps.get(frame, Defaults::exp_veryfast)->get(Image::BMP, bmp);
+					}*/
+
+					if (frame >= bmps.size()) frame = bmps.size() - 1;
+
+					bmps[frame]->get(Image::BMP, bmp);
 					if (!bmp) {
 						replacing.unlock();
 						return false;
@@ -521,7 +524,7 @@ namespace LSW {
 			void sprite::_setAsTarg(const size_t a)
 			{
 				ALLEGRO_BITMAP* bmp = nullptr;
-				bmps.get(a, Defaults::exp_veryfast)->get(Image::BMP, bmp);
+				bmps[a]->get(Image::BMP, bmp);
 				if (!bmp) throw "SPRITE::_SETASTARG - Cannot set id #" + std::to_string((int)this) + " as target";
 
 				al_set_target_bitmap(bmp);
@@ -661,9 +664,8 @@ namespace LSW {
 				logg.debug("# SCLY:" + std::to_string(data.dval[SCALEY]));
 				logg.debug("# SCLG:" + std::to_string(data.dval[SCALEG]));
 				logg.debug("# BMPS:");
-				bmps.lock();
 				size_t p = 0;
-				for (auto& i : bmps.work()) {
+				for (auto& i : bmps) {
 					if (i) {
 						Safer::safe_string tempstr;
 						i->get(Image::ID, tempstr);
@@ -675,7 +677,6 @@ namespace LSW {
 					}
 					p++;
 				}
-				bmps.unlock();
 				logg.debug("# ------------------------------------------");
 			}
 
@@ -722,15 +723,17 @@ namespace LSW {
 				return (u == layer);
 			}
 
-			size_t _find(const Safer::safe_string s, Safer::safe_vector<sprite*>& v, bool& u)
+			size_t _find(const Safer::safe_string s, Safer::safer_vector<sprite>& v, bool& u)
 			{
 				u = false;
-				for (size_t p = 0; p < v.getMax(); p++)
+				size_t p = 0;
+				for (auto& i : v)
 				{
-					if (v[p]->amI(s)) {
+					if (i->amI(s)) {
 						u = true;
 						return p;
 					}
+					p++;
 				}
 				return 0;
 			}
@@ -743,12 +746,18 @@ namespace LSW {
 
 				for (auto& i : v) {
 
-					for (size_t p = 0; p < spr_data.work().getMax(); p++)
+					for (size_t pos = 0; pos < spr_data.work().work().size();)
 					{
-						Sprite::sprite* spr;
-						spr_data.get(spr, p);
-						if (spr) {
-							spr->drawIfLayer(i);
+						auto j = spr_data.work().get(pos);
+						if (Safer::_check_pointer_existance<sprite>(j)) {
+
+							if (j.use_count() == 0) continue;
+							j->drawIfLayer(i);
+
+							pos++;
+						}
+						else {
+							spr_data.work().erase(pos);
 						}
 					}
 				}
@@ -791,29 +800,30 @@ namespace LSW {
 			}
 
 
-			sprite* getOrCreate(const Safer::safe_string s, const bool create)
+			Safer::safe_pointer<sprite> getOrCreate(const Safer::safe_string s, const bool create)
 			{
 				d_sprite_database spr_data;
-				sprite* ref = nullptr;
+				Safer::safe_pointer<sprite> ref;
 				if (spr_data.get(ref, s)) return ref;
 				if (create) {
-					spr_data.create(ref);
-					ref->setID(s);
-					return ref;
+					Safer::safe_pointer<sprite> nuev;
+					spr_data.create(nuev);
+					nuev->setID(s);
+					return nuev;
 				}
 				else {
-					throw "EXCEPTION AT SPRITE GETORCREATE: NOT FOUND AND NOT SUPPOSED TO CREATE!";
-					return nullptr;
+					throw "at Image::getOrCreate(): Could not find \"" + s.g() + "\".";
+					return Safer::safe_pointer<sprite>();
 				}
 			}
 			void easyRemove(const Safer::safe_string s)
 			{
 				d_sprite_database spr_data;
-				sprite* ref = nullptr;
+				Safer::safe_pointer<sprite> ref;
 				if (spr_data.get(ref, s)) {
 					spr_data.remove(s);
 					// delete should do the trick
-					delete ref;
+					//delete ref;
 				}
 			}
 		}

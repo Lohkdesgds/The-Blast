@@ -43,7 +43,7 @@ namespace LSW {
 						ALLEGRO_BITMAP* orig = al_get_backbuffer(data.md);
 						ALLEGRO_BITMAP* tbmp = nullptr;
 
-						Image::image_low* il = Image::getOrCreate("__INTERNAL_FX_0");
+						auto il = Image::getOrCreate("__INTERNAL_FX_0");
 						if (il) {
 							il->get(Image::BMP, tbmp);
 							if (tbmp) {
@@ -52,7 +52,6 @@ namespace LSW {
 								al_draw_bitmap(orig, 0, 0, 0);
 							}
 						}
-						il = nullptr;
 
 						il = Image::getOrCreate("__INTERNAL_FX_1");
 						if (il) {
@@ -63,7 +62,7 @@ namespace LSW {
 								al_draw_bitmap(orig, 0, 0, 0);
 							}
 						}
-						il = nullptr;
+						
 
 						il = Image::getOrCreate("__INTERNAL_FX_2");
 						if (il) {
@@ -74,7 +73,7 @@ namespace LSW {
 								al_draw_bitmap(orig, 0, 0, 0);
 							}
 						}
-						il = nullptr;
+						
 
 						al_set_target_backbuffer(data.md);
 					}
@@ -116,10 +115,10 @@ namespace LSW {
 				// flush
 				if (al_get_time() - data.last_flush > Defaults::Display::flush_time) {
 					data.last_flush = al_get_time();
-					__flushCache();
+					//__flushCache();
 				}
 			}
-			void big_display::__flushCache()
+			/*void big_display::__flushCache()
 			{
 				d_entity_database ent_data;
 				d_images_database img_data;
@@ -140,7 +139,7 @@ namespace LSW {
 				if (txts > 0) logg << Log::NEEDED_START << Log::_func("main", "__flushCache") << txts << " texts have been cleaned." << Log::NEEDED_ENDL;
 				if (msks > 0) logg << Log::NEEDED_START << Log::_func("main", "__flushCache") << msks << " tracks have been cleaned." << Log::NEEDED_ENDL;
 				if (ents > 0) logg << Log::NEEDED_START << Log::_func("main", "__flushCache") << ents << " entities have been cleaned." << Log::NEEDED_ENDL;
-			}
+			}*/
 
 			big_display::big_display()
 			{
@@ -164,7 +163,7 @@ namespace LSW {
 
 						logg << Log::NEEDED_START << Log::_func("big_display", "~big_display", Log::WARN) << "Display has been disabled!" << Log::NEEDED_ENDL;
 
-						__flushCache();
+						//__flushCache();
 					}
 					else {
 						logg << Log::NEEDED_START << Log::_func("big_display", "~big_display", Log::WARN) << "DISPLAY WAS NOT FOUND BY LAST BIG_DISPLAY INSTANCE! This can be an error, or not. Hmm." << Log::NEEDED_ENDL;

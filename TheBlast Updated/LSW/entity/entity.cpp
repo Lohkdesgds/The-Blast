@@ -16,28 +16,25 @@ namespace LSW {
 					d_sprite_database spr_data;
 					Safer::safe_string str;
 					spr->getID(str);
-					spr_data.remove(str);
-					delete spr;
+					Sprite::easyRemove(str);
+					//delete spr;
 				}
 				if (txt) {
 					d_texts_database txt_data;
 					Safer::safe_string str;
 					txt->get(Text::SETID, str);
-					txt_data.remove(str);
-					delete txt;
+					Text::easyRemove(str);
+					//delete txt;
 				}
 				if (rgb)
 				{
 					d_images_database img_data;
 					Safer::safe_string str;
 					rgb->get(Image::ID, str);
-					img_data.remove(str);
-					rgb->unload();
-					delete rgb;
+					Image::easyRemove(str);
+					///rgb->unload();
+					//delete rgb;
 				}
-				spr = nullptr;
-				txt = nullptr;
-				rgb = nullptr;
 
 				name.clear();
 				//health = 1.0;
@@ -71,7 +68,7 @@ namespace LSW {
 				return (name == s);
 			}
 
-			Sprite::sprite * entity::getS()
+			Safer::safe_pointer<Sprite::sprite> entity::getS()
 			{
 				return spr;
 			}
@@ -81,7 +78,7 @@ namespace LSW {
 			{
 				typ = BADBOY;
 			}
-			void badboy::setFollowing(Sprite::sprite * s)
+			void badboy::setFollowing(Safer::safe_pointer<Sprite::sprite> s)
 			{
 				player_to_follow = s;
 			}
@@ -345,15 +342,17 @@ namespace LSW {
 
 
 
-			size_t _find(const Safer::safe_string s, Safer::safe_vector<entity*>& v, bool& u)
+			size_t _find(const Safer::safe_string s, Safer::safer_vector<entity>& v, bool& u)
 			{
 				u = false;
-				for (size_t p = 0; p < v.getMax(); p++)
+				size_t p = 0;
+				for (auto& i : v)
 				{
-					if (v[p]->amI(s)) {
+					if (i->amI(s)) {
 						u = true;
 						return p;
 					}
+					p++;
 				}
 				return 0;
 			}
@@ -363,21 +362,27 @@ namespace LSW {
 				d_entity_database ent_data;
 				//Camera::camera_g cam;
 
-
-				ent_data.work().lock();
-				for (auto& i : ent_data.work().work())
+				for (size_t pos = 0; pos < ent_data.work().work().size();)
 				{
-					switch (i->getType())
-					{
-					case PLAYER:
-						((player*)i)->tick();
-						break;
-					case BADBOY:
-						((badboy*)i)->tick();
-						break;
+					auto i = ent_data.work().get(pos);
+					if (Safer::_check_pointer_existance<entity>(i)) {
+					
+						switch (i->getType())
+						{
+						case PLAYER:
+							std::dynamic_pointer_cast<player>(i)->tick();
+							break;
+						case BADBOY:
+							std::dynamic_pointer_cast<badboy>(i)->tick();
+							break;
+						}
+
+						pos++;
+					}
+					else {
+						ent_data.work().erase(pos);
 					}
 				}
-				ent_data.work().unlock();
 			}
 
 

@@ -191,7 +191,7 @@ namespace LSW {
 							}
 							else sprintf_s(tempstr_c, "UNDEF");
 							break;
-						case T_SPRITE_ENTITY_HEALTH:
+						case T_SPRITE_ENTITY_HEALTH: ///TODO
 							if (follow) {
 
 								Entities::entity* ent = nullptr;
@@ -224,38 +224,91 @@ namespace LSW {
 						case T_IMAGES_LOADED:
 							{
 								d_images_database img_data;
-								size_t t = img_data.work().getMax();
+								size_t t = img_data.work().work().size();
 								sprintf_s(tempstr_c, "%lu", t);
 							}
 							break;
 						case T_SPRITES_LOADED:
 							{
 								d_sprite_database spr_data;
-								size_t t = spr_data.work().getMax();
+								size_t t = spr_data.work().work().size();
 								sprintf_s(tempstr_c, "%lu", t);
 							}
 							break;
 						case T_TEXTS_LOADED:
 							{
 								d_texts_database txt_data;
-								size_t t = txt_data.work().getMax();
+								size_t t = txt_data.work().work().size();
 								sprintf_s(tempstr_c, "%lu", t);
 							}
 							break;
 						case T_TRACKS_LOADED:
 							{
 								d_musics_database msk_data;
-								size_t t = msk_data.work().getMax();
+								size_t t = msk_data.work().work().size();
 								sprintf_s(tempstr_c, "%lu", t);
 							}
 							break;
 						case T_ENTITIES_LOADED:
 							{
 								d_entity_database ent_data;
-								size_t t = ent_data.work().getMax();
+								size_t t = ent_data.work().work().size();
 								sprintf_s(tempstr_c, "%lu", t);
 							}
 							break;
+						case T_GARBAGE_TOTAL:
+							{
+								d_entity_database ent_data;
+								d_images_database img_data;
+								d_musics_database msk_data;
+								d_sprite_database spr_data;
+								d_texts_database txt_data;
+
+								size_t sprs = spr_data.work().check_weak_count();
+								size_t imgs = img_data.work().check_weak_count();
+								size_t txts = txt_data.work().check_weak_count();
+								size_t msks = msk_data.work().check_weak_count();
+								size_t ents = ent_data.work().check_weak_count();
+
+								size_t t = sprs + imgs + txts + msks + ents;
+								
+								sprintf_s(tempstr_c, "%lu", t);
+							}
+							break;
+						case T_IMAGES_GARBAGE:
+							{
+								d_images_database img_data;
+								size_t t = img_data.work().check_weak_count();
+								sprintf_s(tempstr_c, "%lu", t);
+							}
+							break;
+						case T_SPRITES_GARBAGE:
+							{
+								d_sprite_database spr_data;
+								size_t t = spr_data.work().check_weak_count();
+								sprintf_s(tempstr_c, "%lu", t);
+							}
+							break;
+						case T_TEXTS_GARBAGE:
+							{
+								d_texts_database txt_data;
+								size_t t = txt_data.work().check_weak_count();
+								sprintf_s(tempstr_c, "%lu", t);
+							}
+							break;
+						case T_TRACKS_GARBAGE:
+							{
+								d_musics_database msk_data;
+								size_t t = msk_data.work().check_weak_count();
+								sprintf_s(tempstr_c, "%lu", t);
+							}
+							break;
+						case T_ENTITIES_GARBAGE:
+							{
+								d_entity_database ent_data;
+								size_t t = ent_data.work().check_weak_count();
+								sprintf_s(tempstr_c, "%lu", t);
+							}
 						}
 
 						substitute = tempstr_c;
@@ -292,14 +345,14 @@ namespace LSW {
 			void text::setFollow(const Safer::safe_string u)
 			{
 				d_sprite_database spr_data;
-				Sprite::sprite* spr = nullptr;
+				Safer::safe_pointer<Sprite::sprite> spr;
 				if (spr_data.get(spr, u))
 				{
 					setFollow(spr);
 				}
 			}
 
-			void text::setFollow(Sprite::sprite* u)
+			void text::setFollow(Safer::safe_pointer<Sprite::sprite> u)
 			{
 				follow = u;
 			}
@@ -307,12 +360,12 @@ namespace LSW {
 			const bool text::load(const Safer::safe_string p, const bool raw, const double siz)
 			{
 				Log::gfile logg;
-				logg << Log::START << "[TEXT:LOAD_][INFO] Verifying new loading of texture called " << p << "... (ID#" << (int)this << ")" << Log::ENDL;
+				logg << Log::START << Log::_func("text","load") << "Verifying new loading of texture called " << p << "... (ID#" << (int)this << ")" << Log::ENDL;
 
 				if (!default_font) {
 					//Camera::camera_g cam;
 
-					logg << Log::START << "[TEXT:LOAD_][INFO] Load allowed for " << p << "... (ID#" << (int)this << ")" << Log::ENDL;
+					logg << Log::START << Log::_func("text", "load") << "Load allowed for " << p << "... (ID#" << (int)this << ")" << Log::ENDL;
 
 					_bpath = p;
 
@@ -326,7 +379,7 @@ namespace LSW {
 
 					bool aa= (default_font = al_load_ttf_font(s.g().c_str(), 1.0 * siz * Defaults::sharpness_font / 20.0/*(sqrt(cam.get(Camera::BUF_X)*cam.get(Camera::BUF_Y)))*(2.5 / 144)*/, 0));
 
-					logg << Log::START << "[TEXT:LOAD_][INFO] Settings: {LOADSUCCESS=" << (aa ? "Y" : "N") << ";ID=#" << (int)this << ";PATH=" << s << ";SIZE=" << 1000000.0 * siz * Defaults::sharpness_font / 20.0 << "E-6}" << Log::ENDL;
+					//logg << Log::START << Log::_func("text", "load") << " Settings: {LOADSUCCESS=" << (aa ? "Y" : "N") << ";ID=#" << (int)this << ";PATH=" << s << ";SIZE=" << 1000000.0 * siz * Defaults::sharpness_font / 20.0 << "E-6}" << Log::ENDL;
 					logg.flush();
 
 					return aa;
@@ -362,9 +415,20 @@ namespace LSW {
 				}
 			}
 
+			text::text()
+			{
+				Log::gfile logg;
+				logg << Log::START << Log::_func("text", "text") << "Registered spawn of text #" + std::to_string((size_t)this) << Log::ENDL;
+				logg.flush();
+			}
+
 			text::~text()
 			{
-				unload();
+				//unload();
+				Log::gfile* loggi = new Log::gfile();
+				*loggi << Log::START << Log::_func("text", "~text") << "Registered despawn of text #" + std::to_string((size_t)this)/* << ";ID=" << id */<< Log::ENDL;
+				loggi->flush();
+				delete loggi;
 			}
 
 			void text::verify(const bool reloadd)
@@ -723,15 +787,17 @@ namespace LSW {
 
 
 
-			size_t _find(const Safer::safe_string s, Safer::safe_vector<text*>& v, bool& u)
+			size_t _find(const Safer::safe_string s, Safer::safer_vector<text>& v, bool& u)
 			{
 				u = false;
-				for (size_t p = 0; p < v.getMax(); p++)
+				size_t p = 0;
+				for (auto& i : v)
 				{
-					if (v[p]->isEq(Text::SETID, s)) {
+					if (i->isEq(Text::SETID, s)) {
 						u = true;
 						return p;
 					}
+					p++;
 				}
 				return 0;
 			}
@@ -744,42 +810,46 @@ namespace LSW {
 				std::vector<int> v = cam.getLayers(cam.getLastApplyID());
 
 				for (auto& j : v) {
-					for (size_t p = 0; p < txt_data.work().getMax(); p++)
+					for (size_t pos = 0; pos < txt_data.work().work().size();)
 					{
-						Text::text* txt;
-						txt_data.get(txt, p);
-						if (txt) {
-							txt->verify();
-							txt->draw(j);
+						auto i = txt_data.work().get(pos);
+						if (Safer::_check_pointer_existance<text>(i)){
+							i->verify();
+							i->draw(j);
+							pos++;
+						}
+						else {
+							txt_data.work().erase(pos);
 						}
 					}
 				}
 
 			}
 
-			text* getOrCreate(const Safer::safe_string s, const bool create)
+			Safer::safe_pointer<text> getOrCreate(const Safer::safe_string s, const bool create)
 			{
 				d_texts_database txt_data;
-				text* ref = nullptr;
+				Safer::safe_pointer<text> ref;
 				if (txt_data.get(ref, s)) return ref;
 				if (create) {
-					txt_data.create(ref);
-					ref->set(Text::SETID, s);
-					return ref;
+					Safer::safe_pointer<text> nuev;
+					txt_data.create(nuev);
+					nuev->set(Text::SETID, s);
+					return nuev;
 				}
 				else {
-					throw "EXCEPTION AT TEXT GETORCREATE: NOT FOUND AND NOT SUPPOSED TO CREATE!";
-					return nullptr;
+					throw "at Image::getOrCreate(): Could not find \"" + s.g() + "\".";
+					return Safer::safe_pointer<text>();
 				}
 			}
 			void easyRemove(const Safer::safe_string s)
 			{
 				d_texts_database txt_data;
-				text* ref = nullptr;
+				Safer::safe_pointer<text> ref;
 				if (txt_data.get(ref, s)) {
-					txt_data.remove(s);
 					ref->unload();
-					delete ref;
+					txt_data.remove(s);
+					//delete ref;
 				}
 			}
 		}

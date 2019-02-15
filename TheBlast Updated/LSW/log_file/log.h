@@ -18,7 +18,7 @@ namespace LSW {
 				bool islonglog = false;
 				bool is_needed_lock = false;
 				Safer::safe_string now;
-				Safer::safe_vector<Safer::safe_string> lines;
+				std::vector<Safer::safe_string> lines;
 			};
 
 			struct _custom_call_0 {
@@ -144,11 +144,11 @@ namespace LSW {
 
 						if (g.store_log) {
 							if (i == '\n') {
-								g.lines.push(g.now);
+								g.lines.push_back(g.now);
 								g.now.clear();
-								if (g.lines.getMax() > Defaults::max_lines_stored_by_memlog)
+								if (g.lines.size() > Defaults::max_lines_stored_by_memlog)
 								{
-									g.lines.fpop();
+									g.lines.erase(g.lines.begin());
 								}
 							}
 							else g.now += i;

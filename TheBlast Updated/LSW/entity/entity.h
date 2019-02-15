@@ -17,9 +17,9 @@ namespace LSW {
 			protected:
 				static size_t countt;
 
-				Sprite::sprite* spr = nullptr;
-				Image::image_low* rgb = nullptr;
-				Text::text* txt = nullptr;
+				Safer::safe_pointer<Sprite::sprite> spr;
+				Safer::safe_pointer<Image::image_low> rgb;
+				Safer::safe_pointer<Text::text> txt;
 
 				Safer::safe_string name;
 				double health = 1.0;
@@ -43,7 +43,7 @@ namespace LSW {
 				const type getType();
 				const bool amI(const Safer::safe_string);
 
-				Sprite::sprite* getS();
+				Safer::safe_pointer<Sprite::sprite> getS();
 
 				virtual void tick() = 0;
 			};
@@ -75,10 +75,10 @@ namespace LSW {
 
 			class badboy : public entity
 			{
-				Sprite::sprite* player_to_follow = nullptr;
+				Safer::safe_pointer<Sprite::sprite> player_to_follow;
 			public:
 				badboy();
-				void setFollowing(Sprite::sprite*);
+				void setFollowing(Safer::safe_pointer<Sprite::sprite>);
 				void tick();
 
 				void load(const ALLEGRO_COLOR, const int = Defaults::Entity::common_layer, const double = Defaults::Entity::size);
@@ -86,7 +86,7 @@ namespace LSW {
 			};
 
 
-			size_t _find(const Safer::safe_string, Safer::safe_vector<entity*>&, bool&);
+			size_t _find(const Safer::safe_string, Safer::safer_vector<entity>&, bool&);
 			void _draw();
 
 			void reset_player_data(_player_data&);

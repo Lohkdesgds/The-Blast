@@ -237,33 +237,32 @@ namespace LSW {
 			}
 
 
-			_functionThr* events::_get(const int r)
+			Safer::safe_pointer<_functionThr> events::_get(const int r)
 			{
-				_functionThr* re = nullptr;
-				for (size_t p = 0; p < funcs.getMax(); p++)
+				for (auto& i : funcs)
 				{
-					if (funcs[p]->getId() == r) {
-						re = funcs[p];
-						break;
+					if (i->getId() == r) {
+						return i;
 					}
 				}
-				return re;
+				throw "at events::_get: not found id " + std::to_string(r);
+				return Safer::safe_pointer<_functionThr>();
 			}
 			const bool events::setup()
 			{
 				if (!targ) {
-					glog << Log::START << "[THR?:EVENT][INFO] Initializing event handler... (thread)" << Log::ENDL;
+					glog << Log::START << Log::_func("events", "setup") << "Initializing event handler... (thread)" << Log::ENDL;
 
 					targ = al_get_current_display();
 					if (!targ) {
-						glog << Log::START << "[THR?:EVENT][ERRR] Cannot detect display! Something is not great!" << Log::ENDL;
+						glog << Log::START << Log::_func("events", "setup", Log::ERRR) << "Cannot detect display! Something is not great!" << Log::ENDL;
 						glog.flush();
 						return false;
 					}
 
 					if (!(ev_qu = al_create_event_queue())) {
 						targ = nullptr;
-						glog << Log::START << "[THR?:EVENT][ERRR] Could not create event queue." << Log::ENDL;
+						glog << Log::START << Log::_func("events", "setup", Log::ERRR) << "Could not create event queue." << Log::ENDL;
 						return false;
 					}
 
@@ -271,20 +270,20 @@ namespace LSW {
 					al_register_event_source(ev_qu, al_get_mouse_event_source());
 					al_register_event_source(ev_qu, al_get_display_event_source(targ));
 
-					glog << Log::START << "[THR?:EVENT][INFO] Initializing thread right now..." << Log::ENDL;
+					glog << Log::START << Log::_func("events", "setup") << "Initializing thread right now..." << Log::ENDL;
 
 					thr = new std::thread(_thread_ev, this);
 
 					for (clock_t now = clock(); clock() - now < 20 * CLOCKS_PER_SEC && !alright;);
 					if (!alright) {
-						glog << Log::START << "[THR?:EVENT][ERRR] SOMETHING WENT WRONG, I guess. I have to wait for the thread, so..." << Log::ENDL;
+						glog << Log::START << Log::_func("events", "setup", Log::ERRR) << "SOMETHING WENT WRONG, I guess. I have to wait for the thread, so..." << Log::ENDL;
 						glog.flush();
 						thr->join();
 						alright = false;
 						al_destroy_event_queue(ev_qu);
 						ev_qu = nullptr;
 						targ = nullptr;
-						glog << Log::START << "[THR?:EVENT][WARN] Trying again..." << Log::ENDL;
+						glog << Log::START << Log::_func("events", "setup", Log::WARN) << "Trying again..." << Log::ENDL;
 						setup();
 					}
 				}
@@ -294,7 +293,7 @@ namespace LSW {
 			void events::stop()
 			{
 				if (!targ) {
-					glog << Log::START << "[THR?:EVENT][INFO] Shutting down thread..." << Log::ENDL;
+					glog << Log::START << Log::_func("events", "stop") << "Shutting down thread(s)..." << Log::ENDL;
 					glog.flush();
 					alright = false;
 					thr->join();
@@ -314,30 +313,29 @@ namespace LSW {
 				multiplier_hz_d = 1.0 / v;
 			}
 
-			const bool events::addFunction(_functionThr* u, void(*f)(void*, double&)) //int(*f)(void*, bool), void* data)
+			const bool events::addFunction(Safer::safe_pointer<_functionThr> u, void(*f)(void *, double &)) //int(*f)(void*, bool), void* data)
 			{
-				for (size_t p = 0; p < funcs.getMax(); p++)
+				for (auto& i : funcs)
 				{
-					if (funcs[p]->getId() == u->getId()) {
+					if (i->getId() == u->getId()) {
 						// a function is returning the same value for null as someone else already on functions!
 						// change the default "nullptr" return for the new function for correct usage of this "hack" I made :3
-						glog << Log::START << "[THR?:EVENTS][WARN] A function added on functions vector has already been added or there's another one with the same signature! PLEASE VERIFY THIS SITUATION! Return value got: " << u->getId() << Log::ENDL;
+						glog << Log::START << Log::_func("events", "addFunction", Log::WARN) << "A function added on functions vector has already been added or there's another one with the same signature! PLEASE VERIFY THIS SITUATION! Return value got: " << u->getId() << Log::ENDL;
 						glog.flush();
 						exit(EXIT_FAILURE);
 					}
 				}
 				u->setF(f);
-				funcs.push(u);
+				funcs.push_back(u);
 				//params_f.push(data);
 				return true;
 			}
 			void events::delFunction(const int r)
 			{
-				for (size_t p = 0; p < funcs.getMax(); p++)
+				for (size_t p = 0; p < funcs.size(); p++)
 				{
 					if (funcs[p]->getId() == r) {
-						delete funcs[p];
-						funcs.erase(p);
+						funcs.erase(funcs.begin() + p);
 						return;
 					}
 				}
@@ -350,16 +348,16 @@ namespace LSW {
 
 			double events::getFunctionValNow(const int r)
 			{
-				_functionThr* tf = _get(r);
+				Safer::safe_pointer<_functionThr> tf = _get(r);
 				if (tf) {
 					return tf->getVal();
 				}
 				return 0.0;
 			}
 
-			void * events::getFVoidArg(const int r)
+			void* events::getFVoidArg(const int r)
 			{
-				_functionThr* tf = _get(r);
+				Safer::safe_pointer<_functionThr> tf = _get(r);
 				if (tf) {
 					return tf->getArgAsVoid();
 				}
@@ -368,7 +366,7 @@ namespace LSW {
 
 			void events::setTimerForF(const double u, const int r)
 			{
-				_functionThr* tf = _get(r);
+				Safer::safe_pointer<_functionThr> tf = _get(r);
 				if (tf) {
 					assert(u >= Defaults::functions_timer); // cannot be faster than that
 					tf->setUpdateTime(u);
@@ -377,7 +375,7 @@ namespace LSW {
 
 			void events::resetFValTo(const double u, const int r)
 			{
-				_functionThr* tf = _get(r);
+				Safer::safe_pointer<_functionThr> tf = _get(r);
 				if (tf) {
 					tf->resetTo(u);
 				}
@@ -493,15 +491,9 @@ namespace LSW {
 			}
 			void events::_update_functions()
 			{
-				for (size_t p = 0; p < funcs.getMax(); p++)
-				{
-					
-					funcs[p]->work();
-
-					//funcs[p] = funcs[p].f(funcs[p], funcs[p].arg);
-
-					/*void* val = params_f[p];
-					functions[p](val,true);*/
+				for (auto& i : funcs)
+				{					
+					i->work();
 				}
 			}
 			void events::_setMousePos(const float x, const float y)
@@ -573,7 +565,7 @@ namespace LSW {
 				_event_log& tlogging = e->_getEventLog();
 				double last = al_get_time();
 
-				glog << Log::NEEDED_START << "[THR2:EVENT][INFO] Preparing smaller threads..." << Log::NEEDED_ENDL;
+				glog << Log::NEEDED_START << Log::_func("_thread_ev", "") << "Preparing smaller threads..." << Log::NEEDED_ENDL;
 
 				// multithread start:
 				std::thread* thrs[3];
@@ -588,7 +580,7 @@ namespace LSW {
 				thrs[1] = new std::thread(_i_thr_functionsTimed, &tlogging, e, Defaults::functions_timer, &arethey[1]);
 				thrs[2] = new std::thread(_i_thr_updatePosTimed, &tlogging, e, Defaults::updatepos_timer, &arethey[2]);
 
-				glog << Log::START << "[THR2:EVENT][INFO] Waiting smaller threads..." << Log::ENDL;
+				glog << Log::START << Log::_func("_thread_ev", "") << "Waiting smaller threads..." << Log::ENDL;
 
 				{
 					bool isDone = false;
@@ -600,7 +592,7 @@ namespace LSW {
 					}
 				}
 
-				glog << Log::START << "[THR2:EVENT][INFO] They seem ready. Let's go!" << Log::ENDL;
+				glog << Log::START << Log::_func("_thread_ev", "") << "They seem ready. Let's go!" << Log::ENDL;
 
 
 				/*double fixMultI = e->_getMultiplierForUpdatingImg();
@@ -614,7 +606,7 @@ namespace LSW {
 
 				ALLEGRO_TIMER* calcLoopsTimer = e->getTimer(3, Defaults::calcLoops_timer);
 
-				glog << Log::NEEDED_START << "[THR2:EVENT][INFO] Thread initialized successfully." << Log::NEEDED_ENDL;
+				glog << Log::NEEDED_START << Log::_func("_thread_ev", "") << "Thread initialized successfully." << Log::NEEDED_ENDL;
 
 				e->_setThrRunning(true);
 
@@ -661,7 +653,7 @@ namespace LSW {
 							}*/
 						}
 						else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
-							glog << Log::START << "[THR2:EVENT][INFO] Display has been closed!" << Log::ENDL;
+							glog << Log::START << Log::_func("_thread_ev", "") << "Display has been closed!" << Log::ENDL;
 							glog.flush();							
 
 							e->delTimer(-1); // all
@@ -693,21 +685,21 @@ namespace LSW {
 						{
 							if (ev.mouse.button - 1 + MOUSE_0 <= MOUSE_9) {
 								e->_setKey((events_keys)(ev.mouse.button + MOUSE_0 - 1), true);
-								glog << Log::START << "[THR2:EVENT][INFO] Mouse key pressed: N" << ev.mouse.button << Log::ENDL;
+								glog << Log::START << Log::_func("_thread_ev", "") << "Mouse key pressed: N" << ev.mouse.button << Log::ENDL;
 							}
 						}
 						else if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP)
 						{
 							if (ev.mouse.button - 1 + MOUSE_0 <= MOUSE_9) {
 								e->_setKey((events_keys)(ev.mouse.button + MOUSE_0 - 1), false);
-								glog << Log::START << "[THR2:EVENT][INFO] Mouse key released: N" << ev.mouse.button << Log::ENDL;
+								glog << Log::START << Log::_func("_thread_ev", "") << "Mouse key released: N" << ev.mouse.button << Log::ENDL;
 							}
 						}
 
 						else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
 						{
 							e->_setKey((events_keys)ev.keyboard.keycode, true);
-							glog << Log::START << "[THR2:EVENT][INFO] Detected keyboard pressed: N" << ev.keyboard.keycode << Log::ENDL;
+							glog << Log::START << Log::_func("_thread_ev", "") << "Detected keyboard pressed: N" << ev.keyboard.keycode << Log::ENDL;
 
 							{ // interpret
 								Config::config conf;
@@ -727,7 +719,7 @@ namespace LSW {
 						else if (ev.type == ALLEGRO_EVENT_KEY_UP)
 						{
 							e->_setKey((events_keys)ev.keyboard.keycode, false);
-							glog << Log::START << "[THR2:EVENT][INFO] Detected keyboard released: N" << ev.keyboard.keycode << Log::ENDL;
+							glog << Log::START << Log::_func("_thread_ev", "") << "Detected keyboard released: N" << ev.keyboard.keycode << Log::ENDL;
 						}
 
 						else if (ev.type == ALLEGRO_EVENT_KEY_UP || ev.type == ALLEGRO_EVENT_KEY_CHAR)
@@ -742,7 +734,7 @@ namespace LSW {
 							wrk.getLastString(str);
 							if (str.g().length() > 1) {
 								wrk.clear();
-								glog << Log::START << "[THR2:EVENT][INFO] New string for last string: " << str << Log::ENDL;
+								glog << Log::START << Log::_func("_thread_ev", "") << "New string for last string: " << str << Log::ENDL;
 								e->_setLastString(str);
 							}
 
@@ -752,17 +744,17 @@ namespace LSW {
 								switch (val)
 								{
 								case HACK_IMMORTAL:
-									glog << Log::NEEDED_START << "[THR2:EVENT][INFO] GOT IMMORTAL HACK CODE!" << str << Log::NEEDED_ENDL;
+									glog << Log::NEEDED_START << Log::_func("_thread_ev", "") << "GOT IMMORTAL HACK CODE!" << str << Log::NEEDED_ENDL;
 									break;
 								case HACK_NEXTLEVEL:
-									glog << Log::NEEDED_START << "[THR2:EVENT][INFO] GOT NEXTLEVEL HACK CODE!" << str << Log::NEEDED_ENDL;
+									glog << Log::NEEDED_START << Log::_func("_thread_ev", "") << "GOT NEXTLEVEL HACK CODE!" << str << Log::NEEDED_ENDL;
 									break;
 								}
 							}
 						}
 					}
 				}
-				glog << Log::NEEDED_START << "[THR2:EVENT][INFO] Got call for end. Waiting smaller threads..." << Log::NEEDED_ENDL;
+				glog << Log::NEEDED_START << Log::_func("_thread_ev", "") << "Got call for end. Waiting smaller threads..." << Log::NEEDED_ENDL;
 
 				{
 					bool isDone = false;
@@ -774,7 +766,7 @@ namespace LSW {
 					}
 				}
 
-				glog << Log::NEEDED_START << "[THR2:EVENT][INFO] Done. Bye!" << Log::NEEDED_ENDL;
+				glog << Log::NEEDED_START << Log::_func("_thread_ev", "") << "Done. Bye!" << Log::NEEDED_ENDL;
 
 				e->_setThrRunning(false);
 			}
@@ -822,27 +814,27 @@ namespace LSW {
 				int error_count = 0;
 
 				if (!evl || !e || !amIRunning) {
-					logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: NULL POINTER AT START!" << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("_i_thr_collisionTimed", "", Log::ERRR) << "FATAL ERROR AT _i_thr_collisionTimed: NULL POINTER AT START!" << Log::NEEDED_ENDL;
 					logg.flush();
 					exit(EXIT_FAILURE);
 				}
 
 				ALLEGRO_EVENT_QUEUE* ev_qu_internal = nullptr;
 				if (!(ev_qu_internal = al_create_event_queue())) {
-					logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: Cannot setup Event queue!" << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("_i_thr_collisionTimed", "", Log::ERRR) << "FATAL ERROR AT _i_thr_collisionTimed: Cannot setup Event queue!" << Log::NEEDED_ENDL;
 					logg.flush();
 					exit(EXIT_FAILURE);
 				}
 				ALLEGRO_TIMER* ev_timer_internal = nullptr;
 				if (!(ev_timer_internal = al_create_timer(min_timer))) {
-					logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: Cannot setup Timer for thread!" << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("_i_thr_collisionTimed", "", Log::ERRR) << "FATAL ERROR AT _i_thr_collisionTimed: Cannot setup Timer for thread!" << Log::NEEDED_ENDL;
 					logg.flush();
 					exit(EXIT_FAILURE);
 				}
 				al_register_event_source(ev_qu_internal, al_get_timer_event_source(ev_timer_internal));
 				al_start_timer(ev_timer_internal);
 
-				logg << Log::NEEDED_START << "[THR3:COLLD][INFO] Thread initialized successfully." << Log::NEEDED_ENDL;
+				logg << Log::NEEDED_START << Log::_func("_i_thr_collisionTimed", "") << "Thread initialized successfully." << Log::NEEDED_ENDL;
 				*amIRunning = true;
 
 				while (e->_keep()) {
@@ -855,7 +847,7 @@ namespace LSW {
 
 					Layer::layerer lyr;
 					d_sprite_database spr_data;
-					//Sprite::sprite* spr, *spr2;
+					//Safer::safe_pointer<Sprite::sprite> spr, *spr2;
 
 					switch (lyr.getNow().getMode())
 					{
@@ -870,7 +862,7 @@ namespace LSW {
 						catch (...)
 						{
 							if (++error_count < 10) {
-								logg << Log::NEEDED_START << "[THR3:COLLD][WARN] _i_thr_collisionTimed got an exception. Trying to leave it as is (skippable)" << Log::NEEDED_ENDL;
+								logg << Log::NEEDED_START << Log::_func("_i_thr_collisionTimed", "", Log::WARN) << " _i_thr_collisionTimed got an exception. Trying to leave it as is (skippable)" << Log::NEEDED_ENDL;
 								logg.flush();
 							}
 						}
@@ -879,85 +871,92 @@ namespace LSW {
 						try {
 							for (auto& i : lyr.getNow().work())
 							{
-								for (size_t p = 0; p < spr_data.work().getMax(); p++)//(auto& spr : spr_data.work().work())
+								// START
+								for (size_t pos = 0; pos < spr_data.work().work().size();)
 								{
-									Sprite::sprite* spr;
-									spr_data.get(spr, p);
+									auto spr = spr_data.work().get(pos);
+									if (Safer::_check_pointer_existance<Sprite::sprite>(spr)) {
+										{// ------------------------------------------------------
+											bool skip;
+											spr->get(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, skip);
+											if (skip) continue;
 
-									bool skip;
-									spr->get(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, skip);
-									if (skip) continue;
+											int u, m;
+											spr->get(Sprite::LAYER, u);
 
-									//spr_data.get(spr, p);
-									int u, m;
-									spr->get(Sprite::LAYER, u);
+											if (u == i.first) {
 
-									if (u == i.first) {
+												spr->_resetCollision();
 
-										spr->_resetCollision();
-
-										for (size_t q = 0; q < spr_data.work().getMax(); q++)//(auto& spr2 : spr_data.work().work())
-										{
-											Sprite::sprite* spr2;
-											spr_data.get(spr2, q);
-
-											if (spr != spr2) {
-												spr2->get(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, skip);
-												if (skip) continue;
-
-												spr2->get(Sprite::LAYER, m);
-
-												for (auto& a : i.second.collides_with)
+												// START2
+												for (size_t pos = 0; pos < spr_data.work().work().size();)
 												{
-													if (a == m) {
-														spr->_verifyCollision(*spr2);
-														break;
+													auto spr2 = spr_data.work().get(pos);
+													if (Safer::_check_pointer_existance<Sprite::sprite>(spr2)) {
+														// ------------------------------------------------------
+														if (spr != spr2) {
+															spr2->get(Sprite::_SKIP_DEFAULT_COLLISION_METHOD, skip);
+															if (skip) continue;
+
+															spr2->get(Sprite::LAYER, m);
+
+															for (auto& a : i.second.collides_with)
+															{
+																if (a == m) {
+																	spr->_verifyCollision(*spr2);
+																	break;
+																}
+															}
+														}
+														// ------------------------------------------------------
+														pos++;
+													}
+													else {
+														spr_data.work().erase(pos);
 													}
 												}
 											}
-										}
+										}// ------------------------------------------------------
+										pos++;
+									}
+									else {
+										spr_data.work().erase(pos);
 									}
 								}
-								spr_data.work().unlock();
 							}
 						}
 						catch (const Safer::safe_string& s)
 						{
-							logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][WARN] Caught throw at _i_thr_collisionTimed: " << s << Log::NEEDED_ENDL;
+							logg << Log::NEEDED_START << Log::_func("_i_thr_collisionTimed", "", Log::WARN) << " Caught throw at _i_thr_collisionTimed: " << s << Log::NEEDED_ENDL;
 							logg.flush();
-							spr_data.work().unlock();
 							if (!al_get_current_display()) throw 0;
 							throw s;
 						}
 						catch (const std::string& s)
 						{
-							logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][WARN] Caught throw at _i_thr_collisionTimed: " << s << Log::NEEDED_ENDL;
+							logg << Log::NEEDED_START << Log::_func("_i_thr_collisionTimed", "", Log::WARN) << " Caught throw at _i_thr_collisionTimed: " << s << Log::NEEDED_ENDL;
 							logg.flush();
-							spr_data.work().unlock();
 							if (!al_get_current_display()) throw 0;
 							throw s;
 						}
 						catch (const char* s)
 						{
-							logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][WARN] Caught throw at _i_thr_collisionTimed: " << s << Log::NEEDED_ENDL;
+							logg << Log::NEEDED_START << Log::_func("_i_thr_collisionTimed", "", Log::WARN) << " Caught throw at _i_thr_collisionTimed: " << s << Log::NEEDED_ENDL;
 							logg.flush();
-							spr_data.work().unlock();
 							if (!al_get_current_display()) throw 0;
 							throw s;
 						}
 						catch (const int i)
 						{
-							logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][WARN] Caught throw at _i_thr_collisionTimed: Error code #" << i << Log::NEEDED_ENDL;
+							logg << Log::NEEDED_START << Log::_func("_i_thr_collisionTimed", "", Log::WARN) << " Caught throw at _i_thr_collisionTimed: Error code #" << i << Log::NEEDED_ENDL;
 							logg.flush();
-							spr_data.work().unlock();
 							if (!al_get_current_display()) throw 0;
 							throw i;
 						}
 						catch (...)
 						{
-							logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][WARN] Caught throw at _i_thr_collisionTimed: Unknown error." << Log::NEEDED_ENDL;
+							logg << Log::NEEDED_START << Log::_func("_i_thr_collisionTimed", "", Log::WARN) << " Caught throw at _i_thr_collisionTimed: Unknown error." << Log::NEEDED_ENDL;
 							logg.flush();
-							spr_data.work().unlock();
 							if (!al_get_current_display()) throw 0;
 							throw 1;
 						}
@@ -965,7 +964,7 @@ namespace LSW {
 					}
 				}
 
-				logg << Log::NEEDED_START << "[THR3:COLLD][INFO] Thread has quit the usual way." << Log::NEEDED_ENDL;
+				logg << Log::NEEDED_START << Log::_func("_i_thr_collisionTimed", "") << "Thread has quit the usual way." << Log::NEEDED_ENDL;
 
 				al_stop_timer(ev_timer_internal);
 				al_unregister_event_source(ev_qu_internal, al_get_timer_event_source(ev_timer_internal));
@@ -980,27 +979,27 @@ namespace LSW {
 			{				
 				Log::gfile logg;
 				if (!evl || !e || !amIRunning) {
-					logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: NULL POINTER AT START!" << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("_i_thr_functionsTimed", "", Log::ERRR) << " FATAL ERROR AT _i_thr_collisionTimed: NULL POINTER AT START!" << Log::NEEDED_ENDL;
 					logg.flush();
 					exit(EXIT_FAILURE);
 				}
 
 				ALLEGRO_EVENT_QUEUE* ev_qu_internal = nullptr;
 				if (!(ev_qu_internal = al_create_event_queue())) {
-					logg << Log::ERRDV << Log::NEEDED_START << "[THR4:FUNCT][ERRR] FATAL ERROR AT _i_thr_functionsTimed: Cannot setup Event queue!" << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("_i_thr_functionsTimed", "", Log::ERRR) << "FATAL ERROR AT _i_thr_functionsTimed: Cannot setup Event queue!" << Log::NEEDED_ENDL;
 					logg.flush();
 					exit(EXIT_FAILURE);
 				}
 				ALLEGRO_TIMER* ev_timer_internal = nullptr;
 				if (!(ev_timer_internal = al_create_timer(min_timer))) {
-					logg << Log::ERRDV << Log::NEEDED_START << "[THR4:FUNCT][ERRR] FATAL ERROR AT _i_thr_functionsTimed: Cannot setup Timer for thread!" << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("_i_thr_functionsTimed", "", Log::ERRR) << "FATAL ERROR AT _i_thr_functionsTimed: Cannot setup Timer for thread!" << Log::NEEDED_ENDL;
 					logg.flush();
 					exit(EXIT_FAILURE);
 				}
 				al_register_event_source(ev_qu_internal, al_get_timer_event_source(ev_timer_internal));
 				al_start_timer(ev_timer_internal);
 
-				logg << Log::NEEDED_START << "[THR4:FUNCT][INFO] Thread initialized successfully." << Log::NEEDED_ENDL;
+				logg << Log::NEEDED_START << Log::_func("_i_thr_functionsTimed", "") << "Thread initialized successfully." << Log::NEEDED_ENDL;
 
 				*amIRunning = true;
 
@@ -1015,7 +1014,7 @@ namespace LSW {
 					e->_update_functions();
 				}
 
-				logg << Log::NEEDED_START << "[THR4:FUNCT][INFO] Thread has quit the usual way." << Log::NEEDED_ENDL;
+				logg << Log::NEEDED_START << Log::_func("_i_thr_functionsTimed", "") << "Thread has quit the usual way." << Log::NEEDED_ENDL;
 
 				al_stop_timer(ev_timer_internal);
 				al_unregister_event_source(ev_qu_internal, al_get_timer_event_source(ev_timer_internal));
@@ -1030,27 +1029,27 @@ namespace LSW {
 			{
 				Log::gfile logg;
 				if (!evl || !e || !amIRunning) {
-					logg << Log::ERRDV << Log::NEEDED_START << "[THR3:COLLD][ERRR] FATAL ERROR AT _i_thr_collisionTimed: NULL POINTER AT START!" << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("_i_thr_updatePosTimed", "", Log::ERRR) << "FATAL ERROR AT _i_thr_collisionTimed: NULL POINTER AT START!" << Log::NEEDED_ENDL;
 					logg.flush();
 					exit(EXIT_FAILURE);
 				}
 
 				ALLEGRO_EVENT_QUEUE* ev_qu_internal = nullptr;
 				if (!(ev_qu_internal = al_create_event_queue())) {
-					logg << Log::ERRDV << Log::NEEDED_START << "[THR5:UPPLR][ERRR] FATAL ERROR AT _i_thr_updatePosTimed: Cannot setup Event queue!" << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("_i_thr_updatePosTimed", "", Log::ERRR) << "FATAL ERROR AT _i_thr_updatePosTimed: Cannot setup Event queue!" << Log::NEEDED_ENDL;
 					logg.flush();
 					exit(EXIT_FAILURE);
 				}
 				ALLEGRO_TIMER* ev_timer_internal = nullptr;
 				if (!(ev_timer_internal = al_create_timer(min_timer))) {
-					logg << Log::ERRDV << Log::NEEDED_START << "[THR5:UPPLR][ERRR] FATAL ERROR AT _i_thr_updatePosTimed: Cannot setup Timer for thread!" << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("_i_thr_updatePosTimed", "", Log::ERRR) << "FATAL ERROR AT _i_thr_updatePosTimed: Cannot setup Timer for thread!" << Log::NEEDED_ENDL;
 					logg.flush();
 					exit(EXIT_FAILURE);
 				}
 				al_register_event_source(ev_qu_internal, al_get_timer_event_source(ev_timer_internal));
 				al_start_timer(ev_timer_internal);
 
-				logg << Log::NEEDED_START << "[THR5:UPPLR][INFO] Thread initialized successfully." << Log::NEEDED_ENDL;
+				logg << Log::NEEDED_START << Log::_func("_i_thr_updatePosTimed", "") << "Thread initialized successfully." << Log::NEEDED_ENDL;
 
 				*amIRunning = true;
 
@@ -1063,58 +1062,21 @@ namespace LSW {
 					evl->_updatePosTimer_last = tii;
 
 					d_sprite_database spr_data;
-					Sprite::sprite* spr;
 
-					for (size_t p = 0; p < spr_data.work().getMax(); p++)
+					for (size_t pos = 0; pos < spr_data.work().work().size();)
 					{
-						spr_data.get(spr, p);
+						auto i = spr_data.work().get(pos);
+						if (Safer::_check_pointer_existance<Sprite::sprite>(i)) {
 
-						/*bool isAffectedByGravity;  // ONLY ENTITIES OF PLAYER MOVE FROM KEYBOARD NOW
-						spr->get(Sprite::AFFECTED_BY_GRAVITY, isAffectedByGravity);
-						if (isAffectedByGravity)
-						{
-							Layer::layerer lyr;
-							double acceleration_gravity, scale;
-							int layer;
+							i->_updateAcceleration(/*fixMultI*/);
 
-							spr->get(Sprite::LAYER, layer);
-							spr->get(Sprite::ACCELERATION_GRAVITY_SCALE, scale);
-
-							acceleration_gravity = lyr.getNow().getR(layer).gravity;
-
-							spr->setScaled(Sprite::SPEEDY, acceleration_gravity, scale);
+							pos++;
 						}
-
-						bool isControllerBased; 
-						spr->get(Sprite::FOLLOWKEYBOARD, isControllerBased);
-						if (isControllerBased)
-						{
-							bool wasd[4] = { e->getKey(KEY_W, false) || (isAffectedByGravity ? e->getKey(KEY_UP, true) : e->getKey(KEY_UP, false),e->getKey(KEY_A, false) || e->getKey(KEY_LEFT, false),e->getKey(KEY_S, false) || e->getKey(KEY_DOWN, false),e->getKey(KEY_D, false) || e->getKey(KEY_RIGHT, false) };
-							double acceleration, scale;// , temp;
-
-							spr->get(Sprite::ACCELERATION_BY_KEYING, acceleration);
-							spr->get(Sprite::ACCELERATION_SCALE, scale);
-
-							if (wasd[0]) { // go north
-								if (isAffectedByGravity)
-								{
-									spr->setScaled(Sprite::SPEEDY, -acceleration, scale);
-								}
-							}
-							else if (wasd[2]) { // go south
-								spr->setScaled(Sprite::SPEEDY, acceleration, scale);
-							}
-
-							if (wasd[1]) { // go left
-								spr->setScaled(Sprite::SPEEDX, -acceleration, scale);
-							}
-							else if (wasd[3]) { // go right
-								spr->setScaled(Sprite::SPEEDX, acceleration, scale);
-							}
-						}*/
-
-						spr->_updateAcceleration(/*fixMultI*/);
+						else {
+							spr_data.work().erase(pos);
+						}
 					}
+
 
 					Layer::layerer lyr;
 					if (lyr.getNow().getMode() == Layer::USEMAP) {
@@ -1130,7 +1092,7 @@ namespace LSW {
 						}
 						catch (...)
 						{
-							logg << Log::NEEDED_START << "[THR5:UPPLR][WARN] _i_thr_updatePosTimed got an exception. Trying to leave it as is (skippable)" << Log::NEEDED_ENDL;
+							logg << Log::NEEDED_START << Log::_func("_i_thr_updatePosTimed", "", Log::WARN) << "_i_thr_updatePosTimed got an exception. Trying to leave it as is (skippable)" << Log::NEEDED_ENDL;
 						}
 					}
 
@@ -1157,7 +1119,7 @@ namespace LSW {
 					}*/
 				}
 
-				logg << Log::NEEDED_START << "[THR5:UPPLR][INFO] Thread has quit the usual way." << Log::NEEDED_ENDL;
+				logg << Log::NEEDED_START << Log::_func("_i_thr_updatePosTimed", "") << "Thread has quit the usual way." << Log::NEEDED_ENDL;
 
 				al_stop_timer(ev_timer_internal);
 				al_unregister_event_source(ev_qu_internal, al_get_timer_event_source(ev_timer_internal));

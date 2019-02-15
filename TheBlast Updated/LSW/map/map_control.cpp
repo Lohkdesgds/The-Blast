@@ -562,7 +562,7 @@ namespace LSW {
 			void map::generateMap()
 			{
 				Log::gfile logg;
-				logg << Log::START << "[MAP:GENMAP][INFO] Generating map..." << Log::ENDL;
+				logg << Log::START << Log::_func("map", "generateMap") << "Generating map..." << Log::ENDL;
 
 				has_reachedEnd = false;
 				hasToUpdate = true;
@@ -636,7 +636,7 @@ namespace LSW {
 
 				has_loadedMap = true;
 				//is_new_Map = true;
-				logg << Log::START << "[MAP:GENMAP][INFO] Generated map." << Log::ENDL;
+				logg << Log::START << Log::_func("map", "generateMap") << "Generated map." << Log::ENDL;
 			}
 
 			void map::_checkBitmapsOnMapP()
@@ -650,7 +650,7 @@ namespace LSW {
 				{
 					for (int a = 0; a < Defaults::map_size_default_x; a++)
 					{
-						Sprite::sprite* each = nullptr;
+						Safer::safe_pointer<Sprite::sprite> each;
 						if (!map_p[a][b]) {
 
 							if (spr_data.get(each, "_MAP_" + std::to_string(a) + "_" + std::to_string(b)))
@@ -659,15 +659,13 @@ namespace LSW {
 
 								logg.debug("Adjusted bitmap at " + std::to_string(a) + ":" + std::to_string(b));
 
-								each = nullptr;
 
 								continue;
 							}
 							else {
-								logg << Log::START << "[MAP:CHKBMM][INFO] Prepared Sprite on " << a << ":" << b << Log::ENDL;
-								spr_data.create(each);
-
-								each->setID("_MAP_" + std::to_string(a) + "_" + std::to_string(b));
+								logg << Log::START << Log::_func("map", "_checkBitmapsOnMapP") << "Prepared Sprite on " << a << ":" << b << Log::ENDL;
+								//spr_data.create(each);
+								each = Sprite::getOrCreate("_MAP_" + std::to_string(a) + "_" + std::to_string(b), true);
 
 								each->set(Sprite::POSX, x_off + (1.0*(2.0*a / (Defaults::map_size_default_x*1.0)) - 1.0));
 								each->set(Sprite::POSY, y_off + (1.0*(2.0*b / (Defaults::map_size_default_y*1.0)) - 1.0));
@@ -689,10 +687,6 @@ namespace LSW {
 						Safer::safe_string id_path = interpretIntToBlockName((blockstats)ouu);
 
 						each->replaceAllWith(id_path);
-
-						logg.debug("Generated bitmap at " + std::to_string(a) + ":" + std::to_string(b));
-
-						each = nullptr;
 					}
 				}
 
@@ -701,28 +695,25 @@ namespace LSW {
 
 			void map::_checkBitmapsBigMap()
 			{
-				d_sprite_database spr_data;
-				d_images_database img_data;
-
 				if (!big_map || !big_map_il)
 				{
 					if (big_map) {
-						delete big_map;
+						Image::easyRemove("__MAP_FRAME_FULL");
+						//delete big_map;
 					}
 					if (big_map_il) {
-						big_map_il->unload();
-						delete big_map_il;
+						///big_map_il->unload();
+						Image::easyRemove("__MAP_FRAME_FULL_S");
+						//delete big_map_il;
 					}
 
-					img_data.create(big_map_il);
+					big_map_il = Image::getOrCreate("__MAP_FRAME_FULL", true);
 					big_map_il->set(Image::CREATE_X, -1);
 					big_map_il->set(Image::CREATE_Y, -1);
-					big_map_il->set(Image::ID, "__MAP_FRAME_FULL");
 					big_map_il->set(Image::FORCE_ON_MEMORY, true);
 					big_map_il->load();
 
-					spr_data.create(big_map);
-					big_map->setID("__MAP_FRAME_FULL_S");
+					big_map = Sprite::getOrCreate("__MAP_FRAME_FULL_S", true);
 					big_map->add("__MAP_FRAME_FULL");
 					big_map->set(Sprite::LAYER, layerUsed);
 					big_map->set(Sprite::DRAW, true);
@@ -739,24 +730,24 @@ namespace LSW {
 				bool redrawall = false;
 
 				if (!big_map) { //return;
-					logg << Log::ERRDV << Log::NEEDED_START << "[MAP:_REDRW][ERRR] Big_map is unreachable! Trying to fix this..." << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("map", "_redraw", Log::ERRR) << "Big_map is unreachable! Trying to fix this..." << Log::NEEDED_ENDL;
 
 					_checkBitmapsBigMap();
 
 					if (!big_map) {
-						logg << Log::ERRDV << Log::NEEDED_START << "[MAP:_REDRW][ERRR] Big_map STILL unreachable! Aborting _REDRAW!" << Log::NEEDED_ENDL;
+						logg << Log::NEEDED_START << Log::_func("map", "_redraw", Log::ERRR) << "Big_map STILL unreachable! Aborting _REDRAW!" << Log::NEEDED_ENDL;
 						return;
 					}
 
 					redrawall = true;
 				}
 				if (!big_map_il) {
-					logg << Log::ERRDV << Log::NEEDED_START << "[MAP:_REDRW][ERRR] Big_map_il is unreachable! Trying to fix this..." << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("map", "_redraw", Log::ERRR) << "Big_map_il is unreachable! Trying to fix this..." << Log::NEEDED_ENDL;
 
 					_checkBitmapsBigMap();
 
 					if (!big_map_il) {
-						logg << Log::ERRDV << Log::NEEDED_START << "[MAP:_REDRW][ERRR] Big_map_il STILL unreachable! Aborting _REDRAW!" << Log::NEEDED_ENDL;
+						logg << Log::NEEDED_START << Log::_func("map", "_redraw", Log::ERRR) << "Big_map_il STILL unreachable! Aborting _REDRAW!" << Log::NEEDED_ENDL;
 						return;
 					}
 
@@ -766,7 +757,7 @@ namespace LSW {
 
 				ALLEGRO_BITMAP* targ = al_get_target_bitmap();
 				if (!targ) {
-					logg << Log::ERRDV << Log::START << "[MAP:_REDRW][WARN] Could not get target bitmap! Skipping map update for now..." << Log::ENDL;
+					logg << Log::START << Log::_func("map", "_redraw", Log::WARN) << "Could not get target bitmap! Skipping map update for now..." << Log::ENDL;
 					hasToUpdate = true;
 					return;
 				}
@@ -794,7 +785,7 @@ namespace LSW {
 					for (auto& j : i)
 					{
 						if (!j) {
-							logg << Log::ERRDV << Log::NEEDED_START << "[MAP:_REDRW][ERRR] MAP NULL AT " << pp << "! Trying to adjust map_p!" << Log::NEEDED_ENDL;
+							logg << Log::NEEDED_START << Log::_func("map", "_redraw", Log::ERRR) << "MAP NULL AT " << pp << "! Trying to adjust map_p!" << Log::NEEDED_ENDL;
 							_checkBitmapsOnMapP();
 							return _redraw();
 						}
@@ -828,7 +819,7 @@ namespace LSW {
 
 			const bool map::_getPlayerPos(int &x, int &y)
 			{
-				Sprite::sprite* player = plr.getS();
+				Safer::safe_pointer<Sprite::sprite> player = plr->getS();
 				double orig_x, orig_y;
 
 				if (!player) return false;
@@ -846,19 +837,17 @@ namespace LSW {
 
 			void map::_setPlayerAtLastPos()
 			{
-				plr.getS()->set(Sprite::POSX, x_off + (1.0*(2.0*pausepos[0] / (Defaults::map_size_default_x*1.0)) - 1.0));
-				plr.getS()->set(Sprite::POSY, y_off + (1.0*(2.0*pausepos[1] / (Defaults::map_size_default_y*1.0)) - 1.0));
+				plr->getS()->set(Sprite::POSX, x_off + (1.0*(2.0*pausepos[0] / (Defaults::map_size_default_x*1.0)) - 1.0));
+				plr->getS()->set(Sprite::POSY, y_off + (1.0*(2.0*pausepos[1] / (Defaults::map_size_default_y*1.0)) - 1.0));
 			}
 
 			map::map()
 			{
-				/*for (int a = 0; a < Defaults::map_size_default_x; a++)
-				{
-					for (int b = 0; b < Defaults::map_size_default_y; b++)
-					{
-						map_p[a][b] = nullptr;
-					}
-				}*/
+				if (!plr) {
+					d_entity_database ent_data;
+					ent_data.try_create_as<Entities::player>(plr);
+				}
+
 				cpu_thr_ready = gpu_thr_ready = false;
 			}
 
@@ -875,28 +864,28 @@ namespace LSW {
 
 				if (big_map)
 				{
-					spr_data.remove("__MAP_FRAME_FULL_S");
-					Sprite::sprite* temp = big_map;
+					Sprite::easyRemove("__MAP_FRAME_FULL_S");
+					/*Safer::safe_pointer<Sprite::sprite> temp = big_map;
 					big_map = nullptr;
-					delete temp;
+					delete temp;*/
 				}
 				if (big_map_il)
 				{
-					img_data.remove("__MAP_FRAME_FULL");
-					big_map_il->unload();
-					Image::image_low* temp = big_map_il;
+					///big_map_il->unload();
+					Image::easyRemove("__MAP_FRAME_FULL");
+					/*Safer::safe_pointer<Image::image_low> temp = big_map_il;
 					big_map_il = nullptr;
-					delete big_map_il;
+					delete big_map_il;*/
 				}
 				for (int a = 0; a < Defaults::map_size_default_x; a++)
 				{
 					for (int b = 0; b < Defaults::map_size_default_y; b++)
 					{
-						spr_data.remove("_MAP_" + std::to_string(a) + "_" + std::to_string(b));
-						logg << Log::START << "[MAP:~MAP__][INFO] Finally erased sprite at " << a << ":" << b << Log::ENDL;
-						Sprite::sprite* temp = map_p[a][b];
-						map_p[a][b] = nullptr;
-						delete temp;
+						Sprite::easyRemove("_MAP_" + std::to_string(a) + "_" + std::to_string(b));
+						/*logg << Log::START << Log::_func("map", "~map") << "Finally erased sprite at " << a << ":" << b << Log::ENDL;
+						Safer::safe_pointer<Sprite::sprite> temp = map_p[a][b];*/
+						map_p[a][b].reset();
+						//delete temp;
 
 						map_i[a][b] = SPACEID;
 					}
@@ -923,49 +912,37 @@ namespace LSW {
 
 				d_entity_database ent_data;
 
-				lock();
-				badboys.clear();
-				unlock();
+				is_player_enabled = false;
 
-				ent_data.work().lock();
-
-				Safer::safe_vector<Entities::entity*>& vec = ent_data.work();
-				Safer::safe_vector<Entities::entity*> clone;
-
-				//vec.lock();
-				for (auto& i : vec.work()) {
-					Entities::entity* tempp = i;
-					clone.push(tempp);
-				}
-				//vec.unlock();
-				vec.clear();
-
-				clone.lock();
-				for (auto& i : clone.work())
+				for (size_t pos = 0; pos < ent_data.work().work().size();)
 				{
-					switch (i->getType())
-					{
-					case Entities::PLAYER:
-					{
-						Entities::player* tempp = (Entities::player*)i;
-						is_player_enabled = false;
-						tempp->reset();
-						//delete tempp;
+					auto i = ent_data.work().get(pos);
+					if (Safer::_check_pointer_existance<Entities::entity>(i)) {
+						
+						switch (i->getType())
+						{
+						case Entities::PLAYER:
+						{
+							Safer::safe_pointer<Entities::player> tempp = std::dynamic_pointer_cast<Entities::player>(i);
+							tempp->reset();
+						}
+						break;
+						case Entities::BADBOY:
+						{
+							Safer::safe_pointer<Entities::badboy> tempp = std::dynamic_pointer_cast<Entities::badboy>(i);
+							tempp->reset();
+						}
+						break;
+						}
+
+						pos++;
 					}
-					break;
-					case Entities::BADBOY:
-					{
-						Entities::badboy* tempp = (Entities::badboy*)i;
-						tempp->reset();
-						delete tempp;
-					}
-					break;
+					else {
+						ent_data.work().erase(pos);
 					}
 				}
-				clone.clear();
-				clone.unlock();
 
-				ent_data.work().unlock();
+				ent_data.clear();
 
 				has_loadedMap = false;
 
@@ -983,15 +960,15 @@ namespace LSW {
 					if (!was_player_rgb_instead) launch_player(last_player_path, last_player_size, last_player_layer);
 					else launch_player(last_player_color, last_player_size, last_player_layer);
 				}
-				if (badboys.getMax() == 0) {
+				if (badboys.size() == 0) {
 					launch_badboys(last_badboys_path, last_badboy_count, last_badboys_layer);
 				}
 
-				if (!plr.getS()) return false;
+				if (!plr->getS()) return false;
 				if (!cpu_thr_ready) return false;
 
 				if (!has_loadedMap) {
-					logg << Log::START << "[MAP:GENBMP][WARN] Called generateBitmaps before generating a map! Just call generateMap() before this!" << Log::ENDL;
+					logg << Log::START << Log::_func("map", "start_draw_thr", Log::WARN) << "Called generateBitmaps before generating a map! Just call generateMap() before this!" << Log::ENDL;
 					return false;
 				}
 
@@ -1009,7 +986,8 @@ namespace LSW {
 				//lock();
 
 				hasToUpdate = true;
-				Safer::safe_vector<point> poss;
+				std::vector<point> poss;
+				point player_temp_point;
 
 				for (int a = 0; a < Defaults::map_size_default_x; a++)
 				{
@@ -1020,7 +998,7 @@ namespace LSW {
 							spawn[0] = (1.0*(2.0*a / (Defaults::map_size_default_x*1.0)) - 1.0);
 							spawn[1] = (1.0*(2.0*b / (Defaults::map_size_default_y*1.0)) - 1.0);
 
-							Sprite::sprite* player = plr.getS();
+							Safer::safe_pointer<Sprite::sprite> player = plr->getS();
 
 							if (player) {
 								player->set(Sprite::POSX, spawn[0] + x_off);
@@ -1031,13 +1009,12 @@ namespace LSW {
 								player->set(Sprite::SCALEY, 2.0 / Defaults::map_size_default_y);
 								player->set(Sprite::SCALEG, Defaults::user_scale_compared_to_map);
 							}
-							{
-								point ab;
-								ab.x = a;
-								ab.y = b;
-								poss.push(ab);
-							}
-							logg.debug("[" + std::to_string(poss.getMax()) + "/??]Defined player spawn pos as " + std::to_string(a) + ":" + std::to_string(b));
+
+							player_temp_point.x = a;
+							player_temp_point.y = b;
+							poss.push_back(player_temp_point);
+
+							logg.debug("[" + std::to_string(poss.size()) + "/??]Defined player spawn pos as " + std::to_string(a) + ":" + std::to_string(b));
 
 							a = Defaults::map_size_default_x;
 							b = Defaults::map_size_default_y;
@@ -1049,7 +1026,7 @@ namespace LSW {
 
 				/* ---------------| Setup of first spawn for badboys |--------------- */
 
-				for (size_t p = 0; p < badboys.getMax(); p++) {
+				for (auto& i : badboys) {
 					double x, y;
 
 					int mapx = rand() % Defaults::map_size_default_x, mapy = rand() % Defaults::map_size_default_y;
@@ -1061,31 +1038,32 @@ namespace LSW {
 
 						if (!isBlockTransparent((blockstats)map_i[mapx][mapy])) continue;
 
+						float dd = sqrt((player_temp_point.x - mapx) * (player_temp_point.y - mapy));
+						if (dd < 5.0) continue;
+	
 						donee = true;
 
-						poss.lock();
-						for (auto& i : poss.work())
+						for (auto& i : poss)
 						{
 							if (mapx == i.x && mapy == i.y) {
 								donee = false;
 								break;
 							}
 						}
-						poss.unlock();
 					}
 					{
 						point ab;
 						ab.x = mapx;
 						ab.y = mapy;
-						poss.push(ab);
+						poss.push_back(ab);
 					}
 
-					logg.debug("[" + std::to_string(poss.getMax()) + "/" + std::to_string((int)badboys.getMax()) + "]Defined position of an enemy at " + std::to_string(mapx) + ":" + std::to_string(mapy));
+					logg.debug("[" + std::to_string(poss.size()) + "/" + std::to_string((size_t)badboys.size()) + "]Defined position of an enemy at " + std::to_string(mapx) + ":" + std::to_string(mapy));
 
 					x = x_off + (1.0*(2.0*mapx / (Defaults::map_size_default_x*1.0)) - 1.0);
 					y = y_off + (1.0*(2.0*mapy / (Defaults::map_size_default_y*1.0)) - 1.0);
 
-					Sprite::sprite* sprt = badboys[p]->getS();
+					Safer::safe_pointer<Sprite::sprite> sprt = i->getS();
 					if (sprt) {
 						sprt->set(Sprite::POSX, x);
 						sprt->set(Sprite::POSY, y);
@@ -1114,14 +1092,14 @@ namespace LSW {
 			void map::setSeed(const int u)
 			{
 				Log::gfile logg;
-				logg << Log::START << "[MAP:STSEED][INFO] Defined seed for map making as: " << u << Log::ENDL;
+				logg << Log::START << Log::_func("map", "setSeed") << "Defined seed for map making as: " << u << Log::ENDL;
 
 				seed = u;
 			}
 			void map::setLayer(const int u)
 			{
 				Log::gfile logg;
-				logg << Log::START << "[MAP:SLAYER][INFO] Defined layer for further drawing as " << u << Log::ENDL;
+				logg << Log::START << Log::_func("map", "setLayer") << "Defined layer for further drawing as " << u << Log::ENDL;
 
 				layerUsed = u;
 			}
@@ -1177,7 +1155,7 @@ namespace LSW {
 			void map::setPlayerName(const Safer::safe_string s)
 			{
 				if (s.g().length() > 0) {
-					plr.setMyName(s);
+					plr->setMyName(s);
 					last_player_name = s;
 				}
 			}
@@ -1189,17 +1167,17 @@ namespace LSW {
 			{
 				//plr.reset();
 				was_player_rgb_instead = true;
-				plr.load(color, layer, size);
+				plr->load(color, layer, size);
 				//plr.setMyHealth(1.0);
 				if (last_player_name.g().length() == 0) last_player_name = randomName();
-				plr.setMyName(last_player_name);
-				{
+				plr->setMyName(last_player_name);
+				/*{
 					lock();
 					d_entity_database ent_data;
-					Entities::entity* tempp = &plr;
+					Safer::safe_pointer<Entities::entity> tempp = std::dynamic_pointer_cast<Entities::entity>(plr);
 					ent_data.add(tempp);
 					unlock();
-				}
+				}*/
 
 				last_player_color = color;
 				//last_player_path = path;
@@ -1217,17 +1195,17 @@ namespace LSW {
 
 				//plr.reset();
 				was_player_rgb_instead = false;
-				plr.load(path, layer, size);
+				plr->load(path, layer, size);
 				//plr.setMyHealth(1.0);
 				if (last_player_name.g().length() == 0) last_player_name = randomName();
-				plr.setMyName(last_player_name);
-				{
+				plr->setMyName(last_player_name);
+				/*{
 					lock();
 					d_entity_database ent_data;
-					Entities::entity* tempp = &plr;
+					Safer::safe_pointer<Entities::entity> tempp = std::dynamic_pointer_cast<Entities::entity>(plr);
 					ent_data.add(tempp);
 					unlock();
-				}
+				}*/
 
 				//last_player_color = color;
 				last_player_path = path;
@@ -1251,19 +1229,16 @@ namespace LSW {
 
 				for (unsigned o = 0; o < how_many; o++)
 				{
-					Entities::badboy* bb = nullptr;
-
-					bb = new Entities::badboy();
+					Safer::safe_pointer<Entities::badboy> bb;
 					{
 						lock();
 						d_entity_database ent_data;
-						Entities::entity* tempp = bb;
-						ent_data.add(tempp);
+						ent_data.try_create_as<Entities::badboy>(bb);
 						unlock();
 					}
 					bb->load(path);
 
-					Sprite::sprite* sprt = bb->getS();
+					Safer::safe_pointer<Sprite::sprite> sprt = bb->getS();
 					if (sprt) {
 						sprt->set(Sprite::SPEEDX, 0.0);
 						sprt->set(Sprite::SPEEDY, 0.0);
@@ -1279,29 +1254,26 @@ namespace LSW {
 						throw "FAILED CREATING BADBOY!";
 					}
 
-					badboys.push(bb);
-					bb = nullptr;
+					badboys.push_back(bb);
 				}
 
-				Sprite::sprite* spr = nullptr;
-				if ((spr = plr.getS())) {
-					badboys.lock();
-					for (auto& i : badboys.work())
+				Safer::safe_pointer<Sprite::sprite> spr = plr->getS();
+				if (spr) {
+					for (auto& i : badboys)
 					{
 						i->setFollowing(spr);
 					}
-					badboys.unlock();
 				}
 
 				return true;
 			}
-			Entities::player & map::getPlayer()
+			Entities::player& map::getPlayer()
 			{
-				return plr;
+				return *plr;
 			}
 			Entities::badboy & map::getBB(const size_t p)
 			{
-				if (p < badboys.getMax()) return *badboys[p];
+				if (p < badboys.size()) return *badboys[p];
 				else {
 					throw "MAP::GETBB - CANNOT GET #" + std::to_string(p) + " BADBOY! (out of range)";
 					return (Entities::badboy&)plr;
@@ -1343,15 +1315,15 @@ namespace LSW {
 					has_reachedEnd = true;
 					break;
 				case NOEXTID:
-					plr.setMyHealth(plr.getMyHealth() - 0.0003);
-					if (plr.getMyHealth() < 0.0) {
+					plr->setMyHealth(plr->getMyHealth() - 0.0003);
+					if (plr->getMyHealth() < 0.0) {
 						game_ended_dead = true;
-						plr.setMyHealth(0.0);
+						plr->setMyHealth(0.0);
 					}
 					break;
 				case STARTID:
-					plr.setMyHealth(plr.getMyHealth() + 0.001);
-					if (plr.getMyHealth() > 1.0) plr.setMyHealth(1.0);
+					plr->setMyHealth(plr->getMyHealth() + 0.001);
+					if (plr->getMyHealth() > 1.0) plr->setMyHealth(1.0);
 					break;
 				case INVISID:
 				{
@@ -1387,7 +1359,7 @@ namespace LSW {
 				Log::gfile logg;
 
 				if (paused) {
-					verifyCollision(*plr.getS());
+					verifyCollision(*plr->getS());
 					return;
 				}
 
@@ -1401,16 +1373,15 @@ namespace LSW {
 					return;
 				}
 
-				Sprite::sprite* player = plr.getS();
+				Safer::safe_pointer<Sprite::sprite> player = plr->getS();
 				if (player) {
 					verifyCollision(*player);
-					badboys.lock();
-					for (auto& e : badboys.work()) {
+					for (auto& e : badboys) {
 
 						e->getS()->_verifyCollision(*player);
 						player->_verifyCollision(*e->getS());
 
-						for (auto& r : badboys.work()) {
+						for (auto& r : badboys) {
 							if (r != e) {
 								e->getS()->_verifyCollision(*r->getS());
 							}
@@ -1418,7 +1389,6 @@ namespace LSW {
 
 						verifyCollision(*e->getS());
 					}
-					badboys.unlock();
 				}
 
 				unlock();
@@ -1444,7 +1414,7 @@ namespace LSW {
 					_setPlayerAtLastPos();
 				}
 				paused = b;
-				plr.sleep(b);
+				plr->sleep(b);
 				hasToUpdate = true;
 			}
 			const bool map::isPaused()
@@ -1464,9 +1434,9 @@ namespace LSW {
 			{
 				muu.unlock();
 			}
-			Sprite::sprite * map::_getPlayerSprite()
+			Safer::safe_pointer<Sprite::sprite> map::_getPlayerSprite()
 			{
-				return plr.getS();
+				return plr->getS();
 			}
 			const Safer::safe_string randomName()
 			{

@@ -12,7 +12,7 @@ namespace LSW {
 				stack.clear();
 				FILE* fp = nullptr;
 				if (fopen_s(&fp, path.c_str(), "rb") != 0) {
-					logg << Log::ERRDV << Log::NEEDED_START << "[EXTR:INTRP][ERRR] Failed on extractor::interpret = no file found / file is null." << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("extractor", "interpret", Log::ERRR) << "Failed on extractor::interpret = no file found / file is null." << Log::NEEDED_ENDL;
 					return false;
 				}
 
@@ -25,7 +25,7 @@ namespace LSW {
 
 				if (std::string(line) != "%LSW_C")
 				{
-					logg << Log::ERRDV << Log::NEEDED_START << "[EXTR:INTRP][ERRR] Failed on extractor::interpret = This file is not supported!" << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("extractor", "interpret", Log::ERRR) << "Failed on extractor::interpret = This file is not supported!" << Log::NEEDED_ENDL;
 					return false;
 				}
 
@@ -43,7 +43,7 @@ namespace LSW {
 				}
 
 				if (amountofd <= 0) {
-					logg << Log::ERRDV << Log::NEEDED_START << "[EXTR:INTRP][ERRR] Failed on extractor::interpret = Amount of files detected not valid!" << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("extractor", "interpret", Log::ERRR) << "Failed on extractor::interpret = Amount of files detected not valid!" << Log::NEEDED_ENDL;
 					return false;
 				}
 
@@ -56,13 +56,13 @@ namespace LSW {
 					fscanf_s(fp, "%I64d\n", &sa.siz_o_file);
 					sa.filename = buf;
 					if (sa.filename.length() == 0) {
-						logg << Log::ERRDV << Log::NEEDED_START << "[EXTR:INTRP][ERRR] Failed on extractor::interpret = One file read was bad formatted!" << Log::NEEDED_ENDL;
+						logg << Log::NEEDED_START << Log::_func("extractor", "interpret", Log::ERRR) << "Failed on extractor::interpret = One file read was bad formatted!" << Log::NEEDED_ENDL;
 						return false;
 					}
 					sa.filename.pop_back();
 
 					if (sa.filename.length() == 0 || sa.siz_o_file <= 0) {
-						logg << Log::ERRDV << Log::NEEDED_START << "[EXTR:INTRP][ERRR] Failed on extractor::interpret = One file read was bad formatted!" << Log::NEEDED_ENDL;
+						logg << Log::NEEDED_START << Log::_func("extractor", "interpret", Log::ERRR) << "Failed on extractor::interpret = One file read was bad formatted!" << Log::NEEDED_ENDL;
 						return false;
 					}
 					stack.push_back(sa);
@@ -79,7 +79,7 @@ namespace LSW {
 
 				FILE* fp = nullptr;
 				if (fopen_s(&fp, orig.c_str(), "rb") != 0) {
-					logg << Log::ERRDV << Log::NEEDED_START << "[EXTR:EXALL][ERRR] Failed on extractor::extractAll = Could not re-open file / file is null!" << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("extractor", "extractAll", Log::ERRR) << "Failed on extractor::extractAll = Could not re-open file / file is null!" << Log::NEEDED_ENDL;
 					return false;
 				}
 
@@ -92,7 +92,7 @@ namespace LSW {
 					}
 
 					if (feof(fp)) {
-						logg << Log::ERRDV << Log::NEEDED_START << "[EXTR:EXALL][ERRR] Failed on compactor::extractAll = End of index not found / corrupted!" << Log::NEEDED_ENDL;
+						logg << Log::NEEDED_START << Log::_func("extractor", "extractAll", Log::ERRR) << "Failed on compactor::extractAll = End of index not found / corrupted!" << Log::NEEDED_ENDL;
 					}
 				}
 
@@ -133,7 +133,7 @@ namespace LSW {
 								logg << Log::ERRDV;
 								printed_err = true;
 							}
-							logg << Log::NEEDED_START << "[EXTR:EXALL][ERRR] Failed on compactor::extractAll = One of the files could not be created! Skipping..." << Log::NEEDED_ENDL;
+							logg << Log::NEEDED_START << Log::_func("extractor", "extractAll", Log::ERRR) << "Failed on compactor::extractAll = One of the files could not be created! Skipping..." << Log::NEEDED_ENDL;
 							continue;
 						}
 					}
@@ -180,7 +180,7 @@ namespace LSW {
 				_stack_assist sa;
 				sa.siz_o_file = _getFileSize(nuev);
 				if (sa.siz_o_file <= 0) {
-					logg << Log::ERRDV << Log::NEEDED_START << "[COMP:INSRT][ERRR] Failed on compactor::insert = no file found / file is null." << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("compactor", "insert", Log::ERRR) << "Failed on compactor::insert = no file found / file is null." << Log::NEEDED_ENDL;
 					return;
 				}
 				sa.filename = nuev;
@@ -205,7 +205,7 @@ namespace LSW {
 
 				FILE* fp = nullptr;
 				if (fopen_s(&fp, orig.c_str(), "wb") != 0) {
-					logg << Log::ERRDV << Log::NEEDED_START << "[COMP:CPALL][ERRR] Failed on compactor::compactAll = Cannot open the file for writing!" << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("compactor", "compactAll", Log::ERRR) << "Failed on compactor::compactAll = Cannot open the file for writing!" << Log::NEEDED_ENDL;
 					return;
 				}
 
@@ -225,7 +225,7 @@ namespace LSW {
 
 					FILE* fl = nullptr;
 					if (fopen_s(&fl, i.filename.c_str(), "rb") != 0) {
-						logg << Log::ERRDV << Log::NEEDED_START << "[COMP:CPALL][ERRR]Failed on compactor::compactAll = One of the files doesn't exist! (how?)" << Log::NEEDED_ENDL;
+						logg << Log::NEEDED_START << Log::_func("compactor", "compactAll", Log::ERRR) << "Failed on compactor::compactAll = One of the files doesn't exist! (how?)" << Log::NEEDED_ENDL;
 						return;
 					}
 

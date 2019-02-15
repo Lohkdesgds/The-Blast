@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
 		"Keep in mind that pre-releases normally are incomplete.\n\n"
 		"Some features are not stable or not availabe in this version:\n"
 		"- \"Map loading / collision\"\n"
-		"- \"Memory check / Safer methods\"\n\n"
+		"- \"Memory check (leak) / Safer methods\"\n\n"
 		"If you want to continue (people does that), please click YES.",
 		NULL,
 		ALLEGRO_MESSAGEBOX_YES_NO
@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 #endif
 
 	Log::gfile logg;
-	logg << Log::NEEDED_START << "[MAIN:_____][INFO] Initializing..." << Log::NEEDED_ENDL;
+	logg << Log::NEEDED_START << Log::_func("main", "") << "Initializing..." << Log::NEEDED_ENDL;
 
 	Main::main cmain;
 	Config::config conf; // has to be after cmain (allegro initialization)
@@ -37,15 +37,15 @@ int main(int argc, char* argv[])
 		cmain.__saveConfig(init);
 
 		// initialize display, events, camera and layers configuration
-		logg << Log::NEEDED_START << "[MAIN:_____][INFO] Starting display, events, camera and layers..." << Log::NEEDED_ENDL;
+		logg << Log::NEEDED_START << Log::_func("main", "") << "Starting display, events, camera and layers..." << Log::NEEDED_ENDL;
 		cmain.init();
 
 		// show Loading %% thing and load
-		logg << Log::NEEDED_START << "[MAIN:_____][INFO] Loading resources..." << Log::NEEDED_ENDL;
+		logg << Log::NEEDED_START << Log::_func("main", "") << "Loading resources..." << Log::NEEDED_ENDL;
 		cmain.load();
 
 		// READY
-		logg << Log::NEEDED_START << "[MAIN:_____][INFO] Ready to play! Playing now!" << Log::NEEDED_ENDL;
+		logg << Log::NEEDED_START << Log::_func("main", "") << "Ready to play! Playing now!" << Log::NEEDED_ENDL;
 		while (cmain.play());
 
 		cmain.unloadAll();

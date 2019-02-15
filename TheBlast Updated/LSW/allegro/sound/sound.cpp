@@ -9,12 +9,16 @@ namespace LSW {
 
 			track::track()
 			{
-				logg << Log::START << "[IMGL:CONST][INFO] Registered spawn of image_low ID#" + std::to_string((size_t)this) << Log::ENDL;
+				logg << Log::START << Log::_func("track", "track") << "Registered spawn of track #" + std::to_string((size_t)this) << Log::ENDL;
+				logg.flush();
 			}
 			track::~track()
 			{
-				unload();
-				logg << Log::START << "[IMGL:DESTR][INFO] Registered despawn of image_low ID#" + std::to_string((size_t)this) << ";ID=" << id << Log::ENDL;
+				//unload();
+				Log::gfile* loggi = new Log::gfile();
+				*loggi << Log::START << Log::_func("track", "~track") << "Registered despawn of track #" + std::to_string((size_t)this) /*<< ";ID=" << id*/ << Log::ENDL;
+				loggi->flush();
+				delete loggi;
 			}
 
 			const bool track::load()
@@ -216,45 +220,48 @@ namespace LSW {
 
 
 
-			size_t _find(const Safer::safe_string s, Safer::safe_vector<track*>& v, bool& u)
+			size_t _find(const Safer::safe_string s, Safer::safer_vector<track>& v, bool& u)
 			{
 				u = false;
-				for (size_t p = 0; p < v.getMax(); p++)
+				size_t p = 0;
+				for (auto& i : v)
 				{
 					Safer::safe_string str;
-					v[p]->get(ID, str);
+					i->get(ID, str);
 					if (str == s) {
 						u = true;
 						return p;
 					}
+					p++;
 				}
 				return 0;
 			}
 
 
-			track* getOrCreate(const Safer::safe_string s, const bool create)
+			Safer::safe_pointer<track> getOrCreate(const Safer::safe_string s, const bool create)
 			{
 				d_musics_database msk_data;
-				track* ref = nullptr;
+				Safer::safe_pointer<track> ref;
 				if (msk_data.get(ref, s)) return ref;
 				if (create) {
-					msk_data.create(ref);
-					ref->set(Sound::ID, s);
-					return ref;
+					Safer::safe_pointer<track> nuev;
+					msk_data.create(nuev);
+					nuev->set(Sound::ID, s);
+					return nuev;
 				}
 				else {
-					throw "at Sound::getOrCreate(): Could not find \"" + s.g() + "\".";
-					return nullptr;
+					throw "at Image::getOrCreate(): Could not find \"" + s.g() + "\".";
+					return Safer::safe_pointer<track>();
 				}
 			}
 			void easyRemove(const Safer::safe_string s)
 			{
 				d_musics_database msk_data;
-				track* ref = nullptr;
+				Safer::safe_pointer<track> ref;
 				if (msk_data.get(ref, s)) {
 					msk_data.remove(s);
 					ref->unload();
-					delete ref;
+					//delete ref;
 				}
 			}
 		}

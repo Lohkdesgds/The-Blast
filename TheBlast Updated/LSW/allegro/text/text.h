@@ -15,12 +15,13 @@ namespace LSW {
 
 			enum mode_int{ALIGN_LEFT = ALLEGRO_ALIGN_LEFT,ALIGN_CENTER = ALLEGRO_ALIGN_CENTER,ALIGN_RIGHT = ALLEGRO_ALIGN_RIGHT};
 			// 2
-			const std::string tags[] = { "%pos_x%", "%pos_y%", "%screen_pos_x%", "%screen_pos_y%","%is_following%", "%color_r%", "%color_g%", "%color_b%", "%color_a%", "%mode%", "%time%", "%is_using_buf%", "%g_b_res_x%", "%g_b_res_y%", "%base_refresh_rate%", "%fps%", "%tps%", "%tps_col%", "%tps_funcs%", "%tps_second%", "%tps_posupd%", "%sprite_frame%", "%cam_x%", "%cam_y%", "%cam_zoom%", "%curr_string%", "%last_string%", "%mouse_x%", "%mouse_y%", "%sprite_speed_x%", "%sprite_speed_y%", "%sprite_name%", "%entity_name%", "%entity_health%", "%num_images%", "%num_sprites%", "%num_texts%", "%num_tracks%", "%num_entities%" };
-			enum tags_e{T_POSX,T_POSY,T_SCREEN_POSX, T_SCREEN_POSY,T_ISFOLLOWING,T_COLOR_R, T_COLOR_G, T_COLOR_B, T_COLOR_A,T_MODE,T_TIME,T_ISUSINGBUF,T_GB_RESX, T_GB_RESY,T_REFRESHRATE,T_FPS,T_TPS_COUNT, T_TPS_COLLISION, T_TPS_FUNCTIONS, T_TPS_SECOND_TAKEN, T_TPS_POSUPDATE,T_SPRITE_FRAME,T_CAM_X,T_CAM_Y,T_CAM_ZOOM,T_CURRSTRING,T_LASTSTRING,T_MOUSE_X,T_MOUSE_Y,T_SPRITE_SPEEDX,T_SPRITE_SPEEDY,T_SPRITE_NAME,T_SPRITE_ENTITY_NAME,T_SPRITE_ENTITY_HEALTH,T_IMAGES_LOADED,T_SPRITES_LOADED,T_TEXTS_LOADED,T_TRACKS_LOADED,T_ENTITIES_LOADED};
+			const std::string tags[] = { "%pos_x%", "%pos_y%", "%screen_pos_x%", "%screen_pos_y%","%is_following%", "%color_r%", "%color_g%", "%color_b%", "%color_a%", "%mode%", "%time%", "%is_using_buf%", "%g_b_res_x%", "%g_b_res_y%", "%base_refresh_rate%", "%fps%", "%tps%", "%tps_col%", "%tps_funcs%", "%tps_second%", "%tps_posupd%", "%sprite_frame%", "%cam_x%", "%cam_y%", "%cam_zoom%", "%curr_string%", "%last_string%", "%mouse_x%", "%mouse_y%", "%sprite_speed_x%", "%sprite_speed_y%", "%sprite_name%", "%entity_name%", "%entity_health%", "%num_images%", "%num_sprites%", "%num_texts%", "%num_tracks%", "%num_entities%", "%garbage_total%", "%garbage_images%", "%garbage_sprites%", "%garbage_texts%", "%garbage_tracks%", "%garbage_entities%" };
+			enum tags_e{T_POSX,T_POSY,T_SCREEN_POSX, T_SCREEN_POSY,T_ISFOLLOWING,T_COLOR_R, T_COLOR_G, T_COLOR_B, T_COLOR_A,T_MODE,T_TIME,T_ISUSINGBUF,T_GB_RESX, T_GB_RESY,T_REFRESHRATE,T_FPS,T_TPS_COUNT, T_TPS_COLLISION, T_TPS_FUNCTIONS, T_TPS_SECOND_TAKEN, T_TPS_POSUPDATE,T_SPRITE_FRAME,T_CAM_X,T_CAM_Y,T_CAM_ZOOM,T_CURRSTRING,T_LASTSTRING,T_MOUSE_X,T_MOUSE_Y,T_SPRITE_SPEEDX,T_SPRITE_SPEEDY,T_SPRITE_NAME,T_SPRITE_ENTITY_NAME,T_SPRITE_ENTITY_HEALTH,T_IMAGES_LOADED,T_SPRITES_LOADED,T_TEXTS_LOADED,T_TRACKS_LOADED,T_ENTITIES_LOADED,T_GARBAGE_TOTAL,T_IMAGES_GARBAGE,T_SPRITES_GARBAGE,T_TEXTS_GARBAGE,T_TRACKS_GARBAGE,T_ENTITIES_GARBAGE
+			};
 					   		
 
 			class text {
-				Sprite::sprite* follow = nullptr;
+				Safer::safe_pointer<Sprite::sprite> follow;
 				double off_plr[2] = { 0.0,0.0 };
 				double ofr_plr = 0.0;
 
@@ -46,7 +47,7 @@ namespace LSW {
 				bool str_upd = false;
 
 				//static size_t counter;
-				//Sprite::sprite* sbuf = nullptr;
+				//Safer::safe_pointer<Sprite::sprite> sbuf = nullptr;
 				//ALLEGRO_BITMAP* buf = nullptr;
 				//bool usebuf = false;
 				bool show = true;
@@ -56,8 +57,8 @@ namespace LSW {
 
 				//static unsigned text_count;
 
-				//Sprite::sprite* local_paint = nullptr;
-				//Image::image_low* local_paint_i = nullptr;
+				//Safer::safe_pointer<Sprite::sprite> local_paint = nullptr;
+				//Safer::safe_pointer<Image::image_low> local_paint_i = nullptr;
 
 				Safer::safe_string id, path, _bpath;
 				static Safer::safe_string gpath;
@@ -68,12 +69,13 @@ namespace LSW {
 				void _interpretTags(Safer::safe_string&);
 
 				void setFollow(const Safer::safe_string);
-				void setFollow(Sprite::sprite*);
+				void setFollow(Safer::safe_pointer<Sprite::sprite>);
 				const bool load(const Safer::safe_string = Defaults::font_default_name, const bool = false, const double = 1.0);
 				void reload();
 				//void loadInternalBMP();
 				void _verify();
 			public:
+				text();
 				~text();
 				void verify(const bool = false); // reload
 				/*const bool loadFromDatabase(const Safer::safe_string = Defaults::font_default_name);
@@ -102,11 +104,11 @@ namespace LSW {
 				void draw(const int);
 			};
 
-			size_t _find(const Safer::safe_string, Safer::safe_vector<text*>&, bool&);
+			size_t _find(const Safer::safe_string, Safer::safer_vector<text>&, bool&);
 			void _draw();
 
 
-			text* getOrCreate(const Safer::safe_string s, const bool = false); // create?
+			Safer::safe_pointer<text> getOrCreate(const Safer::safe_string s, const bool = false); // create?
 			void easyRemove(const Safer::safe_string);
 
 		}

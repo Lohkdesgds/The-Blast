@@ -24,6 +24,7 @@ namespace LSW {
 			class config {
 				static ALLEGRO_CONFIG* c;
 				static std::mutex m;
+				static unsigned counter;
 				Log::gfile logg;
 			public:
 				config();

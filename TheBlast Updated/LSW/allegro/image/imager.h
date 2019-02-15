@@ -50,7 +50,7 @@ namespace LSW {
 				bool has_reloaded = false;
 
 				bool no_optimization = false;
-				std::mutex optimizing;
+				//std::mutex optimizing;
 
 				void paint();
 			public:
@@ -93,14 +93,14 @@ namespace LSW {
 				void checkMemory();
 			};
 
-			size_t _find(const Safer::safe_string, Safer::safe_vector<image_low*>&, bool&);
+			size_t _find(const Safer::safe_string, Safer::safer_vector<image_low>&, bool&);
 			void _draw();
 
 
 			void multipleLoad(const Safer::safe_string, Safer::safe_string, const size_t, const unsigned, Safer::safe_string, float* = nullptr, const bool = true);
 
 
-			image_low* getOrCreate(const Safer::safe_string, const bool = false); // create?
+			Safer::safe_pointer<image_low> getOrCreate(const Safer::safe_string, const bool = false); // create?
 			void easyRemove(const Safer::safe_string);
 		}
 	}

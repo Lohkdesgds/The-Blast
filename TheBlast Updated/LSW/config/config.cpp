@@ -6,22 +6,23 @@ namespace LSW {
 
 			ALLEGRO_CONFIG* config::c = nullptr;
 			std::mutex config::m;
+			unsigned config::counter = 0;
 			
 			config::config()
 			{
-				logg << Log::START << "[CONF:CONST][INFO] Registered spawn of config ID#" + std::to_string((size_t)this) << Log::ENDL;
 				m.lock();
-				if (!c) {
+				if (counter++ == 0) {
+					logg << Log::START << Log::_func("config", "config") << "Registered spawn of config #" + std::to_string((size_t)this) << " (handler)" << Log::ENDL;
 					Safer::safe_string temporary = Defaults::Config::config_file;
 					Tools::interpret_path(temporary);
 					Tools::createPath(temporary);
 
-					logg << Log::NEEDED_START << "[CONF:CONST][INFO] Registered loading of Config file (global)" << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("config", "config") << "Registered loading of Config file (global)" << Log::NEEDED_ENDL;
 					if (!(c = al_load_config_file(temporary.g().c_str())))
 					{
 						c = al_create_config();
 						if (!c) throw "at config::config [#" + std::to_string((size_t)this) + "]: Cannot load/create config file!";
-						logg << Log::NEEDED_START << "[CONF:CONST][INFO] Is this the first time you're opening this game? Registered first Config load." << Log::NEEDED_ENDL;
+						logg << Log::NEEDED_START << Log::_func("config", "config") << "Is this the first time you're opening this game? Registered first Config load." << Log::NEEDED_ENDL;
 
 						// set or load first values
 						set(Config::HAD_ERROR, true); // then texture download starts			// USED
@@ -47,12 +48,15 @@ namespace LSW {
 						set(Config::_TIMES_LIT, ll);
 					}
 				}
+				else if (!c) {
+					throw "at config::config [#" + std::to_string((size_t)this) + "]: Unexpected situation! Why isn't config loaded if there's more than one config object?";
+				}
 				m.unlock();
 			}
 			config::~config()
 			{
-				logg << Log::START << "[CONF:DESTR][INFO] Registered despawn of config ID#" + std::to_string((size_t)this) << Log::ENDL;
-				if (c) {
+				if (--counter == 0) {
+					logg << Log::START << Log::_func("config", "~config") << "Registered despawn of config #" + std::to_string((size_t)this) << " (handler)" << Log::ENDL;
 					m.lock();
 					Safer::safe_string temporary = Defaults::Config::config_file;
 					Tools::interpret_path(temporary);
@@ -93,7 +97,7 @@ namespace LSW {
 				if (!c) throw "at config::get [#" + std::to_string((size_t)this) + "]: Cannot get \"" + e.g() + "\" as \"" + v.g() + "\".";
 				const char* chh = al_get_config_value(c, Defaults::Config::strt_txt.g().c_str(), e.g().c_str());
 				if (!chh) {
-					logg << Log::NEEDED_START << "[CONF:GET()][WARN] There was no value to " << e << ", so the default value was set (" << defaul << ")." << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("config", "get", Log::WARN) << "There was no value to " << e << ", so the default value was set (" << defaul << ")." << Log::NEEDED_ENDL;
 					set(e, defaul);
 					v = defaul;
 					return;

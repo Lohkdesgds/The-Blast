@@ -25,10 +25,10 @@ namespace LSW {
 			class map {
 				int map_i[Defaults::map_size_default_x][Defaults::map_size_default_y];
 				
-				Sprite::sprite* map_p[Defaults::map_size_default_x][Defaults::map_size_default_y];
+				Safer::safe_pointer<Sprite::sprite> map_p[Defaults::map_size_default_x][Defaults::map_size_default_y];
 
-				Sprite::sprite* big_map = nullptr;
-				Image::image_low* big_map_il = nullptr;
+				Safer::safe_pointer<Sprite::sprite> big_map;
+				Safer::safe_pointer<Image::image_low> big_map_il;
 
 				int pausepos[2] {0,0};
 				double spawn[2] = { 0.0,0.0 };
@@ -45,8 +45,8 @@ namespace LSW {
 				const double y_off = (1.0*(1.0 / (Defaults::map_size_default_y*1.0)));
 
 				bool is_player_enabled = false;
-				Entities::player plr;
-				Safer::safe_vector<Entities::badboy*> badboys;
+				Safer::safe_pointer<Entities::player> plr;
+				Safer::safer_vector<Entities::badboy> badboys;
 
 				bool cpu_thr_ready, gpu_thr_ready;
 
@@ -103,7 +103,7 @@ namespace LSW {
 				//void generateBitmaps();
 				//void killMap();
 				//void killEntities();
-				//void setPlayer(Sprite::sprite*);
+				//void setPlayer(Safer::safe_pointer<Sprite::sprite>);
 				void corruptWorldTick();
 
 				void setPlayerName(const Safer::safe_string);
@@ -135,7 +135,7 @@ namespace LSW {
 				void lock();
 				void unlock();
 
-				Sprite::sprite* _getPlayerSprite();
+				Safer::safe_pointer<Sprite::sprite> _getPlayerSprite();
 			};
 
 			const Safer::safe_string randomName();

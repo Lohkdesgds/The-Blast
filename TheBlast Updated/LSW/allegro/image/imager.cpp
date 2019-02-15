@@ -23,12 +23,16 @@ namespace LSW {
 
 			image_low::image_low()
 			{
-				logg << Log::START << "[IMGL:CONST][INFO] Registered spawn of image_low ID#" + std::to_string((size_t)this) << Log::ENDL;
+				logg << Log::START << Log::_func("image_low", "image_low") << "Registered spawn of image_low #" + std::to_string((size_t)this) << Log::ENDL;
+				logg.flush();
 			}
 			image_low::~image_low()
 			{
-				unload();
-				logg << Log::START << "[IMGL:DESTR][INFO] Registered despawn of image_low ID#" + std::to_string((size_t)this) << ";ID=" << id << Log::ENDL;
+				//unload();
+				Log::gfile* loggi = new Log::gfile();
+				*loggi << Log::START << Log::_func("image_low", "~image_low") << "Registered despawn of image_low #" + std::to_string((size_t)this) /*<< ";ID=" << id*/ << Log::ENDL;
+				loggi->flush();
+				delete loggi;
 			}
 
 
@@ -340,7 +344,7 @@ namespace LSW {
 							lastcall = GetTickCount64();
 							is_loaded = true;
 							if (using_color) paint();
-							if (!optimized) logg << Log::START << "image_low::load[#" << std::to_string((size_t)this) << ";ID=" << id << "]: Created successfully its image with size \"" << size[0] << "x" << size[1] << "\"" << Log::ENDL;
+							if (!optimized) logg << Log::START << Log::_func("image_low","load") << "[#" << std::to_string((size_t)this) << ";ID=" << id << "]: Created successfully its image with size \"" << size[0] << "x" << size[1] << "\"" << Log::ENDL;
 							return true;
 						}
 						else throw "at image_low::initInstance [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Could not create valid bitmap.";
@@ -357,7 +361,7 @@ namespace LSW {
 							size[0] = al_get_bitmap_width(bmp);
 							size[1] = al_get_bitmap_height(bmp);
 							is_loaded = true;
-							if (!optimized) logg << Log::START << "image_low::load[#" << std::to_string((size_t)this) << ";ID=" << id << "]: Loaded successfully its image with path \"" << path << "\"" << Log::ENDL;
+							if (!optimized) logg << Log::START << Log::_func("image_low", "load") << "[#" << std::to_string((size_t)this) << ";ID=" << id << "]: Loaded successfully its image with path \"" << path << "\"" << Log::ENDL;
 							return true;
 						}
 						throw "at image_low::initInstance [#" + std::to_string((size_t)this) + ";ID=" + id.g() + "]: Cannot load texture \"" + path.g() + "\"";
@@ -373,8 +377,10 @@ namespace LSW {
 				return (has_reloaded = load());
 			}
 
-			void image_low::unload()
+			void image_low::unload() /// potential error here (if multithreaded, but we can't multithread, so it's safe...)
 			{
+				if (!is_loaded) return;
+
 				lastcall = 0;
 				is_loaded = false;
 
@@ -403,18 +409,18 @@ namespace LSW {
 						if (x != size[0] || y != size[1])
 						{
 							reload();
-							logg << Log::START << "image_low::verify[#" << std::to_string((size_t)this) << ";ID=" << id << "]: Reallocated." << Log::ENDL;
+							logg << Log::START << Log::_func("image_low", "verify") << "[#" << std::to_string((size_t)this) << ";ID=" << id << "]: Reallocated." << Log::ENDL;
 						}
 					}
 					break;
 				case LOADED:
 					if (optimized)
 					{
-						optimizing.lock();
+						//optimizing.lock();
 						reload();
-						logg << Log::START << "image_low::verify[#" << std::to_string((size_t)this) << ";ID=" << id << "]: Reallocated." << Log::ENDL;
+						logg << Log::START << Log::_func("image_low", "verify") << "[#" << std::to_string((size_t)this) << ";ID=" << id << "]: Reallocated." << Log::ENDL;
 						optimized = false;
-						optimizing.unlock();
+						//optimizing.unlock();
 					}
 					break;
 				}
@@ -426,11 +432,11 @@ namespace LSW {
 
 				if (al_get_time() - lastcall > global_timing_optimization && !optimized)
 				{
-					optimizing.lock();
+					//optimizing.lock();
 					unload();
-					logg << Log::START << "image_low::checkMemory[#" << std::to_string((size_t)this) << ";ID=" << id << "]: Optimized." << Log::ENDL;
+					logg << Log::START << Log::_func("image_low", "checkMemory") << "[#" << std::to_string((size_t)this) << ";ID=" << id << "]: Optimized." << Log::ENDL;
 					optimized = true;
-					optimizing.unlock();
+					//optimizing.unlock();
 				}
 			}
 
@@ -439,16 +445,18 @@ namespace LSW {
 
 
 
-			
-			size_t _find(const Safer::safe_string s, Safer::safe_vector<image_low*>& v, bool& u)
+
+			size_t _find(const Safer::safe_string s, Safer::safer_vector<image_low>& v, bool& u)
 			{
 				u = false;
-				for (size_t p = 0; p < v.getMax(); p++)
+				size_t p = 0;
+				for (auto& i : v)
 				{
-					if (v[p]->isEq(Image::ID, s)) {
+					if (i->isEq(Image::ID, s)) {
 						u = true;
 						return p;
 					}
+					p++;
 				}
 				return 0;
 			}
@@ -460,12 +468,19 @@ namespace LSW {
 
 				bool hasChanged = bev.g().getKey(Events::CUSTOMEVENT_BITMAPS_RELOAD);
 
-				for (size_t p = 0; p < img_data.work().getMax(); p++)
+				for (size_t pos = 0; pos < img_data.work().work().size();)
 				{
-					Image::image_low* imglw;
-					img_data.get(imglw, p);
-					if (hasChanged && imglw->isEq(Image::MODE, Image::CREATED)) imglw->reload();
-					else imglw->checkMemory();
+					auto i = img_data.work().get(pos);
+					if (Safer::_check_pointer_existance<Image::image_low>(i)) {
+
+						if (hasChanged && i->isEq(Image::MODE, Image::CREATED)) i->reload();
+						else i->checkMemory();
+
+						pos++;
+					}
+					else {
+						img_data.work().erase(pos);
+					}
 				}
 			}
 
@@ -478,7 +493,7 @@ namespace LSW {
 				Tools::clearPath(end);
 
 				d_images_database img_data;
-				Image::image_low* wi = nullptr;
+				Safer::safe_pointer<image_low> wi;
 
 				char format_ch[256];
 				char format_nick[128];
@@ -497,11 +512,9 @@ namespace LSW {
 					sprintf_s(newname, format_ch, p);
 					sprintf_s(newnick, format_nick, p);
 
-					img_data.create(wi);
-					wi->set(Image::ID, newnick);
+					wi = Image::getOrCreate(newnick, true);
 					wi->set(Image::PATH, newname);
 					wi->set(Image::FORCE_ON_MEMORY, !optimizethem);
-					wi = nullptr;
 				}
 
 				if (perc) *perc = 1.0;
@@ -509,29 +522,30 @@ namespace LSW {
 			
 
 
-			image_low* getOrCreate(const Safer::safe_string s, const bool create)
+			Safer::safe_pointer<image_low> getOrCreate(const Safer::safe_string s, const bool create)
 			{
 				d_images_database img_data;
-				image_low* ref = nullptr;
+				Safer::safe_pointer<image_low> ref;
 				if (img_data.get(ref, s)) return ref;
 				if (create){
-					img_data.create(ref);
-					ref->set(Image::ID, s);
-					return ref;
+					Safer::safe_pointer<image_low> nuev;
+					img_data.create(nuev);
+					nuev->set(Image::ID, s);
+					return nuev;
 				}
 				else {
 					throw "at Image::getOrCreate(): Could not find \"" + s.g() + "\".";
-					return nullptr;
+					return Safer::safe_pointer<image_low>();
 				}
 			}
 			void easyRemove(const Safer::safe_string s)
 			{
 				d_images_database img_data;
-				image_low* ref = nullptr;
+				Safer::safe_pointer<image_low> ref;
 				if (img_data.get(ref, s)) {
 					img_data.remove(s);
 					ref->unload();
-					delete ref;
+					//delete ref;
 				}
 			}
 		}

@@ -44,10 +44,10 @@ namespace LSW {
 				void get(const track_s, Safer::safe_string&);
 			};
 
-			size_t _find(const Safer::safe_string, Safer::safe_vector<track*>&, bool&);
+			size_t _find(const Safer::safe_string, Safer::safer_vector<track>&, bool&);
 
 
-			track* getOrCreate(const Safer::safe_string, const bool = false); // create?
+			Safer::safe_pointer<track> getOrCreate(const Safer::safe_string, const bool = false); // create?
 			void easyRemove(const Safer::safe_string);
 		}
 	}

@@ -123,12 +123,12 @@ namespace LSW {
 				// VARIABLES
 				levels return_val;
 				Fx::lines lines(-20);
-				Sprite::sprite* mouse;
-				Sprite::sprite* b00;
-				Sprite::sprite* b01;
-				Sprite::sprite* b02;
-				Text::text* x00;
-				Text::text* x01;
+				Safer::safe_pointer<Sprite::sprite> mouse;
+				Safer::safe_pointer<Sprite::sprite> b00;
+				Safer::safe_pointer<Sprite::sprite> b01;
+				Safer::safe_pointer<Sprite::sprite> b02;
+				Safer::safe_pointer<Text::text> x00;
+				Safer::safe_pointer<Text::text> x01;
 
 				// SEARCHES
 				mouse = Sprite::getOrCreate("MOUSE");
@@ -210,7 +210,7 @@ namespace LSW {
 
 						if ((data->setup.res[0] < 0 && data->setup.res[1] >= 0) || (data->setup.res[0] >= 0 && data->setup.res[1] < 0))
 						{
-							logg << Log::NEEDED_START << "[MAIN:INIT_][WARN] One of the resolutions was set, but the other one wasn't. Please set both or none!" << Log::NEEDED_ENDL;
+							logg << Log::NEEDED_START << Log::_func("main", "init", Log::WARN) << "One of the resolutions was set, but the other one wasn't. Please set both or none!" << Log::NEEDED_ENDL;
 							data->setup.res[0] = data->setup.res[1] = -1;
 						}
 					}
@@ -364,31 +364,31 @@ namespace LSW {
 				}
 				catch (const Safer::safe_string& s)
 				{
-					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:INIT_][ERROR] Caught throw at main::init: " << s << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("main", "init", Log::ERRR) << "Caught throw at main::init: " << s << Log::NEEDED_ENDL;
 					if (data->disp.isEq(Display::RUNNING_P, false)) throw 0;
 					throw s;
 				}
 				catch (const std::string& s)
 				{
-					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:INIT_][ERROR] Caught throw at main::init: " << s << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("main", "init", Log::ERRR) << "Caught throw at main::init: " << s << Log::NEEDED_ENDL;
 					if (data->disp.isEq(Display::RUNNING_P, false)) throw 0;
 					throw s;
 				}
 				catch (const char* s)
 				{
-					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:INIT_][ERROR] Caught throw at main::init: " << s << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("main", "init", Log::ERRR) << "Caught throw at main::init: " << s << Log::NEEDED_ENDL;
 					if (data->disp.isEq(Display::RUNNING_P, false)) throw 0;
 					throw s;
 				}
 				catch (const int i)
 				{
-					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:INIT_][ERROR] Caught throw at main::init: Error code #" << i << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("main", "init", Log::ERRR) << "Caught throw at main::init: Error code #" << i << Log::NEEDED_ENDL;
 					if (data->disp.isEq(Display::RUNNING_P, false)) throw 0;
 					throw i;
 				}
 				catch (...)
 				{
-					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:INIT_][ERROR] Caught throw at main::init: Unknown error." << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("main", "init", Log::ERRR) << "Caught throw at main::init: Unknown error." << Log::NEEDED_ENDL;
 					if (data->disp.isEq(Display::RUNNING_P, false)) throw 0;
 					throw 1;
 				}
@@ -403,7 +403,7 @@ namespace LSW {
 				try {
 					if (!check("load")) return;
 
-					Text::text* txt = nullptr;
+					Safer::safe_pointer<Text::text> txt;
 
 					// EARLY ACCESS
 					txt = Text::getOrCreate("EARLY_ACCESS_00", true);
@@ -451,14 +451,13 @@ namespace LSW {
 					txt->set(Text::UPDATETIME, 1.00);
 					txt->set(Text::LAYER, -2);
 
+					Safer::safe_pointer<Text::text> title;
+					Safer::safe_pointer<Text::text> desc;
+
+					title = Text::getOrCreate("LOADING_0");
+					desc = Text::getOrCreate("LOADING_1");
+
 					{
-						Text::text* title = nullptr;
-						Text::text* desc = nullptr;
-
-						title = Text::getOrCreate("LOADING_0");
-						desc = Text::getOrCreate("LOADING_1");
-
-
 						data->disp.set(Display::LOCK_FPS_TO, 60);
 						data->cam.apply(-2);
 
@@ -632,38 +631,52 @@ namespace LSW {
 							title->set(Text::UPDATETIME, 0.2);
 							data->disp.set(Display::LOCK_FPS_TO, 30);
 
-							data->img_data.work().lock();
-							size_t nnow = 0, sizz = data->img_data.work().getMax();
-							for (auto& i : data->img_data.work().work())
+							size_t sizz = data->img_data.work().work().size();
+
+							for (size_t pos = 0; pos < data->img_data.work().work().size();)
 							{
-								if (data->disp.work(false)) {
-									data->spr_data.draw();
-									data->txt_data.draw();
+								auto i = data->img_data.work().get(pos);
+								if (Safer::_check_pointer_existance<Image::image_low>(i)) {
+
+									if (data->disp.work(false)) {
+										data->spr_data.draw();
+										data->txt_data.draw();
+									}
+
+									i->reload();
+
+									Safer::safe_string tempstr;
+									i->get(Image::ID, tempstr);
+									title->set(Text::SETSTRING, std::string("Checking [") + std::to_string(pos) + "/" + std::to_string(sizz) + "]: " + tempstr.g());
+
+									pos++;
 								}
-
-								i->reload();
-
-								Safer::safe_string tempstr;
-								i->get(Image::ID, tempstr);
-								title->set(Text::SETSTRING, std::string("Checking [") + std::to_string(nnow) + "/" + std::to_string(sizz) + "]: " + tempstr.g());
-								nnow++;
+								else {
+									data->img_data.work().erase(pos);
+								}
 							}
-							data->img_data.work().unlock();
 						}
 
 						// reload of the font to the new expected one
-						data->txt_data.work().lock();
-						for (auto& i : data->txt_data.work().work()) {
-							i->unload();
-							i->verify();
+						for (size_t pos = 0; pos < data->img_data.work().work().size();)
+						{
+							auto i = data->img_data.work().get(pos);
+							if (Safer::_check_pointer_existance<Image::image_low>(i)) {
+								i->unload();
+								i->verify();
+
+								pos++;
+							}
+							else {
+								data->img_data.work().erase(pos);
+							}
 						}
-						data->txt_data.work().unlock();
 					}
 
 					// Some flags
 					{
 						if (data->setup.fixed_memory_flag) {
-							Image::image_low* nulp;
+							Safer::safe_pointer<Image::image_low> nulp;
 							data->img_data.get(nulp, 0);
 							assert(nulp);
 							nulp->set(Image::GLOBAL_SET_NO_OPTIMIZING_SETTING, data->setup.fixed_memory_flag);
@@ -676,6 +689,7 @@ namespace LSW {
 					// SETUP OF THE FUNCTIONS FOR MOUSE (maybe more later)
 
 					// start functions
+					
 					data->bev.g().addFunction(NEWF(Events::add_t_s, 0), &Events::defaultfunction_add); // mouse
 					data->bev.g().addFunction(NEWF(Events::cos_t_s, 1), &Events::defaultfunction_cos); // mouse
 					data->bev.g().addFunction(NEWF(Events::cos_t_s, 2), &Events::defaultfunction_cos); // fx background
@@ -720,31 +734,31 @@ namespace LSW {
 				}
 				catch (const Safer::safe_string& s)
 				{
-					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:LOAD_][ERROR] Caught throw at main::load: " << s << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("main", "load", Log::ERRR) << "Caught throw at main::load: " << s << Log::NEEDED_ENDL;
 					if (data->disp.isEq(Display::RUNNING_P, false)) throw 0;
 					throw s;
 				}
 				catch (const std::string& s)
 				{
-					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:LOAD_][ERROR] Caught throw at main::load: " << s << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("main", "load", Log::ERRR) << "Caught throw at main::load: " << s << Log::NEEDED_ENDL;
 					if (data->disp.isEq(Display::RUNNING_P, false)) throw 0;
 					throw s;
 				}
 				catch (const char* s)
 				{
-					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:LOAD_][ERROR] Caught throw at main::load: " << s << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("main", "load", Log::ERRR) << "Caught throw at main::load: " << s << Log::NEEDED_ENDL;
 					if (data->disp.isEq(Display::RUNNING_P, false)) throw 0;
 					throw s;
 				}
 				catch (const int i)
 				{
-					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:LOAD_][ERROR] Caught throw at main::load: Error code #" << i << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("main", "load", Log::ERRR) << "Caught throw at main::load: Error code #" << i << Log::NEEDED_ENDL;
 					if (data->disp.isEq(Display::RUNNING_P, false)) throw 0;
 					throw i;
 				}
 				catch (...)
 				{
-					logg << Log::ERRDV << Log::NEEDED_START << "[MAIN:LOAD_][ERROR] Caught throw at main::load: Unknown error." << Log::NEEDED_ENDL;
+					logg << Log::NEEDED_START << Log::_func("main", "load", Log::ERRR) << "Caught throw at main::load: Unknown error." << Log::NEEDED_ENDL;
 					if (data->disp.isEq(Display::RUNNING_P, false)) throw 0;
 					throw 1;
 				}
@@ -759,7 +773,7 @@ namespace LSW {
 				case INTRO:
 				{
 					// VARIABLES
-					Sprite::sprite *s00;
+					Safer::safe_pointer<Sprite::sprite> s00;
 					double start_point;
 
 					// SEARCHES
@@ -786,6 +800,10 @@ namespace LSW {
 
 						// FLIP AND STUFF
 						if (!__internal_task_level_common()) return false;
+
+						// IF ENTER, CONTINUE
+						if (data->bev.g().getKey(Events::KEY_ENTER) || data->bev.g().getKey(Events::KEY_PAD_ENTER))
+							break;
 					}
 					s00->set(Sprite::ANIMATIONTIME, 0.0);
 					for (double n = al_get_time(); al_get_time() - n < 3.0;)
@@ -805,15 +823,15 @@ namespace LSW {
 					// VARIABLES
 					bool return_false;
 					Fx::bubbles bubbles;
-					Sprite::sprite* mouse;
-					Sprite::sprite* b00;
-					Sprite::sprite* b01;
-					Sprite::sprite* b02;
-					Sound::track* t00;
-					Sound::track* t01;
-					Sound::track* t02;
-					Text::text* x00;
-					Text::text* x01;
+					Safer::safe_pointer<Sprite::sprite> mouse;
+					Safer::safe_pointer<Sprite::sprite> b00;
+					Safer::safe_pointer<Sprite::sprite> b01;
+					Safer::safe_pointer<Sprite::sprite> b02;
+					Safer::safe_pointer<Sound::track> t00;
+					Safer::safe_pointer<Sound::track> t01;
+					Safer::safe_pointer<Sound::track> t02;
+					Safer::safe_pointer<Text::text> x00;
+					Safer::safe_pointer<Text::text> x01;
 
 					// SEARCHES
 					mouse = Sprite::getOrCreate("MOUSE");
@@ -896,12 +914,12 @@ namespace LSW {
 				{
 					// VARIABLES
 					Map::map *map;
-					Sprite::sprite *mouse;
-					Sprite::sprite *player;
-					Sound::track *t00;
-					Sound::track *t01;
-					Sound::track *t02;
-					Text::text* level;
+					Safer::safe_pointer<Sprite::sprite> mouse;
+					Safer::safe_pointer<Sprite::sprite> player;
+					Safer::safe_pointer<Sound::track> t00;
+					Safer::safe_pointer<Sound::track> t01;
+					Safer::safe_pointer<Sound::track> t02;
+					Safer::safe_pointer<Text::text> level;
 					Config::config conf;
 					double zoom = 1.0;
 					double pos_x = 0.0, pos_y = 0.0;
@@ -910,6 +928,7 @@ namespace LSW {
 					double corrosion;
 					double music_fx;
 					double level_now_fx;
+					double time_paused;
 
 					{
 						Safer::safe_string temporary_color;
@@ -922,7 +941,6 @@ namespace LSW {
 					// SEARCHES
 					map = nullptr;
 					mouse = Sprite::getOrCreate("MOUSE");
-					player = nullptr; // started from map
 					t00 = Sound::getOrCreate("MUSIC_0");
 					t01 = Sound::getOrCreate("MUSIC_1");
 					t02 = Sound::getOrCreate("MUSIC_2");
@@ -932,6 +950,7 @@ namespace LSW {
 					__apply_cam_number(2);
 					
 					// SETTING VARIABLES VALUES
+					time_paused = 0;
 					level_now = 1;
 					if (!(map = new Map::map())) {
 						throw "MAIN::PLAY - COULD NOT CREATE MAP POINTER!";
@@ -956,7 +975,7 @@ namespace LSW {
 					{
 						map->setCPULock(true);
 
-						Text::text* txt = Text::getOrCreate("LOADING_SCREEN_MAP", true);
+						Safer::safe_pointer<Text::text> txt = Text::getOrCreate("LOADING_SCREEN_MAP", true);
 						txt->set(Text::SETSTRING, "LOADING NEW MAP...");
 						txt->set(Text::MODE, Text::ALIGN_CENTER);
 						txt->set(Text::AFFECTED_BY_CAM, false);
@@ -1012,8 +1031,8 @@ namespace LSW {
 							if (fx_amount > Defaults::music_maxspeed) fx_amount = Defaults::music_maxspeed;
 							t02->set(Sound::SPEED, fx_amount);
 						}
-						if (al_get_time() - level_now_fx < 5.0) {
-							double diff = al_get_time() - level_now_fx;
+						if (al_get_time() - (level_now_fx - time_paused) < 5.0) {
+							double diff = al_get_time() - (level_now_fx - time_paused);
 							diff = 5.0 - diff;
 							diff /= 5.0;
 							diff *= 0.8;
@@ -1033,7 +1052,7 @@ namespace LSW {
 							level->set(Text::COLOR, al_map_rgba_f(0.0, 0.0, 0.0, 0.0));
 							map->setCPULock(true);
 
-							Text::text* txt = Text::getOrCreate("LOADING_SCREEN_MAP", true);
+							Safer::safe_pointer<Text::text> txt = Text::getOrCreate("LOADING_SCREEN_MAP", true);
 							txt->set(Text::SETSTRING, "LOADING NEW MAP...");
 							txt->set(Text::MODE, Text::ALIGN_CENTER);
 							txt->set(Text::AFFECTED_BY_CAM, false);
@@ -1067,20 +1086,20 @@ namespace LSW {
 
 							// Level
 							level_now_fx = al_get_time();
+							time_paused = 0;
 							level_now++;
 						}
 						if (data->bev.g().getKey(Events::KEY_ESCAPE)) {
 							level->set(Text::COLOR, al_map_rgba_f(0.0, 0.0, 0.0, 0.0));
 							map->Pause(true);
+							double nww = al_get_time();
 							levels tl = _rgb_pause_screen();
 							map->Pause(false);
+							time_paused += al_get_time() - nww;
 
 							// reapply layer setup
 							__apply_cam_number(2);
 							__apply_layer_number(2);
-
-							// Level
-							level_now_fx = al_get_time();
 
 							if (tl != data->playing) { // end
 								data->playing = tl;
@@ -1095,6 +1114,7 @@ namespace LSW {
 							__apply_layer_number(0);
 							while (map->isCPUtasking());
 							delete map;
+							map = nullptr;
 							return false;
 						}
 					}
@@ -1104,6 +1124,7 @@ namespace LSW {
 						map->setCPULock(true);
 						while (map->isCPUtasking());
 						delete map;
+						map = nullptr;
 					}
 
 					Text::easyRemove("LEVEL_SHOW");
@@ -1112,26 +1133,25 @@ namespace LSW {
 				case SETTINGS:
 				{
 					// VARIABLES
-					Sprite::sprite* menu_00; // enable OSD													///
-					Sprite::sprite* menu_01; // set music volume (background fixed)							///
-					Sprite::sprite* menu_02; // set music volume (grap)										///
-					Sprite::sprite* menu_03; // create player settings, so then creates:					///
-					Sprite::sprite* menu_04; // Set Nickname (big block, enter saves)						///
-					Sprite::sprite* menu_05; // Set predefined color (RGB+CYM+BW)							///
-					Sprite::sprite* menu_06; // Set Blur FX On/Off											///
-					Sprite::sprite* menu_07; // back														///
-					Text::text* menu_00_t;																	///
-					Text::text* menu_01_t;																	///
-					//Text::text* menu_02_t;																/// SHOULDN'T EXIST (now)
-					Text::text* menu_03_t;																	///
-					Text::text* menu_04_t;																	///
-					Text::text* menu_05_t;																	///
-					Text::text* menu_06_t;																	///
-					Text::text* menu_07_t;																	///
+					Safer::safe_pointer<Sprite::sprite> menu_00; // enable OSD
+					Safer::safe_pointer<Sprite::sprite> menu_01; // set music volume (background fixed)
+					Safer::safe_pointer<Sprite::sprite> menu_02; // set music volume (grap)
+					Safer::safe_pointer<Sprite::sprite> menu_03; // recreate player settings
+					Safer::safe_pointer<Sprite::sprite> menu_04; // Set Nickname (big block, enter saves)
+					Safer::safe_pointer<Sprite::sprite> menu_05; // Set predefined color (RGB+CYM+BW)
+					Safer::safe_pointer<Sprite::sprite> menu_06; // Set Blur FX On/Off
+					Safer::safe_pointer<Sprite::sprite> menu_07; // back
+					Safer::safe_pointer<Text::text> menu_00_t;
+					Safer::safe_pointer<Text::text> menu_01_t;
+					Safer::safe_pointer<Text::text> menu_03_t;
+					Safer::safe_pointer<Text::text> menu_04_t;
+					Safer::safe_pointer<Text::text> menu_05_t;
+					Safer::safe_pointer<Text::text> menu_06_t;
+					Safer::safe_pointer<Text::text> menu_07_t;
 					Fx::bubbles bubbles;
 					Config::config conf;
-					Sprite::sprite* mouse;
-					Sound::track* t00;
+					Safer::safe_pointer<Sprite::sprite> mouse;
+					Safer::safe_pointer<Sound::track> t00;
 					float volume_got;
 					bool is_typing_name;
 					bool was_fx_enabled;
@@ -1440,7 +1460,7 @@ namespace LSW {
 							if (b00) {
 								//data->bev.g()._setKey(Events::KEY_F3, true); // MAYBE CHANGE LATER
 
-								Text::text* txt = Text::getOrCreate("OSD_2");
+								Safer::safe_pointer<Text::text> txt = Text::getOrCreate("OSD_2");
 								bool allas;
 								txt->get(Text::SHOW, allas);
 								Text::getOrCreate("OSD_0")->set(Text::SHOW, !allas);
@@ -1575,11 +1595,11 @@ namespace LSW {
 
 					// VARIABLES
 					Fx::lines lines(-81);
-					Sprite::sprite* mouse;
-					Sprite::sprite* menu_00;
-					Sprite::sprite* menu_01;
-					Text::text* menu_00_t;
-					Text::text* menu_01_t;
+					Safer::safe_pointer<Sprite::sprite> mouse;
+					Safer::safe_pointer<Sprite::sprite> menu_00;
+					Safer::safe_pointer<Sprite::sprite> menu_01;
+					Safer::safe_pointer<Text::text> menu_00_t;
+					Safer::safe_pointer<Text::text> menu_01_t;
 
 					// SEARCHES
 					mouse = Sprite::getOrCreate("MOUSE");
@@ -1689,10 +1709,10 @@ namespace LSW {
 				try {
 					if (!check("__thr_once_load")) return;
 
-					Sprite::sprite*   ws = nullptr;
-					Image::image_low* wi = nullptr;
-					Text::text*       wt = nullptr;
-					Sound::track*	  wm = nullptr;
+					Safer::safe_pointer<Sprite::sprite>   ws;
+					Safer::safe_pointer<Image::image_low> wi;
+					Safer::safe_pointer<Text::text>       wt;
+					Safer::safe_pointer<Sound::track>	  wm;
 
 					Config::config conf;
 
@@ -2008,13 +2028,13 @@ namespace LSW {
 
 					wt = Text::getOrCreate("OSD_2", true);
 					wt->set(Text::SETSTRING,
-						"{IMG=%num_images%;SPR=%num_sprites%;TXT=%num_texts%;TCK=%num_tracks%;E=%num_entities%}");
+						"{IMG=%num_images%;SPR=%num_sprites%;TXT=%num_texts%;TCK=%num_tracks%;E=%num_entities%/GARB=%garbage_total%;[%garbage_images%;%garbage_sprites%;%garbage_texts%;%garbage_tracks%;%garbage_entities%]}");
 					wt->set(Text::POSX, -1.0);
 					wt->set(Text::POSY, -0.95);
 					wt->set(Text::SCALEG, 0.7);
 					wt->set(Text::MODE, Text::ALIGN_LEFT);
 					wt->set(Text::LAYER, Defaults::default_font_foreground_layer);
-					wt->set(Text::UPDATETIME, 1.0);
+					wt->set(Text::UPDATETIME, 0.5);
 					wt->set(Text::AFFECTED_BY_CAM, false);
 					wt->set(Text::SHOW, temp_osd_on);
 
@@ -2067,7 +2087,7 @@ namespace LSW {
 					if (al_get_time() - lastF3switch >= Defaults::display_osd_toggle_min_time) {
 						lastF3switch = al_get_time();
 
-						Text::text* txt = Text::getOrCreate("OSD_2");
+						Safer::safe_pointer<Text::text> txt = Text::getOrCreate("OSD_2");
 						bool allas;
 						txt->get(Text::SHOW, allas);
 						Text::getOrCreate("OSD_0")->set(Text::SHOW, !allas);

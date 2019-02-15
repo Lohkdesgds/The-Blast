@@ -111,7 +111,7 @@ namespace LSW {
 				}
 				return 0.0;
 			}
-			void camera_g::get(/*const _cam_p a, */const int o, Safer::safe_vector<int>& v)
+			void camera_g::get(/*const _cam_p a, */const int o, std::vector<int>& v)
 			{
 				assert(cam.t);
 
@@ -124,7 +124,7 @@ namespace LSW {
 				}*/
 
 				v.clear();
-				for (auto& i : cam.t->get(o).layers_enabled) v.push(i);
+				for (auto& i : cam.t->get(o).layers_enabled) v.push_back(i);
 			}
 
 			std::vector<int>& camera_g::getLayers(const int u)

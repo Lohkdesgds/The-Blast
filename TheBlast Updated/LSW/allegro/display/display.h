@@ -46,8 +46,8 @@ namespace LSW {
 
 				// fx
 				bool color_shift = true; // test
-				Sprite::sprite* spr[3] = { nullptr };
-				Image::image_low* img_lw[3] = { nullptr };
+				Safer::safe_pointer<Sprite::sprite> spr[3];
+				Safer::safe_pointer<Image::image_low> img_lw[3];
 				double last_color_shift_FX = 0;
 
 				// external / aux
@@ -66,7 +66,7 @@ namespace LSW {
 				static long long instance_count; // 0? kills display
 
 				void _realDraw(const ALLEGRO_COLOR);
-				void __flushCache(); // has to be in draw thread. Maybe later I'll put it somewhere else.
+				//void __flushCache(); // has to be in draw thread. Maybe later I'll put it somewhere else.
 			public:
 				big_display();
 				~big_display();

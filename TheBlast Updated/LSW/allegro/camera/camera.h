@@ -76,7 +76,7 @@ namespace LSW {
 				const int getLastApplyID();
 
 				const double get(const int, const _cam_v); // get config of n int, typ _cam_v
-				void get(const int, Safer::safe_vector<int>&);
+				void get(const int, std::vector<int>&);
 				std::vector<int>& getLayers(const int);
 				
 				void set(const int, const _cam_v, const double);

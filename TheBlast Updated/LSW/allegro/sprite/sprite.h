@@ -47,7 +47,7 @@ namespace LSW {
 			};
 
 			class sprite {
-				Safer::safe_vector<Image::image_low*> bmps;
+				Safer::safer_vector<Image::image_low> bmps;
 				Safer::safe_string id_g;
 				_sprite_data data;
 
@@ -128,19 +128,14 @@ namespace LSW {
 
 				//void runOn(void(*fu)(ALLEGRO_FONT*, ALLEGRO_COLOR, float, float, const char*), ALLEGRO_FONT*, ALLEGRO_COLOR, float, float, const char*, const size_t = 0);
 			};
-			/*
-			struct _sprites_database_data {
-				Safer::safe_vector<sprite*> sprs;
-				size_t layer0 = 0;
-				size_t layer1 = 3;
-			};*/
 
-			size_t _find(const Safer::safe_string, Safer::safe_vector<sprite*>&, bool&);
+
+			size_t _find(const Safer::safe_string, Safer::safer_vector<sprite>&, bool&);
 			void _draw();
 
 			void reset_sprite_data(_sprite_data&);
 			
-			sprite* getOrCreate(const Safer::safe_string, const bool = false); // create?
+			Safer::safe_pointer<sprite> getOrCreate(const Safer::safe_string, const bool = false); // create?
 			void easyRemove(const Safer::safe_string);
 		}
 	}

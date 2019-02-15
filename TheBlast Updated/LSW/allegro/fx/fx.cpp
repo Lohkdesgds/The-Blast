@@ -19,13 +19,11 @@ namespace LSW {
 
 				d_images_database img_data;
 				d_sprite_database spr_data;
-				img_data.remove("BKG_NULL");
-				spr_data.remove("BKG_NULL");
-				delete disguy;
-				imglw->unload();
-				delete imglw;
-				disguy = nullptr;
-				imglw = nullptr;
+				Image::easyRemove("BKG_NULL");
+				Sprite::easyRemove("BKG_NULL");
+				//delete disguy;
+				///imglw->unload();
+				//delete imglw;
 			}
 
 			void bubbles::init(const unsigned amout, const float mfps, const int layer)
@@ -45,9 +43,8 @@ namespace LSW {
 					siz[0] = al_get_bitmap_width(bp);
 					siz[1] = al_get_bitmap_height(bp);
 
-					spr_data.create(disguy);
+					disguy = Sprite::getOrCreate("BKG_NULL", true);
 					disguy->add("BKG_NULL");
-					disguy->setID("BKG_NULL");
 					disguy->set(Sprite::LAYER, layer);
 					disguy->set(Sprite::SCALEG, 2.0);
 					disguy->set(Sprite::AFFECTED_BY_CAM, false);
@@ -183,9 +180,9 @@ namespace LSW {
 
 				rad = ((al_get_bitmap_width(bp) > al_get_bitmap_height(bp)) ? al_get_bitmap_width(bp) : al_get_bitmap_height(bp));
 
-				spr_data.create(disguy);
+
+				disguy = Sprite::getOrCreate("LINES_NULL", true);
 				disguy->add("LINES_NULL");
-				disguy->setID("LINES_NULL");
 				disguy->set(Sprite::LAYER, layer);
 				disguy->set(Sprite::SCALEG, 2.0);
 				disguy->set(Sprite::AFFECTED_BY_CAM, false);
@@ -197,13 +194,11 @@ namespace LSW {
 
 				d_images_database img_data;
 				d_sprite_database spr_data;
-				img_data.remove("LINES_NULL");
-				spr_data.remove("LINES_NULL");
-				delete disguy;
-				imglw->unload();
-				delete imglw;
-				disguy = nullptr;
-				imglw = nullptr;
+				Image::easyRemove("LINES_NULL");
+				Sprite::easyRemove("LINES_NULL");
+				//delete disguy;
+				///imglw->unload();
+				//delete imglw;
 			}
 			void lines::draw()
 			{

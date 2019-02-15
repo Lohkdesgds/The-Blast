@@ -21,8 +21,8 @@ namespace LSW {
 				bool firstcall = true;
 
 				//ALLEGRO_BITMAP* lastbitmap = nullptr;
-				Image::image_low* imglw = nullptr;
-				Sprite::sprite* disguy = nullptr;
+				Safer::safe_pointer<Image::image_low> imglw;
+				Safer::safe_pointer<Sprite::sprite> disguy;
 
 				int siz[2] = { 0, 0 };
 				//int lastbitmapwidth = 0;
@@ -41,8 +41,8 @@ namespace LSW {
 			const double maxone(double, const double = 1.0);
 
 			class lines {
-				Image::image_low* imglw = nullptr;
-				Sprite::sprite* disguy = nullptr;
+				Safer::safe_pointer<Image::image_low> imglw;
+				Safer::safe_pointer<Sprite::sprite> disguy;
 				int rad = 2;
 			public:
 				lines(const int = 0);

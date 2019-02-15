@@ -16,7 +16,7 @@ namespace LSW {
 				conf.set(Config::HAD_ERROR, true);
 				conf.~config();
 
-				logg << Log::ERRDV << Log::NEEDED_START << "[__________][FATAL] THROWN ERROR SOMEWHERE: " << thrown << Log::NEEDED_ENDL;
+				logg << Log::NEEDED_START << Log::_func("throw_at_screen", "", Log::ERRR) << "THROWN ERROR SOMEWHERE: " << thrown << Log::NEEDED_ENDL;
 				logg.flush();
 
 				if (diee) exit(EXIT_FAILURE);

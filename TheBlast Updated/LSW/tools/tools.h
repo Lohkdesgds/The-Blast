@@ -16,15 +16,19 @@ namespace LSW {
 
 				template<class T, typename U = int>
 				class manager {
-					static Safer::safe_vector<T*> data;
-					static size_t(*f) (const Safer::safe_string, Safer::safe_vector<T*> &, bool &);
+					static Safer::memory_controller<T> data;
+					static size_t(*f) (const Safer::safe_string, Safer::safer_vector<T> &, bool &);
 					static void(*drw) ();
 					static U arg; // not being used nowadays
 				public:
-					manager(size_t(*fi) (const Safer::safe_string, Safer::safe_vector<T*> &, bool &) = nullptr, void(*df) () = nullptr);
+					manager(size_t(*fi) (const Safer::safe_string, Safer::safer_vector<T>&, bool &) = nullptr, void(*df) () = nullptr);
 
-					void add(T*);
-					void create(T*&);
+					//void add(Safer::safe_pointer<T>);
+					void create(Safer::safe_pointer<T>&);
+
+					template<typename V>
+					void try_create_as(Safer::safe_pointer<V>&);
+
 					void remove(const Safer::safe_string); // id
 					void remove(const size_t);
 
@@ -32,22 +36,22 @@ namespace LSW {
 
 					void draw();
 
-					const bool get(T*&, const Safer::safe_string); // get from database by id
-					const bool get(T*&, const size_t);
+					const bool get(Safer::safe_pointer<T>&, const Safer::safe_string); // get from database by id
+					const bool get(Safer::safe_pointer<T>&, const size_t);
 					U& getArg();
 
-					Safer::safe_vector<T*>& work();
+					Safer::memory_controller<T>& work();
 				};
 
 
-				template<class T, typename U> Safer::safe_vector<T*> manager<T, U>::data;
-				template<class T, typename U> size_t(*manager<T, U>::f) (const Safer::safe_string, Safer::safe_vector<T*> &, bool &);
+				template<class T, typename U> Safer::memory_controller<T> manager<T, U>::data;
+				template<class T, typename U> size_t(*manager<T, U>::f) (const Safer::safe_string, Safer::safer_vector<T> &, bool &);
 				template<class T, typename U> void(*manager<T, U>::drw) ();
 				template<class T, typename U> U manager<T, U>::arg;
 
 
 				template<class T, typename U>
-				inline manager<T, U>::manager(size_t(*fi)(const Safer::safe_string, Safer::safe_vector<T*>&, bool &), void(*df) ())
+				inline manager<T, U>::manager(size_t(*fi)(const Safer::safe_string, Safer::safer_vector<T>&, bool &), void(*df) ())
 				{
 					if (!(f)) {
 						/*if (!(fi)) {
@@ -62,22 +66,24 @@ namespace LSW {
 					}
 				}
 
-				template<class T, typename U>
-				inline void manager<T, U>::add(T* u)
+				/*template<class T, typename U>
+				inline void manager<T, U>::add(Safer::safe_pointer<T> u)
 				{
 					if (!u) return;
 					data.push(u);
-				}
+				}*/
 
 				template <class T, typename U>
-				inline void manager<T, U>::create(T*& u)
+				inline void manager<T, U>::create(Safer::safe_pointer<T>& u)
 				{
-					if (!u) u = new T();
-					if (!u) {
-						throw "CANNOT USE NEW AT manager::create";
-						exit(-1);
-					}
-					data.push(u);
+					u = data.create();
+				}
+
+				template<class T, typename U>
+				template<typename V>
+				inline void LSW::v2::experimental::Tools::manager<T, U>::try_create_as(Safer::safe_pointer<V>& u)
+				{
+					u = data.try_create_as<V>();
 				}
 
 				template<class T, typename U>
@@ -86,7 +92,7 @@ namespace LSW {
 					if (!f) return;
 
 					bool right = false;
-					size_t pos = f(s, data, right);
+					size_t pos = f(s, data.work(), right);
 					if (right) {
 						remove(pos);
 					}
@@ -112,12 +118,12 @@ namespace LSW {
 				}
 
 				template <class T, typename U>
-				inline const bool manager<T, U>::get(T*& r, const Safer::safe_string s) // get from database by id
+				inline const bool manager<T, U>::get(Safer::safe_pointer<T>& r, const Safer::safe_string s) // get from database by id
 				{
 					if (!f) return false;
 
 					bool right = false;
-					size_t pos = f(s, data, right);
+					size_t pos = f(s, data.work(), right);
 					//data.lock();
 
 					if (right)
@@ -131,10 +137,10 @@ namespace LSW {
 				}
 
 				template<class T, typename U>
-				inline const bool manager<T, U>::get(T *& r, const size_t pos)
+				inline const bool manager<T, U>::get(Safer::safe_pointer<T>& r, const size_t pos)
 				{
 					//data.lock();
-					if (pos < data.getMax()) {
+					if (pos < data.work().size()) {
 						r = data[pos];
 						//data.unlock();
 						return true;
@@ -150,7 +156,7 @@ namespace LSW {
 				}
 
 				template <class T, typename U>
-				inline Safer::safe_vector<T*>& manager<T, U>::work()
+				inline Safer::memory_controller<T>& manager<T, U>::work()
 				{
 					return data;
 				}
@@ -295,27 +301,22 @@ d_entity_database ent_data(LSW::v2::Entities::_find, LSW::v2::Entities::_draw); 
 				Safer::safe_string str;
 				std::stringstream ss(s.g());
 				std::string token;
-				Safer::safe_vector<Safer::safe_string> paths;
+				std::vector<Safer::safe_string> paths;
 
 				while (std::getline(ss, token, '\\'))
 				{
 					str += token;
-					paths.push(str);
+					paths.push_back(str);
 					str += '\\';
 				}
 
-				Safer::safe_string u = paths.pop();
-				if (u.g().rfind(".") == std::string::npos) paths.push(u);
-
-				paths.lock();
-				size_t siz = paths.getMax();
-
-				for (size_t p = 0; p < siz; p++)
+				Safer::safe_string u = paths.back();
+				if (u.g().rfind(".") != std::string::npos) paths.pop_back();
+				
+				for (auto& i : paths)
 				{
-					CreateDirectoryA(paths.work()[p].g().c_str(), NULL);
+					CreateDirectoryA(i.g().c_str(), NULL);
 				}
-
-				paths.unlock();
 			}
 			inline __int64 getFileSize(const Safer::safe_string& s)
 			{
