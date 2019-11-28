@@ -107,7 +107,7 @@ int main(int argc, const char* argv[])
 {
 	lsw_init();
 
-	__raw_display disp(1280, 720, ALLEGRO_WINDOWED|ALLEGRO_DIRECT3D_INTERNAL);
+	__raw_display disp;
 	Textures imgs;
 	
 	imgs.load("temp", "pause/pause_00.png");
@@ -121,11 +121,14 @@ int main(int argc, const char* argv[])
 	spr.apply(Assistance::_sprite_opt_bval::SHOWBOX, true);
 	spr.apply(Assistance::_sprite_opt_dval::CENTERX, 0.0);
 
-	disp.clear_to(al_map_rgb(0, 0, 0));
-	spr.draw();
-	disp.flip();
 
-	Sleep(10000);
+	disp.print();
 
+	for (auto u = GetTickCount64(); GetTickCount64() - u < 10000;) {
+		disp.clear_to(al_map_rgb(0, 0, 0));
+		spr.draw();
+		disp.flip();
+	}
+	
 	return 0;
 }

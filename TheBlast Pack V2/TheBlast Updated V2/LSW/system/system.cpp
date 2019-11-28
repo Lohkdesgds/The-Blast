@@ -270,9 +270,24 @@ namespace LSW {
 
 			auto u = __g_sys.__get_available_res();
 
+			int tx, ty;
+			tx = x;
+			ty = y;
+
 			if (hz == 0) {
 				for (auto& i : u) {
-					if (i.hz > hz) hz = i.hz;
+					bool higher = ((i.x > tx && i.y >= ty) || (i.x >= tx && i.y > ty));
+					bool equall = (i.x == tx && i.y == ty);
+					bool faster = i.hz > hz;
+
+					if (higher) {
+						hz = i.hz;
+						tx = i.x;
+						ty = i.y;
+					}
+					if (equall && faster) {
+						hz = i.hz;
+					}
 				}
 			}
 
@@ -291,6 +306,38 @@ namespace LSW {
 			else {
 				throw Abort::abort("system::__check_resolution_existance", "display::display", "Resolution not available.");
 			}
+		}
+		
+		void __raw_display::_print()
+		{
+			auto u = al_get_backbuffer(d);
+			std::string path = Constants::default_print_path;
+			Tools::interpret_path(path);
+			Tools::createPath(path);
+
+			auto rt = time(NULL);
+			tm tt;
+			auto v = localtime_s(&tt, &rt);
+
+			if (v != 0) throw Abort::abort("localtime_s", "__raw_display::_print", "Cannot get local time to name the print file!");
+
+			path = path + std::to_string(tt.tm_year + 1900) + "_" + std::to_string(tt.tm_mon + 1) + "_" + std::to_string(tt.tm_mday) + "-" + std::to_string(tt.tm_hour) + "_" + std::to_string(tt.tm_min) + "_" + std::to_string(tt.tm_sec) + "-" + std::to_string((int)(GetTickCount64()%1000)) + ".jpg";
+			auto cpy = al_clone_bitmap(u);
+
+			if (printthr) {
+				printthr->join();
+				delete printthr;
+				printthr = nullptr;
+			}
+			printthr = new std::thread([=] {__print_thr_autodel(cpy, path); });
+
+			printing = false;
+		}
+
+		void __raw_display::__print_thr_autodel(ALLEGRO_BITMAP* u, const std::string path)
+		{
+			al_save_bitmap(path.c_str(), u);
+			al_destroy_bitmap(u);
 		}
 
 		__raw_display::__raw_display()
@@ -311,6 +358,12 @@ namespace LSW {
 				}
 			}
 
+			if (Constants::start_force_720p)
+			{
+				md.x = 1280;
+				md.y = 720;
+			}
+
 			_init(md.x, md.y, -1, md.hz);
 		}
 
@@ -329,8 +382,9 @@ namespace LSW {
 		}
 		void __raw_display::flip()
 		{
-			al_set_target_backbuffer(d);
 			al_flip_display();
+			if (printing) _print();
+			al_set_target_backbuffer(d);
 		}
 		void __raw_display::clear_to(const ALLEGRO_COLOR v)
 		{
@@ -346,6 +400,10 @@ namespace LSW {
 		bool __raw_display::exist()
 		{
 			return (d);
+		}
+		void __raw_display::print()
+		{
+			printing = true;
 		}
 		__raw_image::~__raw_image()
 		{

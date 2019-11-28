@@ -16,6 +16,7 @@
 #include <vector>
 #include <memory>
 #include <Windows.h>
+#include <thread>
 
 #include "..\custom_abort\abort.h"
 #include "..\tools\tools.h"
@@ -26,7 +27,8 @@ namespace LSW {
 		namespace Constants {
 
 			const int start_audio_samples_max = 8;
-			const int start_display_default_mode = ALLEGRO_FULLSCREEN | ALLEGRO_DIRECT3D_INTERNAL;
+			const int start_display_default_mode = ALLEGRO_WINDOWED | ALLEGRO_DIRECT3D_INTERNAL;
+			const bool start_force_720p = true;
 
 			const std::string __match_unmatch = "_DATA";
 			const std::string _match_extract = std::string("%LSW") + __match_unmatch;
@@ -35,6 +37,7 @@ namespace LSW {
 			const std::string start_zip_warning_file_txt = "%appdata%/Lohk's Studios/TheBlast/data/README.txt";
 			const std::string start_zip_warning_default_text = "Hey,\nThe data.zip file will be replaced everytime you open the game. Just don't change it, because it won't be saved in this version, ok?\nThanks.";
 
+			const std::string default_print_path = "%win_photos_path%/Lohk's Studios/TheBlast/Screenshots/"; // + YYYY_MM_DD-HH_MM.jpg
 		}
 
 		namespace Assistance {
@@ -78,8 +81,13 @@ namespace LSW {
 		class __raw_display {
 			ALLEGRO_DISPLAY* d = nullptr;
 			int x, y, f, h;
+			bool printing = false;
+
+			std::thread* printthr = nullptr;
 
 			void _init(const int, const int, const int, int); // x, y, flags, hz
+			void _print();
+			void __print_thr_autodel(ALLEGRO_BITMAP*, const std::string);
 		public:
 			__raw_display();
 			__raw_display(const int, const int, const int = Constants::start_display_default_mode, int = 0); // x, y, flags, hz
@@ -90,6 +98,8 @@ namespace LSW {
 			void clear_to(const ALLEGRO_COLOR);
 			void close();
 			bool exist();
+
+			void print();
 		};
 
 		class __raw_image {
