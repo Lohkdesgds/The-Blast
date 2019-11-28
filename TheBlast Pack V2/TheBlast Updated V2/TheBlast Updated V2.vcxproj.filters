@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="custom_abort">
+      <UniqueIdentifier>{cd6e2afa-e14a-427f-8e14-7257f884de13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tools">
+      <UniqueIdentifier>{5f1144ce-f0d1-432f-8883-8202e776813d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="organizer">
+      <UniqueIdentifier>{9adb8b70-e2b7-40f7-9971-25ebd55cbcf5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="system">
+      <UniqueIdentifier>{669ce889-547d-4fe4-b8b9-b3dcae8b284f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="drawing">
+      <UniqueIdentifier>{d61599ae-3ecc-448a-9871-b23b08ceb76c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="starter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LSW\custom_abort\abort.cpp">
+      <Filter>custom_abort</Filter>
+    </ClCompile>
+    <ClCompile Include="LSW\tools\tools.cpp">
+      <Filter>tools</Filter>
+    </ClCompile>
+    <ClCompile Include="LSW\system\system.cpp">
+      <Filter>system</Filter>
+    </ClCompile>
+    <ClCompile Include="LSW\drawing\drawing.cpp">
+      <Filter>drawing</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="LSW\custom_abort\abort.h">
+      <Filter>custom_abort</Filter>
+    </ClInclude>
+    <ClInclude Include="LSW\tools\tools.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="LSW\organizer\organizer.h">
+      <Filter>organizer</Filter>
+    </ClInclude>
+    <ClInclude Include="LSW\system\system.h">
+      <Filter>system</Filter>
+    </ClInclude>
+    <ClInclude Include="LSW\drawing\drawing.h">
+      <Filter>drawing</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+</Project>
