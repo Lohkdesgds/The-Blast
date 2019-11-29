@@ -34,7 +34,7 @@ namespace LSW {
 				ROTATION
 			};
 
-			enum _cam_opt { SCALE_X, SCALE_Y, SCALE_G, OFFSET_X, OFFSET_Y, ROTATION, _MAX_CAM_OPT };
+			enum class _cam_opt { SCALE_X, SCALE_Y, SCALE_G, OFFSET_X, OFFSET_Y, ROTATION, _MAX_CAM_OPT };
 
 			enum class _sprite_opt_strg { ADD, REMOVE };
 			enum class _sprite_opt_fltv { FPS };
@@ -78,7 +78,7 @@ namespace LSW {
 
 		class camera_preset {
 		public:
-			float p[Assistance::_MAX_CAM_OPT] = { 1.0,1.0,1.0,0.0,0.0,0.0 };
+			float p[+Assistance::_cam_opt::_MAX_CAM_OPT] = { 1.0,1.0,1.0,0.0,0.0,0.0 };
 			std::vector<int> layers; // layers enabled
 
 			void set(const Assistance::_cam_opt, const float); // set a value to a property

@@ -20,6 +20,9 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="console">
+      <UniqueIdentifier>{b2b97a5f-37dd-4066-8c96-c09c6035eba0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="starter.cpp">
@@ -37,6 +40,9 @@
     <ClCompile Include="LSW\drawing\drawing.cpp">
       <Filter>drawing</Filter>
     </ClCompile>
+    <ClCompile Include="LSW\console\console.cpp">
+      <Filter>console</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LSW\custom_abort\abort.h">
@@ -53,6 +59,9 @@
     </ClInclude>
     <ClInclude Include="LSW\organizer\organizer.h">
       <Filter>organizer</Filter>
+    </ClInclude>
+    <ClInclude Include="LSW\console\console.h">
+      <Filter>console</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

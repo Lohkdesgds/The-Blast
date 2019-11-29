@@ -2,7 +2,22 @@
 
 namespace LSW {
 	namespace v4 {
-		std::vector<std::shared_ptr<__raw_image>> Textures::imgs; // static
+
+		Assistance::__image_control Textures::ictrl;
+
+
+		namespace Assistance {
+			__raw_image::~__raw_image()
+			{
+				if (bmp && al_is_system_installed()) {
+					al_destroy_bitmap(bmp);
+					bmp = nullptr;
+					path.clear();
+					id.clear();
+				}
+			}
+		}
+
 
 		void __systematic::__extract_package(float* perc)
 		{
@@ -109,6 +124,8 @@ namespace LSW {
 			}
 
 			if (!PHYSFS_addToSearchPath(extracted_zip_at.c_str(), 1)) throw Abort::abort("PHYSFS_addToSearchPath", "system::__loadPackage", "Can't add datapack to internal search");
+
+			return true;
 		}
 
 		__systematic::~__systematic()
@@ -405,31 +422,30 @@ namespace LSW {
 		{
 			printing = true;
 		}
-		__raw_image::~__raw_image()
+		ALLEGRO_DISPLAY*& __raw_display::_getD()
 		{
-			if (bmp && al_is_system_installed()) {
-				al_destroy_bitmap(bmp);
-				bmp = nullptr;
-				path.clear();
-				id.clear();
-			}
+			return d;
 		}
 		void Textures::load(const std::string str, const std::string path)
 		{
-			std::weak_ptr<__raw_image> i;
+			std::weak_ptr<Assistance::__raw_image> i;
 
 			if (!get(str, i)) {
-				std::shared_ptr<__raw_image> j(new __raw_image());
+				std::shared_ptr<Assistance::__raw_image> j(new Assistance::__raw_image());
 
 				j->path = path;
 				j->id = str;
 				if (!(j->bmp = al_load_bitmap(path.c_str()))) throw Abort::abort("al_load_bitmap", "images::load", "Couldn't load '" + str + "' @ path '" + path + "'");
-				imgs.push_back(j);
+
+				ictrl.hugedeal.lock();
+				ictrl.loadnew = true;
+				ictrl.imgs.push_back(j);
+				ictrl.hugedeal.unlock();
 			}
 		}
-		bool Textures::get(const std::string str, std::weak_ptr<__raw_image>& ime)
+		bool Textures::get(const std::string str, std::weak_ptr<Assistance::__raw_image>& ime)
 		{
-			for (auto& i : imgs) {
+			for (auto& i : ictrl.imgs) {
 				if (str == i->id) {
 					ime = i;
 					return true;
@@ -440,12 +456,22 @@ namespace LSW {
 		}
 		void Textures::del(const std::string str)
 		{
-			for (size_t p = 0; p < imgs.size(); p++)
+			for (size_t p = 0; p < ictrl.imgs.size(); p++)
 			{
-				if (imgs[p]->id == str) {
-					imgs.erase(imgs.begin() + p);
+				if (ictrl.imgs[p]->id == str) {
+					ictrl.imgs.erase(ictrl.imgs.begin() + p);
 					return;
 				}
+			}
+		}
+
+		void Textures::checkvideo()
+		{
+			if (ictrl.loadnew) {
+				ictrl.loadnew = false;
+				ictrl.hugedeal.lock();
+				al_convert_bitmaps();
+				ictrl.hugedeal.unlock();
 			}
 		}
 

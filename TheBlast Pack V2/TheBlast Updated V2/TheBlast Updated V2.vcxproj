@@ -184,6 +184,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="LSW\console\console.cpp" />
     <ClCompile Include="LSW\custom_abort\abort.cpp" />
     <ClCompile Include="LSW\drawing\drawing.cpp" />
     <ClCompile Include="LSW\system\system.cpp" />
@@ -191,6 +192,7 @@
     <ClCompile Include="starter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="LSW\console\console.h" />
     <ClInclude Include="LSW\custom_abort\abort.h" />
     <ClInclude Include="LSW\drawing\drawing.h" />
     <ClInclude Include="LSW\organizer\organizer.h" />

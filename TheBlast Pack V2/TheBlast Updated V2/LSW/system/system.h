@@ -17,6 +17,7 @@
 #include <memory>
 #include <Windows.h>
 #include <thread>
+#include <mutex>
 
 #include "..\custom_abort\abort.h"
 #include "..\tools\tools.h"
@@ -27,7 +28,7 @@ namespace LSW {
 		namespace Constants {
 
 			const int start_audio_samples_max = 8;
-			const int start_display_default_mode = ALLEGRO_WINDOWED | ALLEGRO_DIRECT3D_INTERNAL;
+			const int start_display_default_mode = ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE | ALLEGRO_DIRECT3D_INTERNAL;
 			const bool start_force_720p = true;
 
 			const std::string __match_unmatch = "_DATA";
@@ -52,6 +53,20 @@ namespace LSW {
 				int lastmode = Constants::start_display_default_mode;
 			};
 
+			class __raw_image {
+			public:
+				ALLEGRO_BITMAP* bmp = nullptr;
+				std::string path;
+				std::string id;
+
+				~__raw_image();
+			};
+
+			struct __image_control {
+				std::vector<std::shared_ptr<__raw_image>> imgs;
+				bool loadnew = false;
+				std::mutex hugedeal;
+			};
 		}
 		
 
@@ -100,25 +115,19 @@ namespace LSW {
 			bool exist();
 
 			void print();
-		};
 
-		class __raw_image {
-		public:
-			ALLEGRO_BITMAP* bmp = nullptr;
-			std::string path;
-			std::string id;
-
-			~__raw_image();
+			ALLEGRO_DISPLAY*& _getD();
 		};
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> not raw stuff
 
 		class Textures {
-			static std::vector<std::shared_ptr<__raw_image>> imgs;
+			static Assistance::__image_control ictrl;
 		public:
 			void load(const std::string, const std::string);
-			bool get(const std::string, std::weak_ptr<__raw_image>&);
+			bool get(const std::string, std::weak_ptr<Assistance::__raw_image>&);
 			void del(const std::string);
+			void checkvideo();
 		};
 
 

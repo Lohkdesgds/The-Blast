@@ -8,3 +8,5 @@ Namespaces:
 
 #include "..\system\system.h"
 #include "..\drawing\drawing.h"
+
+#include "..\console\console.h"
