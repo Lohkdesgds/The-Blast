@@ -23,21 +23,24 @@ namespace LSW {
 						lastcall += difftimeanim;
 					}
 				}
-				return copies[actual].lock();
+				return copies[actual].bmp.lock();
 			}
 			void __sprite_smart_images::add(const std::string id)
 			{
-				Textures imgs;
-				std::weak_ptr<__raw_image> wp;
+				__template_static_vector<ALLEGRO_BITMAP> imgs; // Textures
 
-				imgs.get(id, wp);
-				copies.push_back(wp);
+
+				__custom_data cd;
+
+				imgs.get(id, cd.bmp);
+				cd.idc = id;
+
+				copies.push_back(cd);
 			}
 			void __sprite_smart_images::remove(const std::string id)
 			{
 				for (size_t p = 0; p < copies.size(); p++) {
-					auto strongcpy = copies[p].lock();
-					if (strongcpy->id == id) {
+					if (copies[p].idc == id) {
 						copies.erase(copies.begin() + p);
 						return;
 					}
@@ -73,7 +76,7 @@ namespace LSW {
 			void __sprite_smart_images::check()
 			{
 				for (size_t p = 0; p < copies.size(); p++) {
-					if (copies[p].expired()) {
+					if (copies[p].bmp.expired()) {
 						copies.erase(copies.begin() + (p--));
 					}
 				}
@@ -83,11 +86,11 @@ namespace LSW {
 			{
 				/*for (auto& i : dval) i = 0.0;
 				for (auto& j : bval) j = false;*/
-				dval[+Assistance::_sprite_opt_dval::SCALEX] = 1.0;
-				dval[+Assistance::_sprite_opt_dval::SCALEY] = 1.0;
-				dval[+Assistance::_sprite_opt_dval::SCALEG] = 1.0;
-				bval[+Assistance::_sprite_opt_bval::DRAW] = true;
-				bval[+Assistance::_sprite_opt_bval::AFFECTED_BY_CAM] = true;
+				dval[+Assistance::in___double_sprite::SCALEX] = 1.0;
+				dval[+Assistance::in___double_sprite::SCALEY] = 1.0;
+				dval[+Assistance::in___double_sprite::SCALEG] = 1.0;
+				bval[+Assistance::in___boolean_sprite::DRAW] = true;
+				bval[+Assistance::in___boolean_sprite::AFFECTED_BY_CAM] = true;
 			}
 
 		}//endof Assistance
@@ -179,64 +182,62 @@ namespace LSW {
 			bmps.reset();
 		}
 
-		void Sprite::apply(const Assistance::_sprite_opt_strg u, const std::string v)
+		void Sprite::apply(const Assistance::in___string_sprite u, const std::string v)
 		{
 			switch (u) {
-			case Assistance::_sprite_opt_strg::ADD:
+			case Assistance::in___string_sprite::ADD:
 				bmps.add(v);
 				break;
-			case Assistance::_sprite_opt_strg::REMOVE:
+			case Assistance::in___string_sprite::REMOVE:
 				bmps.remove(v);
 				break;
+			case Assistance::in___string_sprite::SPRITE_ID:
+				sprite_id = v;
+				break;
 			}
 		}
-		void Sprite::apply(const Assistance::_sprite_opt_fltv u, const float v)
+		void Sprite::apply(const Assistance::in___double_sprite u, const double v)
 		{
 			switch (u) {
-			case Assistance::_sprite_opt_fltv::FPS:
+			case Assistance::in___double_sprite::ANIMATION_FPS:
 				bmps.setFPS(v);
 				break;
-			}
-		}
-		void Sprite::apply(const Assistance::_sprite_opt_bool u, const bool v)
-		{
-			switch (u) {
-			case Assistance::_sprite_opt_bool::LOOP:
-				bmps.loop(v);
+			default:
+				data.dval[+u] = v;
 				break;
 			}
 		}
-		void Sprite::apply(const Assistance::_sprite_opt_dval u, const double v)
-		{
-			data.dval[+u] = v;
-		}
-		void Sprite::apply(const Assistance::_sprite_opt_bval u, const bool v)
-		{
-			data.bval[+u] = v;
-		}
-		void Sprite::apply(const Assistance::_sprite_opt_ival u, const int v)
+		void Sprite::apply(const Assistance::in___boolean_sprite u, const bool v)
 		{
 			switch (u) {
-			case Assistance::_sprite_opt_ival::LAYER:
+			case Assistance::in___boolean_sprite::LOOPFRAMES:
+				bmps.loop(v);
+				break;
+			default:
+				data.bval[+u] = v;
+				break;
+			}
+		}
+		void Sprite::apply(const Assistance::in___integer_sprite u, const int v)
+		{
+			switch (u) {
+			case Assistance::in___integer_sprite::LAYER:
 				layer = v;
 				break;
 			}
 		}
-		void Sprite::apply(const Assistance::_sprite_opt_zval u, const size_t v)
+		void Sprite::apply(const Assistance::in___size_sprite u, const size_t v)
 		{
 			switch (u) {
-			case Assistance::_sprite_opt_zval::SIZE:
-				// nothing to do
-				break;
-			case Assistance::_sprite_opt_zval::FRAME:
+			case Assistance::in___size_sprite::FRAME:
 				bmps.setFPS(-(int)(v));
 				break;
 			}
 		}
-		void Sprite::apply(const Assistance::_sprite_opt_cval u, const ALLEGRO_COLOR v)
+		void Sprite::apply(const Assistance::in___color_sprite u, const ALLEGRO_COLOR v)
 		{
 			switch (u) {
-			case Assistance::_sprite_opt_cval::TINT:
+			case Assistance::in___color_sprite::TINT:
 				data.tint = v;
 				break;
 			}
@@ -273,38 +274,38 @@ namespace LSW {
 
 			
 			float cx, cy, px, py, dsx, dsy, rot_rad;
-			cx =		1.0f * al_get_bitmap_width(rn->bmp) * ((data.dval[+Assistance::_sprite_opt_dval::CENTERX] + 1.0) * 0.5);
-			cy =		1.0f * al_get_bitmap_height(rn->bmp) * ((data.dval[+Assistance::_sprite_opt_dval::CENTERY] + 1.0) * 0.5);
-			rot_rad =	1.0f * data.dval[+Assistance::_sprite_opt_dval::ROTATION] * ALLEGRO_PI / 180.0;
-			px =		1.0f * data.dval[+Assistance::_sprite_opt_dval::POSX] * cos(rot_rad) + data.dval[+Assistance::_sprite_opt_dval::POSY] * sin(rot_rad);
-			py =		1.0f * data.dval[+Assistance::_sprite_opt_dval::POSY] * cos(rot_rad) - data.dval[+Assistance::_sprite_opt_dval::POSX] * sin(rot_rad);
-			dsx =		1.0f * data.dval[+Assistance::_sprite_opt_dval::SCALEX] * data.dval[+Assistance::_sprite_opt_dval::SCALEG] * (1.0 / al_get_bitmap_width(rn->bmp));
-			dsy =		1.0f * data.dval[+Assistance::_sprite_opt_dval::SCALEY] * data.dval[+Assistance::_sprite_opt_dval::SCALEG] * (1.0 / al_get_bitmap_height(rn->bmp));
+			cx =		1.0f * al_get_bitmap_width(rn.get()) * ((data.dval[+Assistance::in___double_sprite::CENTERX] + 1.0) * 0.5);
+			cy =		1.0f * al_get_bitmap_height(rn.get()) * ((data.dval[+Assistance::in___double_sprite::CENTERY] + 1.0) * 0.5);
+			rot_rad =	1.0f * data.dval[+Assistance::in___double_sprite::ROTATION] * ALLEGRO_PI / 180.0;
+			px =		1.0f * data.dval[+Assistance::in___double_sprite::POSX] * cos(rot_rad) + data.dval[+Assistance::in___double_sprite::POSY] * sin(rot_rad);
+			py =		1.0f * data.dval[+Assistance::in___double_sprite::POSY] * cos(rot_rad) - data.dval[+Assistance::in___double_sprite::POSX] * sin(rot_rad);
+			dsx =		1.0f * data.dval[+Assistance::in___double_sprite::SCALEX] * data.dval[+Assistance::in___double_sprite::SCALEG] * (1.0 / al_get_bitmap_width(rn.get()));
+			dsy =		1.0f * data.dval[+Assistance::in___double_sprite::SCALEY] * data.dval[+Assistance::in___double_sprite::SCALEG] * (1.0 / al_get_bitmap_height(rn.get()));
 
 			// draw
 
-			if (data.bval[+Assistance::_sprite_opt_bval::USE_TINTED_DRAWING])	al_draw_tinted_scaled_rotated_bitmap(rn->bmp, data.tint, cx, cy, px, py, dsx, dsy, rot_rad, 0);
-			else																al_draw_scaled_rotated_bitmap       (rn->bmp,            cx, cy, px, py, dsx, dsy, rot_rad, 0);
+			if (data.bval[+Assistance::in___boolean_sprite::USE_TINTED_DRAWING])	al_draw_tinted_scaled_rotated_bitmap(rn.get(), data.tint, cx, cy, px, py, dsx, dsy, rot_rad, 0);
+			else																al_draw_scaled_rotated_bitmap       (rn.get(),            cx, cy, px, py, dsx, dsy, rot_rad, 0);
 
 			// debug
 
-			if (data.bval[+Assistance::_sprite_opt_bval::SHOWBOX] || data.bval[+Assistance::_sprite_opt_bval::SHOWDOT])
+			if (data.bval[+Assistance::in___boolean_sprite::SHOWBOX] || data.bval[+Assistance::in___boolean_sprite::SHOWDOT])
 			{
 				ALLEGRO_COLOR colorr = al_map_rgb(0, 255, 0);
 				Camera camm;
 				auto psf = camm.get();
 
-				if (data.bval[+Assistance::_sprite_opt_bval::_IS_COLLIDING]) colorr = al_map_rgb(255, 0, 0);
+				if (data.bval[+Assistance::in___boolean_sprite::IS_COLLIDING]) colorr = al_map_rgb(255, 0, 0);
 				//else if (al_get_time() - lastresetcollisioncall < Defaults::diff_time_show_last_resetCollision) colorr = al_map_rgb(255, 255, 0);
 
-				if (data.bval[+Assistance::_sprite_opt_bval::SHOWBOX]) {
+				if (data.bval[+Assistance::in___boolean_sprite::SHOWBOX]) {
 					al_draw_filled_circle(px - cx * dsx, py - cy * dsy, 0.1f * fabs(psf.get(Assistance::_cam_opt::SCALE_G) * sqrt(psf.get(Assistance::_cam_opt::SCALE_X) * psf.get(Assistance::_cam_opt::SCALE_Y)) * 0.20f), colorr);
 					al_draw_filled_circle(px - cx * dsx, py + cy * dsy, 0.1f * fabs(psf.get(Assistance::_cam_opt::SCALE_G) * sqrt(psf.get(Assistance::_cam_opt::SCALE_X) * psf.get(Assistance::_cam_opt::SCALE_Y)) * 0.20f), colorr);
 					al_draw_filled_circle(px + cx * dsx, py - cy * dsy, 0.1f * fabs(psf.get(Assistance::_cam_opt::SCALE_G) * sqrt(psf.get(Assistance::_cam_opt::SCALE_X) * psf.get(Assistance::_cam_opt::SCALE_Y)) * 0.20f), colorr);
 					al_draw_filled_circle(px + cx * dsx, py + cy * dsy, 0.1f * fabs(psf.get(Assistance::_cam_opt::SCALE_G) * sqrt(psf.get(Assistance::_cam_opt::SCALE_X) * psf.get(Assistance::_cam_opt::SCALE_Y)) * 0.20f), colorr);
 				}
 
-				if (data.bval[+Assistance::_sprite_opt_bval::SHOWDOT])
+				if (data.bval[+Assistance::in___boolean_sprite::SHOWDOT])
 				{
 					al_draw_filled_circle(px, py, 0.1f * fabs(psf.get(Assistance::_cam_opt::SCALE_G) * sqrt(psf.get(Assistance::_cam_opt::SCALE_X) * psf.get(Assistance::_cam_opt::SCALE_Y)) * 0.20f), colorr);
 				}

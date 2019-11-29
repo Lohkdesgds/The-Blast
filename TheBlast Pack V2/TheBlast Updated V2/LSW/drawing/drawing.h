@@ -20,6 +20,7 @@
 
 #include "..\custom_abort\abort.h"
 #include "..\system\system.h"
+#include "..\big_templates\big_templates.h"
 
 namespace LSW {
 	namespace v4 {
@@ -36,22 +37,19 @@ namespace LSW {
 
 			enum class _cam_opt { SCALE_X, SCALE_Y, SCALE_G, OFFSET_X, OFFSET_Y, ROTATION, _MAX_CAM_OPT };
 
-			enum class _sprite_opt_strg { ADD, REMOVE };
-			enum class _sprite_opt_fltv { FPS };
-			enum class _sprite_opt_bool { LOOP };
-
-			enum class _sprite_opt_dval { POSX, POSY, SCALEX, SCALEY, CENTERX, CENTERY, SCALEG, ROTATION, SPEEDX, SPEEDY, SPEEDROT, SMOOTHNESS_X, SMOOTHNESS_Y, size }; // rotation = degrees
-			enum class _sprite_opt_bval { DRAW, COLLIDE, _IS_COLLIDING, AFFECTED_BY_COLLISION,AFFECTED_BY_CAM, SHOWDOT, SHOWBOX, FOLLOWMOUSE, FOLLOWKEYBOARD, USE_TINTED_DRAWING, size	};
-			enum class _sprite_opt_ival { LAYER, size };
-			enum class _sprite_opt_zval { SIZE, FRAME, size };
-			enum class _sprite_opt_cval { TINT, size };
+			enum class in___string_sprite	{ ADD, REMOVE, SPRITE_ID };
+			enum class in___double_sprite	{ POSX, POSY, SCALEX, SCALEY, CENTERX, CENTERY, SCALEG, ROTATION /*DEGREES*/, SPEEDX, SPEEDY, SPEEDROT, SMOOTHNESS_X, SMOOTHNESS_Y, size, /* since here they are not Sprite exactly stuff*/ ANIMATION_FPS };
+			enum class in___boolean_sprite	{ DRAW, COLLIDE, IS_COLLIDING, AFFECTED_BY_COLLISION, AFFECTED_BY_CAM, SHOWDOT, SHOWBOX, FOLLOWMOUSE, FOLLOWKEYBOARD, USE_TINTED_DRAWING, size, /* since here they are not Sprite exactly stuff*/ LOOPFRAMES };
+			enum class in___integer_sprite	{ LAYER, size };
+			enum class in___size_sprite		{ SIZE, FRAME, size };
+			enum class in___color_sprite	{ TINT, size };
 
 			enum class _sprite_coll_way { NORTH, SOUTH, WEST, EAST };
 
 			class __sprite_smart_data {
 			public:
-				double dval[+_sprite_opt_dval::size] = { 0.0 };
-				bool bval[+_sprite_opt_bval::size] = { false };
+				double dval[+in___double_sprite::size] = { 0.0 };
+				bool bval[+in___boolean_sprite::size] = { false };
 				ALLEGRO_COLOR tint = al_map_rgb(255, 255, 255);
 
 				__sprite_smart_data();
@@ -63,7 +61,13 @@ namespace LSW {
 				double lastcall = 0;
 				size_t actual = 0;
 				bool loopin = true;
-				std::vector<std::weak_ptr<__raw_image> > copies;
+
+				struct __custom_data { // local yes
+					std::weak_ptr<ALLEGRO_BITMAP> bmp;
+					std::string idc;
+				};
+
+				std::vector<__custom_data> copies;
 			public:
 				auto get();
 				void add(const std::string); // id
@@ -114,18 +118,17 @@ namespace LSW {
 			Assistance::__sprite_smart_images bmps;
 			Assistance::__sprite_smart_data data;
 
+			std::string sprite_id;
 			int layer = 0;
 		public:
 			~Sprite();
 
-			void apply(const Assistance::_sprite_opt_strg, const std::string);
-			void apply(const Assistance::_sprite_opt_fltv, const float);
-			void apply(const Assistance::_sprite_opt_bool, const bool);
-			void apply(const Assistance::_sprite_opt_dval, const double);
-			void apply(const Assistance::_sprite_opt_bval, const bool);
-			void apply(const Assistance::_sprite_opt_ival, const int);
-			void apply(const Assistance::_sprite_opt_zval, const size_t);
-			void apply(const Assistance::_sprite_opt_cval, const ALLEGRO_COLOR);
+			void apply(const Assistance::in___string_sprite, const std::string);
+			void apply(const Assistance::in___double_sprite, const double);
+			void apply(const Assistance::in___boolean_sprite, const bool);
+			void apply(const Assistance::in___integer_sprite, const int);
+			void apply(const Assistance::in___size_sprite, const size_t);
+			void apply(const Assistance::in___color_sprite, const ALLEGRO_COLOR);
 
 			void draw();
 		};

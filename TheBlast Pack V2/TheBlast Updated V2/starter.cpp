@@ -118,8 +118,8 @@ int main(int argc, const char* argv[])
 	
 	Sprite spr;
 	spr.apply(Assistance::_sprite_opt_strg::ADD, "temp");
-	spr.apply(Assistance::_sprite_opt_bval::SHOWBOX, true);
-	spr.apply(Assistance::_sprite_opt_dval::CENTERX, 0.0);*/
+	spr.apply(Assistance::in___boolean_sprite::SHOWBOX, true);
+	spr.apply(Assistance::in___double_sprite::CENTERX, 0.0);*/
 
 
 	/*disp.print();

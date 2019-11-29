@@ -172,7 +172,7 @@ namespace LSW {
 
 			md = new __raw_display();
 
-			thr_md_arg = new Assistance::__display_routines();
+			thr_md_arg = new __display_routines();
 			thr_md_arg->insert(al_get_display_event_source(md->_getD()));
 			thr_md_arg->start_timers();
 
@@ -240,7 +240,7 @@ namespace LSW {
 			thr_shared_arg.threadcount++;
 			thr_shared_arg.threadcountm.unlock();
 
-			thr_cl_arg = new Assistance::__collision_routines();
+			thr_cl_arg = new __collision_routines();
 			thr_cl_arg->start_timers();
 
 			for (bool localb = true; localb;)
@@ -282,7 +282,7 @@ namespace LSW {
 			_configthreadlocale(_ENABLE_PER_THREAD_LOCALE);
 			setlocale(LC_ALL, "");
 
-			thr_kb_arg = new Assistance::__keyboardmouse_routines();
+			thr_kb_arg = new __keyboardmouse_routines();
 			thr_kb_arg->insert(al_get_keyboard_event_source());
 			thr_kb_arg->insert(al_get_mouse_event_source());
 

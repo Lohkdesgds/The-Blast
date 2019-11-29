@@ -3,7 +3,7 @@
 namespace LSW {
 	namespace v4 {
 
-		Assistance::__image_control Textures::ictrl;
+		/*Assistance::__image_control Textures::ictrl;
 
 
 		namespace Assistance {
@@ -16,7 +16,7 @@ namespace LSW {
 					id.clear();
 				}
 			}
-		}
+		}*/
 
 
 		void __systematic::__extract_package(float* perc)
@@ -51,7 +51,7 @@ namespace LSW {
 			bool still = true;
 			bool found = false;
 
-			while (still)
+			while (still && (me != nullptr && fi != nullptr))
 			{
 				auto u = fread_s(ch, 1, 1, 1, me);
 				if (u != 1) {
@@ -426,7 +426,7 @@ namespace LSW {
 		{
 			return d;
 		}
-		void Textures::load(const std::string str, const std::string path)
+		/*void Textures::load(const std::string str, const std::string path)
 		{
 			std::weak_ptr<Assistance::__raw_image> i;
 
@@ -473,7 +473,7 @@ namespace LSW {
 				al_convert_bitmaps();
 				ictrl.hugedeal.unlock();
 			}
-		}
+		}*/
 
 
 

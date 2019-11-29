@@ -192,6 +192,7 @@
     <ClCompile Include="starter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="LSW\big_templates\big_templates.h" />
     <ClInclude Include="LSW\console\console.h" />
     <ClInclude Include="LSW\custom_abort\abort.h" />
     <ClInclude Include="LSW\drawing\drawing.h" />

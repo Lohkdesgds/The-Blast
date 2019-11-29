@@ -19,8 +19,8 @@
 #include <thread>
 #include <mutex>
 
-#include "..\custom_abort\abort.h"
 #include "..\tools\tools.h"
+#include "..\custom_abort\abort.h"
 
 namespace LSW {
 	namespace v4 {
@@ -53,7 +53,7 @@ namespace LSW {
 				int lastmode = Constants::start_display_default_mode;
 			};
 
-			class __raw_image {
+			/*class __raw_image {
 			public:
 				ALLEGRO_BITMAP* bmp = nullptr;
 				std::string path;
@@ -66,7 +66,7 @@ namespace LSW {
 				std::vector<std::shared_ptr<__raw_image>> imgs;
 				bool loadnew = false;
 				std::mutex hugedeal;
-			};
+			};*/
 		}
 		
 
@@ -121,14 +121,14 @@ namespace LSW {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> not raw stuff
 
-		class Textures {
+		/*class Textures {
 			static Assistance::__image_control ictrl;
 		public:
 			void load(const std::string, const std::string);
 			bool get(const std::string, std::weak_ptr<Assistance::__raw_image>&);
 			void del(const std::string);
 			void checkvideo();
-		};
+		};*/
 
 
 
