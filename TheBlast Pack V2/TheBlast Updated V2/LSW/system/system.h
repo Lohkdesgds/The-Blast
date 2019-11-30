@@ -28,7 +28,7 @@ namespace LSW {
 		namespace Constants {
 
 			const int start_audio_samples_max = 8;
-			const int start_display_default_mode = ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE | ALLEGRO_DIRECT3D_INTERNAL;
+			const int start_display_default_mode = ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE | ALLEGRO_OPENGL;
 			const bool start_force_720p = true;
 
 			const std::string __match_unmatch = "_DATA";

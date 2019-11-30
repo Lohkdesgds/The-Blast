@@ -48,10 +48,20 @@ namespace LSW {
 
 			// FUNCTIONS ASSISTANTS	
 
-			const auto lambda_bitmap_load =		[](char* p) -> ALLEGRO_BITMAP* { return al_load_bitmap(p); };
-			const auto lambda_bitmap_unload =	[](ALLEGRO_BITMAP*& b) -> void {al_destroy_bitmap(b); };
-			const auto lambda_font_load =		[](char* p) -> ALLEGRO_FONT*   { return al_load_ttf_font(p, 20, 0); };
-			const auto lambda_font_unload =		[](ALLEGRO_FONT*& b) -> void   {al_destroy_font(b); };
+			const auto lambda_bitmap_load =     [](const char* p, std::shared_ptr<ALLEGRO_BITMAP>& b) -> bool {
+				return ((b = std::shared_ptr<ALLEGRO_BITMAP>(al_load_bitmap(p))).get() != nullptr);
+			};
+
+			const auto lambda_bitmap_unload =   [](std::shared_ptr<ALLEGRO_BITMAP>& b) -> void {
+				if (al_is_system_installed() && b.get()) { al_destroy_bitmap(b.get()); }
+			};
+
+			const auto lambda_font_load =		[](const char* p, std::shared_ptr<ALLEGRO_FONT>& b) -> bool { 
+				return ((b = std::shared_ptr<ALLEGRO_FONT>(al_load_ttf_font(p, 20, 0))).get() != nullptr);
+			};
+			const auto lambda_font_unload =		[](std::shared_ptr<ALLEGRO_FONT>& b) -> void { 
+				if (al_is_system_installed() && b.get()) { al_destroy_font(b.get()); }
+			};
 		}
 
 		typedef __template_multiple_timers<1, 2, 2, 10> __display_routines;
@@ -59,10 +69,10 @@ namespace LSW {
 		typedef __template_multiple_timers<1, 5, 5>		__keyboardmouse_routines;
 
 
-		typedef __template_static_vector <ALLEGRO_BITMAP/*, Assistance::lambda_bitmap_load, Assistance::lambda_bitmap_unload*/> Textures;
-		typedef __template_static_vector<Sprite>																			    Sprites;
-		typedef __template_static_vector<ALLEGRO_FONT/*, Assistance::lambda_font_load, Assistance::lambda_font_unload*/>		Fonts;
-		typedef __template_static_vector<ALLEGRO_SAMPLE>	Tracks;
+		typedef __template_static_vector<ALLEGRO_BITMAP>  Textures;
+		typedef __template_static_vector<Sprite>		  Sprites;
+		typedef __template_static_vector<ALLEGRO_FONT>    Fonts;
+		typedef __template_static_vector<ALLEGRO_SAMPLE>  Tracks;
 
 
 

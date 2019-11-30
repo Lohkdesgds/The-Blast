@@ -50,10 +50,10 @@ namespace LSW {
 				HRESULT hr = SHGetFolderPathW(0, u, 0, 0, Folder);
 				if (SUCCEEDED(hr))
 				{
-					char str[1024];
+					char str[1024] = { 0 };
 					size_t i;
 					wcstombs_s(&i, str, Folder, 1023);
-					s = str + '\0';
+					s = str;
 					return true;
 				}
 				return false;
@@ -128,6 +128,55 @@ namespace LSW {
 				}
 
 				clearPath(local_t);
+			}
+
+			std::vector<std::string> generateStringsFormat(const std::string format, const size_t max, const size_t startat)
+			{
+				std::vector<std::string> rett;
+
+				std::string start;
+				size_t amountofzeros = 1;
+				std::string end;
+
+				short step = 0; // start, zeros, end
+
+				// split
+				for (auto& i : format)
+				{
+					switch (step) {
+					case 0:
+						if (i != '#') {
+							start += i;
+						}
+						else {
+							step++; // skip one amountofzeros
+						}
+						break;
+					case 1:
+						if (i == '#') {
+							amountofzeros++;
+						}
+						else {
+							step++;
+							end += i;
+						}
+						break;
+					case 2:
+						end += i;
+						break;
+					}
+				}
+
+				std::string realformat = "%s%0" + std::to_string(amountofzeros) + "zu%s";
+
+				char buff[512];
+
+				for (size_t c = startat; c < max; c++) {
+					sprintf_s(buff, realformat.c_str(), start.c_str(), c, end.c_str());
+					rett.push_back(buff);
+				}
+
+				return rett;
 			}
 		}
 	}

@@ -43,18 +43,18 @@ namespace LSW {
 				std::string path;
 			};
 
-			template<typename H> const auto lambda_null_load   = [](char* p, H*& r) -> bool { return false; };//[](char* p, T*& r) -> bool { return (r = new T()); };
-			template<typename H> const auto lambda_null_unload = [](H*& b) -> void { return; };//[](T*& b) -> void { delete b; b = nullptr; };
+			template<typename H> const auto lambda_null_load = [](const char* p, std::shared_ptr<H>& r) -> bool { return false; };//[](char* p, T*& r) -> bool { return (r = new T()); };
+			template<typename H> const auto lambda_null_unload = [](std::shared_ptr<H>& b) -> void { return; };//[](T*& b) -> void { delete b; b = nullptr; };
 			
-			template<typename K> const auto lambda_default_load = [](char* p, K*& r) -> bool { return (r = new K()); };
-			template<typename K> const auto lambda_default_unload = [](K*& b) -> void { delete b; b = nullptr; };
+			template<typename K> const auto lambda_default_load = [](const char* p, std::shared_ptr<K>& r) -> bool { return (r = std::make_shared()); };
+			template<typename K> const auto lambda_default_unload = [](std::shared_ptr<K>& b) -> void { if (b.get()) delete b.get(); };
 					   
 			template<typename T>
 			struct __template_static_vector_control {
 				std::vector<__template_static_each_control<T>> data;
 
-				std::function <bool(char*,T*&)> load = lambda_null_load<T>; // cast void if different
-				std::function <void(T*&)> unload = lambda_null_unload<T>;
+				std::function <bool(const char*,std::shared_ptr<T>&)> load = lambda_null_load<T>; // cast void if different
+				std::function <void(std::shared_ptr<T>&)> unload = lambda_null_unload<T>;
 
 				std::mutex hugedeal;
 			};
@@ -231,14 +231,14 @@ namespace LSW {
 		class __template_static_vector {
 			static Assistance::__template_static_vector_control<T> data;
 		public:
+			~__template_static_vector() {
+				clear();
+			}
 			__template_static_vector() {}
-			__template_static_vector(const std::function <bool(char*,T*&)> howtoload, const std::function <void(T*&)> howtounload)
+			__template_static_vector(const std::function <bool(const char*,std::shared_ptr<T>&)> howtoload, const std::function <void(std::shared_ptr<T>&)> howtounload)
 			{
 				if (howtoload)		data.load =		howtoload;
-				else				data.load =		Assistance::lambda_default_load<T>;
-
 				if (howtounload)	data.unload =	howtounload;
-				else				data.unload =	Assistance::lambda_default_unload<T>;
 			}
 			void load(const std::string id, const char* path/*, const std::function <T * (char*)> howtoload = nullptr, const std::function <void(T*&)> howtounload = nullptr*/)
 			{
@@ -252,14 +252,22 @@ namespace LSW {
 					jj.path = path;
 					jj.id = id;
 
-					T* kat = nullptr;
-					if (!(std::shared_ptr<T>(data.load(path, kat)))) throw Abort::abort("lambda load", "__template_static_vector<>::load", "Couldn't load '" + id + "' @ path '" + path + "'");
-
-					jj.ptr = kat;
+					if (!(data.load(path, jj.ptr))) throw Abort::abort("lambda load", "__template_static_vector<>::load", "Couldn't load '" + id + "' @ path '" + path + "'");
 
 					data.hugedeal.lock();
 					data.data.push_back(jj);
 					data.hugedeal.unlock();
+				}
+			}
+			void load(std::vector<std::string> names, std::vector<std::string> paths) {
+
+				if (names.size() != paths.size()) {
+					throw Abort::abort("std::function<std::vector<std::string>()>", "__template_static_vector<>::load", "Names generated doesn't match paths generated size! (they have to be the same size!)");
+					return;
+				}
+				for (size_t p = 0; p < names.size(); p++)
+				{
+					load(names[p], paths[p].c_str());
 				}
 			}
 			bool get(const std::string id, std::weak_ptr<T>& wptr)
@@ -278,10 +286,23 @@ namespace LSW {
 				{
 					if (data.data[p].id == id) {
 						data.unload(data.data[p]);
+						data.hugedeal.lock();
 						data.data.erase(data.data.begin() + p);
+						data.hugedeal.unlock();
 						return;
 					}
 				}
+			}
+			void clear()
+			{
+				data.hugedeal.lock();
+				if (data.data.size() == 0) { data.hugedeal.unlock();  return; }
+
+				for (auto& i : data.data) {
+					data.unload(i.ptr);
+				}
+				data.data.clear();
+				data.hugedeal.unlock();
 			}
 		};
 

@@ -25,7 +25,8 @@ namespace LSW {
 			bool GetFolderCSIDL(std::string&, const int&);
 			void clearPath(std::string&, const bool = false);
 			void interpret_path(std::string&);
-			void createPath(std::string);
+
+			std::vector<std::string> generateStringsFormat(const std::string, const size_t, const size_t = 0); // FORMAT = "STARTSTUFF######ENDSTUFF" (# = number space)
 		}
 	}
 }

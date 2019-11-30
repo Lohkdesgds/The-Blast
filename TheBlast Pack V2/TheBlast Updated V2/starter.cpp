@@ -11,7 +11,6 @@ extern "C" {
 }
 
 // example FS
-
 /*static void show_image(ALLEGRO_BITMAP* bmp)
 {
 	ALLEGRO_EVENT_QUEUE* queue;
@@ -83,7 +82,7 @@ ALLEGRO_FS_ENTRY* entry;
 
 	 //Make future calls to al_fopen() on this thread go to the PhysicsFS
 	 //backend.
-	 
+
 
 	 //List the contents of our example zip recursively.
 
@@ -107,15 +106,16 @@ int main(int argc, const char* argv[])
 {
 	lsw_init();
 
+
 	//__raw_display disp;
 	/*Textures imgs;
-	
+
 	imgs.load("temp", "pause/pause_00.png");
 
 
 	Camera tf;
 	tf.apply(); // reset to a default situation
-	
+
 	Sprite spr;
 	spr.apply(Assistance::_sprite_opt_strg::ADD, "temp");
 	spr.apply(Assistance::in___boolean_sprite::SHOWBOX, true);
@@ -131,12 +131,24 @@ int main(int argc, const char* argv[])
 	}*/
 
 	Console consol;
-
 	consol.launch();
+
+
+	Textures textures(Assistance::lambda_bitmap_load, Assistance::lambda_bitmap_unload);
+	Sprites sprites; // no custom new/delete because it works standard way
+	Fonts fonts(Assistance::lambda_font_load, Assistance::lambda_font_unload);
+
+	textures.load(Tools::generateStringsFormat("PAUSE_##", 29), Tools::generateStringsFormat("pause/pause_##.png", 29));
+
 
 	while (consol.running()) {
 		Sleep(100);
 	}
-	
+
+
+	textures.clear();
+	sprites.clear();
+	fonts.clear();
+
 	return 0;
 }
