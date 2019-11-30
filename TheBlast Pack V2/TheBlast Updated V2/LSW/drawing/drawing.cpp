@@ -23,7 +23,7 @@ namespace LSW {
 						lastcall += difftimeanim;
 					}
 				}
-				return copies[actual].bmp.lock();
+				return copies[actual].bmp;
 			}
 			void __sprite_smart_images::add(const std::string id)
 			{
@@ -73,14 +73,7 @@ namespace LSW {
 			{
 				copies.clear();
 			}
-			void __sprite_smart_images::check()
-			{
-				for (size_t p = 0; p < copies.size(); p++) {
-					if (copies[p].bmp.expired()) {
-						copies.erase(copies.begin() + (p--));
-					}
-				}
-			}
+			
 
 			__sprite_smart_data::__sprite_smart_data()
 			{
@@ -245,7 +238,7 @@ namespace LSW {
 
 		void Sprite::draw()
 		{
-			auto rn = bmps.get();
+			ALLEGRO_BITMAP* rn = bmps.get();
 
 			// vars
 
@@ -274,18 +267,18 @@ namespace LSW {
 
 			
 			float cx, cy, px, py, dsx, dsy, rot_rad;
-			cx =		1.0f * al_get_bitmap_width(rn.get()) * ((data.dval[+Assistance::in___double_sprite::CENTERX] + 1.0) * 0.5);
-			cy =		1.0f * al_get_bitmap_height(rn.get()) * ((data.dval[+Assistance::in___double_sprite::CENTERY] + 1.0) * 0.5);
+			cx =		1.0f * al_get_bitmap_width(rn) * ((data.dval[+Assistance::in___double_sprite::CENTERX] + 1.0) * 0.5);
+			cy =		1.0f * al_get_bitmap_height(rn) * ((data.dval[+Assistance::in___double_sprite::CENTERY] + 1.0) * 0.5);
 			rot_rad =	1.0f * data.dval[+Assistance::in___double_sprite::ROTATION] * ALLEGRO_PI / 180.0;
 			px =		1.0f * data.dval[+Assistance::in___double_sprite::POSX] * cos(rot_rad) + data.dval[+Assistance::in___double_sprite::POSY] * sin(rot_rad);
 			py =		1.0f * data.dval[+Assistance::in___double_sprite::POSY] * cos(rot_rad) - data.dval[+Assistance::in___double_sprite::POSX] * sin(rot_rad);
-			dsx =		1.0f * data.dval[+Assistance::in___double_sprite::SCALEX] * data.dval[+Assistance::in___double_sprite::SCALEG] * (1.0 / al_get_bitmap_width(rn.get()));
-			dsy =		1.0f * data.dval[+Assistance::in___double_sprite::SCALEY] * data.dval[+Assistance::in___double_sprite::SCALEG] * (1.0 / al_get_bitmap_height(rn.get()));
+			dsx =		1.0f * data.dval[+Assistance::in___double_sprite::SCALEX] * data.dval[+Assistance::in___double_sprite::SCALEG] * (1.0 / al_get_bitmap_width(rn));
+			dsy =		1.0f * data.dval[+Assistance::in___double_sprite::SCALEY] * data.dval[+Assistance::in___double_sprite::SCALEG] * (1.0 / al_get_bitmap_height(rn));
 
 			// draw
 
-			if (data.bval[+Assistance::in___boolean_sprite::USE_TINTED_DRAWING])	al_draw_tinted_scaled_rotated_bitmap(rn.get(), data.tint, cx, cy, px, py, dsx, dsy, rot_rad, 0);
-			else																al_draw_scaled_rotated_bitmap       (rn.get(),            cx, cy, px, py, dsx, dsy, rot_rad, 0);
+			if (data.bval[+Assistance::in___boolean_sprite::USE_TINTED_DRAWING])	al_draw_tinted_scaled_rotated_bitmap(rn, data.tint, cx, cy, px, py, dsx, dsy, rot_rad, 0);
+			else																    al_draw_scaled_rotated_bitmap       (rn,            cx, cy, px, py, dsx, dsy, rot_rad, 0);
 
 			// debug
 

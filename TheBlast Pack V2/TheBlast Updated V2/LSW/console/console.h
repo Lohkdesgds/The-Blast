@@ -48,19 +48,19 @@ namespace LSW {
 
 			// FUNCTIONS ASSISTANTS	
 
-			const auto lambda_bitmap_load =     [](const char* p, std::shared_ptr<ALLEGRO_BITMAP>& b) -> bool {
-				return ((b = std::shared_ptr<ALLEGRO_BITMAP>(al_load_bitmap(p))).get() != nullptr);
+			const auto lambda_bitmap_load =     [](const char* p, ALLEGRO_BITMAP*& b) -> bool {
+				return ((b = al_load_bitmap(p)) != nullptr);
 			};
 
-			const auto lambda_bitmap_unload =   [](std::shared_ptr<ALLEGRO_BITMAP>& b) -> void {
-				if (al_is_system_installed() && b.get()) { al_destroy_bitmap(b.get()); }
+			const auto lambda_bitmap_unload =   [](ALLEGRO_BITMAP*& b) -> void {
+				if (al_is_system_installed() && b) { al_destroy_bitmap(b); }
 			};
 
-			const auto lambda_font_load =		[](const char* p, std::shared_ptr<ALLEGRO_FONT>& b) -> bool { 
-				return ((b = std::shared_ptr<ALLEGRO_FONT>(al_load_ttf_font(p, 20, 0))).get() != nullptr);
+			const auto lambda_font_load =		[](const char* p, ALLEGRO_FONT*& b) -> bool { 
+				return ((b = al_load_ttf_font(p, 20, 0)) != nullptr);
 			};
-			const auto lambda_font_unload =		[](std::shared_ptr<ALLEGRO_FONT>& b) -> void { 
-				if (al_is_system_installed() && b.get()) { al_destroy_font(b.get()); }
+			const auto lambda_font_unload =		[](ALLEGRO_FONT*& b) -> void { 
+				if (al_is_system_installed() && b) { al_destroy_font(b); }
 			};
 		}
 

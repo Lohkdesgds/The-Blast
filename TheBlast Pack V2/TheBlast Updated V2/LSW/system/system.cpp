@@ -106,7 +106,7 @@ namespace LSW {
 			FILE* fp = nullptr;
 			auto err = fopen_s(&fp, work.c_str(), "wb");
 
-			if (err == 0) {
+			if (err == 0 && fp) {
 				fprintf_s(fp, Constants::start_zip_warning_default_text.c_str());
 				fclose(fp);
 			}
@@ -428,10 +428,10 @@ namespace LSW {
 		}
 		/*void Textures::load(const std::string str, const std::string path)
 		{
-			std::weak_ptr<Assistance::__raw_image> i;
+			std:\:weak_ptr<Assistance::__raw_image> i;
 
 			if (!get(str, i)) {
-				std::shared_ptr<Assistance::__raw_image> j(new Assistance::__raw_image());
+				std:\:shared_ptr<Assistance::__raw_image> j(new Assistance::__raw_image());
 
 				j->path = path;
 				j->id = str;
@@ -443,7 +443,7 @@ namespace LSW {
 				ictrl.hugedeal.unlock();
 			}
 		}
-		bool Textures::get(const std::string str, std::weak_ptr<Assistance::__raw_image>& ime)
+		bool Textures::get(const std::string str, std:\:weak_ptr<Assistance::__raw_image>& ime)
 		{
 			for (auto& i : ictrl.imgs) {
 				if (str == i->id) {

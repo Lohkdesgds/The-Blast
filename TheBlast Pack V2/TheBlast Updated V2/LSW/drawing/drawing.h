@@ -62,8 +62,8 @@ namespace LSW {
 				size_t actual = 0;
 				bool loopin = true;
 
-				struct __custom_data { // local yes
-					std::weak_ptr<ALLEGRO_BITMAP> bmp;
+				struct  __custom_data { // local yes
+					ALLEGRO_BITMAP* bmp = nullptr;
 					std::string idc;
 				};
 
@@ -76,7 +76,6 @@ namespace LSW {
 				void loop(const bool = true);
 				void reset(); // default settings
 				void clear(); // copies.clear();
-				void check(); // check all weak_ptr if still available
 			};
 		}
 
