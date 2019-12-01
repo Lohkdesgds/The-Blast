@@ -34,6 +34,23 @@
 namespace LSW {
 	namespace v4 {
 
+		namespace Constants {
+			const auto lambda_bitmap_load = [](const char* p, ALLEGRO_BITMAP*& b) -> bool {
+				return ((b = al_load_bitmap(p)));
+			};
+
+			const auto lambda_bitmap_unload = [](ALLEGRO_BITMAP*& b) -> void {
+				if (al_is_system_installed() && b) { al_destroy_bitmap(b); }
+			};
+
+			const auto lambda_font_load = [](const char* p, ALLEGRO_FONT*& b) -> bool {
+				return ((b = al_load_ttf_font(p, 20, 0)));
+			};
+			const auto lambda_font_unload = [](ALLEGRO_FONT*& b) -> void {
+				if (al_is_system_installed() && b) { al_destroy_font(b); }
+			};
+		}
+
 		namespace Assistance {
 
 			struct __shared_routines {
@@ -42,29 +59,13 @@ namespace LSW {
 				bool should_exit = true;
 			};
 
-			enum class __display_routines_timers { LOOPTRACK, CHECKKEEP, CHECKMEMORYBITMAP, CHECKACKNOWLEDGE };
+			enum class __display_routines_timers { LOOPTRACK, CHECKKEEP, CHECKMEMORYBITMAP };
 			enum class __collision_routines_timers { LOOPTRACK, CHECKKEEP, COLLISIONWORK };
 			enum class __keyboardm_routines_timers { LOOPTRACK, CHECKKEEP, CHECKDISPLAYRESIZE };
 
-			// FUNCTIONS ASSISTANTS	
-
-			const auto lambda_bitmap_load =     [](const char* p, ALLEGRO_BITMAP*& b) -> bool {
-				return ((b = al_load_bitmap(p)) != nullptr);
-			};
-
-			const auto lambda_bitmap_unload =   [](ALLEGRO_BITMAP*& b) -> void {
-				if (al_is_system_installed() && b) { al_destroy_bitmap(b); }
-			};
-
-			const auto lambda_font_load =		[](const char* p, ALLEGRO_FONT*& b) -> bool { 
-				return ((b = al_load_ttf_font(p, 20, 0)) != nullptr);
-			};
-			const auto lambda_font_unload =		[](ALLEGRO_FONT*& b) -> void { 
-				if (al_is_system_installed() && b) { al_destroy_font(b); }
-			};
 		}
 
-		typedef __template_multiple_timers<1, 2, 2, 10> __display_routines;
+		typedef __template_multiple_timers<1, 2, 2>     __display_routines;
 		typedef __template_multiple_timers<1, 5, 30>	__collision_routines;
 		typedef __template_multiple_timers<1, 5, 5>		__keyboardmouse_routines;
 
@@ -99,10 +100,13 @@ namespace LSW {
 			//std::function <void(void*)> thr_kb_func; // if user wants to run something before the actual init
 			__keyboardmouse_routines* thr_kb_arg; // already in here oops, HANDLED INTERNALLY ON THREAD
 
+			ALLEGRO_EVENT_SOURCE evsrc;
+
 			void __l_thr_md();
 			void __l_thr_cl();
 			void __l_thr_kb();
 		public:
+			Console();
 			~Console();
 
 			void launch();

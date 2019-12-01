@@ -166,15 +166,34 @@ namespace LSW {
 
 		void Console::__l_thr_md()
 		{
+
+#ifdef DEBUG
+			PRINTDEBUG("[INFO][THR_DRW] Initializing...")
+#endif
 			thr_shared_arg.threadcountm.lock();
 			thr_shared_arg.threadcount++;
 			thr_shared_arg.threadcountm.unlock();
 
+			size_t last_loop_had_error = 0;
+
+#ifdef DEBUG
+			PRINTDEBUG("[INFO][THR_DRW] Creating display...")
+#endif
+
 			md = new __raw_display();
+			Sprites sprites;
+			al_set_new_bitmap_flags(ALLEGRO_VIDEO_BITMAP);
+
+			gcam.apply();
 
 			thr_md_arg = new __display_routines();
 			thr_md_arg->insert(al_get_display_event_source(md->_getD()));
+			thr_md_arg->insert(&evsrc);
 			thr_md_arg->start_timers();
+
+#ifdef DEBUG
+			PRINTDEBUG("[INFO][THR_DRW] In the loop!")
+#endif
 
 			for(bool localb = true; localb;)
 			{
@@ -182,17 +201,12 @@ namespace LSW {
 					
 					if (thr_md_arg->isThisThis(+Assistance::__display_routines_timers::LOOPTRACK))
 					{
-						printf_s("[THR_DRW] LOOPSCHECK: %zu\n", thr_md_arg->getNumCalls());
+						printf_s("[INFO][THR_DRW] LOOPSCHECK: %zu\n", thr_md_arg->getNumCalls());
 					}
 					else if (thr_md_arg->isThisThis(+Assistance::__display_routines_timers::CHECKKEEP))
 					{
 						localb = !thr_shared_arg.should_exit;
 						//printf_s("[THR_DRW] CHECKKEEP called\n");
-					}
-					else if (thr_md_arg->isThisThis(+Assistance::__display_routines_timers::CHECKACKNOWLEDGE))
-					{
-						al_acknowledge_resize(md->_getD());
-						//printf_s("[THR_DRW] CHECKACKNOWLEDGE called\n");
 					}
 					else if (thr_md_arg->isThisThis(+Assistance::__display_routines_timers::CHECKMEMORYBITMAP))
 					{
@@ -206,7 +220,13 @@ namespace LSW {
 
 						if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
 							thr_shared_arg.should_exit = true;
-							printf_s("[THR_DRW] DISPLAYCLOSE event got. Set to turn off soon.\n");
+							printf_s("[INFO][THR_DRW] DISPLAYCLOSE event got. Set to turn off soon.\n");
+						}
+						if (ev.type == ALLEGRO_EVENT_DISPLAY_RESIZE)
+						{
+							al_acknowledge_resize(md->_getD());
+							gcam.apply();
+							printf_s("[INFO][THR_DRW] DISPLAYRESIZE got, acknowledged, done.\n");
 						}
 					}
 				}
@@ -215,9 +235,36 @@ namespace LSW {
 
 				md->clear_to(BLACK);
 
+				
+				while (!sprites.try_lock()) Sleep(10);
+
+				// locally check if dealable error
+				try {
+					for (auto& i : sprites)
+					{
+						i->self->draw();
+					}
+					last_loop_had_error = 0;
+				}
+				catch (Abort::abort err)
+				{
+#ifdef DEBUG
+					PRINTDEBUG("[WARN][THR_DRW] Got sprite draw exception! {%s,%s,%s,#%d}", err.function().c_str(), err.from().c_str(), err.details().c_str(), err.getErrN())
+#endif
+					if (err.getErrN() == 1 && (last_loop_had_error < 10)) {
+						//md->restart();
+						al_convert_bitmaps();
+						last_loop_had_error++;
+					}
+					//else throw err;
+				}
+				
+
+				sprites.unlock();
+
 				md->flip();
 
-				Sleep(50);
+				//Sleep(50);
 			}
 
 			// should not stop before the others (it is safer to close later)
@@ -231,17 +278,26 @@ namespace LSW {
 			thr_md_arg = nullptr;
 			md = nullptr;
 
-			printf_s("[THR_DRW] Byee!\n");
+			printf_s("[INFO][THR_DRW] Byee!\n");
 		}
 
 		void Console::__l_thr_cl()
-		{			
+		{
+
+#ifdef DEBUG
+			PRINTDEBUG("[INFO][THR_COL] Initializing...")
+#endif
 			thr_shared_arg.threadcountm.lock();
 			thr_shared_arg.threadcount++;
 			thr_shared_arg.threadcountm.unlock();
 
 			thr_cl_arg = new __collision_routines();
+			thr_cl_arg->insert(&evsrc);
 			thr_cl_arg->start_timers();
+
+#ifdef DEBUG
+			PRINTDEBUG("[INFO][THR_COL] In the loop!")
+#endif
 
 			for (bool localb = true; localb;)
 			{
@@ -249,7 +305,7 @@ namespace LSW {
 
 				if (thr_cl_arg->isThisThis(+Assistance::__collision_routines_timers::LOOPTRACK))
 				{
-					printf_s("[THR_COL] LOOPSCHECK: %zu\n", thr_cl_arg->getNumCalls());
+					printf_s("[INFO][THR_COL] LOOPSCHECK: %zu\n", thr_cl_arg->getNumCalls());
 				}
 				else if (thr_cl_arg->isThisThis(+Assistance::__collision_routines_timers::CHECKKEEP))
 				{
@@ -270,11 +326,15 @@ namespace LSW {
 
 			thr_cl_arg = nullptr;
 
-			printf_s("[THR_COL] Byee!\n");
+			printf_s("[INFO][THR_COL] Byee!\n");
 		}
 
 		void Console::__l_thr_kb()
 		{
+
+#ifdef DEBUG
+			PRINTDEBUG("[INFO][THR_KBM] Initializing...")
+#endif
 			thr_shared_arg.threadcountm.lock();
 			thr_shared_arg.threadcount++;
 			thr_shared_arg.threadcountm.unlock();
@@ -285,6 +345,12 @@ namespace LSW {
 			thr_kb_arg = new __keyboardmouse_routines();
 			thr_kb_arg->insert(al_get_keyboard_event_source());
 			thr_kb_arg->insert(al_get_mouse_event_source());
+			thr_kb_arg->insert(&evsrc);
+
+
+#ifdef DEBUG
+			PRINTDEBUG("[INFO][THR_KBM] Waiting display to be created to get event source...")
+#endif
 
 			while (!md) Sleep(50); // it will use the display size to work with mouse relative positioning
 			while (!md->_getD()) Sleep(50);
@@ -292,8 +358,13 @@ namespace LSW {
 			int display_x = al_get_display_width(md->_getD());
 			int display_y = al_get_display_height(md->_getD());
 			float mouse_pos[2] = { 0.0,0.0 };
+			bool isscreenfullscreen = (al_get_display_flags(md->_getD()) & ALLEGRO_FULLSCREEN) || (al_get_display_flags(md->_getD()) & ALLEGRO_FULLSCREEN_WINDOW);
 
 			thr_kb_arg->start_timers();
+
+#ifdef DEBUG
+			PRINTDEBUG("[INFO][THR_KBM] In the loop!")
+#endif
 
 			for (bool localb = true; localb;)
 			{
@@ -301,7 +372,7 @@ namespace LSW {
 
 				if (thr_kb_arg->isThisThis(+Assistance::__keyboardm_routines_timers::LOOPTRACK))
 				{
-					printf_s("[THR_KBM] LOOPSCHECK: %zu\n", thr_kb_arg->getNumCalls());
+					printf_s("[INFO][THR_KBM] LOOPSCHECK: %zu\n", thr_kb_arg->getNumCalls());
 				}
 				else if (thr_kb_arg->isThisThis(+Assistance::__keyboardm_routines_timers::CHECKKEEP))
 				{
@@ -318,10 +389,23 @@ namespace LSW {
 					auto ev = thr_kb_arg->soWhat();
 
 					if (ev.type == ALLEGRO_EVENT_KEY_DOWN) { // USE IN GAME
+
 						//printf_s("[THR_KBM] KEYDOWN= %d\n", ev.keyboard.keycode);
 					}
 					if (ev.type == ALLEGRO_EVENT_KEY_UP) { // USE IN GAME
-						//printf_s("[THR_KBM] KEYUP= %d\n", ev.keyboard.keycode);
+
+						switch (ev.keyboard.keycode) {
+						case ALLEGRO_KEY_F11:
+							al_set_display_flag(md->_getD(), ALLEGRO_FULLSCREEN_WINDOW, (isscreenfullscreen = !isscreenfullscreen));
+							// cast an event on the queue of everybody
+							ALLEGRO_EVENT ev;
+							ev.type = ALLEGRO_EVENT_DISPLAY_RESIZE;
+							al_emit_user_event(&evsrc, &ev, NULL);
+							break;
+						case ALLEGRO_KEY_F2:
+							md->print();
+							break;
+						}
 					}
 
 					if (ev.type == ALLEGRO_EVENT_KEY_CHAR) {
@@ -348,12 +432,18 @@ namespace LSW {
 
 			thr_kb_arg = nullptr;
 
-			printf_s("[THR_KBM] Byee!\n");
+			printf_s("[INFO][THR_KBM] Byee!\n");
+		}
+
+		Console::Console()
+		{
+			al_init_user_event_source(&evsrc);
 		}
 
 		Console::~Console()
 		{
 			close();
+			al_destroy_user_event_source(&evsrc);
 		}
 
 		void Console::launch()
@@ -397,7 +487,11 @@ namespace LSW {
 
 		bool Console::running()
 		{
-			return !thr_shared_arg.should_exit;
+			bool stillrunning = !thr_shared_arg.should_exit;
+			if (!stillrunning) {
+				close();
+			}
+			return stillrunning;
 		}
 
 	}

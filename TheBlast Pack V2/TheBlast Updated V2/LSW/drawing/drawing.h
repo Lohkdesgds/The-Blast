@@ -45,38 +45,6 @@ namespace LSW {
 			enum class in___color_sprite	{ TINT, size };
 
 			enum class _sprite_coll_way { NORTH, SOUTH, WEST, EAST };
-
-			class __sprite_smart_data {
-			public:
-				double dval[+in___double_sprite::size] = { 0.0 };
-				bool bval[+in___boolean_sprite::size] = { false };
-				ALLEGRO_COLOR tint = al_map_rgb(255, 255, 255);
-
-				__sprite_smart_data();
-			};
-			
-
-			class __sprite_smart_images {
-				double difftimeanim = 1.0/60;
-				double lastcall = 0;
-				size_t actual = 0;
-				bool loopin = true;
-
-				struct  __custom_data { // local yes
-					ALLEGRO_BITMAP* bmp = nullptr;
-					std::string idc;
-				};
-
-				std::vector<__custom_data> copies;
-			public:
-				auto get();
-				void add(const std::string); // id
-				void remove(const std::string);
-				void setFPS(const double = 0); // 0 = no cycle, < 0 = static one (-1 == first aka 0), x > 0 = x changes per sec
-				void loop(const bool = true);
-				void reset(); // default settings
-				void clear(); // copies.clear();
-			};
 		}
 
 		class camera_preset {
@@ -114,8 +82,41 @@ namespace LSW {
 		*/
 
 		class Sprite {
-			Assistance::__sprite_smart_images bmps;
-			Assistance::__sprite_smart_data data;
+
+			class __sprite_smart_data {
+			public:
+				double dval[+Assistance::in___double_sprite::size] = { 0.0 };
+				bool bval[+Assistance::in___boolean_sprite::size] = { false };
+				ALLEGRO_COLOR tint = al_map_rgb(255, 255, 255);
+
+				__sprite_smart_data();
+			};
+
+
+			class __sprite_smart_images {
+				double difftimeanim = 1.0 / 60;
+				double lastcall = 0;
+				size_t actual = 0;
+				bool loopin = true;
+
+				struct  __custom_data { // local yes
+					ALLEGRO_BITMAP* bmp = nullptr;
+					std::string idc;
+				};
+
+				std::vector<__custom_data*> copies;
+			public:
+				auto get();
+				ALLEGRO_BITMAP* add(const std::string); // id
+				void remove(const std::string);
+				void setFPS(const double = 0); // 0 = no cycle, < 0 = static one (-1 == first aka 0), x > 0 = x changes per sec
+				void loop(const bool = true);
+				void reset(); // default settings
+				void clear(); // copies.clear();
+			};
+
+			__sprite_smart_images bmps;
+			__sprite_smart_data data;
 
 			std::string sprite_id;
 			int layer = 0;

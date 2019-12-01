@@ -104,7 +104,33 @@ al_destroy_fs_entry(entry);
 
 int main(int argc, const char* argv[])
 {
+
+#ifdef DEBUG
+	PRINTDEBUG("[INFO] Initializing game...")
+#endif
+
 	lsw_init();
+
+#ifdef DEBUG
+	PRINTDEBUG("[INFO] Setting up textures base...")
+#endif
+
+	Textures textures;
+	textures.setFuncs(Constants::lambda_bitmap_load, Constants::lambda_bitmap_unload);
+
+#ifdef DEBUG
+	PRINTDEBUG("[INFO] Setting up sprites base...")
+#endif
+
+	Sprites sprites;
+	sprites.setFuncs(Constants::lambda_default_load<Sprite>, Constants::lambda_default_unload<Sprite>);
+
+#ifdef DEBUG
+	PRINTDEBUG("[INFO] Setting up fonts base...")
+#endif
+
+	Fonts fonts;
+	fonts.setFuncs(Constants::lambda_font_load, Constants::lambda_font_unload);
 
 
 	//__raw_display disp;
@@ -130,25 +156,53 @@ int main(int argc, const char* argv[])
 		disp.flip();
 	}*/
 
+
+#ifdef DEBUG
+	PRINTDEBUG("[INFO] Setting up console...")
+#endif
+
 	Console consol;
 	consol.launch();
 
 
-	Textures textures(Assistance::lambda_bitmap_load, Assistance::lambda_bitmap_unload);
-	Sprites sprites; // no custom new/delete because it works standard way
-	Fonts fonts(Assistance::lambda_font_load, Assistance::lambda_font_unload);
+#ifdef DEBUG
+	PRINTDEBUG("[INFO] Loading textures...")
+#endif
 
 	textures.load(Tools::generateStringsFormat("PAUSE_##", 29), Tools::generateStringsFormat("pause/pause_##.png", 29));
+
+
+#ifdef DEBUG
+	PRINTDEBUG("[INFO] Loading sprites...")
+#endif
+
+	auto mysprite = sprites.create("randomsprite");
+	mysprite->apply(Assistance::in___string_sprite::ADD, "PAUSE_00");
+	mysprite->apply(Assistance::in___string_sprite::SPRITE_ID, "MySprite");
+	mysprite->apply(Assistance::in___boolean_sprite::DRAW, true);
+
+
+#ifdef DEBUG
+	PRINTDEBUG("[INFO] Main thread chillin'")
+#endif
 
 
 	while (consol.running()) {
 		Sleep(100);
 	}
 
+#ifdef DEBUG
+	PRINTDEBUG("[INFO] Closing textures, sprites, fonts and the game...")
+#endif
+
 
 	textures.clear();
 	sprites.clear();
 	fonts.clear();
+
+#ifdef DEBUG
+	PRINTDEBUG("[INFO] Ended successfully")
+#endif
 
 	return 0;
 }

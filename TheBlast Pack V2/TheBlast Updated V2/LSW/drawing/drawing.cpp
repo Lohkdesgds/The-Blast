@@ -7,87 +7,6 @@ namespace LSW {
 		std::map<int, camera_preset> Camera::presets;
 		int Camera::lastapply = 0;
 
-		namespace Assistance {
-
-			auto __sprite_smart_images::get()
-			{
-				auto now = al_get_time();
-				auto siz = copies.size();
-
-				if (lastcall == 0 || difftimeanim <= 0) lastcall = now;
-
-				if (difftimeanim > 0) {
-					while ((now - lastcall) > difftimeanim)
-					{
-						if (++actual == siz) actual = 0;
-						lastcall += difftimeanim;
-					}
-				}
-				return copies[actual].bmp;
-			}
-			void __sprite_smart_images::add(const std::string id)
-			{
-				__template_static_vector<ALLEGRO_BITMAP> imgs; // Textures
-
-
-				__custom_data cd;
-
-				imgs.get(id, cd.bmp);
-				cd.idc = id;
-
-				copies.push_back(cd);
-			}
-			void __sprite_smart_images::remove(const std::string id)
-			{
-				for (size_t p = 0; p < copies.size(); p++) {
-					if (copies[p].idc == id) {
-						copies.erase(copies.begin() + p);
-						return;
-					}
-				}
-			}
-			void __sprite_smart_images::setFPS(const double v)
-			{
-				if (v < 0) {
-					difftimeanim = 0;
-					actual = -(int)v;
-				}
-				else if (v == 0) {
-					difftimeanim = 0;
-				}
-				else {
-					difftimeanim = 1.0 / v;
-				}
-			}
-			void __sprite_smart_images::loop(const bool b)
-			{
-				loopin = b;
-			}
-			void __sprite_smart_images::reset()
-			{
-				clear();
-				loop(true);
-				setFPS(60);
-			}
-			void __sprite_smart_images::clear()
-			{
-				copies.clear();
-			}
-			
-
-			__sprite_smart_data::__sprite_smart_data()
-			{
-				/*for (auto& i : dval) i = 0.0;
-				for (auto& j : bval) j = false;*/
-				dval[+Assistance::in___double_sprite::SCALEX] = 1.0;
-				dval[+Assistance::in___double_sprite::SCALEY] = 1.0;
-				dval[+Assistance::in___double_sprite::SCALEG] = 1.0;
-				bval[+Assistance::in___boolean_sprite::DRAW] = true;
-				bval[+Assistance::in___boolean_sprite::AFFECTED_BY_CAM] = true;
-			}
-
-		}//endof Assistance
-
 
 		void camera_preset::set(const Assistance::_cam_opt u, const float v)
 		{
@@ -170,6 +89,97 @@ namespace LSW {
 		}
 
 		
+
+		auto Sprite::__sprite_smart_images::get()
+		{
+			auto now = al_get_time();
+			auto siz = copies.size();
+
+			if (lastcall == 0 || difftimeanim <= 0) lastcall = now;
+
+			if (difftimeanim > 0 && siz > 1) {
+				while ((now - lastcall) > difftimeanim)
+				{
+					if (++actual == siz) actual = 0;
+					lastcall += difftimeanim;
+				}
+			}
+			return copies[actual]->bmp;
+		}
+		ALLEGRO_BITMAP* Sprite::__sprite_smart_images::add(const std::string id)
+		{
+			__template_static_vector<ALLEGRO_BITMAP> imgs; // Textures
+
+
+			__custom_data* cd = new __custom_data();
+
+			imgs.get(id, cd->bmp);
+			cd->idc = id;
+
+
+			int _flags = al_get_bitmap_flags(cd->bmp);
+			int _format = al_get_bitmap_format(cd->bmp);
+
+			copies.push_back(cd);
+
+			int _flags2 = al_get_bitmap_flags(cd->bmp);
+			int _format2 = al_get_bitmap_format(cd->bmp);
+
+			return cd->bmp;
+		}
+		void Sprite::__sprite_smart_images::remove(const std::string id)
+		{
+			for (size_t p = 0; p < copies.size(); p++) {
+				if (copies[p]->idc == id) {
+					copies.erase(copies.begin() + p);
+					return;
+				}
+			}
+		}
+		void Sprite::__sprite_smart_images::setFPS(const double v)
+		{
+			if (v < 0) {
+				difftimeanim = 0;
+				actual = -(int)v;
+			}
+			else if (v == 0) {
+				difftimeanim = 0;
+			}
+			else {
+				difftimeanim = 1.0 / v;
+			}
+		}
+		void Sprite::__sprite_smart_images::loop(const bool b)
+		{
+			loopin = b;
+		}
+		void Sprite::__sprite_smart_images::reset()
+		{
+			clear();
+			loop(true);
+			setFPS(60);
+		}
+		void Sprite::__sprite_smart_images::clear()
+		{
+			copies.clear();
+		}
+
+
+		Sprite::__sprite_smart_data::__sprite_smart_data()
+		{
+			/*for (auto& i : dval) i = 0.0;
+			for (auto& j : bval) j = false;*/
+			dval[+Assistance::in___double_sprite::SCALEX] = 1.0;
+			dval[+Assistance::in___double_sprite::SCALEY] = 1.0;
+			dval[+Assistance::in___double_sprite::SCALEG] = 1.0;
+			//bval[+Assistance::in___boolean_sprite::DRAW] = false;
+			bval[+Assistance::in___boolean_sprite::AFFECTED_BY_CAM] = true;
+		}
+
+
+
+
+
 		Sprite::~Sprite()
 		{
 			bmps.reset();
@@ -239,6 +249,7 @@ namespace LSW {
 		void Sprite::draw()
 		{
 			ALLEGRO_BITMAP* rn = bmps.get();
+			
 
 			// vars
 
@@ -267,13 +278,19 @@ namespace LSW {
 
 			
 			float cx, cy, px, py, dsx, dsy, rot_rad;
-			cx =		1.0f * al_get_bitmap_width(rn) * ((data.dval[+Assistance::in___double_sprite::CENTERX] + 1.0) * 0.5);
-			cy =		1.0f * al_get_bitmap_height(rn) * ((data.dval[+Assistance::in___double_sprite::CENTERY] + 1.0) * 0.5);
+			int bmpx, bmpy;
+			bmpx =		al_get_bitmap_width(rn);
+			bmpy =		al_get_bitmap_height(rn);
+			if (bmpx <= 0 || bmpy <= 0) {
+				throw Abort::abort("al_get_bitmap_width|al_get_bitmap_height", "Sprite::draw", "Somehow the texture have < 0 width / height id=[" + this->sprite_id + "] size={" + std::to_string(bmpx) + "," + std::to_string(bmpy) + "}", 1);
+			}
+			cx =		1.0f * bmpx * ((data.dval[+Assistance::in___double_sprite::CENTERX] + 1.0) * 0.5);
+			cy =		1.0f * bmpy * ((data.dval[+Assistance::in___double_sprite::CENTERY] + 1.0) * 0.5);
 			rot_rad =	1.0f * data.dval[+Assistance::in___double_sprite::ROTATION] * ALLEGRO_PI / 180.0;
 			px =		1.0f * data.dval[+Assistance::in___double_sprite::POSX] * cos(rot_rad) + data.dval[+Assistance::in___double_sprite::POSY] * sin(rot_rad);
 			py =		1.0f * data.dval[+Assistance::in___double_sprite::POSY] * cos(rot_rad) - data.dval[+Assistance::in___double_sprite::POSX] * sin(rot_rad);
-			dsx =		1.0f * data.dval[+Assistance::in___double_sprite::SCALEX] * data.dval[+Assistance::in___double_sprite::SCALEG] * (1.0 / al_get_bitmap_width(rn));
-			dsy =		1.0f * data.dval[+Assistance::in___double_sprite::SCALEY] * data.dval[+Assistance::in___double_sprite::SCALEG] * (1.0 / al_get_bitmap_height(rn));
+			dsx =		1.0f * data.dval[+Assistance::in___double_sprite::SCALEX] * data.dval[+Assistance::in___double_sprite::SCALEG] * (1.0 / bmpx);
+			dsy =		1.0f * data.dval[+Assistance::in___double_sprite::SCALEY] * data.dval[+Assistance::in___double_sprite::SCALEG] * (1.0 / bmpy);
 
 			// draw
 

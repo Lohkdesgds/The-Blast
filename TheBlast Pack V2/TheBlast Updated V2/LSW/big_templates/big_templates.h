@@ -23,6 +23,7 @@
 
 #include "..\custom_abort\abort.h"
 #include "..\system\system.h"
+#include "..\debug\debug.h"
 
 #define BLACK	al_map_rgb(0,0,0)
 #define WHITE	al_map_rgb(255,255,255)
@@ -34,32 +35,13 @@
 namespace LSW {
 	namespace v4 {
 
-		namespace Assistance {
+		namespace Constants {
 
-			template<typename N>
-			struct __template_static_each_control {
-				N* ptr;
-				std::string id;
-				std::string path;
-			};
-
-			template<typename H> const auto lambda_null_load = [](const char* p, H*& r) -> bool { return false; };//[](char* p, T*& r) -> bool { return (r = new T()); };
-			template<typename H> const auto lambda_null_unload = [](H*& b) -> void { return; };//[](T*& b) -> void { delete b; b = nullptr; };
+			template<typename H> const auto lambda_null_load = [](const char* p, H*& r) -> bool { return false; };
+			template<typename H> const auto lambda_null_unload = [](H*& b) -> void { return; };
 			
 			template<typename K> const auto lambda_default_load = [](const char* p,K*& r) -> bool { return (r = new K()); };
 			template<typename K> const auto lambda_default_unload = [](K*& b) -> void { if (b) delete b; b = nullptr; };
-					   
-			template<typename T>
-			struct __template_static_vector_control {
-				std::vector<__template_static_each_control<T>> data;
-
-				std::function <bool(const char*,T*&)> load = lambda_null_load<T>; // cast void if different
-				std::function <void(T*&)> unload = lambda_null_unload<T>;
-
-				std::mutex hugedeal;
-			};
-
-
 		}
 
 
@@ -225,89 +207,110 @@ namespace LSW {
 			> Declaration doesn't need to set load/unload std::function s, so it can be accessed everywhere no problem
 
 		**************************************************************************************/
-			   		 
+		
 
-		template <typename T>
+		template<typename T>
 		class __template_static_vector {
-			static Assistance::__template_static_vector_control<T> data;
+			template<typename S = T> struct _d {
+				S* self = nullptr;
+				std::string id;
+			};
+			template<typename Q = T> struct _i {
+				std::vector< _d<Q>* >					db;
+				std::mutex                              dbm;
+				std::function<bool(const char*, Q*&)>	load; // cast void if different
+				std::function<void(Q*&)>				unload;
+			};
+
+			static _i<T> data;
 		public:
-			~__template_static_vector() {
-				clear();
+			//~__template_static_vector() { clear(); }
+
+			void setFuncs(const std::function <bool(const char*, T*&)> hl, const std::function <void(T*&)> hd) {
+				assert(hl);
+				assert(hd);
+				data.load = hl;
+				data.unload = hd;
 			}
-			__template_static_vector() {}
-			__template_static_vector(const std::function <bool(const char*,T*&)> howtoload, const std::function <void(T*&)> howtounload)
-			{
-				if (howtoload)		data.load =		howtoload;
-				if (howtounload)	data.unload =	howtounload;
+			bool try_lock() {
+				return data.dbm.try_lock();
 			}
-			void load(const std::string id, const char* path/*, const std::function <T * (char*)> howtoload = nullptr, const std::function <void(T*&)> howtounload = nullptr*/)
-			{
-				//setNewDel(howtoload, howtounload);
+			size_t size() {
+				return data.db.size();
+			}
+			auto begin() {
+				return data.db.begin();
+			}
+			auto end() {
+				return data.db.end();
+			}
+			void unlock() {
+				data.dbm.unlock();
+			}
+			T* create(const std::string a, const std::string b = "") { return load(a, b); }
+			T* load(const std::string id, const std::string path = "")	{
+				T* b = nullptr;
+				bool r = get(id, b);
 
-				T* i = nullptr;
+				if (!r) {
+					_d<T>* dt = new _d<T>();
+					dt->id = id;
 
-				if (!get(id, i)) {
-					Assistance::__template_static_each_control<T> jj;
+					r = data.load(path.c_str(), dt->self);
+					assert(r);
+					assert(dt->self);
+					b = dt->self;
 
-					jj.path = path;
-					jj.id = id;
-
-					if (!(data.load(path, jj.ptr))) throw Abort::abort("lambda load", "__template_static_vector<>::load", "Couldn't load '" + id + "' @ path '" + path + "'");
-
-					data.hugedeal.lock();
-					data.data.push_back(jj);
-					data.hugedeal.unlock();
+					data.dbm.lock();
+					data.db.push_back(dt);
+					data.dbm.unlock();
 				}
+				return b;
 			}
-			void load(std::vector<std::string> names, std::vector<std::string> paths) {
+			void create(std::vector<std::string> n, std::vector<std::string> q) { load(n, q); }
+			void load(std::vector<std::string> n, std::vector<std::string> q)
+			{
+				assert(n.size() == q.size());
 
-				if (names.size() != paths.size()) {
-					throw Abort::abort("std::function<std::vector<std::string>()>", "__template_static_vector<>::load", "Names generated doesn't match paths generated size! (they have to be the same size!)");
-					return;
-				}
-				for (size_t p = 0; p < names.size(); p++)
+				for (size_t p = 0; p < n.size(); p++)
 				{
-					load(names[p], paths[p].c_str());
+					load(n[p], q[p]);
 				}
 			}
-			bool get(const std::string id, T*& wptr)
-			{
-				for (Assistance::__template_static_each_control<T>& i : data.data) {
-					if (id == i.id) {
-						wptr = i.ptr;
+			bool get(const std::string id, T*& p) {
+				data.dbm.lock();
+				for (auto& i : data.db) {
+					if (i->id == id) {
+						p = i->self;
+						data.dbm.unlock();
 						return true;
 					}
 				}
+				data.dbm.unlock();
 				return false;
 			}
-			void del(const std::string id)
-			{
-				for (size_t p = 0; p < data.data.size(); p++)
+			void del(const std::string id) {
+				for (size_t p = 0; p < data.db.size(); p++)
 				{
-					if (data.data[p].id == id) {
-						data.unload(data.data[p]);
-						data.hugedeal.lock();
-						data.data.erase(data.data.begin() + p);
-						data.hugedeal.unlock();
-						return;
+					if (data.db[p]->id == id) {
+						data.dbm.lock();
+						data.unload(data.db[p]->self);
+						data.db.erase(data.db.begin() + p);
+						data.dbm.unlock();
 					}
 				}
 			}
-			void clear()
-			{
-				data.hugedeal.lock();
-				if (data.data.size() == 0) { data.hugedeal.unlock();  return; }
-
-				for (auto& i : data.data) {
-					data.unload(i.ptr);
+			void clear() {
+				data.dbm.lock();
+				for (auto& i : data.db)
+				{
+					data.unload(i->self);
 				}
-				data.data.clear();
-				data.hugedeal.unlock();
+				data.db.clear();
+				data.dbm.unlock();
 			}
 		};
 
-
-		// init?
-		template<typename T> Assistance::__template_static_vector_control<T> __template_static_vector<T>::data;
+		template<typename T> __template_static_vector<T>::_i<T> __template_static_vector<T>::data;
 	}
 }

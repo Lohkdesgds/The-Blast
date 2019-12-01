@@ -309,7 +309,7 @@ namespace LSW {
 			}
 
 			if (__g_sys.__check_resolution_existance(x, y, hz) || (flag & ALLEGRO_WINDOWED)) {
-				al_set_new_bitmap_flags(ALLEGRO_VIDEO_BITMAP | ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR);
+				al_set_new_bitmap_flags(Constants::start_bitmap_default_mode);
 				al_set_new_display_refresh_rate(hz);
 				al_set_new_display_option(ALLEGRO_VSYNC, 2, ALLEGRO_SUGGEST);
 				d = al_create_display(x, y);
@@ -339,13 +339,21 @@ namespace LSW {
 			if (v != 0) throw Abort::abort("localtime_s", "__raw_display::_print", "Cannot get local time to name the print file!");
 
 			path = path + std::to_string(tt.tm_year + 1900) + "_" + std::to_string(tt.tm_mon + 1) + "_" + std::to_string(tt.tm_mday) + "-" + std::to_string(tt.tm_hour) + "_" + std::to_string(tt.tm_min) + "_" + std::to_string(tt.tm_sec) + "-" + std::to_string((int)(GetTickCount64()%1000)) + ".jpg";
+			
+			int savv = al_get_new_bitmap_flags();
+			al_set_new_bitmap_flags(ALLEGRO_MEMORY_BITMAP);
 			auto cpy = al_clone_bitmap(u);
+			al_set_new_bitmap_flags(savv);			
 
 			if (printthr) {
+				if (!printthrdone) return;
+
 				printthr->join();
 				delete printthr;
 				printthr = nullptr;
 			}
+
+			printthrdone = false;
 			printthr = new std::thread([=] {__print_thr_autodel(cpy, path); });
 
 			printing = false;
@@ -355,6 +363,7 @@ namespace LSW {
 		{
 			al_save_bitmap(path.c_str(), u);
 			al_destroy_bitmap(u);
+			printthrdone = true;
 		}
 
 		__raw_display::__raw_display()
