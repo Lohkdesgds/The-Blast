@@ -180,6 +180,8 @@ namespace LSW {
 
 			md = new __raw_display();
 			Sprites sprites;
+			Texts texts;
+
 			al_set_new_bitmap_flags(ALLEGRO_VIDEO_BITMAP);
 
 			gcam.apply();
@@ -238,16 +240,15 @@ namespace LSW {
 
 				// locally check if dealable error
 				try {
-					for (auto& i : sprites)
-					{
-						i->self->draw();
-					}
+					for (auto& i : sprites) i->self->draw(0);
+					for (auto& i : texts)  i->self->draw(0);
+
 					last_loop_had_error = 0;
 				}
 				catch (Abort::abort err)
 				{
 
-					printf_s("[WARN][THR_DRW] Got sprite draw exception! {%s,%s,%s,#%d}", err.function().c_str(), err.from().c_str(), err.details().c_str(), err.getErrN());
+					printf_s("[WARN][THR_DRW] Got draw exception! {%s,%s,%s,#%d}", err.function().c_str(), err.from().c_str(), err.details().c_str(), err.getErrN());
 
 					if (err.getErrN() == 1 && (last_loop_had_error < 10)) {
 						//md->restart();

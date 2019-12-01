@@ -44,7 +44,7 @@ namespace LSW {
 			};
 
 			const auto lambda_font_load = [](const char* p, ALLEGRO_FONT*& b) -> bool {
-				return ((b = al_load_ttf_font(p, 20, 0)));
+				return ((b = al_load_ttf_font(p, 2500, 0)));
 			};
 			const auto lambda_font_unload = [](ALLEGRO_FONT*& b) -> void {
 				if (al_is_system_installed() && b) { al_destroy_font(b); }
@@ -71,9 +71,12 @@ namespace LSW {
 
 
 		typedef __template_static_vector<ALLEGRO_BITMAP>  Textures;
-		typedef __template_static_vector<Sprite>		  Sprites;
 		typedef __template_static_vector<ALLEGRO_FONT>    Fonts;
 		typedef __template_static_vector<ALLEGRO_SAMPLE>  Tracks;
+
+		typedef __template_static_vector<Sprite>		  Sprites;
+		typedef __template_static_vector<Text>			  Texts;
+
 
 
 

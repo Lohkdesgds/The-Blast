@@ -133,18 +133,113 @@ namespace LSW {
 			void apply(const Assistance::in___size_sprite, const size_t);
 			void apply(const Assistance::in___color_sprite, const ALLEGRO_COLOR);
 
-			void draw();
+			bool get(const Assistance::in___string_sprite, std::string&);
+			bool get(const Assistance::in___double_sprite, double&);
+			bool get(const Assistance::in___boolean_sprite, bool&);
+			bool get(const Assistance::in___integer_sprite, int&);
+			bool get(const Assistance::in___size_sprite, size_t&);
+			bool get(const Assistance::in___color_sprite, ALLEGRO_COLOR&);
+
+			void draw(const int);
 		};
 
 
 
 
 
+		namespace Assistance {
+
+			enum class _text_opt_str { SETSTRING, SETID, SETFOLLOW, SETFONT };
+			enum class _text_opt_bool { SHOW, AFFECTED_BY_CAM };
+			enum class _text_opt_db { POSX, POSY, SCALEG, ROTATION, UPDATETIME };
+			enum class _text_opt_int { MODE, LAYER };
+			enum class _text_opt_color { COLOR };
+
+			enum class mode_int { ALIGN_LEFT = ALLEGRO_ALIGN_LEFT, ALIGN_CENTER = ALLEGRO_ALIGN_CENTER, ALIGN_RIGHT = ALLEGRO_ALIGN_RIGHT };
+			// 2
+			const std::string tags[] = { "%pos_x%", "%pos_y%", "%screen_pos_x%", "%screen_pos_y%","%is_following%", "%color_r%", "%color_g%", "%color_b%", "%color_a%", "%mode%", "%time%", "%is_using_buf%", "%g_b_res_x%", "%g_b_res_y%", "%base_refresh_rate%", "%fps%", "%tps%", "%tps_col%", "%tps_funcs%", "%tps_second%", "%tps_posupd%", "%sprite_frame%", "%cam_x%", "%cam_y%", "%cam_zoom%", "%cam_zoom_x%", "%cam_zoom_y%", "%curr_string%", "%last_string%", "%mouse_x%", "%mouse_y%", "%sprite_speed_x%", "%sprite_speed_y%", "%sprite_name%", "%entity_name%", "%entity_health%", "%num_images%", "%num_sprites%", "%num_texts%", "%num_tracks%", "%num_entities%", "%garbage_total%", "%garbage_images%", "%garbage_sprites%", "%garbage_texts%", "%garbage_tracks%", "%garbage_entities%" };
+			enum class tags_e { T_POSX, T_POSY, T_SCREEN_POSX, T_SCREEN_POSY, T_ISFOLLOWING, T_COLOR_R, T_COLOR_G, T_COLOR_B, T_COLOR_A, T_MODE, T_TIME, T_ISUSINGBUF, T_GB_RESX, T_GB_RESY, T_REFRESHRATE, T_FPS, T_TPS_COUNT, T_TPS_COLLISION, T_TPS_FUNCTIONS, T_TPS_SECOND_TAKEN, T_TPS_POSUPDATE, T_SPRITE_FRAME, T_CAM_X, T_CAM_Y, T_CAM_ZOOM, T_CAM_ZOOMX, T_CAM_ZOOMY, T_CURRSTRING, T_LASTSTRING, T_MOUSE_X, T_MOUSE_Y, T_SPRITE_SPEEDX, T_SPRITE_SPEEDY, T_SPRITE_NAME, T_SPRITE_ENTITY_NAME, T_SPRITE_ENTITY_HEALTH, T_IMAGES_LOADED, T_SPRITES_LOADED, T_TEXTS_LOADED, T_TRACKS_LOADED, T_ENTITIES_LOADED, T_GARBAGE_TOTAL, T_IMAGES_GARBAGE, T_SPRITES_GARBAGE, T_TEXTS_GARBAGE, T_TRACKS_GARBAGE, T_ENTITIES_GARBAGE };
+		}
+
+		namespace Constants {
+			const double text_default_sharpness_font = 2500.0;
+			const double text_timeout_interpret = 0.1;
+		}
 
 
+		class Text {
+			Sprite* follow = nullptr;
+			double off_plr[2] = { 0.0,0.0 };
+			double ofr_plr = 0.0;
 
+			//Events::big_event bev;
 
+			int layer = 0;
 
-		
+			double scale = 1.0;
+			double final_scale = 1.0;
+			double last_final_scale = 1.0;
+			double rot = 0.0;
+
+			double pos[2] = { 0,0 };
+			int mode = ALLEGRO_ALIGN_CENTER;
+			bool affected_by_camera = true;
+
+			ALLEGRO_FONT* ffont = nullptr;
+			//bool lastwasraw = false;
+
+			ALLEGRO_COLOR color = al_map_rgb(255, 255, 255);
+			std::string orig_str;
+			std::string string;
+			bool str_upd = false;
+
+			bool show = true;
+
+			double lastinterpret = 0;
+			double update_time = 1.0/24; // sec
+			
+			std::string id;//, path;// , _bpath;
+			//static std::string gpath;
+			//static bool is_gpath_raw;
+			//bool using_gpath = true;
+
+			void _draw(const double[2]);
+			void _interpretTags(std::string&);
+
+			void setFollow(const std::string);
+			void setFollow(Sprite*);
+			///const bool load(std::string = "font.ttf", const double = 1.0);
+			///void reload();
+			//void loadInternalBMP();
+			///void _verify();
+		public:
+			Text();
+			~Text();
+			///void verify(const bool = false); // reload
+			/*const bool loadFromDatabase(const std::string = Defaults::font_default_name);
+			const bool loadFromURL(const std::string, const std::string); // url, name it as (THE FILE! NOT ID)*/
+
+			void unload();
+
+			void set(const Assistance::_text_opt_str, const std::string);
+			void set(const Assistance::_text_opt_bool, const bool);
+			void set(const Assistance::_text_opt_db, const double);
+			void set(const Assistance::_text_opt_color, const ALLEGRO_COLOR);
+			void set(const Assistance::_text_opt_int, const int);
+
+			void get(const Assistance::_text_opt_str, std::string&);
+			void get(const Assistance::_text_opt_bool, bool&);
+			void get(const Assistance::_text_opt_db, double&);
+			void get(const Assistance::_text_opt_color, ALLEGRO_COLOR&);
+			void get(const Assistance::_text_opt_int, int&);
+
+			const bool isEq(const Assistance::_text_opt_str, const std::string);
+			const bool isEq(const Assistance::_text_opt_bool, const bool);
+			const bool isEq(const Assistance::_text_opt_db, const double);
+			const bool isEq(const Assistance::_text_opt_color, const ALLEGRO_COLOR);
+			const bool isEq(const Assistance::_text_opt_int, const int);
+
+			void draw(const int);
+		};
 	}
 }
