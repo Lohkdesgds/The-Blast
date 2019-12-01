@@ -113,6 +113,7 @@ namespace LSW {
 			//void launch(const std::function <void(void*)>, const std::function <void(void*)>, const std::function <void(void*)>); // display, events, kb?
 			void close();
 
+			bool awakened();
 			bool running();
 		};
 

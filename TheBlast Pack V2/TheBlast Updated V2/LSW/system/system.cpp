@@ -23,7 +23,7 @@ namespace LSW {
 		{
 			if (perc) *perc = 0.00;
 
-			FILE* me, * fi;
+			FILE* me;
 			std::string work = Constants::start_zip_default_extract_path;
 			char myself[1024];
 			GetModuleFileNameA(NULL, myself, 1024);
@@ -32,17 +32,15 @@ namespace LSW {
 			Tools::createPath(work);
 
 			auto err0 = fopen_s(&me, myself, "rb");
-			auto err1 = fopen_s(&fi, work.c_str(), "wb");
 
 			__ensure_warn_package();
 
 			LONGLONG totalsiz = Tools::getFileSize(myself) - 2; // adjust
 			LONGLONG nowstep = 0;
 
-			if (err0 || err1) {
-				throw Abort::abort("fopen_s", "::lsw_extract_merge", "Cannot proceed with temp file to zip");
+			if (err0) {
 				if (me) fclose(me);
-				if (fi) fclose(fi);
+				throw Abort::abort("fopen_s", "__systematic::__extract_package", "Cannot proceed with temp file to zip");
 				return;
 			}
 
@@ -51,7 +49,7 @@ namespace LSW {
 			bool still = true;
 			bool found = false;
 
-			while (still && (me != nullptr && fi != nullptr))
+			while (still && (me != nullptr))
 			{
 				auto u = fread_s(ch, 1, 1, 1, me);
 				if (u != 1) {
@@ -69,30 +67,57 @@ namespace LSW {
 				else p = 0;
 
 				if (totalsiz-- <= 0) {
-					throw Abort::abort("totalsiz", "Tools::getFileSize", "File size isn't right!");
+					if (me) fclose(me);
+					throw Abort::abort("Tools::getFileSize", "__systematic::__extract_package", "File size isn't right!", 1);
 					return;
 				}
 			}
 
 			if (found) {
+				FILE *fi;
+				auto err1 = fopen_s(&fi, work.c_str(), "wb");
 				char buf[512];
 				for (size_t s = 0;;) {
 					s = fread_s(buf, sizeof(buf), sizeof(char), 512, me);
-					fwrite(buf, sizeof(char), s, fi);
+					if (fi) fwrite(buf, sizeof(char), s, fi);
 					nowstep += s;
 
 					if (perc) *perc = (1.0 * nowstep / totalsiz);
 					if (s != 512) break;
 				}
+				if (fi) fclose(fi);
 			}
 			else {
-				throw Abort::abort("null", "::lsw_extract_merge", "data pack not available inside .exe file");
+				if (me) fclose(me);
+				throw Abort::abort("null", "__systematic::__extract_package", "data pack not available inside .exe file");
 			}
 
 			if (me) fclose(me);
-			if (fi) fclose(fi);
 
 			if (perc) *perc = 1.0;
+			extracted_zip_at = work;
+		}
+
+		void __systematic::__nointernalzip_extract_package()
+		{
+			FILE* fi;
+			std::string work = Constants::start_zip_default_extract_path;
+			char myself[1024];
+			GetModuleFileNameA(NULL, myself, 1024);
+
+			Tools::interpret_path(work);
+			Tools::createPath(work);
+
+			__ensure_warn_package();
+
+			auto err1 = fopen_s(&fi, work.c_str(), "rb");
+
+			if (err1) {
+				if (fi) fclose(fi);
+				throw Abort::abort("fopen_s", "__systematic::__nointernalzip_extract_package", "ZIP not found, can't proceed");
+				return;
+			}
+
 			extracted_zip_at = work;
 		}
 
@@ -123,7 +148,21 @@ namespace LSW {
 				__extract_package();
 			}
 
-			if (!PHYSFS_addToSearchPath(extracted_zip_at.c_str(), 1)) throw Abort::abort("PHYSFS_addToSearchPath", "system::__loadPackage", "Can't add datapack to internal search");
+			if (!PHYSFS_addToSearchPath(extracted_zip_at.c_str(), 1)) throw Abort::abort("PHYSFS_addToSearchPath", "system::__loadPackage", "Can't add datapack to internal search", 99);
+
+			return true;
+		}
+
+		bool __systematic::__nointernalzip_loadPackage()
+		{
+			if (!initialized) throw Abort::abort("initialized", "system::__nointernalzip_loadPackage", "Wasn't initialized properly!");
+
+
+			if (extracted_zip_at.length() == 0) {
+				__nointernalzip_extract_package();
+			}
+
+			if (!PHYSFS_addToSearchPath(extracted_zip_at.c_str(), 1)) throw Abort::abort("PHYSFS_addToSearchPath", "system::__nointernalzip_loadPackage", "Can't add datapack to internal search");
 
 			return true;
 		}
@@ -151,6 +190,7 @@ namespace LSW {
 
 		void __systematic::init_system()
 		{
+
 			if (!al_init())
 				throw Abort::abort("al_init", "system::system", "Failed to open the game");
 			if (!al_init_acodec_addon())
@@ -176,8 +216,10 @@ namespace LSW {
 			char myself[1024];
 			GetModuleFileNameA(NULL, myself, 1024);
 
-			if (!PHYSFS_init(myself))
-				throw Abort::abort("PHYSFS_init", "system::system", "Failed to set the datapack to run");
+			if (!already_set_physfs_root) {
+				if (!PHYSFS_init(myself)) throw Abort::abort("PHYSFS_init", "system::system", "Failed to set the datapack to run", 1); // already set the whole thing
+				already_set_physfs_root = true;
+			}
 
 			if (l) {
 				delete l;
@@ -189,7 +231,15 @@ namespace LSW {
 			initialized = true;
 
 			__set_new_display_mode(Constants::start_display_default_mode);
+
 			__loadPackage(); // extract and set zip on physfs
+
+			al_set_physfs_file_interface();
+		}
+
+		void __systematic::force_setzip()
+		{
+			__nointernalzip_loadPackage();
 			al_set_physfs_file_interface();
 		}
 
@@ -493,15 +543,43 @@ namespace LSW {
 				__g_sys.init_system();
 			}
 			catch (Abort::abort a) {
-				al_show_native_message_box(
-					nullptr,
-					"Something went wrong!",
-					"Please report the following:",
-					std::string("Function gone wrong: " + a.function() + "\n\nFrom what exactly: " + a.from() + "\n\nExtended explanation: " + a.details()).c_str(),
-					NULL,
-					ALLEGRO_MESSAGEBOX_ERROR
-				);
-				exit(EXIT_FAILURE);
+				if (a.getErrN() == 1) {
+					int res = al_show_native_message_box(
+						nullptr,
+						"Internal datapack not found!",
+						"Your file may be incomplete!",
+						"You can still run the game, but there will be no verification about the resource pack. Click OK if you want to continue anyway.",
+						NULL,
+						ALLEGRO_MESSAGEBOX_OK_CANCEL
+					);
+					if (res == 1) {
+						try {
+							__g_sys.force_setzip();
+						}
+						catch (Abort::abort a) {
+							al_show_native_message_box(
+								nullptr,
+								"Something went wrong anyway!",
+								"Please report the following:",
+								std::string("Function gone wrong: " + a.function() + "\n\nFrom what exactly: " + a.from() + "\n\nExtended explanation: " + a.details()).c_str(),
+								NULL,
+								ALLEGRO_MESSAGEBOX_ERROR
+							);
+							exit(EXIT_FAILURE);
+						}
+					}
+				}
+				else {
+					al_show_native_message_box(
+						nullptr,
+						"Something went wrong!",
+						"Please report the following:",
+						std::string("Function gone wrong: " + a.function() + "\n\nFrom what exactly: " + a.from() + "\n\nExtended explanation: " + a.details()).c_str(),
+						NULL,
+						ALLEGRO_MESSAGEBOX_ERROR
+					);
+					exit(EXIT_FAILURE);
+				}
 			}
 		}
 	}

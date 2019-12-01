@@ -6,12 +6,10 @@ Namespaces:
 - Assistance: the structs, enums and classes that are not directly used by the user (may be used on a method)
 */
 
-// debugging
-#include "..\debug\debug.h"
-
 // barebones (each)
 #include "..\tools\tools.h"
 #include "..\custom_abort\abort.h"
+#include "..\logger\logger.h"
 
 // helper (TEMPLATES DON'T KNOW WHAT THEY ARE)
 #include "..\big_templates\big_templates.h"

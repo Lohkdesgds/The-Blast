@@ -104,105 +104,69 @@ al_destroy_fs_entry(entry);
 
 int main(int argc, const char* argv[])
 {
+	gfile logg;
 
-#ifdef DEBUG
-	PRINTDEBUG("[INFO] Initializing game...")
-#endif
+	logg << L::START << freg("main", "main") << "Initializing game..." << L::ENDL;
 
 	lsw_init();
 
-#ifdef DEBUG
-	PRINTDEBUG("[INFO] Setting up textures base...")
-#endif
-
 	Textures textures;
-	textures.setFuncs(Constants::lambda_bitmap_load, Constants::lambda_bitmap_unload);
-
-#ifdef DEBUG
-	PRINTDEBUG("[INFO] Setting up sprites base...")
-#endif
-
 	Sprites sprites;
-	sprites.setFuncs(Constants::lambda_default_load<Sprite>, Constants::lambda_default_unload<Sprite>);
-
-#ifdef DEBUG
-	PRINTDEBUG("[INFO] Setting up fonts base...")
-#endif
-
 	Fonts fonts;
+
+
+	logg << L::START << freg("main", "main") << "Setting up template functions..." << L::ENDL;
+
+	textures.setFuncs(Constants::lambda_bitmap_load, Constants::lambda_bitmap_unload);
+	sprites.setFuncs(Constants::lambda_default_load<Sprite>, Constants::lambda_default_unload<Sprite>);
 	fonts.setFuncs(Constants::lambda_font_load, Constants::lambda_font_unload);
 
 
-	//__raw_display disp;
-	/*Textures imgs;
-
-	imgs.load("temp", "pause/pause_00.png");
-
-
-	Camera tf;
-	tf.apply(); // reset to a default situation
-
-	Sprite spr;
-	spr.apply(Assistance::_sprite_opt_strg::ADD, "temp");
-	spr.apply(Assistance::in___boolean_sprite::SHOWBOX, true);
-	spr.apply(Assistance::in___double_sprite::CENTERX, 0.0);*/
-
-
-	/*disp.print();
-
-	for (auto u = GetTickCount64(); GetTickCount64() - u < 10000;) {
-		disp.clear_to(al_map_rgb(0, 0, 0));
-		spr.draw();
-		disp.flip();
-	}*/
-
-
-#ifdef DEBUG
-	PRINTDEBUG("[INFO] Setting up console...")
-#endif
+	logg << L::START << freg("main", "main") << "Initializing display, events and stuff..." << L::ENDL;
 
 	Console consol;
 	consol.launch();
 
-
-#ifdef DEBUG
-	PRINTDEBUG("[INFO] Loading textures...")
-#endif
-
 	textures.load(Tools::generateStringsFormat("PAUSE_##", 29), Tools::generateStringsFormat("pause/pause_##.png", 29));
 
 
-#ifdef DEBUG
-	PRINTDEBUG("[INFO] Loading sprites...")
-#endif
-
 	auto mysprite = sprites.create("randomsprite");
-	mysprite->apply(Assistance::in___string_sprite::ADD, "PAUSE_00");
+	mysprite->apply(Assistance::in___vecstring_sprite::ADDMULTIPLE, Tools::generateStringsFormat("PAUSE_##", 29));
 	mysprite->apply(Assistance::in___string_sprite::SPRITE_ID, "MySprite");
 	mysprite->apply(Assistance::in___boolean_sprite::DRAW, true);
+	mysprite->apply(Assistance::in___double_sprite::SCALEG, 0.7);
+	//mysprite->apply(Assistance::in___double_sprite::POSX, 0.3 * sin(0.7 + 0.91 * al_get_time()));
+	//mysprite->apply(Assistance::in___double_sprite::POSY, -1.5 + 0.2 * cos(0.4 + 0.65 * al_get_time()));
+	mysprite->apply(Assistance::in___double_sprite::POSY, 3.20);
+	
+	Camera gcam;
 
+	camera_preset cp;
+	cp.set(Assistance::_cam_opt::OFFSET_Y, 2.7);
 
-#ifdef DEBUG
-	PRINTDEBUG("[INFO] Main thread chillin'")
-#endif
+	logg << L::START << freg("main", "main") << "Waiting the end of initialization..." << L::ENDL;
 
+	while (!consol.awakened()) Sleep(20);
+
+	logg << L::START << freg("main", "main") << "Started main loop." << L::ENDL;
 
 	while (consol.running()) {
-		Sleep(100);
+		//Sleep(100);
+		
+		//mysprite->apply(Assistance::in___double_sprite::POSX, 0.3 * sin(0.7 + 0.91 * al_get_time()));
+		//mysprite->apply(Assistance::in___double_sprite::POSY, - 1.5 + 0.2 * cos(0.4 + 0.65 * al_get_time()));
+
+		cp.set(Assistance::_cam_opt::ROTATION, cos(al_get_time()) * 0.04);
+
+		gcam.set(cp, 0);
+		gcam.apply();
 	}
 
-#ifdef DEBUG
-	PRINTDEBUG("[INFO] Closing textures, sprites, fonts and the game...")
-#endif
-
-
+	logg << L::START << freg("main", "main") << "Closing game..." << L::ENDL;
+	   
 	textures.clear();
 	sprites.clear();
 	fonts.clear();
-
-#ifdef DEBUG
-	PRINTDEBUG("[INFO] Ended successfully")
-#endif
 
 	return 0;
 }

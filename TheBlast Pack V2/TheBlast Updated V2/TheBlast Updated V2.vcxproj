@@ -195,8 +195,8 @@
     <ClInclude Include="LSW\big_templates\big_templates.h" />
     <ClInclude Include="LSW\console\console.h" />
     <ClInclude Include="LSW\custom_abort\abort.h" />
-    <ClInclude Include="LSW\debug\debug.h" />
     <ClInclude Include="LSW\drawing\drawing.h" />
+    <ClInclude Include="LSW\logger\logger.h" />
     <ClInclude Include="LSW\organizer\organizer.h" />
     <ClInclude Include="LSW\system\system.h" />
     <ClInclude Include="LSW\tools\tools.h" />

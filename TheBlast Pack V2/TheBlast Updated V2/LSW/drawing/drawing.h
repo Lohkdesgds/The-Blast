@@ -36,7 +36,8 @@ namespace LSW {
 			};
 
 			enum class _cam_opt { SCALE_X, SCALE_Y, SCALE_G, OFFSET_X, OFFSET_Y, ROTATION, _MAX_CAM_OPT };
-
+			
+			enum class in___vecstring_sprite{ ADDMULTIPLE, REMOVEMULTIPLE };
 			enum class in___string_sprite	{ ADD, REMOVE, SPRITE_ID };
 			enum class in___double_sprite	{ POSX, POSY, SCALEX, SCALEY, CENTERX, CENTERY, SCALEG, ROTATION /*DEGREES*/, SPEEDX, SPEEDY, SPEEDROT, SMOOTHNESS_X, SMOOTHNESS_Y, size, /* since here they are not Sprite exactly stuff*/ ANIMATION_FPS };
 			enum class in___boolean_sprite	{ DRAW, COLLIDE, IS_COLLIDING, AFFECTED_BY_COLLISION, AFFECTED_BY_CAM, SHOWDOT, SHOWBOX, FOLLOWMOUSE, FOLLOWKEYBOARD, USE_TINTED_DRAWING, size, /* since here they are not Sprite exactly stuff*/ LOOPFRAMES };
@@ -71,6 +72,7 @@ namespace LSW {
 			void set(const camera_preset&, const int = 0);
 			void apply(const int);
 			void apply();
+			void applyNoSave(camera_preset);
 			camera_preset& get(const int);
 			camera_preset& get();
 		};
@@ -123,6 +125,7 @@ namespace LSW {
 		public:
 			~Sprite();
 
+			void apply(const Assistance::in___vecstring_sprite, const std::vector<std::string>);
 			void apply(const Assistance::in___string_sprite, const std::string);
 			void apply(const Assistance::in___double_sprite, const double);
 			void apply(const Assistance::in___boolean_sprite, const bool);
@@ -132,5 +135,16 @@ namespace LSW {
 
 			void draw();
 		};
+
+
+
+
+
+
+
+
+
+
+		
 	}
 }

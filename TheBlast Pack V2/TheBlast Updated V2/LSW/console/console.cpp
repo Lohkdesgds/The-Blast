@@ -166,19 +166,17 @@ namespace LSW {
 
 		void Console::__l_thr_md()
 		{
+			gfile logg;
 
-#ifdef DEBUG
-			PRINTDEBUG("[INFO][THR_DRW] Initializing...")
-#endif
+			logg << L::START << freg("main", "main") << "[THR_DRW] Initializing..." << L::ENDL;
+
 			thr_shared_arg.threadcountm.lock();
 			thr_shared_arg.threadcount++;
 			thr_shared_arg.threadcountm.unlock();
 
 			size_t last_loop_had_error = 0;
 
-#ifdef DEBUG
-			PRINTDEBUG("[INFO][THR_DRW] Creating display...")
-#endif
+			logg << L::START << freg("main", "main") << "[THR_DRW] Creating display..." << L::ENDL;
 
 			md = new __raw_display();
 			Sprites sprites;
@@ -191,9 +189,9 @@ namespace LSW {
 			thr_md_arg->insert(&evsrc);
 			thr_md_arg->start_timers();
 
-#ifdef DEBUG
-			PRINTDEBUG("[INFO][THR_DRW] In the loop!")
-#endif
+
+			logg << L::START << freg("main", "main") << "[THR_DRW] In the loop!" << L::ENDL;
+
 
 			for(bool localb = true; localb;)
 			{
@@ -248,9 +246,9 @@ namespace LSW {
 				}
 				catch (Abort::abort err)
 				{
-#ifdef DEBUG
-					PRINTDEBUG("[WARN][THR_DRW] Got sprite draw exception! {%s,%s,%s,#%d}", err.function().c_str(), err.from().c_str(), err.details().c_str(), err.getErrN())
-#endif
+
+					printf_s("[WARN][THR_DRW] Got sprite draw exception! {%s,%s,%s,#%d}", err.function().c_str(), err.from().c_str(), err.details().c_str(), err.getErrN());
+
 					if (err.getErrN() == 1 && (last_loop_had_error < 10)) {
 						//md->restart();
 						al_convert_bitmaps();
@@ -283,10 +281,10 @@ namespace LSW {
 
 		void Console::__l_thr_cl()
 		{
+			gfile logg;
 
-#ifdef DEBUG
-			PRINTDEBUG("[INFO][THR_COL] Initializing...")
-#endif
+			logg << L::START << freg("main", "main") << "[THR_COL] Initializing..." << L::ENDL;
+
 			thr_shared_arg.threadcountm.lock();
 			thr_shared_arg.threadcount++;
 			thr_shared_arg.threadcountm.unlock();
@@ -295,9 +293,9 @@ namespace LSW {
 			thr_cl_arg->insert(&evsrc);
 			thr_cl_arg->start_timers();
 
-#ifdef DEBUG
-			PRINTDEBUG("[INFO][THR_COL] In the loop!")
-#endif
+
+			logg << L::START << freg("main", "main") << "[THR_COL] In the loop!" << L::ENDL;
+
 
 			for (bool localb = true; localb;)
 			{
@@ -331,10 +329,10 @@ namespace LSW {
 
 		void Console::__l_thr_kb()
 		{
+			gfile logg;
 
-#ifdef DEBUG
-			PRINTDEBUG("[INFO][THR_KBM] Initializing...")
-#endif
+			logg << L::START << freg("main", "main") << "[THR_KBM] Initializing..." << L::ENDL;
+
 			thr_shared_arg.threadcountm.lock();
 			thr_shared_arg.threadcount++;
 			thr_shared_arg.threadcountm.unlock();
@@ -348,9 +346,9 @@ namespace LSW {
 			thr_kb_arg->insert(&evsrc);
 
 
-#ifdef DEBUG
-			PRINTDEBUG("[INFO][THR_KBM] Waiting display to be created to get event source...")
-#endif
+
+			logg << L::START << freg("main", "main") << "[THR_KBM] Waiting display to be created to get event source..." << L::ENDL;
+
 
 			while (!md) Sleep(50); // it will use the display size to work with mouse relative positioning
 			while (!md->_getD()) Sleep(50);
@@ -362,9 +360,9 @@ namespace LSW {
 
 			thr_kb_arg->start_timers();
 
-#ifdef DEBUG
-			PRINTDEBUG("[INFO][THR_KBM] In the loop!")
-#endif
+
+			logg << L::START << freg("main", "main") << "[THR_KBM] In the loop!" << L::ENDL;
+
 
 			for (bool localb = true; localb;)
 			{
@@ -483,6 +481,11 @@ namespace LSW {
 			thr_md = nullptr;
 			thr_cl = nullptr;
 			thr_kb = nullptr;
+		}
+
+		bool Console::awakened()
+		{
+			return (md != nullptr);
 		}
 
 		bool Console::running()

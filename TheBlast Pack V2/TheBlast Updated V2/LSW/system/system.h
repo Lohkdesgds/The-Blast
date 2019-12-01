@@ -75,14 +75,18 @@ namespace LSW {
 			Assistance::modes* l = nullptr;
 			std::string extracted_zip_at;
 			bool initialized = false;
+			bool already_set_physfs_root = false;
 
 			void __extract_package(float* = nullptr);
+			void __nointernalzip_extract_package();
 			void __ensure_warn_package();
 			bool __loadPackage();
+			bool __nointernalzip_loadPackage();
 		public:
 			~__systematic();
 
 			void init_system();
+			void force_setzip();
 
 			void __set_new_display_mode(const int);
 			bool __check_resolution_existance(const int, const int, const int);

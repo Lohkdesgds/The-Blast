@@ -23,7 +23,7 @@
 
 #include "..\custom_abort\abort.h"
 #include "..\system\system.h"
-#include "..\debug\debug.h"
+#include "..\logger\logger.h"
 
 #define BLACK	al_map_rgb(0,0,0)
 #define WHITE	al_map_rgb(255,255,255)

@@ -55,7 +55,7 @@ namespace LSW {
 			camera_preset lastTransf = presets[a];
 			ALLEGRO_DISPLAY* d = al_get_current_display();
 
-			if (!d) throw Abort::abort("al_get_current_display", "transformator::apply", "Display not found to apply transformation");
+			if (!d) return;// throw Abort::abort("al_get_current_display", "transformator::apply", "Display not found to apply transformation"); (should not do that just because it failed)
 
 			al_identity_transform(&g_t);
 
@@ -76,6 +76,28 @@ namespace LSW {
 		void Camera::apply()
 		{
 			apply(lastapply);
+		}
+
+		void Camera::applyNoSave(camera_preset lastTransf)
+		{
+			ALLEGRO_DISPLAY* d = al_get_current_display();
+
+			if (!d) throw Abort::abort("al_get_current_display", "transformator::apply", "Display not found to apply transformation");
+
+			al_identity_transform(&g_t);
+
+			al_rotate_transform(&g_t,
+				lastTransf.get(Assistance::_cam_opt::ROTATION));
+
+			al_scale_transform(&g_t,
+				al_get_display_width(d) * 0.5 * lastTransf.get(Assistance::_cam_opt::SCALE_X) * lastTransf.get(Assistance::_cam_opt::SCALE_G),
+				al_get_display_height(d) * 0.5 * lastTransf.get(Assistance::_cam_opt::SCALE_Y) * lastTransf.get(Assistance::_cam_opt::SCALE_G)); // SCALING NOT AS EXPECTED (multiplier by zoom is not being made by transformation!)
+
+			al_translate_transform(&g_t,
+				al_get_display_width(d) * 0.5 - lastTransf.get(Assistance::_cam_opt::OFFSET_X) * (al_get_display_width(d) * 0.5 * lastTransf.get(Assistance::_cam_opt::SCALE_X) * lastTransf.get(Assistance::_cam_opt::SCALE_G)),
+				al_get_display_height(d) * 0.5 - lastTransf.get(Assistance::_cam_opt::OFFSET_Y) * (al_get_display_height(d) * 0.5 * lastTransf.get(Assistance::_cam_opt::SCALE_Y) * lastTransf.get(Assistance::_cam_opt::SCALE_G)));
+
+			al_use_transform(&g_t);
 		}
 
 		camera_preset& Camera::get(const int u)
@@ -185,6 +207,18 @@ namespace LSW {
 			bmps.reset();
 		}
 
+		void Sprite::apply(const Assistance::in___vecstring_sprite u, const std::vector<std::string> v)
+		{
+			switch (u) {
+			case Assistance::in___vecstring_sprite::ADDMULTIPLE:
+				for(auto& i : v) bmps.add(i);
+				break;
+			case Assistance::in___vecstring_sprite::REMOVEMULTIPLE:
+				for (auto& i : v) bmps.remove(i);
+				break;
+			}
+		}
+
 		void Sprite::apply(const Assistance::in___string_sprite u, const std::string v)
 		{
 			switch (u) {
@@ -249,34 +283,10 @@ namespace LSW {
 		void Sprite::draw()
 		{
 			ALLEGRO_BITMAP* rn = bmps.get();
-			
+			Camera camm;
 
-			// vars
+			if (!data.bval[+Assistance::in___boolean_sprite::AFFECTED_BY_CAM]) camm.applyNoSave(camera_preset());
 
-			/*
-			double targ_draw_xy[2];
-			targ_draw_xy[0] = data.dval[POSX] * cos(rotation_rad) + data.dval[POSY] * sin(rotation_rad);
-			targ_draw_xy[1] = -data.dval[POSX] * sin(rotation_rad) + data.dval[POSY] * cos(rotation_rad);
-
-			double bmp_s_center[2];
-			bmp_s_center[0] = al_get_bitmap_width(bmp) * ((data.dval[CENTERX] + 1.0) * 0.5);
-			bmp_s_center[1] = al_get_bitmap_height(bmp) * ((data.dval[CENTERY] + 1.0) * 0.5);
-
-			double targ_distortion_xy[2];
-			targ_distortion_xy[0] = data.dval[SCALEX] * data.dval[SCALEG] * (1.0 / al_get_bitmap_width(bmp));
-			targ_distortion_xy[1] = data.dval[SCALEY] * data.dval[SCALEG] * (1.0 / al_get_bitmap_height(bmp));
-
-			//if (rotation_rad != 0.0) targ_distortion_xy[0] = targ_distortion_xy[1] = sqrt(targ_distortion_xy[0] * targ_distortion_xy[1]);
-
-			cam.set(lastapply, Camera::ROTATION, cam.get(lastapply, Camera::ROTATION) + rotation_rad);
-
-			cam.apply(lastapply);
-
-
-			if (data.bval[USE_TINTED_DRAWING]) al_draw_tinted_scaled_rotated_bitmap(bmp, data.tint, bmp_s_center[0], bmp_s_center[1], targ_draw_xy[0], targ_draw_xy[1], targ_distortion_xy[0], targ_distortion_xy[1], rotation_rad, 0);
-			else al_draw_scaled_rotated_bitmap(bmp, bmp_s_center[0], bmp_s_center[1], targ_draw_xy[0], targ_draw_xy[1], targ_distortion_xy[0], targ_distortion_xy[1], 0.0, 0);*/
-
-			
 			float cx, cy, px, py, dsx, dsy, rot_rad;
 			int bmpx, bmpy;
 			bmpx =		al_get_bitmap_width(rn);
@@ -284,6 +294,7 @@ namespace LSW {
 			if (bmpx <= 0 || bmpy <= 0) {
 				throw Abort::abort("al_get_bitmap_width|al_get_bitmap_height", "Sprite::draw", "Somehow the texture have < 0 width / height id=[" + this->sprite_id + "] size={" + std::to_string(bmpx) + "," + std::to_string(bmpy) + "}", 1);
 			}
+
 			cx =		1.0f * bmpx * ((data.dval[+Assistance::in___double_sprite::CENTERX] + 1.0) * 0.5);
 			cy =		1.0f * bmpy * ((data.dval[+Assistance::in___double_sprite::CENTERY] + 1.0) * 0.5);
 			rot_rad =	1.0f * data.dval[+Assistance::in___double_sprite::ROTATION] * ALLEGRO_PI / 180.0;
@@ -302,8 +313,7 @@ namespace LSW {
 			if (data.bval[+Assistance::in___boolean_sprite::SHOWBOX] || data.bval[+Assistance::in___boolean_sprite::SHOWDOT])
 			{
 				ALLEGRO_COLOR colorr = al_map_rgb(0, 255, 0);
-				Camera camm;
-				auto psf = camm.get();
+				camera_preset psf = camm.get();
 
 				if (data.bval[+Assistance::in___boolean_sprite::IS_COLLIDING]) colorr = al_map_rgb(255, 0, 0);
 				//else if (al_get_time() - lastresetcollisioncall < Defaults::diff_time_show_last_resetCollision) colorr = al_map_rgb(255, 255, 0);
@@ -321,6 +331,7 @@ namespace LSW {
 				}
 			}
 
+			camm.apply();
 		}
 	}
 }
