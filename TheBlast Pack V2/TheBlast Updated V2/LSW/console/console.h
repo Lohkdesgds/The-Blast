@@ -90,7 +90,7 @@ namespace LSW {
 
 
 		class Console {
-			__raw_display* md = nullptr; // HANDLED INTERNALLY ON THREAD
+			single_display* md = nullptr; // HANDLED INTERNALLY ON THREAD
 
 			Textures gimg;
 			Camera gcam;

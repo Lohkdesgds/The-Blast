@@ -2,21 +2,8 @@
 
 namespace LSW {
 	namespace v4 {
-
-		/*Assistance::__image_control Textures::ictrl;
-
-
-		namespace Assistance {
-			__raw_image::~__raw_image()
-			{
-				if (bmp && al_is_system_installed()) {
-					al_destroy_bitmap(bmp);
-					bmp = nullptr;
-					path.clear();
-					id.clear();
-				}
-			}
-		}*/
+		ALLEGRO_CONFIG* Config::c = nullptr;
+		std::mutex Config::m;
 
 
 		void __systematic::__extract_package(float* perc)
@@ -326,7 +313,7 @@ namespace LSW {
 			return l->options;
 		}
 
-		void __raw_display::_init(const int x, const int y, const int flag, int hz)
+		void single_display::_init(const int x, const int y, const int flag, int hz)
 		{
 			if (d) {
 				al_destroy_display(d);
@@ -375,7 +362,7 @@ namespace LSW {
 			}
 		}
 		
-		void __raw_display::_print()
+		void single_display::_print()
 		{
 			auto u = al_get_backbuffer(d);
 			std::string path = Constants::default_print_path;
@@ -386,7 +373,7 @@ namespace LSW {
 			tm tt;
 			auto v = localtime_s(&tt, &rt);
 
-			if (v != 0) throw Abort::abort("localtime_s", "__raw_display::_print", "Cannot get local time to name the print file!");
+			if (v != 0) throw Abort::abort("localtime_s", "single_display::_print", "Cannot get local time to name the print file!");
 
 			path = path + std::to_string(tt.tm_year + 1900) + "_" + std::to_string(tt.tm_mon + 1) + "_" + std::to_string(tt.tm_mday) + "-" + std::to_string(tt.tm_hour) + "_" + std::to_string(tt.tm_min) + "_" + std::to_string(tt.tm_sec) + "-" + std::to_string((int)(GetTickCount64()%1000)) + ".jpg";
 			
@@ -409,17 +396,19 @@ namespace LSW {
 			printing = false;
 		}
 
-		void __raw_display::__print_thr_autodel(ALLEGRO_BITMAP* u, const std::string path)
+		void single_display::__print_thr_autodel(ALLEGRO_BITMAP* u, const std::string path)
 		{
 			al_save_bitmap(path.c_str(), u);
 			al_destroy_bitmap(u);
 			printthrdone = true;
 		}
 
-		__raw_display::__raw_display()
+		single_display::single_display()
 		{
 			gfile logg;
-			logg << L::SLL << freg("raw_display", "raw_display") << "Creating new display (blank)" << L::BLL;
+			logg << L::SLL << fsr(__FUNCSIG__) << "Creating new display (blank)" << L::BLL;
+
+			// TODO: CHANGE TO LOAD FROM CONFIG!
 
 			int flag = Constants::start_display_default_mode;
 			__g_sys.__set_new_display_mode(flag);
@@ -427,54 +416,74 @@ namespace LSW {
 
 			Assistance::__submode md;
 
-			for (auto& i : u) {
-				if ((i.x >= md.x || i.y >= md.y)) {
-					if (i.hz > md.hz) {
-						md.hz = i.hz;
+			Config config;
+			config.get(Assistance::conf_i::SCREEN_X, md.x, 0);
+			config.get(Assistance::conf_i::SCREEN_Y, md.y, 0);
+
+			
+			if (md.x != 0 && md.y != 0) {
+				logg << L::SLL << fsr(__FUNCSIG__) << "Found config from config file. Searching available refresh rates..." << L::BLL;
+				md.hz = 0;
+				for (auto& i : u) {
+					if ((i.x == md.x && i.y == md.y)) {
+						if (i.hz > md.hz) {
+							md.hz = i.hz;
+						}
 					}
-					md.x = i.x;
-					md.y = i.y;
 				}
 			}
-
-			if (Constants::start_force_720p)
+			else if (Constants::start_force_720p)
 			{
+				logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "No config file found. 720P is set to default, so, searching available refresh rates..." << L::BLL;
 				md.x = 1280;
 				md.y = 720;
+				md.hz = 0;
+				for (auto& i : u) {
+					if ((i.x == md.x && i.y == md.y)) {
+						if (i.hz > md.hz) {
+							md.hz = i.hz;
+						}
+					}
+				}
 			}
+			if (md.hz == 0){ // both before failed, search for another option afaik
+				logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "Failed to find a supported refresh rate. Going with 60 hz instead." << L::BLL;
+				md.hz = 60;
+			}
+
 
 			_init(md.x, md.y, -1, md.hz);
 		}
 
-		__raw_display::__raw_display(const int x, const int y, const int flag, int hz)
+		single_display::single_display(const int x, const int y, const int flag, int hz)
 		{
 			gfile logg;
-			logg << L::SLL << freg("raw_display", "raw_display") << "Creating new custom display [" << x << "x" << y << "@" << hz << " w/ " << flag << "]" << L::BLL;
+			logg << L::SLL << fsr(__FUNCSIG__) << "Creating new custom display [" << x << "x" << y << "@" << hz << " w/ " << flag << "]" << L::BLL;
 			_init(x, y, flag, hz);
 		}
-		__raw_display::~__raw_display()
+		single_display::~single_display()
 		{
 			close();
 		}
-		void __raw_display::restart()
+		void single_display::restart()
 		{
 			close();
 			_init(this->x, this->y, this->f, this->h);
 		}
-		void __raw_display::flip()
+		void single_display::flip()
 		{
 			al_flip_display();
 			if (printing) _print();
 			al_set_target_backbuffer(d);
 		}
-		void __raw_display::clear_to(const ALLEGRO_COLOR v)
+		void single_display::clear_to(const ALLEGRO_COLOR v)
 		{
 			al_clear_to_color(v);
 		}
-		void __raw_display::close()
+		void single_display::close()
 		{
 			gfile logg;
-			logg << L::SLL << freg("raw_display", "close") << "Deleting display..." << L::BLL;
+			logg << L::SLL << fsr(__FUNCSIG__) << "Deleting display..." << L::BLL;
 
 			d_try.lock();
 			if (d) {
@@ -484,66 +493,179 @@ namespace LSW {
 			}
 			d_try.unlock();
 		}
-		bool __raw_display::exist()
+		bool single_display::exist()
 		{
 			return (d);
 		}
-		void __raw_display::print()
+		void single_display::print()
 		{
 			printing = true;
 		}
-		ALLEGRO_DISPLAY*& __raw_display::_getD()
+		ALLEGRO_DISPLAY*& single_display::_getD()
 		{
 			return d;
 		}
-		/*void Textures::load(const std::string str, const std::string path)
+
+		Config::Config()
 		{
-			std:\:weak_ptr<Assistance::__raw_image> i;
+			logg << L::SL << fsr(__FUNCSIG__ )<< "Registered spawn of Config ID#" + std::to_string((size_t)this) << L::BL;
+			m.lock();
+			if (!c) {
+				std::string temporary = Constants::config_default_file;
+				Tools::interpret_path(temporary);
+				Tools::createPath(temporary);
 
-			if (!get(str, i)) {
-				std:\:shared_ptr<Assistance::__raw_image> j(new Assistance::__raw_image());
+				logg << L::SLL << fsr(__FUNCSIG__) << "Registered loading of Config file (global)" << L::BLL;
+				if (!(c = al_load_config_file(temporary.c_str())))
+				{
+					c = al_create_config();
+					if (!c) throw "at Config::Config [#" + std::to_string((size_t)this) + "]: Cannot load/create Config file!";
+					logg << L::SLL << fsr(__FUNCSIG__) << "Is this the first time you're opening this game? Registered first Config load." << L::BLL;
 
-				j->path = path;
-				j->id = str;
-				if (!(j->bmp = al_load_bitmap(path.c_str()))) throw Abort::abort("al_load_bitmap", "images::load", "Couldn't load '" + str + "' @ path '" + path + "'");
+					// set or load first values
+					set(Assistance::conf_b::HAD_ERROR, true); // then texture download starts			// USED
+					set(Assistance::conf_b::WAS_OSD_ON, false);											// USED
+					set(Assistance::conf_b::WAS_FULLSCREEN, true);										// USED
+					set(Assistance::conf_f::LAST_VOLUME, 0.5);
+					set(Assistance::conf_s::LAST_VERSION, Constants::version_app);						// nah
+					set(Assistance::conf_s::LAST_PLAYERNAME, "Player");
+					set(Assistance::conf_s::LAST_COLOR, "GREEN");
+					set(Assistance::conf_i::SCREEN_X, 0);
+					set(Assistance::conf_i::SCREEN_Y, 0);
+					set(Assistance::conf_ll::_TIMES_LIT, 0LL);
 
-				ictrl.hugedeal.lock();
-				ictrl.loadnew = true;
-				ictrl.imgs.push_back(j);
-				ictrl.hugedeal.unlock();
-			}
-		}
-		bool Textures::get(const std::string str, std:\:weak_ptr<Assistance::__raw_image>& ime)
-		{
-			for (auto& i : ictrl.imgs) {
-				if (str == i->id) {
-					ime = i;
-					return true;
+					if (!al_save_config_file(temporary.c_str(), c)) {
+						throw "at Config::Config [#" + std::to_string((size_t)this) + "]: Cannot save Config file!";
+					}
+				}
+				else {
+					long long ll;
+					get(Assistance::conf_ll::_TIMES_LIT, ll, 0LL);
+					ll++;
+					set(Assistance::conf_ll::_TIMES_LIT, ll);
 				}
 			}
-			//throw Abort::abort("null", "images::get", "Couldn't find '" + str + "'");
-			return false;
+			m.unlock();
 		}
-		void Textures::del(const std::string str)
+		Config::~Config()
 		{
-			for (size_t p = 0; p < ictrl.imgs.size(); p++)
-			{
-				if (ictrl.imgs[p]->id == str) {
-					ictrl.imgs.erase(ictrl.imgs.begin() + p);
-					return;
-				}
+			logg << L::SL << fsr(__FUNCSIG__) << "Registered despawn of Config ID#" + std::to_string((size_t)this) << L::BL;
+			if (c) {
+				m.lock();
+				std::string temporary = Constants::config_default_file;
+				Tools::interpret_path(temporary);
+				Tools::createPath(temporary);
+				al_save_config_file(temporary.c_str(), c);
+				m.unlock();
 			}
 		}
 
-		void Textures::checkvideo()
+		void Config::set(const std::string e, const std::string v)
 		{
-			if (ictrl.loadnew) {
-				ictrl.loadnew = false;
-				ictrl.hugedeal.lock();
-				al_convert_bitmaps();
-				ictrl.hugedeal.unlock();
+			if (!c) throw "at Config::set [#" + std::to_string((size_t)this) + "]: Cannot set \"" + e + "\" as \"" + v + "\".";
+			al_set_config_value(c, Constants::conf_string_default_txt.c_str(), e.c_str(), v.c_str());
+		}
+		void Config::set(const Assistance::conf_b e, const bool v)
+		{
+			set(Assistance::conf_b_str[+e], Assistance::conf_bool_s[(int)v]);
+		}
+		void Config::set(const Assistance::conf_f e, const float v)
+		{
+			set(Assistance::conf_f_str[+e], std::to_string(v));
+		}
+		void Config::set(const Assistance::conf_i e, const int v)
+		{
+			set(Assistance::conf_i_str[+e], std::to_string(v));
+		}
+		void Config::set(const Assistance::conf_ll e, const long long v)
+		{
+			set(Assistance::conf_ll_str[+e], std::to_string(v));
+		}
+		void Config::set(const Assistance::conf_s e, const std::string v)
+		{
+			set(Assistance::conf_s_str[+e], v);
+		}
+
+		void Config::get(const std::string e, std::string& v, const std::string defaul)
+		{
+			if (!c) throw "at Config::get [#" + std::to_string((size_t)this) + "]: Cannot get \"" + e + "\" as \"" + v + "\".";
+			const char* chh = al_get_config_value(c, Constants::conf_string_default_txt.c_str(), e.c_str());
+			if (!chh) {
+				logg << L::SLL << "[CONF:GET()][WARN] There was no value to " << e << ", so the default value was set (" << defaul << ")." << L::BLL;
+				set(e, defaul);
+				v = defaul;
+				return;
 			}
-		}*/
+			v = chh;
+		}
+		void Config::get(const Assistance::conf_b e, bool& v, const bool defaul)
+		{
+			std::string output;
+			get(Assistance::conf_b_str[+e], output, Assistance::conf_bool_s[(int)defaul]);
+			v = (output == Assistance::conf_bool_s[1 /*true*/]);
+		}
+		void Config::get(const Assistance::conf_f e, float& v, const float defaul)
+		{
+			std::string output;
+			get(Assistance::conf_f_str[+e], output, std::to_string(defaul));
+			v = atof(output.c_str());
+		}
+		void Config::get(const Assistance::conf_i e, int& v, const int defaul)
+		{
+			std::string output;
+			get(Assistance::conf_i_str[+e], output, std::to_string(defaul));
+			v = atoi(output.c_str());
+		}
+		void Config::get(const Assistance::conf_ll e, long long& v, const long long defaul)
+		{
+			std::string output;
+			get(Assistance::conf_ll_str[+e], output, std::to_string(defaul));
+			v = atoll(output.c_str());
+		}
+		void Config::get(const Assistance::conf_s e, std::string& v, const std::string defaul)
+		{
+			std::string output;
+			get(Assistance::conf_s_str[+e], output, defaul);
+			v = output;
+		}
+
+
+		const bool Config::isEq(const std::string e, const std::string v)
+		{
+			std::string oth;
+			get(e, oth, v); // meh
+			return oth == v;
+		}
+		const bool Config::isEq(const Assistance::conf_b e, const bool v)
+		{
+			bool oth;
+			get(e, oth, v); // meh
+			return oth == v;
+		}
+		const bool Config::isEq(const Assistance::conf_f e, const float v)
+		{
+			float oth;
+			get(e, oth, v); // meh
+			return oth == v;
+		}
+		const bool Config::isEq(const Assistance::conf_i e, const int v)
+		{
+			int oth;
+			get(e, oth, v); // meh
+			return oth == v;
+		}
+		const bool Config::isEq(const Assistance::conf_ll e, const long long v)
+		{
+			long long oth;
+			get(e, oth, v); // meh
+			return oth == v;
+		}
+		const bool Config::isEq(const Assistance::conf_s e, const std::string v)
+		{
+			std::string oth;
+			get(e, oth, v); // meh
+			return oth == v;
+		}
 
 
 
@@ -558,7 +680,7 @@ namespace LSW {
 			catch (Abort::abort a) {
 				if (a.getErrN() == 1) {
 
-					logg << L::SLL << freg("void", "lsw_init", E::WARN) << "Internal datapack wasn't found." << L::BLL;
+					logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "Internal datapack wasn't found." << L::BLL;
 					logg.flush();
 
 					int res = al_show_native_message_box(
@@ -577,8 +699,8 @@ namespace LSW {
 
 							std::string ext_exp = std::string("Function gone wrong: " + a.function() + "\n\nFrom what exactly: " + a.from() + "\n\nExtended explanation: " + a.details());
 
-							logg << L::SLL << freg("void", "lsw_init", E::ERRR) << "User tried to continue, but something went wrong anyway." << L::BLL;
-							logg << L::SLL << freg("void", "lsw_init", E::ERRR) << ext_exp << L::BLL;
+							logg << L::SLL << fsr(__FUNCSIG__, E::ERRR) << "User tried to continue, but something went wrong anyway." << L::BLL;
+							logg << L::SLL << fsr(__FUNCSIG__, E::ERRR) << ext_exp << L::BLL;
 							logg.flush();
 
 							al_show_native_message_box(
@@ -593,7 +715,7 @@ namespace LSW {
 						}
 					}
 					else {
-						logg << L::SLL << freg("void", "lsw_init") << "User abort." << L::BLL;
+						logg << L::SLL << fsr(__FUNCSIG__) << "User abort." << L::BLL;
 						logg.flush();
 
 						exit(EXIT_FAILURE);
@@ -602,8 +724,8 @@ namespace LSW {
 				else {
 					std::string ext_exp = std::string("Function gone wrong: " + a.function() + "\n\nFrom what exactly: " + a.from() + "\n\nExtended explanation: " + a.details());
 
-					logg << L::SLL << freg("void", "lsw_init", E::ERRR) << "Something went wrong opening the game." << L::BLL;
-					logg << L::SLL << freg("void", "lsw_init", E::ERRR) << ext_exp << L::BLL;
+					logg << L::SLL << fsr(__FUNCSIG__, E::ERRR) << "Something went wrong opening the game." << L::BLL;
+					logg << L::SLL << fsr(__FUNCSIG__, E::ERRR) << ext_exp << L::BLL;
 					logg.flush();
 
 					al_show_native_message_box(

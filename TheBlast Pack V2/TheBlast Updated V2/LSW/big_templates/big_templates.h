@@ -140,7 +140,10 @@ namespace LSW {
 						al_flush_event_queue(queue); // there's something lagging, so clear and refresh
 						// cast warn on log?
 						eachsec_doubleverif = timee - 1.0;
-						printf_s("[WARN] Can't keep up! Somewhere is having some trouble keeping the loops!\n");
+
+						gfile logg;
+						logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "Can't keep up! Somewhere is having some trouble keeping the loops! Running " << (diff - 1.0) << " second(s) behind." << L::BLL;
+						//printf_s("[WARN] Can't keep up! Somewhere is having some trouble keeping the loops!\n");
 					}
 
 					eachsec_doubleverif += 1.0;
@@ -170,8 +173,11 @@ namespace LSW {
 						if (diff > 5.0) {
 							al_flush_event_queue(queue); // there's something lagging, so clear and refresh
 							// cast warn on log?
+
+							gfile logg;
+
 							eachsec_doubleverif = timee - 1.0;
-							printf_s("[WARN] Can't keep up! Somewhere is having some trouble keeping the loops!\n");
+							logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "Can't keep up! Somewhere is having some trouble keeping the loops! Running " << (diff - 1.0) << " second(s) behind." << L::BLL;
 						}
 
 						eachsec_doubleverif += 1.0;

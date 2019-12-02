@@ -24,7 +24,7 @@ namespace LSW {
 				}
 
 				/*float temp_vol_get;
-				Config::config conf;
+				Config::Config conf;
 				conf.get(Config::LAST_VOLUME, temp_vol_get, Defaults::Sound::global_volume);
 				set(Sound::GLOBALVOLUME, temp_vol_get);*/
 
@@ -33,7 +33,7 @@ namespace LSW {
 
 			/*if (mse) al_destroy_sample(mse);
 
-			mse = al_load_sample(path.g().c_str());
+			mse = al_load_sample(path.c_str());
 			if (!mse) {
 				throw "at Track::load [#" + std::to_string((size_t)this) + ";ID=" + id + "]: Failed to load sample.";
 				return false;

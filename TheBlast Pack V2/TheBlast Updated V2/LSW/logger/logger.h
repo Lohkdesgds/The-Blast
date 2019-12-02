@@ -4,25 +4,17 @@
 #include <string>
 #include <vector>
 #include <mutex>
+#include <Windows.h>
 
 #include "..\tools\tools.h"
+#include "..\shared_constants\constants.h"
 
 namespace LSW {
 	namespace v4 {
 
-		namespace Constants {
 
-			const std::string default_file_global_path = "%appdata%/Lohk's Studios/TheBlast/logs/latest.log";
-
-			const size_t len_func = 15;
-			const size_t len_class = 12;
-			const size_t max_lines_stored_by_memlog = 20;
-
-		}
-
-
-		enum class L { BL, SL, ERRDV, SLL, BLL };
-		enum class E { INFO, WARN, ERRR };
+		enum class L { BL, SL, ERRDV, PRTCLOCK, SLL, BLL };
+		enum class E { INFO, WARN, ERRR, DEBUG };
 		
 
 		class gfile {
@@ -42,14 +34,14 @@ namespace LSW {
 			const bool setPath(const std::string&, const char* = "wb", const bool = true);
 			void close();
 			void push(const std::string&);
-			void printclock();
+			void printclock(const bool = true);
 
 			void showOnConsole(const bool);
 
 			void flush();
 			void saveOnMemory(const bool); // global only
-			void debugP(const std::string&, const size_t = 0);
-			template<typename... Args> void debug(const std::string&, Args...);
+			//void debugP(const std::string&, const size_t = 0);
+			//template<typename... Args> void debug(const std::string&, Args...);
 
 			gfile& operator<<(const std::string&);
 			gfile& operator<<(const L&);
@@ -58,6 +50,7 @@ namespace LSW {
 			gfile& operator<<(const double&);
 			gfile& operator<<(const unsigned&);
 			gfile& operator<<(const long&);
+			gfile& operator<<(const size_t&);
 		};
 
 
@@ -131,13 +124,16 @@ namespace LSW {
 		}
 
 		
-		inline void gfile::printclock()
+		inline void gfile::printclock(const bool denyconsole)
 		{
 			char temp[24];
 			SYSTEMTIME t;
 			GetLocalTime(&t);
-			sprintf_s(temp, "[%02d-%02d-%02d_%02d-%02d-%02d]", t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond);
+			sprintf_s(temp, "[%02d%02d%02d%02d%02d%02d]", t.wYear % 100, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond);
+			bool bckp = showconsole;
+			if (denyconsole) showconsole = false;
 			push(temp);
+			showconsole = bckp;
 		}
 		
 		inline void gfile::showOnConsole(const bool u)
@@ -166,8 +162,7 @@ namespace LSW {
 			g.store_log = s;
 		}
 
-		
-		inline void gfile::debugP(const std::string& s, const size_t ptrval)
+		/*inline void gfile::debugP(const std::string& s, const size_t ptrval)
 		{
 			if (showconsole) {
 				std::string addinf = "";
@@ -193,7 +188,7 @@ namespace LSW {
 
 				g.each_call.unlock();
 			}
-		}
+		}*/
 
 		
 		
@@ -218,6 +213,9 @@ namespace LSW {
 			case L::ERRDV:
 				push("\n---------- ERROR ----------\n");
 				flush();
+				break;
+			case L::PRTCLOCK:
+				printclock(false);
 				break;
 			case L::SLL:
 				g.each_call.lock();
@@ -274,52 +272,104 @@ namespace LSW {
 			return *this;
 		}
 
-		inline const std::string freg(std::string where, std::string what/*, const size_t ptrval = 0*/, const E situation = E::INFO) // Function class, function name, type
+		inline gfile& gfile::operator<<(const size_t& u)
 		{
-			if (where.length() < Constants::len_class) {
-				for (size_t p = where.length(); p < Constants::len_class; p++)
+			char temp[48];
+			sprintf_s(temp, "%zu", u);
+			push(temp);
+			return *this;
+		}
+
+		inline const std::string fsr(std::string fname_pretty, const E situation = E::INFO) // Function class, function name, type
+		{
+			if (fname_pretty.length() < Constants::len_class) {
+				for (size_t p = fname_pretty.length(); p < Constants::len_class; p++)
 				{
-					where += '_';
+					fname_pretty += '_';
 				}
 			}
 			else {
-				for (size_t p = where.length(); p > Constants::len_class; p--)
+				for (size_t p = fname_pretty.length(); p > Constants::len_class; p--)
 				{
-					where.pop_back();
+					fname_pretty.pop_back();
 				}
 			}
 
-			if (what.length() < Constants::len_class) {
-				for (size_t p = what.length(); p < Constants::len_class; p++)
-				{
-					what += '_';
-				}
-			}
-			else {
-				for (size_t p = what.length(); p > Constants::len_class; p--)
-				{
-					what.pop_back();
-				}
-			}
+			for (auto& i : fname_pretty) i = ::toupper(i);
 
-			for (auto& i : where) i = ::toupper(i);
-			for (auto& i : what)  i = ::toupper(i);
-						
-			std::string sttr = "[" + where + ":" + what + "]";
+			std::string sttr;
+			HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
 			switch (situation) {
 			case E::INFO:
-				sttr += "[INFO] ";
+				sttr = "[INFO]";
+				SetConsoleTextAttribute(hConsole, 0x07);
 				break;
 			case E::WARN:
-				sttr += "[WARN] ";
+				sttr = "[WARN]";
+				SetConsoleTextAttribute(hConsole, 0x0E);
 				break;
 			case E::ERRR:
-				sttr += "[ERRR] ";
+				sttr = "[ERRR]";
+				SetConsoleTextAttribute(hConsole, 0x0C);
+				break;
+			case E::DEBUG:
+				sttr = "[DEBG]";
+				SetConsoleTextAttribute(hConsole, 0x08);
 				break;
 			}
 
+			sttr += "[" + fname_pretty + "] ";
+
 			return sttr;
 		}
+
+		//inline const std::string freg(std::string where, std::string what/*, const size_t ptrval = 0*/, const E situation = E::INFO) // Function class, function name, type
+		//{
+		//	if (where.length() < Constants::len_class) {
+		//		for (size_t p = where.length(); p < Constants::len_class; p++)
+		//		{
+		//			where += '_';
+		//		}
+		//	}
+		//	else {
+		//		for (size_t p = where.length(); p > Constants::len_class; p--)
+		//		{
+		//			where.pop_back();
+		//		}
+		//	}
+
+		//	if (what.length() < Constants::len_class) {
+		//		for (size_t p = what.length(); p < Constants::len_class; p++)
+		//		{
+		//			what += '_';
+		//		}
+		//	}
+		//	else {
+		//		for (size_t p = what.length(); p > Constants::len_class; p--)
+		//		{
+		//			what.pop_back();
+		//		}
+		//	}
+
+		//	for (auto& i : where) i = ::toupper(i);
+		//	for (auto& i : what)  i = ::toupper(i);
+		//				
+		//	std::string sttr = "[" + where + ":" + what + "]";
+
+		//	switch (situation) {
+		//	case E::INFO:
+		//		sttr += "[INFO] ";
+		//		break;
+		//	case E::WARN:
+		//		sttr += "[WARN] ";
+		//		break;
+		//	case E::ERRR:
+		//		sttr += "[ERRR] ";
+		//		break;
+		//	}
+
+		//	return sttr;
+		//}
 	}
 }

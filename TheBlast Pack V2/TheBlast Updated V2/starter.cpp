@@ -106,7 +106,12 @@ int main(int argc, const char* argv[])
 {
 	gfile logg;
 
-	logg << L::SLL << freg("main", "main") << "Initializing game..." << L::BLL;
+	logg << L::SLL << fsr(__FUNCSIG__, E::INFO) << "Testing INFO" << L::BLL;
+	logg << L::SLL << fsr(__FUNCSIG__, E::DEBUG) << "Testing DEBUG" << L::BLL;
+	logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "Testing WARN" << L::BLL;
+	logg << L::SLL << fsr(__FUNCSIG__, E::ERRR) << "Testing ERROR" << L::BLL;
+
+	logg << L::SLL << fsr(__FUNCSIG__) << "Initializing game..." << L::BLL;
 
 	lsw_init();
 
@@ -121,7 +126,7 @@ int main(int argc, const char* argv[])
 	Tracks tracks;
 
 
-	logg << L::SLL << freg("main", "main") << "Setting up template functions..." << L::BLL;
+	logg << L::SLL << fsr(__FUNCSIG__) << "Setting up template functions..." << L::BLL;
 
 	textures.setFuncs(Constants::lambda_bitmap_load, Constants::lambda_bitmap_unload);
 	fonts.setFuncs(Constants::lambda_font_load, Constants::lambda_font_unload);
@@ -132,7 +137,7 @@ int main(int argc, const char* argv[])
 	tracks.setFuncs(Constants::lambda_default_load<Track>, Constants::lambda_default_unload<Track>);
 
 
-	logg << L::SLL << freg("main", "main") << "Initializing display, events and stuff..." << L::BLL;
+	logg << L::SLL << fsr(__FUNCSIG__) << "Initializing display, events and stuff..." << L::BLL;
 
 
 	textures.load("BACKGROUND_START", "background_gameplay_start.png");
@@ -184,9 +189,9 @@ int main(int argc, const char* argv[])
 
 
 
-	logg << L::SLL << freg("main", "main") << "Waiting the end of initialization..." << L::BLL;
+	logg << L::SLL << fsr(__FUNCSIG__) << "Waiting the end of initialization..." << L::BLL;
 	while (!consol.awakened()) Sleep(20);
-	logg << L::SLL << freg("main", "main") << "Started main loop." << L::BLL;
+	logg << L::SLL << fsr(__FUNCSIG__) << "Started main loop." << L::BLL;
 
 	size_t counttt = 0;
 
@@ -207,7 +212,7 @@ int main(int argc, const char* argv[])
 
 
 
-	logg << L::SLL << freg("main", "main") << "Closing game..." << L::BLL;
+	logg << L::SLL << fsr(__FUNCSIG__) << "Closing game..." << L::BLL;
 	   
 	textures.clear();
 	sprites.clear();

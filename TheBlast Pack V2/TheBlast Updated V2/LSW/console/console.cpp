@@ -7,7 +7,7 @@ namespace LSW {
 		{
 			gfile logg;
 
-			logg << L::SLL << freg("thread", "thr_drw") << "Initializing..." << L::BLL;
+			logg << L::SLL << fsr(__FUNCSIG__) << "Initializing..." << L::BLL;
 
 			thr_shared_arg.threadcountm.lock();
 			thr_shared_arg.threadcount++;
@@ -15,9 +15,9 @@ namespace LSW {
 
 			size_t last_loop_had_error = 0;
 
-			logg << L::SLL << freg("thread", "thr_drw") << "Creating display..." << L::BLL;
+			logg << L::SLL << fsr(__FUNCSIG__) << "Creating display..." << L::BLL;
 
-			md = new __raw_display();
+			md = new single_display();
 			Sprites sprites;
 			Texts texts;
 			//Textures textures;
@@ -39,7 +39,7 @@ namespace LSW {
 				al_emit_user_event(&evsrc, &ev, NULL);
 			}
 
-			logg << L::SLL << freg("thread", "thr_drw") << "In the loop!" << L::BLL;
+			logg << L::SLL << fsr(__FUNCSIG__) << "In the loop!" << L::BLL;
 
 			thr_md_upnrunnin = true;
 			al_convert_bitmaps();
@@ -50,7 +50,7 @@ namespace LSW {
 					
 					if (thr_md_arg->isThisThis(+Assistance::__display_routines_timers::LOOPTRACK))
 					{
-						logg.debug("[THR_DRW] LOOPSCHECK: %zu frames per second", thr_md_arg->getNumCalls());
+						logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "LOOPSCHECK: " << thr_md_arg->getNumCalls() << " frames per second" << L::BL;
 					}
 					else if (thr_md_arg->isThisThis(+Assistance::__display_routines_timers::CHECKKEEP))
 					{
@@ -70,7 +70,7 @@ namespace LSW {
 						switch (ev.type) {
 						case ALLEGRO_EVENT_DISPLAY_CLOSE:
 							thr_shared_arg.should_exit = true;
-							logg.debug("[THR_DRW] DISPLAYCLOSE event got. Set to turn off soon.");
+							logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "DISPLAYCLOSE event got. Set to turn off soon." << L::BL;
 							break;
 						case +Assistance::__my_events::THRDRW_GOT_FORCED_RESIZE:
 							al_set_display_flag(md->_getD(), ALLEGRO_FULLSCREEN_WINDOW, (bool)ev.user.data1);
@@ -78,7 +78,12 @@ namespace LSW {
 						case ALLEGRO_EVENT_DISPLAY_RESIZE:
 							al_acknowledge_resize(md->_getD());
 							gcam.apply();
-							logg.debug("[THR_DRW] DISPLAYRESIZE got, acknowledged, done.");
+							logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "DISPLAYRESIZE got, acknowledged, done." << L::BL;
+
+							Config config;
+							config.set(Assistance::conf_i::SCREEN_X, al_get_display_width(md->_getD()));
+							config.set(Assistance::conf_i::SCREEN_Y, al_get_display_height(md->_getD()));
+
 							{
 								ALLEGRO_EVENT ev;
 								ev.type = +Assistance::__my_events::THRKBM_DISPLAY_SIZE;
@@ -108,7 +113,7 @@ namespace LSW {
 				catch (Abort::abort err)
 				{
 
-					logg << L::SLL << freg("thread", "thr_drw", E::WARN) << "Got draw exception! {" << err.function() << "," << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::BLL;
+					logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "Got draw exception! {" << err.function() << "," << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::BLL;
 
 					if (err.getErrN() == 1 && (last_loop_had_error < 10)) {
 						//md->restart();
@@ -126,7 +131,7 @@ namespace LSW {
 				//Sleep(50);
 			}
 
-			logg << L::SLL << freg("thread", "thr_drw") << "Closing stuff!" << L::BLL;
+			logg << L::SLL << fsr(__FUNCSIG__) << "Closing stuff!" << L::BLL;
 
 			delete md;
 			md = nullptr;
@@ -147,14 +152,14 @@ namespace LSW {
 			//textures.clear();
 
 			thr_md_upnrunnin = false;
-			logg << L::SLL << freg("thread", "thr_drw") << "Ended everything! Bye!" << L::BLL;
+			logg << L::SLL << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::BLL;
 		}
 
 		void Console::__l_thr_cl()
 		{
 			gfile logg;
 
-			logg << L::SLL << freg("thread", "thr_col") << "Initializing..." << L::BLL;
+			logg << L::SLL << fsr(__FUNCSIG__) << "Initializing..." << L::BLL;
 
 			thr_shared_arg.threadcountm.lock();
 			thr_shared_arg.threadcount++;
@@ -165,7 +170,7 @@ namespace LSW {
 			thr_cl_arg->start_timers();
 
 
-			logg << L::SLL << freg("thread", "thr_col") << "In the loop!" << L::BLL;
+			logg << L::SLL << fsr(__FUNCSIG__) << "In the loop!" << L::BLL;
 
 			thr_cl_upnrunnin = true;
 
@@ -175,7 +180,7 @@ namespace LSW {
 
 				if (thr_cl_arg->isThisThis(+Assistance::__collision_routines_timers::LOOPTRACK))
 				{
-					logg.debug("[THR_COL] LOOPSCHECK: %zu collisions and verifications per sec", thr_cl_arg->getNumCalls());
+					logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "LOOPSCHECK: " << thr_cl_arg->getNumCalls() << " collisions and verifications per sec" << L::BL;
 				}
 				else if (thr_cl_arg->isThisThis(+Assistance::__collision_routines_timers::CHECKKEEP))
 				{
@@ -191,7 +196,7 @@ namespace LSW {
 
 				}
 			}
-			logg << L::SLL << freg("thread", "thr_col") << "Closing stuff!" << L::BLL;
+			logg << L::SLL << fsr(__FUNCSIG__) << "Closing stuff!" << L::BLL;
 
 			delete thr_cl_arg;
 
@@ -202,14 +207,14 @@ namespace LSW {
 			thr_shared_arg.threadcountm.unlock();
 
 			thr_cl_upnrunnin = false;
-			logg << L::SLL << freg("thread", "thr_col") << "Ended everything! Bye!" << L::BLL;
+			logg << L::SLL << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::BLL;
 		}
 
 		void Console::__l_thr_kb()
 		{
 			gfile logg;
 
-			logg << L::SLL << freg("thread", "thr_kbm") << "Initializing..." << L::BLL;
+			logg << L::SLL << fsr(__FUNCSIG__) << "Initializing..." << L::BLL;
 
 			thr_shared_arg.threadcountm.lock();
 			thr_shared_arg.threadcount++;
@@ -233,7 +238,7 @@ namespace LSW {
 			thr_kb_arg->start_timers();
 
 
-			logg << L::SLL << freg("thread", "thr_kbm") << "In the loop!" << L::BLL;
+			logg << L::SLL << fsr(__FUNCSIG__) << "In the loop!" << L::BLL;
 
 			thr_kb_upnrunnin = true;
 
@@ -243,7 +248,7 @@ namespace LSW {
 
 				if (thr_kb_arg->isThisThis(+Assistance::__keyboardm_routines_timers::LOOPTRACK))
 				{
-					logg.debug("[THR_KBM] LOOPSCHECK: %zu events per sec", thr_kb_arg->getNumCalls());
+					logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "LOOPSCHECK: " << thr_kb_arg->getNumCalls() << " events per sec" << L::BL;
 				}
 				else if (thr_kb_arg->isThisThis(+Assistance::__keyboardm_routines_timers::CHECKKEEP))
 				{
@@ -289,24 +294,24 @@ namespace LSW {
 
 					if (ev.type == ALLEGRO_EVENT_KEY_CHAR) {
 						//const char* actch = al_keycode_to_name(ev.keyboard.keycode); // prints literally key name KEY26 A B C
-						if (ev.keyboard.unichar > 32) logg.debug("[THR_KBM] KEYCHAR= %d ~= %c", ev.keyboard.keycode, ev.keyboard.unichar);
-						else                          logg.debug("[THR_KBM] KEYCHAR= %d", ev.keyboard.keycode);
+						//if (ev.keyboard.unichar > 32) logg.debug("[THR_KBM] KEYCHAR= %d ~= %c", ev.keyboard.keycode, ev.keyboard.unichar);
+						//else                          logg.debug("[THR_KBM] KEYCHAR= %d", ev.keyboard.keycode);
 					}
 					if (ev.type == ALLEGRO_EVENT_MOUSE_AXES) {
 						mouse_pos[0] = (ev.mouse.x * 2.0f / display_x) - 1.0;
 						mouse_pos[1] = (ev.mouse.y * 2.0f / display_y) - 1.0;
 
-						logg.debug("[THR_KBM] MOUSEAXIS dp={%d,%d} pos={%d,%d} rel={%.3f,%.3f}", ev.mouse.dx, ev.mouse.dy, ev.mouse.x, ev.mouse.y, mouse_pos[0], mouse_pos[1]);
+						//logg.debug("[THR_KBM] MOUSEAXIS dp={%d,%d} pos={%d,%d} rel={%.3f,%.3f}", ev.mouse.dx, ev.mouse.dy, ev.mouse.x, ev.mouse.y, mouse_pos[0], mouse_pos[1]);
 					}
 					if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
-						logg.debug("[THR_KBM] MOUSEDOWN= %d", ev.mouse.button);
+						//logg.debug("[THR_KBM] MOUSEDOWN= %d", ev.mouse.button);
 					}
 					if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
-						logg.debug("[THR_KBM] MOUSEDOWN= %d", ev.mouse.button);
+						//logg.debug("[THR_KBM] MOUSEDOWN= %d", ev.mouse.button);
 					}
 				}
 			}
-			logg << L::SLL << freg("thread", "thr_kbm") << "Closing stuff!" << L::BLL;
+			logg << L::SLL << fsr(__FUNCSIG__) << "Closing stuff!" << L::BLL;
 			
 			delete thr_kb_arg;
 
@@ -317,7 +322,7 @@ namespace LSW {
 			thr_shared_arg.threadcountm.unlock();
 
 			thr_kb_upnrunnin = false;
-			logg << L::SLL << freg("thread", "thr_kbm") << "Ended everything! Bye!" << L::BLL;
+			logg << L::SLL << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::BLL;
 		}
 
 		Console::Console()

@@ -205,6 +205,7 @@
     <ClInclude Include="LSW\drawing\drawing.h" />
     <ClInclude Include="LSW\logger\logger.h" />
     <ClInclude Include="LSW\organizer\organizer.h" />
+    <ClInclude Include="LSW\shared_constants\constants.h" />
     <ClInclude Include="LSW\sound\sound.h" />
     <ClInclude Include="LSW\system\system.h" />
     <ClInclude Include="LSW\tools\tools.h" />

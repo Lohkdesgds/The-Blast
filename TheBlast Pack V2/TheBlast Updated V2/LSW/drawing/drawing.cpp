@@ -850,14 +850,14 @@ namespace LSW {
 		Text::Text()
 		{
 			gfile logg;
-			logg << L::SLL << freg("Text", "Text") << "Registered spawn of Text #" + std::to_string((size_t)this) << L::BLL;
+			logg << L::SLL << fsr(__FUNCSIG__) << "Registered spawn of Text #" + std::to_string((size_t)this) << L::BLL;
 			logg.flush();
 		}
 
 		Text::~Text()
 		{
 			gfile logg;
-			logg << L::SLL << freg("Text", "~Text") << "Registered despawn of Text #" + std::to_string((size_t)this)/* << ";ID=" << id */ << L::BLL;
+			logg << L::SLL << fsr(__FUNCSIG__) << "Registered despawn of Text #" + std::to_string((size_t)this)/* << ";ID=" << id */ << L::BLL;
 		}
 
 		/*void Text::verify(const bool reloadd)

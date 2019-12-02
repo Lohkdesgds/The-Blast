@@ -19,31 +19,15 @@
 #include <thread>
 #include <mutex>
 
-#define WAY ALLEGRO_OPENGL
-
 #include "..\tools\tools.h"
 #include "..\custom_abort\abort.h"
 #include "..\logger\logger.h"
+#include "..\shared_constants\constants.h"
 
 namespace LSW {
 	namespace v4 {
 
-		namespace Constants {
-
-			const int start_audio_samples_max = 8;
-			const int start_display_default_mode = ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE | WAY;
-			const int start_bitmap_default_mode = ALLEGRO_VIDEO_BITMAP | ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR;
-			const bool start_force_720p = true;
-
-			const std::string __match_unmatch = "_DATA";
-			const std::string _match_extract = std::string("%LSW") + __match_unmatch;
-
-			const std::string start_zip_default_extract_path = "%appdata%/Lohk's Studios/TheBlast/data/data.zip";
-			const std::string start_zip_warning_file_txt = "%appdata%/Lohk's Studios/TheBlast/data/README.txt";
-			const std::string start_zip_warning_default_text = "Hey,\nThe data.zip file will be replaced everytime you open the game. Just don't change it, because it won't be saved in this version, ok?\nThanks.";
-
-			const std::string default_print_path = "%win_photos_path%/Lohk's Studios/TheBlast/Screenshots/"; // + YYYY_MM_DD-HH_MM.jpg
-		}
+		// constants now at shared_constants\constants.h
 
 		namespace Assistance {
 
@@ -57,20 +41,19 @@ namespace LSW {
 				int lastmode = Constants::start_display_default_mode;
 			};
 
-			/*class __raw_image {
-			public:
-				ALLEGRO_BITMAP* bmp = nullptr;
-				std::string path;
-				std::string id;
+			enum class conf_b { HAD_ERROR, WAS_OSD_ON, WAS_FULLSCREEN };
+			enum class conf_f { LAST_VOLUME };
+			enum class conf_i { SCREEN_X, SCREEN_Y };
+			enum class conf_ll { _TIMES_LIT };
+			enum class conf_s { LAST_VERSION, LAST_PLAYERNAME, LAST_COLOR };
 
-				~__raw_image();
-			};
+			const std::string conf_b_str[] = { "had_error", "was_osd_on", "fullscreen" };
+			const std::string conf_f_str[] = { "last_volume" };
+			const std::string conf_i_str[] = { "screen_width","screen_height" };
+			const std::string conf_ll_str[] = { "times_open" };
+			const std::string conf_s_str[] = { "last_version","playername","playercolor" };
 
-			struct __image_control {
-				std::vector<std:\:shared_ptr<__raw_image>> imgs;
-				bool loadnew = false;
-				std::mutex hugedeal;
-			};*/
+			const std::string conf_bool_s[] = { "false", "true" };
 		}
 		
 
@@ -101,7 +84,7 @@ namespace LSW {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> some raw stuff
 
-		class __raw_display {
+		class single_display {
 			ALLEGRO_DISPLAY* d = nullptr;
 			std::mutex d_try;
 			int x, y, f, h;
@@ -114,9 +97,9 @@ namespace LSW {
 			void _print();
 			void __print_thr_autodel(ALLEGRO_BITMAP*, const std::string);
 		public:
-			__raw_display();
-			__raw_display(const int, const int, const int = Constants::start_display_default_mode, int = 0); // x, y, flags, hz
-			~__raw_display();
+			single_display();
+			single_display(const int, const int, const int = Constants::start_display_default_mode, int = 0); // x, y, flags, hz
+			~single_display();
 
 			void restart();
 			void flip();
@@ -129,16 +112,39 @@ namespace LSW {
 			ALLEGRO_DISPLAY*& _getD();
 		};
 
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> not raw stuff
 
-		/*class Textures {
-			static Assistance::__image_control ictrl;
+		
+
+		class Config {
+			static ALLEGRO_CONFIG* c;
+			static std::mutex m;
+			gfile logg;
 		public:
-			void load(const std::string, const std::string);
-			bool get(const std::string, std:\:weak_ptr<Assistance::__raw_image>&);
-			void del(const std::string);
-			void checkvideo();
-		};*/
+			Config();
+			~Config();
+
+			void set(const std::string, const std::string);
+			void set(const Assistance::conf_b, const bool);
+			void set(const Assistance::conf_f, const float);
+			void set(const Assistance::conf_i, const int);
+			void set(const Assistance::conf_ll, const long long);
+			void set(const Assistance::conf_s, const std::string);
+
+			void get(const std::string, std::string&, const std::string);
+			void get(const Assistance::conf_b, bool&, const bool);
+			void get(const Assistance::conf_f, float&, const float);
+			void get(const Assistance::conf_i, int&, const int);
+			void get(const Assistance::conf_ll, long long&, const long long);
+			void get(const Assistance::conf_s, std::string&, const std::string);
+
+			const bool isEq(const std::string, const std::string);
+			const bool isEq(const Assistance::conf_b, const bool);
+			const bool isEq(const Assistance::conf_f, const float);
+			const bool isEq(const Assistance::conf_i, const int);
+			const bool isEq(const Assistance::conf_ll, const long long);
+			const bool isEq(const Assistance::conf_s, const std::string);
+		};
+		
 
 
 

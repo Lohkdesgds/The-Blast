@@ -32,6 +32,9 @@
     <Filter Include="sound">
       <UniqueIdentifier>{fd2b2c31-040b-4e19-aa91-f16eabff867e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shared_constants">
+      <UniqueIdentifier>{55ba1b81-6ca2-4f2d-87d8-0bf608a2c5ad}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="starter.cpp">
@@ -83,6 +86,9 @@
     </ClInclude>
     <ClInclude Include="LSW\sound\sound.h">
       <Filter>sound</Filter>
+    </ClInclude>
+    <ClInclude Include="LSW\shared_constants\constants.h">
+      <Filter>shared_constants</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
