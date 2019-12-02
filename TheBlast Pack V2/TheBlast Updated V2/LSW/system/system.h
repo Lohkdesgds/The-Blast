@@ -21,6 +21,7 @@
 
 #include "..\tools\tools.h"
 #include "..\custom_abort\abort.h"
+#include "..\logger\logger.h"
 
 namespace LSW {
 	namespace v4 {
@@ -100,6 +101,7 @@ namespace LSW {
 
 		class __raw_display {
 			ALLEGRO_DISPLAY* d = nullptr;
+			std::mutex d_try;
 			int x, y, f, h;
 			bool printing = false;
 

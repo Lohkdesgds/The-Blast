@@ -63,6 +63,7 @@ namespace LSW {
 			enum class __collision_routines_timers { LOOPTRACK, CHECKKEEP, COLLISIONWORK };
 			enum class __keyboardm_routines_timers { LOOPTRACK, CHECKKEEP, CHECKDISPLAYRESIZE };
 
+			enum class __my_events{THRKBM_DISPLAY_SIZE = 512,THRDRW_GOT_FORCED_RESIZE}; // THRDRW -> event for the THREAD_DRAW
 		}
 
 		typedef __template_multiple_timers<1, 2, 2>     __display_routines;
@@ -90,17 +91,17 @@ namespace LSW {
 
 			/// DISPLAY AND DRAW
 			std::thread* thr_md = nullptr; // unleash framerate
-			//std::function <void(void*)> thr_md_func; // if user wants to run something before the actual init
+			bool thr_md_upnrunnin = false;
 			__display_routines* thr_md_arg; // already in here oops, HANDLED INTERNALLY ON THREAD
 
 			/// COLLISION AND SPRITES
 			std::thread* thr_cl = nullptr; // unleash collision work
-			//std::function <void(void*)> thr_cl_func; // if user wants to run something before the actual init
+			bool thr_cl_upnrunnin = false;
 			__collision_routines* thr_cl_arg; // already in here oops, HANDLED INTERNALLY ON THREAD
 			
 			/// KEYBOARD, MOUSE AND STUFF
 			std::thread* thr_kb = nullptr; // unleash collision work
-			//std::function <void(void*)> thr_kb_func; // if user wants to run something before the actual init
+			bool thr_kb_upnrunnin = false;
 			__keyboardmouse_routines* thr_kb_arg; // already in here oops, HANDLED INTERNALLY ON THREAD
 
 			ALLEGRO_EVENT_SOURCE evsrc;

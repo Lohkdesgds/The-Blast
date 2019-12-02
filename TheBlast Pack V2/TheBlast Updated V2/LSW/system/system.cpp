@@ -418,6 +418,9 @@ namespace LSW {
 
 		__raw_display::__raw_display()
 		{
+			gfile logg;
+			logg << L::SLL << freg("raw_display", "raw_display") << "Creating new display (blank)" << L::BLL;
+
 			int flag = Constants::start_display_default_mode;
 			__g_sys.__set_new_display_mode(flag);
 			auto u = __g_sys.__get_available_res();
@@ -445,6 +448,8 @@ namespace LSW {
 
 		__raw_display::__raw_display(const int x, const int y, const int flag, int hz)
 		{
+			gfile logg;
+			logg << L::SLL << freg("raw_display", "raw_display") << "Creating new custom display [" << x << "x" << y << "@" << hz << " w/ " << flag << "]" << L::BLL;
 			_init(x, y, flag, hz);
 		}
 		__raw_display::~__raw_display()
@@ -468,10 +473,16 @@ namespace LSW {
 		}
 		void __raw_display::close()
 		{
+			gfile logg;
+			logg << L::SLL << freg("raw_display", "close") << "Deleting display..." << L::BLL;
+
+			d_try.lock();
 			if (d) {
+				al_set_target_backbuffer(d);
 				al_destroy_display(d);
 				d = nullptr;
 			}
+			d_try.unlock();
 		}
 		bool __raw_display::exist()
 		{
@@ -539,45 +550,70 @@ namespace LSW {
 
 		void lsw_init()
 		{
+			gfile logg;
+
 			try {
 				__g_sys.init_system();
 			}
 			catch (Abort::abort a) {
 				if (a.getErrN() == 1) {
+
+					logg << L::SLL << freg("void", "lsw_init", E::WARN) << "Internal datapack wasn't found." << L::BLL;
+					logg.flush();
+
 					int res = al_show_native_message_box(
 						nullptr,
 						"Internal datapack not found!",
 						"Your file may be incomplete!",
 						"You can still run the game, but there will be no verification about the resource pack. Click OK if you want to continue anyway.",
 						NULL,
-						ALLEGRO_MESSAGEBOX_OK_CANCEL
-					);
+						ALLEGRO_MESSAGEBOX_OK_CANCEL);
+
 					if (res == 1) {
 						try {
 							__g_sys.force_setzip();
 						}
 						catch (Abort::abort a) {
+
+							std::string ext_exp = std::string("Function gone wrong: " + a.function() + "\n\nFrom what exactly: " + a.from() + "\n\nExtended explanation: " + a.details());
+
+							logg << L::SLL << freg("void", "lsw_init", E::ERRR) << "User tried to continue, but something went wrong anyway." << L::BLL;
+							logg << L::SLL << freg("void", "lsw_init", E::ERRR) << ext_exp << L::BLL;
+							logg.flush();
+
 							al_show_native_message_box(
 								nullptr,
 								"Something went wrong anyway!",
 								"Please report the following:",
-								std::string("Function gone wrong: " + a.function() + "\n\nFrom what exactly: " + a.from() + "\n\nExtended explanation: " + a.details()).c_str(),
+								ext_exp.c_str(),
 								NULL,
-								ALLEGRO_MESSAGEBOX_ERROR
-							);
+								ALLEGRO_MESSAGEBOX_ERROR);
+
 							exit(EXIT_FAILURE);
 						}
 					}
+					else {
+						logg << L::SLL << freg("void", "lsw_init") << "User abort." << L::BLL;
+						logg.flush();
+
+						exit(EXIT_FAILURE);
+					}
 				}
 				else {
+					std::string ext_exp = std::string("Function gone wrong: " + a.function() + "\n\nFrom what exactly: " + a.from() + "\n\nExtended explanation: " + a.details());
+
+					logg << L::SLL << freg("void", "lsw_init", E::ERRR) << "Something went wrong opening the game." << L::BLL;
+					logg << L::SLL << freg("void", "lsw_init", E::ERRR) << ext_exp << L::BLL;
+					logg.flush();
+
 					al_show_native_message_box(
 						nullptr,
 						"Something went wrong!",
 						"Please report the following:",
-						std::string("Function gone wrong: " + a.function() + "\n\nFrom what exactly: " + a.from() + "\n\nExtended explanation: " + a.details()).c_str(),
+						ext_exp.c_str(),
 						NULL,
-						ALLEGRO_MESSAGEBOX_ERROR
-					);
+						ALLEGRO_MESSAGEBOX_ERROR);
+
 					exit(EXIT_FAILURE);
 				}
 			}

@@ -106,7 +106,7 @@ int main(int argc, const char* argv[])
 {
 	gfile logg;
 
-	logg << L::START << freg("main", "main") << "Initializing game..." << L::ENDL;
+	logg << L::SLL << freg("main", "main") << "Initializing game..." << L::BLL;
 
 	lsw_init();
 
@@ -117,7 +117,7 @@ int main(int argc, const char* argv[])
 	Texts texts;
 
 
-	logg << L::START << freg("main", "main") << "Setting up template functions..." << L::ENDL;
+	logg << L::SLL << freg("main", "main") << "Setting up template functions..." << L::BLL;
 
 	textures.setFuncs(Constants::lambda_bitmap_load, Constants::lambda_bitmap_unload);
 	fonts.setFuncs(Constants::lambda_font_load, Constants::lambda_font_unload);
@@ -125,9 +125,16 @@ int main(int argc, const char* argv[])
 	texts.setFuncs(Constants::lambda_default_load<Text>, Constants::lambda_default_unload<Text>);
 
 
-	logg << L::START << freg("main", "main") << "Initializing display, events and stuff..." << L::ENDL;
+	logg << L::SLL << freg("main", "main") << "Initializing display, events and stuff..." << L::BLL;
 
 
+	textures.load("BACKGROUND_START", "background_gameplay_start.png");
+	textures.load("BAR_OFF", "bar_single_one.png");
+	textures.load("BAR_ON", "bar_single_one_on.png");
+	textures.load("MOUSE", "mouse.png");
+	textures.load("MAIN_LOGO", "the_storm.png");
+	textures.load(Tools::generateStringsFormat("BLOCK_##", 10), Tools::generateStringsFormat("anim/bloco##.png", 10));
+	textures.load(Tools::generateStringsFormat("LOGO_##", 115), Tools::generateStringsFormat("logo/frame##.png", 115));
 	textures.load(Tools::generateStringsFormat("PAUSE_##", 29), Tools::generateStringsFormat("pause/pause_##.png", 29));
 	fonts.load("default", "font.ttf");
 
@@ -161,9 +168,9 @@ int main(int argc, const char* argv[])
 
 
 
-	logg << L::START << freg("main", "main") << "Waiting the end of initialization..." << L::ENDL;
+	logg << L::SLL << freg("main", "main") << "Waiting the end of initialization..." << L::BLL;
 	while (!consol.awakened()) Sleep(20);
-	logg << L::START << freg("main", "main") << "Started main loop." << L::ENDL;
+	logg << L::SLL << freg("main", "main") << "Started main loop." << L::BLL;
 
 	size_t counttt = 0;
 
@@ -184,11 +191,12 @@ int main(int argc, const char* argv[])
 
 
 
-	logg << L::START << freg("main", "main") << "Closing game..." << L::ENDL;
+	logg << L::SLL << freg("main", "main") << "Closing game..." << L::BLL;
 	   
 	textures.clear();
 	sprites.clear();
 	fonts.clear();
+	texts.clear();
 
 	return 0;
 }

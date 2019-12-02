@@ -456,7 +456,7 @@ namespace LSW {
 					Camera cam;
 					ALLEGRO_DISPLAY* d = al_get_current_display();
 					char tempstr_c[128];
-					gfile logg;
+					//gfile logg;
 
 					switch (found)
 					{
@@ -798,12 +798,12 @@ namespace LSW {
 		/*const bool Text::load(std::string s, const double siz)
 		{
 			gfile logg;
-			logg << L::START << freg("Text", "load") << "Verifying new loading of texture called " << s << "... (ID#" << (int)this << ")" << L::ENDL;
+			logg << L::SLL << freg("Text", "load") << "Verifying new loading of texture called " << s << "... (ID#" << (int)this << ")" << L::BLL;
 
 			if (!ffont) {
 				//Camera::camera_g cam;
 
-				logg << L::START << freg("Text", "load") << "Load allowed for " << s << "... (ID#" << (int)this << ")" << L::ENDL;
+				logg << L::SLL << freg("Text", "load") << "Load allowed for " << s << "... (ID#" << (int)this << ")" << L::BLL;
 
 				_bpath = s;
 
@@ -812,7 +812,7 @@ namespace LSW {
 
 				bool aa = (ffont = al_load_ttf_font(s.c_str(), 1.0 * siz * Constants::text_default_sharpness_font / 20.0, 0));
 
-				//logg << L::START << freg("Text", "load") << " Settings: {LOADSUCCESS=" << (aa ? "Y" : "N") << ";ID=#" << (int)this << ";PATH=" << s << ";SIZE=" << 1000000.0 * siz * Defaults::sharpness_font / 20.0 << "E-6}" << L::ENDL;
+				//logg << L::SLL << freg("Text", "load") << " Settings: {LOADSUCCESS=" << (aa ? "Y" : "N") << ";ID=#" << (int)this << ";PATH=" << s << ";SIZE=" << 1000000.0 * siz * Defaults::sharpness_font / 20.0 << "E-6}" << L::BLL;
 				logg.flush();
 
 				return aa;
@@ -850,14 +850,14 @@ namespace LSW {
 		Text::Text()
 		{
 			gfile logg;
-			logg << L::START << freg("Text", "Text") << "Registered spawn of Text #" + std::to_string((size_t)this) << L::ENDL;
+			logg << L::SLL << freg("Text", "Text") << "Registered spawn of Text #" + std::to_string((size_t)this) << L::BLL;
 			logg.flush();
 		}
 
 		Text::~Text()
 		{
 			gfile logg;
-			logg << L::START << freg("Text", "~Text") << "Registered despawn of Text #" + std::to_string((size_t)this)/* << ";ID=" << id */ << L::ENDL;
+			logg << L::SLL << freg("Text", "~Text") << "Registered despawn of Text #" + std::to_string((size_t)this)/* << ";ID=" << id */ << L::BLL;
 		}
 
 		/*void Text::verify(const bool reloadd)

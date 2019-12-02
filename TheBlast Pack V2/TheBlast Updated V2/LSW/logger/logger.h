@@ -21,7 +21,7 @@ namespace LSW {
 		}
 
 
-		enum class L { ENDL, START, ERRDV, NEEDED_START, NEEDED_ENDL };
+		enum class L { BL, SL, ERRDV, SLL, BLL };
 		enum class E { INFO, WARN, ERRR };
 		
 
@@ -31,7 +31,6 @@ namespace LSW {
 				std::string path = "log.log"; // temp
 				std::mutex f_m, each_call;
 				bool store_log = true;
-				bool islonglog = false;
 				bool is_needed_lock = false;
 				std::string now;
 				std::vector<std::string> lines;
@@ -46,11 +45,11 @@ namespace LSW {
 			void printclock();
 
 			void showOnConsole(const bool);
-			void longLog(const bool);
 
 			void flush();
 			void saveOnMemory(const bool); // global only
-			void debug(const std::string&);
+			void debugP(const std::string&, const size_t = 0);
+			template<typename... Args> void debug(const std::string&, Args...);
 
 			gfile& operator<<(const std::string&);
 			gfile& operator<<(const L&);
@@ -67,7 +66,7 @@ namespace LSW {
 		*/
 
 		 inline gfile::_log gfile::g;
-		 inline bool gfile::showconsole = false;
+		 inline bool gfile::showconsole = true;
 
 		
 		inline const bool gfile::setPath(const std::string& orig, const char* mode, const bool autopath) // easier
@@ -105,7 +104,7 @@ namespace LSW {
 				for (auto& i : s) putchar(i);
 			}
 
-			if (!g.islonglog && !g.is_needed_lock) return;
+			if (!g.is_needed_lock) return;
 
 			if (!g.f)
 				if (!setPath(Constants::default_file_global_path)) return;
@@ -150,14 +149,9 @@ namespace LSW {
 				freopen_s(&temphandle, "CONOUT$", "w", stdout);
 
 				printf("Now showing on console.\n");
-				*this << L::START << "Console output enabled! It can cause lag and/or lower FPS in game! Use for testing only!" << L::ENDL;
+				*this << L::SL << "Console output enabled! It can cause lag and/or lower FPS in game! Use for testing only!" << L::BL;
 			}
 			else FreeConsole();
-		}
-		
-		inline void gfile::longLog(const bool b)
-		{
-			g.islonglog = b;
 		}
 		
 		inline void gfile::flush()
@@ -173,12 +167,29 @@ namespace LSW {
 		}
 
 		
-		inline void gfile::debug(const std::string& s)
+		inline void gfile::debugP(const std::string& s, const size_t ptrval)
 		{
 			if (showconsole) {
+				std::string addinf = "";
+				if (ptrval != 0) {
+					addinf = "[->" + std::to_string(ptrval) + "]";
+				}
+
 				g.each_call.lock();
 
-				printf("[DEBUG] %s\n", s.c_str());
+				printf("%s[DEBUG]%s\n", addinf.c_str(), s.c_str());
+
+				g.each_call.unlock();
+			}
+		}
+		template<typename... Args>
+		inline void gfile::debug(const std::string& s, Args... args)
+		{
+			if (showconsole) {
+				
+				g.each_call.lock();
+
+				printf(("[DEBUG]" + s + "\n").c_str(), args...);
 
 				g.each_call.unlock();
 			}
@@ -196,11 +207,11 @@ namespace LSW {
 		{
 			switch (u)
 			{
-			case L::START:
+			case L::SL:
 				g.each_call.lock();
 				printclock();
 				break;
-			case L::ENDL:
+			case L::BL:
 				push("\n");
 				g.each_call.unlock();
 				break;
@@ -208,12 +219,12 @@ namespace LSW {
 				push("\n---------- ERROR ----------\n");
 				flush();
 				break;
-			case L::NEEDED_START:
+			case L::SLL:
 				g.each_call.lock();
 				g.is_needed_lock = true;
 				printclock();
 				break;
-			case L::NEEDED_ENDL:
+			case L::BLL:
 				push("\n");
 				g.is_needed_lock = false;
 				g.each_call.unlock();
@@ -263,7 +274,7 @@ namespace LSW {
 			return *this;
 		}
 
-		inline const std::string freg(std::string where, std::string what, const E situation = E::INFO) // Function class, function name, type
+		inline const std::string freg(std::string where, std::string what/*, const size_t ptrval = 0*/, const E situation = E::INFO) // Function class, function name, type
 		{
 			if (where.length() < Constants::len_class) {
 				for (size_t p = where.length(); p < Constants::len_class; p++)
@@ -293,18 +304,18 @@ namespace LSW {
 
 			for (auto& i : where) i = ::toupper(i);
 			for (auto& i : what)  i = ::toupper(i);
-
+						
 			std::string sttr = "[" + where + ":" + what + "]";
 
 			switch (situation) {
 			case E::INFO:
-				sttr += "[INFO]";
+				sttr += "[INFO] ";
 				break;
 			case E::WARN:
-				sttr += "[WARN]";
+				sttr += "[WARN] ";
 				break;
 			case E::ERRR:
-				sttr += "[ERRR]";
+				sttr += "[ERRR] ";
 				break;
 			}
 
