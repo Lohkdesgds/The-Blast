@@ -110,19 +110,26 @@ int main(int argc, const char* argv[])
 
 	lsw_init();
 
+	// raw allegro stuff
 	Textures textures;
 	Fonts fonts;
+	Samples samples;
 
+	// controllers
 	Sprites sprites;
 	Texts texts;
+	Tracks tracks;
 
 
 	logg << L::SLL << freg("main", "main") << "Setting up template functions..." << L::BLL;
 
 	textures.setFuncs(Constants::lambda_bitmap_load, Constants::lambda_bitmap_unload);
 	fonts.setFuncs(Constants::lambda_font_load, Constants::lambda_font_unload);
+	samples.setFuncs(Constants::lambda_sample_load, Constants::lambda_sample_unload);
+
 	sprites.setFuncs(Constants::lambda_default_load<Sprite>, Constants::lambda_default_unload<Sprite>);
 	texts.setFuncs(Constants::lambda_default_load<Text>, Constants::lambda_default_unload<Text>);
+	tracks.setFuncs(Constants::lambda_default_load<Track>, Constants::lambda_default_unload<Track>);
 
 
 	logg << L::SLL << freg("main", "main") << "Initializing display, events and stuff..." << L::BLL;
@@ -136,25 +143,34 @@ int main(int argc, const char* argv[])
 	textures.load(Tools::generateStringsFormat("BLOCK_##", 10), Tools::generateStringsFormat("anim/bloco##.png", 10));
 	textures.load(Tools::generateStringsFormat("LOGO_##", 115), Tools::generateStringsFormat("logo/frame##.png", 115));
 	textures.load(Tools::generateStringsFormat("PAUSE_##", 29), Tools::generateStringsFormat("pause/pause_##.png", 29));
-	fonts.load("default", "font.ttf");
+	fonts.load("DEFAULT", "font.ttf");
+	samples.load("JUMP", "musics/jump_01.wav");
+	samples.load("MUSIC_0", "musics/music_01.ogg");
+	samples.load("MUSIC_1", "musics/music_02.ogg");
+	samples.load("MUSIC_2", "musics/music_03.ogg");
+	samples.load("WALK", "musics/walk_01.wav");
 
 
 	auto mysprite = sprites.create("randomsprite");
-	mysprite->apply(Assistance::in___vecstring_sprite::ADDMULTIPLE, Tools::generateStringsFormat("PAUSE_##", 29));
-	mysprite->apply(Assistance::in___string_sprite::SPRITE_ID, "randomsprite");
-	mysprite->apply(Assistance::in___boolean_sprite::DRAW, true);
-	mysprite->apply(Assistance::in___double_sprite::SCALEG, 0.7);
-	//mysprite->apply(Assistance::in___double_sprite::POSX, 0.3 * sin(0.7 + 0.91 * al_get_time()));
-	//mysprite->apply(Assistance::in___double_sprite::POSY, -1.5 + 0.2 * cos(0.4 + 0.65 * al_get_time()));
-	mysprite->apply(Assistance::in___double_sprite::POSY, 2.80); // 3.20
+	mysprite->apply(Assistance::io___vecstring_sprite::ADDMULTIPLE, Tools::generateStringsFormat("PAUSE_##", 29));
+	mysprite->apply(Assistance::io___string_sprite::SPRITE_ID, "randomsprite");
+	mysprite->apply(Assistance::io___boolean_sprite::DRAW, true);
+	mysprite->apply(Assistance::io___double_sprite::SCALEG, 0.7);
+	//mysprite->apply(Assistance::io___double_sprite::POSX, 0.3 * sin(0.7 + 0.91 * al_get_time()));
+	//mysprite->apply(Assistance::io___double_sprite::POSY, -1.5 + 0.2 * cos(0.4 + 0.65 * al_get_time()));
+	mysprite->apply(Assistance::io___double_sprite::POSY, 2.80); // 3.20
 
 	auto mytext = texts.create("randomtext");
-	mytext->set(Assistance::_text_opt_str::SETFONT, "default");
+	mytext->set(Assistance::_text_opt_str::SETFONT, "DEFAULT");
 	mytext->set(Assistance::_text_opt_str::SETSTRING, "TEST");
 	mytext->set(Assistance::_text_opt_str::SETID, "randomtext");
 	mytext->set(Assistance::_text_opt_bool::SHOW, true);
 	mytext->set(Assistance::_text_opt_db::SCALEG, 0.1);
 	mytext->set(Assistance::_text_opt_db::POSY, 3.3);
+
+	auto mytrack = tracks.create("randomtrack");
+	mytrack->set(track_s::LOADID, "MUSIC_0");
+	mytrack->set(track_p::PLAYING, true);
 
 
 	Console consol;
@@ -163,7 +179,7 @@ int main(int argc, const char* argv[])
 	Camera gcam;
 
 	camera_preset cp;
-	cp.set(Assistance::_cam_opt::OFFSET_Y, 2.6);
+	cp.set(Assistance::io___float_camera::OFFSET_Y, 2.6);
 
 
 
@@ -180,10 +196,10 @@ int main(int argc, const char* argv[])
 
 		mytext->set(Assistance::_text_opt_str::SETSTRING, "Main loop counter:" + std::to_string(counttt++));
 
-		//mysprite->apply(Assistance::in___double_sprite::POSX, 0.3 * sin(0.7 + 0.91 * al_get_time()));
-		//mysprite->apply(Assistance::in___double_sprite::POSY, - 1.5 + 0.2 * cos(0.4 + 0.65 * al_get_time()));
+		//mysprite->apply(Assistance::io___double_sprite::POSX, 0.3 * sin(0.7 + 0.91 * al_get_time()));
+		//mysprite->apply(Assistance::io___double_sprite::POSY, - 1.5 + 0.2 * cos(0.4 + 0.65 * al_get_time()));
 
-		cp.set(Assistance::_cam_opt::ROTATION, cos(al_get_time()) * 0.05);
+		cp.set(Assistance::io___float_camera::ROTATION, cos(al_get_time()) * 0.05);
 
 		gcam.set(cp, 0);
 		gcam.apply();

@@ -29,6 +29,9 @@
     <Filter Include="log">
       <UniqueIdentifier>{8ea53e9f-1584-4bb3-8a24-6191433d5f9a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="sound">
+      <UniqueIdentifier>{fd2b2c31-040b-4e19-aa91-f16eabff867e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="starter.cpp">
@@ -48,6 +51,9 @@
     </ClCompile>
     <ClCompile Include="LSW\console\console.cpp">
       <Filter>console</Filter>
+    </ClCompile>
+    <ClCompile Include="LSW\sound\sound.cpp">
+      <Filter>sound</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -74,6 +80,9 @@
     </ClInclude>
     <ClInclude Include="LSW\logger\logger.h">
       <Filter>log</Filter>
+    </ClInclude>
+    <ClInclude Include="LSW\sound\sound.h">
+      <Filter>sound</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

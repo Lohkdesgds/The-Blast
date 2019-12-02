@@ -19,6 +19,8 @@
 #include <thread>
 #include <mutex>
 
+#define WAY ALLEGRO_OPENGL
+
 #include "..\tools\tools.h"
 #include "..\custom_abort\abort.h"
 #include "..\logger\logger.h"
@@ -29,7 +31,7 @@ namespace LSW {
 		namespace Constants {
 
 			const int start_audio_samples_max = 8;
-			const int start_display_default_mode = ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE | ALLEGRO_DIRECT3D_INTERNAL;
+			const int start_display_default_mode = ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE | WAY;
 			const int start_bitmap_default_mode = ALLEGRO_VIDEO_BITMAP | ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR;
 			const bool start_force_720p = true;
 

@@ -35,10 +35,10 @@ namespace LSW {
 	namespace v4 {
 
 		namespace Constants {
+
 			const auto lambda_bitmap_load = [](const char* p, ALLEGRO_BITMAP*& b) -> bool {
 				return ((b = al_load_bitmap(p)));
 			};
-
 			const auto lambda_bitmap_unload = [](ALLEGRO_BITMAP*& b) -> void {
 				if (al_is_system_installed() && b) { al_destroy_bitmap(b); }
 			};
@@ -48,6 +48,13 @@ namespace LSW {
 			};
 			const auto lambda_font_unload = [](ALLEGRO_FONT*& b) -> void {
 				if (al_is_system_installed() && b) { al_destroy_font(b); }
+			};
+			
+			const auto lambda_sample_load = [](const char* p, ALLEGRO_SAMPLE*& b) -> bool {
+				return ((b = al_load_sample(p)));
+			};
+			const auto lambda_sample_unload = [](ALLEGRO_SAMPLE*& b) -> void {
+				if (al_is_system_installed() && b) { al_destroy_sample(b); }
 			};
 		}
 
@@ -73,10 +80,11 @@ namespace LSW {
 
 		typedef __template_static_vector<ALLEGRO_BITMAP>  Textures;
 		typedef __template_static_vector<ALLEGRO_FONT>    Fonts;
-		typedef __template_static_vector<ALLEGRO_SAMPLE>  Tracks;
+		typedef __template_static_vector<ALLEGRO_SAMPLE>  Samples;
 
 		typedef __template_static_vector<Sprite>		  Sprites;
 		typedef __template_static_vector<Text>			  Texts;
+		typedef __template_static_vector<Track>			  Tracks;
 
 
 

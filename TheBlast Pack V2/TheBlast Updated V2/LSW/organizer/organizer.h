@@ -17,6 +17,7 @@ Namespaces:
 // default
 #include "..\system\system.h"
 #include "..\drawing\drawing.h"
+#include "..\sound\sound.h"
 
 
 // the big thing
