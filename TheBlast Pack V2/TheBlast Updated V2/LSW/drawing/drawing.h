@@ -157,6 +157,9 @@ namespace LSW {
 			//const std::string tags[] = { "%pos_x%", "%pos_y%", "%screen_pos_x%", "%screen_pos_y%","%is_following%", "%color_r%", "%color_g%", "%color_b%", "%color_a%", "%mode%", "%time%", "%is_using_buf%", "%g_b_res_x%", "%g_b_res_y%", "%base_refresh_rate%", "%fps%", "%tps%", "%tps_col%", "%tps_funcs%", "%tps_second%", "%tps_posupd%", "%sprite_frame%", "%cam_x%", "%cam_y%", "%cam_zoom%", "%cam_zoom_x%", "%cam_zoom_y%", "%curr_string%", "%last_string%", "%mouse_x%", "%mouse_y%", "%sprite_speed_x%", "%sprite_speed_y%", "%sprite_name%", "%entity_name%", "%entity_health%", "%num_images%", "%num_sprites%", "%num_texts%", "%num_tracks%", "%num_entities%", "%garbage_total%", "%garbage_images%", "%garbage_sprites%", "%garbage_texts%", "%garbage_tracks%", "%garbage_entities%" };
 		}
 
+		void draw_simple_bar(const float, const ALLEGRO_COLOR = al_map_rgb(0, 0, 0), const ALLEGRO_COLOR = al_map_rgb(0, 200, 0));
+		void draw_simple_txt(ALLEGRO_FONT*, const std::string, ALLEGRO_COLOR = al_map_rgb(255,255,255), const int = ALLEGRO_ALIGN_CENTER);
+
 		class camera_preset {
 		public:
 			float p[+Assistance::io___float_camera::_MAX_CAM_OPT] = { 1.0,1.0,1.0,0.0,0.0,0.0 };
@@ -234,7 +237,7 @@ namespace LSW {
 		public:
 			~Sprite();
 
-			void apply(const Assistance::io___vecstring_sprite, const std::vector<std::string>);
+			void apply(const Assistance::io___vecstring_sprite, const std::vector<std::string>, float* = nullptr);
 			void apply(const Assistance::io___string_sprite, const std::string);
 			void apply(const Assistance::io___double_sprite, const double);
 			void apply(const Assistance::io___boolean_sprite, const bool);

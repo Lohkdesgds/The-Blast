@@ -42,6 +42,7 @@ namespace LSW {
 			logg << L::SLL << fsr(__FUNCSIG__) << "In the loop!" << L::BLL;
 
 			thr_md_upnrunnin = true;
+			al_set_target_backbuffer(md->_getD());
 			al_convert_bitmaps();
 
 			for(bool localb = true; localb;)
@@ -105,6 +106,7 @@ namespace LSW {
 
 				// locally check if dealable error
 				try {
+					al_set_target_backbuffer(md->_getD());
 					for (auto& i : sprites) i->self->draw(0);
 					for (auto& i : texts)  i->self->draw(0);
 

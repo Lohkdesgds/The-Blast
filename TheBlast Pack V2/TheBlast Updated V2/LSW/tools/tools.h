@@ -5,6 +5,7 @@
 #include <ShlObj.h>
 #include <sstream>
 #include <vector>
+#include <functional>
 
 namespace LSW {
 	namespace v4 {

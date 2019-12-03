@@ -104,12 +104,20 @@ al_destroy_fs_entry(entry);
 
 int main(int argc, const char* argv[])
 {
+	/*************************************************************************************
+
+		# Start stuff:
+		> Variables, some tests, initializing the basics
+
+	**************************************************************************************/
+
 	gfile logg;
 
-	logg << L::SLL << fsr(__FUNCSIG__, E::INFO) << "Testing INFO" << L::BLL;
-	logg << L::SLL << fsr(__FUNCSIG__, E::DEBUG) << "Testing DEBUG" << L::BLL;
-	logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "Testing WARN" << L::BLL;
-	logg << L::SLL << fsr(__FUNCSIG__, E::ERRR) << "Testing ERROR" << L::BLL;
+	logg << L::SL << fsr(__FUNCSIG__, E::INFO) << "Testing INFO" << L::BL;
+	logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Testing DEBUG" << L::BL;
+	logg << L::SL << fsr(__FUNCSIG__, E::WARN) << "Testing WARN" << L::BL;
+	logg << L::SL << fsr(__FUNCSIG__, E::ERRR) << "Testing ERROR" << L::BL;
+	logg << L::SLL << fsr(__FUNCSIG__) << "App version: " << Constants::version_app << L::BLL;
 
 	logg << L::SLL << fsr(__FUNCSIG__) << "Initializing game..." << L::BLL;
 
@@ -125,8 +133,19 @@ int main(int argc, const char* argv[])
 	Texts texts;
 	Tracks tracks;
 
+	Camera gcam;
+	camera_preset cp;
 
 	logg << L::SLL << fsr(__FUNCSIG__) << "Setting up template functions..." << L::BLL;
+
+	/*************************************************************************************
+
+		# Functions part:
+		> This is the part where we tell how to create some stuff.
+		> Yes, it is fully customizable!
+
+	**************************************************************************************/
+
 
 	textures.setFuncs(Constants::lambda_bitmap_load, Constants::lambda_bitmap_unload);
 	fonts.setFuncs(Constants::lambda_font_load, Constants::lambda_font_unload);
@@ -136,34 +155,98 @@ int main(int argc, const char* argv[])
 	texts.setFuncs(Constants::lambda_default_load<Text>, Constants::lambda_default_unload<Text>);
 	tracks.setFuncs(Constants::lambda_default_load<Track>, Constants::lambda_default_unload<Track>);
 
+	/*************************************************************************************
+
+		# Loading stuff:
+		> Load textures, sprites, musics, and have a progress bar while doing it hahaha
+
+	**************************************************************************************/
+
+
+	// need this to draw progress bar
+	fonts.load("DEFAULT", "font.ttf");
+
+	float __progress = 0.00f;
+	std::thread __progress_bar([&__progress, &fonts] {
+		single_display* myd = new single_display(250, 45, ALLEGRO_WINDOWED | ALLEGRO_NOFRAME, 60);
+		ALLEGRO_FONT* f;
+		assert(fonts.get("DEFAULT", f));
+		while (__progress < 1.00) {
+			char tb[16];
+			sprintf_s(tb, "%02.2f%c", 100.0f * __progress, '%');
+			draw_simple_bar(__progress);
+			draw_simple_txt(f, tb);
+			myd->flip();
+			Sleep(20);
+		}
+		delete myd;
+		});
+
+	__progress = 0.01f;
+
+	
+
+	cp.set(Assistance::io___float_camera::OFFSET_Y, 2.6);
 
 	logg << L::SLL << fsr(__FUNCSIG__) << "Initializing display, events and stuff..." << L::BLL;
-
 
 	textures.load("BACKGROUND_START", "background_gameplay_start.png");
 	textures.load("BAR_OFF", "bar_single_one.png");
 	textures.load("BAR_ON", "bar_single_one_on.png");
 	textures.load("MOUSE", "mouse.png");
 	textures.load("MAIN_LOGO", "the_storm.png");
-	textures.load(Tools::generateStringsFormat("BLOCK_##", 10), Tools::generateStringsFormat("anim/bloco##.png", 10));
-	textures.load(Tools::generateStringsFormat("LOGO_##", 115), Tools::generateStringsFormat("logo/frame##.png", 115));
-	textures.load(Tools::generateStringsFormat("PAUSE_##", 29), Tools::generateStringsFormat("pause/pause_##.png", 29));
-	fonts.load("DEFAULT", "font.ttf");
+
+	//draw_simple_bar(250, 45, 0.10f); _progress_bar->flip();
+
+	std::thread* lthr = nullptr;
+	float thrfloat = 0.00;
+
+	__progress = 0.03f;
+
+	lthr = new std::thread([&thrfloat, &__progress] {while (thrfloat != 1.00) { __progress = 0.03f + 0.05f * thrfloat; }});
+	textures.load(Tools::generateStringsFormat("BLOCK_##", 10), Tools::generateStringsFormat("anim/bloco##.png", 10), &thrfloat);
+	lthr->join(); delete lthr; lthr = nullptr; thrfloat = 0.00;
+
+	lthr = new std::thread([&thrfloat, &__progress] {while (thrfloat != 1.00) { __progress = 0.09f + 0.69f * thrfloat; }});
+	textures.load(Tools::generateStringsFormat("LOGO_##", 115), Tools::generateStringsFormat("logo/frame##.png", 115), &thrfloat);
+	lthr->join(); delete lthr; lthr = nullptr; thrfloat = 0.00;
+
+	lthr = new std::thread([&thrfloat, &__progress] {while (thrfloat != 1.00) { __progress = 0.79f + 0.20f * thrfloat; }});
+	textures.load(Tools::generateStringsFormat("PAUSE_##", 29), Tools::generateStringsFormat("pause/pause_##.png", 29), &thrfloat);
+	lthr->join(); delete lthr; lthr = nullptr; thrfloat = 0.00;
+
+	// 0.97
+	__progress = 0.990f;
 	samples.load("JUMP", "musics/jump_01.wav");
+	__progress = 0.9915f;
 	samples.load("MUSIC_0", "musics/music_01.ogg");
+	__progress = 0.993f;
 	samples.load("MUSIC_1", "musics/music_02.ogg");
+	__progress = 0.9945f;
 	samples.load("MUSIC_2", "musics/music_03.ogg");
+	__progress = 0.9960f;
 	samples.load("WALK", "musics/walk_01.wav");
+
+	//draw_simple_bar(250, 45, 0.92f); _progress_bar->flip();
+	__progress = 0.997f;
 
 
 	auto mysprite = sprites.create("randomsprite");
-	mysprite->apply(Assistance::io___vecstring_sprite::ADDMULTIPLE, Tools::generateStringsFormat("PAUSE_##", 29));
+
+	lthr = new std::thread([&thrfloat, &__progress] {while (thrfloat != 1.00) { __progress = 0.87f + 0.10f * thrfloat; }});
+	mysprite->apply(Assistance::io___vecstring_sprite::ADDMULTIPLE, Tools::generateStringsFormat("PAUSE_##", 29), &thrfloat);
+	lthr->join(); delete lthr; lthr = nullptr; thrfloat = 0.00;
+
 	mysprite->apply(Assistance::io___string_sprite::SPRITE_ID, "randomsprite");
 	mysprite->apply(Assistance::io___boolean_sprite::DRAW, true);
 	mysprite->apply(Assistance::io___double_sprite::SCALEG, 0.7);
 	//mysprite->apply(Assistance::io___double_sprite::POSX, 0.3 * sin(0.7 + 0.91 * al_get_time()));
 	//mysprite->apply(Assistance::io___double_sprite::POSY, -1.5 + 0.2 * cos(0.4 + 0.65 * al_get_time()));
 	mysprite->apply(Assistance::io___double_sprite::POSY, 2.80); // 3.20
+
+	//draw_simple_bar(250, 45, 0.95f); _progress_bar->flip();
+	__progress = 0.998f;
+
 
 	auto mytext = texts.create("randomtext");
 	mytext->set(Assistance::_text_opt_str::SETFONT, "DEFAULT");
@@ -173,21 +256,35 @@ int main(int argc, const char* argv[])
 	mytext->set(Assistance::_text_opt_db::SCALEG, 0.1);
 	mytext->set(Assistance::_text_opt_db::POSY, 3.3);
 
+	//draw_simple_bar(250, 45, 0.98f); _progress_bar->flip();
+	__progress = 0.999f;
+
 	auto mytrack = tracks.create("randomtrack");
 	mytrack->set(track_s::LOADID, "MUSIC_0");
 	mytrack->set(track_p::PLAYING, true);
 
+	//draw_simple_bar(250, 45, 1.00f); _progress_bar->flip();
+	
+
+	//Sleep(2000);
+
+	/*delete _progress_bar;
+	_progress_bar = nullptr;*/
+
+	__progress = 1.00f;
+	__progress_bar.join(); // sync loading screen, can die
+
+
+	/*************************************************************************************
+
+		# Main thread stuff:
+		> Game has started!
+
+	**************************************************************************************/
+	
 
 	Console consol;
 	consol.launch();
-	
-	Camera gcam;
-
-	camera_preset cp;
-	cp.set(Assistance::io___float_camera::OFFSET_Y, 2.6);
-
-
-
 
 	logg << L::SLL << fsr(__FUNCSIG__) << "Waiting the end of initialization..." << L::BLL;
 	while (!consol.awakened()) Sleep(20);

@@ -186,11 +186,13 @@ namespace LSW {
 				std::string date = __DATE__;
 				std::string time = __TIME__;
 
-				char month[16];
+				char monthr[16];
 				int year, monthn, day, hour, min, sec;
 
-				sscanf_s(date.c_str(), "%s %d %d", month, 16, &day, &year);
+				sscanf_s(date.c_str(), "%s %d %d", monthr, 16, &day, &year);
 				sscanf_s(time.c_str(), "%d:%d:%d", &hour, &min, &sec);
+
+				std::string month = monthr;
 
 				if (month == "Jan") {
 					monthn = 1;
@@ -232,7 +234,10 @@ namespace LSW {
 					monthn = 0;
 				}
 
-				return std::to_string(year) + std::to_string(monthn) + std::to_string(day) + std::to_string(hour) + std::to_string(min);
+				char outtt[64];
+				sprintf_s(outtt, "%04d%02d%02d%02d%02d", year, monthn, day, min, hour);
+
+				return outtt;//std::to_string(year) + std::to_string(monthn) + std::to_string(day) + std::to_string(hour) + std::to_string(min);
 			}
 		}
 	}

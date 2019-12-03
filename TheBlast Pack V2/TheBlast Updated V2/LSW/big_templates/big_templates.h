@@ -274,14 +274,16 @@ namespace LSW {
 				return b;
 			}
 			void create(std::vector<std::string> n, std::vector<std::string> q) { load(n, q); }
-			void load(std::vector<std::string> n, std::vector<std::string> q)
+			void load(std::vector<std::string> n, std::vector<std::string> q, float* perc = nullptr)
 			{
 				assert(n.size() == q.size());
 
 				for (size_t p = 0; p < n.size(); p++)
 				{
+					if (perc) *perc = 1.0f * p / n.size();
 					load(n[p], q[p]);
 				}
+				if (perc) *perc = 1.00;
 			}
 			bool get(const std::string id, T*& p) {
 				data.dbm.lock();

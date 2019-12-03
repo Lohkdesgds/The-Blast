@@ -8,6 +8,27 @@ namespace LSW {
 		int Camera::lastapply = 0;
 
 
+
+		void draw_simple_bar(const float perc, const ALLEGRO_COLOR bg, const ALLEGRO_COLOR bar)
+		{
+			Camera gcam;
+			gcam.applyNoSave(camera_preset());
+			al_clear_to_color(bg);
+			al_draw_filled_rectangle(-0.99, -0.99, 2.0 * perc - 1.0, 0.99, bar);
+		}
+
+		void draw_simple_txt(ALLEGRO_FONT* f, const std::string s, ALLEGRO_COLOR c, const int flag)
+		{
+			Camera gcam;
+			camera_preset cp;
+			cp.set(Assistance::io___float_camera::SCALE_G, 0.3 / Constants::text_default_sharpness_font);
+			cp.set(Assistance::io___float_camera::SCALE_Y, 3.5);
+			gcam.applyNoSave(cp);
+			al_draw_text(f, c, 0, - 0.6 * Constants::text_default_sharpness_font, flag, s.c_str());
+			gcam.apply();
+		}
+
+
 		void camera_preset::set(const Assistance::io___float_camera u, const float v)
 		{
 			p[+u] = v;
@@ -207,16 +228,25 @@ namespace LSW {
 			bmps.reset();
 		}
 
-		void Sprite::apply(const Assistance::io___vecstring_sprite u, const std::vector<std::string> v)
+		void Sprite::apply(const Assistance::io___vecstring_sprite u, const std::vector<std::string> v, float* perc)
 		{
+			if (perc) *perc = 0.00f;
+			size_t countt = 0;
 			switch (u) {
 			case Assistance::io___vecstring_sprite::ADDMULTIPLE:
-				for(auto& i : v) bmps.add(i);
+				for (auto& i : v) {
+					bmps.add(i);
+					if (perc) *perc = 1.00f * countt++ / v.size();
+				}
 				break;
 			case Assistance::io___vecstring_sprite::REMOVEMULTIPLE:
-				for (auto& i : v) bmps.remove(i);
+				for (auto& i : v) {
+					bmps.remove(i);
+					if (perc) *perc = 1.00f * countt++ / v.size();
+				}
 				break;
 			}
+			if (perc) *perc = 1.00f;
 		}
 
 		void Sprite::apply(const Assistance::io___string_sprite u, const std::string v)

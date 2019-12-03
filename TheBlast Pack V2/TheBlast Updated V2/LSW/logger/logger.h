@@ -9,6 +9,12 @@
 #include "..\tools\tools.h"
 #include "..\shared_constants\constants.h"
 
+#ifdef _DEBUG
+#define ISDEBUG true
+#else
+#define ISDEBUG false
+#endif
+
 namespace LSW {
 	namespace v4 {
 
@@ -59,7 +65,7 @@ namespace LSW {
 		*/
 
 		 inline gfile::_log gfile::g;
-		 inline bool gfile::showconsole = true;
+		 inline bool gfile::showconsole = ISDEBUG;
 
 		
 		inline const bool gfile::setPath(const std::string& orig, const char* mode, const bool autopath) // easier
