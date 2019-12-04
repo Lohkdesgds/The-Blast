@@ -41,7 +41,7 @@ namespace LSW {
 			enum class cl__sprite_direction		{ NORTH, SOUTH, WEST, EAST };
 
 			enum class io__text_string  { STRING, PROCESSED_STRING, ID, FOLLOW_SPRITE, FONT, size };
-			enum class io__text_boolean { SHOW, AFFECTED_BY_CAM, size };
+			enum class io__text_boolean { SHOW, AFFECTED_BY_CAM, DEBUG_ITSELF, size };
 			enum class io__text_double  { POSX, POSY, LAST_FOLLOW_POSX, LAST_FOLLOW_POSY, LAST_INTERPRET, SCALEG, ROTATION, UPDATETIME, size };
 			enum class io__text_integer { MODE, LAYER, size };
 			enum class io__text_color   { COLOR };
@@ -191,11 +191,12 @@ __slice("%garbage_tracks%", +tags_e::T_TRACKS_GARBAGE), __slice("%garbage_entiti
 
 			struct __custom_data {
 				std::string str[+Assistance::io__text_string::size];
-				bool b[+Assistance::io__text_boolean::size];
-				double d[+Assistance::io__text_double::size];
-				int i[+Assistance::io__text_integer::size];
+				bool b[+Assistance::io__text_boolean::size] = { false };
+				double d[+Assistance::io__text_double::size] = { 0 };
+				int i[+Assistance::io__text_integer::size] = { 0 };
 				ALLEGRO_COLOR c;
 				ALLEGRO_FONT* font = nullptr;
+				std::string __internal_debug_flag;
 			};
 
 			__custom_data data;		

@@ -310,11 +310,11 @@ int main(int argc, const char* argv[])
 		//mysprite->apply(Assistance::io__sprite_double::POSY, - 1.5 + 0.2 * cos(0.4 + 0.65 * al_get_time()));
 
 		cp.set(Assistance::io__camera_float::ROTATION, al_get_time() * 0.25);
-		logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "ANG=" << (float)((int)(0.3 * (1800.0 / ALLEGRO_PI) * al_get_time())%3600)/10.0 << L::BL;
+		//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "ANG=" << (float)((int)(0.3 * (1800.0 / ALLEGRO_PI) * al_get_time())%3600)/10.0 << L::BL;
 		cp.set(Assistance::io__camera_float::ROTATION, 0.3 * al_get_time());
 
 		gcam.set(cp, 0);
-		gcam.apply(0);
+		//gcam.apply(0);
 	}
 
 

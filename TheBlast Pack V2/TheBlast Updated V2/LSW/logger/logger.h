@@ -51,7 +51,7 @@ namespace LSW {
 			static bool showconsole;
 			static _log g;
 
-			const bool setPath(const std::string&, const char* = "wb", const bool = true);
+			const bool start(const std::string&, const char* = "wb", const bool = true);
 			void printclock(const bool = true);
 			void showOnConsole(const bool);
 		public:
@@ -59,7 +59,7 @@ namespace LSW {
 			void push(const std::string&);
 
 			void flush();
-			ALLEGRO_EVENT_SOURCE* getEventSource();
+			ALLEGRO_EVENT_SOURCE* getEvent();
 			//void saveOnMemory(const bool);
 
 			gfile& operator<<(const __c_entry&);
@@ -82,8 +82,14 @@ namespace LSW {
 		inline bool gfile::showconsole = ISDEBUG;
 
 		
-		inline const bool gfile::setPath(const std::string& orig, const char* mode, const bool autopath) // easier
+		inline const bool gfile::start(const std::string& orig, const char* mode, const bool autopath) // easier
 		{
+			if (!g.started_evsrc) {
+				if (!al_is_system_installed()) al_init();
+				al_init_user_event_source(&g.evsrc);
+				g.started_evsrc = true;
+			}
+
 			std::string s = orig;
 
 			Tools::interpret_path(s);
@@ -140,16 +146,13 @@ namespace LSW {
 			if (showconsole) {
 				for (auto& i : s) {
 					putchar(i);
+				}
+			}
+			if (g.started_evsrc) {
+				for (auto& i : s) {
 
-					// new stuff lmao
 					if (i == '\n') {
 						ALLEGRO_EVENT evv;
-						/*size_t p;
-						for (p = 0; p < Constants::each_line_stored_by_memlog && p < g.now.length(); p++)
-						{
-							g.memlines[g.memlinecount][p] = g.now[p];
-						}
-						if (p < Constants::each_line_stored_by_memlog) g.memlines[g.memlinecount][p] = '\0';*/
 						sprintf_s(g.memline[g.memlinecount].line, g.now.c_str());
 						
 						evv.user.data1 = (intptr_t)g.memline[g.memlinecount].line;
@@ -167,7 +170,7 @@ namespace LSW {
 			if (!g.is_needed_lock) return;
 
 			if (!g.f)
-				if (!setPath(Constants::default_file_global_path)) return;
+				if (!start(Constants::default_file_global_path)) return;
 
 			g.f_m.lock();
 			//fprintf_s(g.f, "%s", temp.c_str());
@@ -186,17 +189,10 @@ namespace LSW {
 			fflush(g.f);
 			g.f_m.unlock();
 		}
-		inline ALLEGRO_EVENT_SOURCE* gfile::getEventSource()
+		inline ALLEGRO_EVENT_SOURCE* gfile::getEvent()
 		{
-			ALLEGRO_EVENT_SOURCE* evs = nullptr;
-			g.evsrc_m.lock();
-			if (!g.started_evsrc) {
-				if (!al_is_system_installed()) al_init();
-				al_init_user_event_source(&g.evsrc);
-			}
-			evs = &g.evsrc;
-			g.evsrc_m.unlock();
-			return evs;
+			if (g.started_evsrc) return &g.evsrc;
+			return nullptr;
 		}
 
 

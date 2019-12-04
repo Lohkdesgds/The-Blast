@@ -497,76 +497,6 @@ namespace LSW {
 
 			camm.apply();
 		}
-		//	if (layer != is_layer) return;
-
-		//	ALLEGRO_BITMAP* rn = bmps.get();
-		//	Camera camm;
-		//	camera_preset psf = camm.get();
-
-		//	if (!data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM]) {
-		//		psf = camera_preset();
-		//	}
-
-		//	float cx, cy/*, px, py, dsx, dsy, rot_rad*/;
-		//	int bmpx, bmpy;
-		//	bmpx =		al_get_bitmap_width(rn);
-		//	bmpy =		al_get_bitmap_height(rn);
-		//	if (bmpx <= 0 || bmpy <= 0) {
-		//		throw Abort::abort("al_get_bitmap_width|al_get_bitmap_height", "Sprite::draw", "Somehow the texture have < 0 width / height id=[" + this->sprite_id + "] size={" + std::to_string(bmpx) + "," + std::to_string(bmpy) + "}", 1);
-		//	}
-
-		//	//psf.merge(Assistance::io__camera_float::ROTATION, data.dval[+Assistance::io__sprite_double::ROTATION] * ALLEGRO_PI / 180.0);
-		//	psf.merge(Assistance::io__camera_float::SCALE_G, data.dval[+Assistance::io__sprite_double::SCALEG]);
-		//	psf.merge(Assistance::io__camera_float::SCALE_X, data.dval[+Assistance::io__sprite_double::SCALEX] * (1.0 / bmpx));
-		//	psf.merge(Assistance::io__camera_float::SCALE_Y, data.dval[+Assistance::io__sprite_double::SCALEY] * (1.0 / bmpy));
-		//	psf.merge(Assistance::io__camera_float::OFFSET_X, -data.dval[+Assistance::io__sprite_double::POSX]);
-		//	psf.merge(Assistance::io__camera_float::OFFSET_Y, -data.dval[+Assistance::io__sprite_double::POSY]);
-		//	psf.merge(Assistance::io__camera_float::ROTATION, data.dval[+Assistance::io__sprite_double::ROTATION] * ALLEGRO_PI / 180.0);
-
-
-		//	cx =		1.0f * bmpx * ((data.dval[+Assistance::io__sprite_double::CENTERX] + 1.0) * 0.5);
-		//	cy =		1.0f * bmpy * ((data.dval[+Assistance::io__sprite_double::CENTERY] + 1.0) * 0.5);
-		//	/*rot_rad =	1.0f * data.dval[+Assistance::io__sprite_double::ROTATION] * ALLEGRO_PI / 180.0;
-		//	px =		1.0f * data.dval[+Assistance::io__sprite_double::POSX] * cos(rot_rad) + data.dval[+Assistance::io__sprite_double::POSY] * sin(rot_rad);
-		//	py =		1.0f * data.dval[+Assistance::io__sprite_double::POSY] * cos(rot_rad) - data.dval[+Assistance::io__sprite_double::POSX] * sin(rot_rad);*/
-
-		//	///px = data.dval[+Assistance::io__sprite_double::POSX];
-		//	///py = data.dval[+Assistance::io__sprite_double::POSY];
-		//	//dsx =		1.0f * data.dval[+Assistance::io__sprite_double::SCALEX] * data.dval[+Assistance::io__sprite_double::SCALEG] * (1.0 / bmpx);
-		//	//dsy =		1.0f * data.dval[+Assistance::io__sprite_double::SCALEY] * data.dval[+Assistance::io__sprite_double::SCALEG] * (1.0 / bmpy);
-
-		//	// draw
-
-
-		//	camm.applyNoSave(psf);
-
-		//	if (data.bval[+Assistance::io__sprite_boolean::USE_TINTED_DRAWING])	al_draw_tinted_scaled_rotated_bitmap(rn, data.tint, cx, cy, 0, 0, 1.0, 1.0, 0, 0);
-		//	else																    al_draw_scaled_rotated_bitmap       (rn,            cx, cy, 0, 0, 1.0, 1.0, 0, 0);
-
-		//	// debug
-
-		//	if (data.bval[+Assistance::io__sprite_boolean::SHOWBOX] || data.bval[+Assistance::io__sprite_boolean::SHOWDOT])
-		//	{
-		//		ALLEGRO_COLOR colorr = al_map_rgb(0, 255, 0);
-
-		//		if (data.bval[+Assistance::io__sprite_boolean::IS_COLLIDING]) colorr = al_map_rgb(255, 0, 0);
-		//		//else if (al_get_time() - lastresetcollisioncall < Defaults::diff_time_show_last_resetCollision) colorr = al_map_rgb(255, 255, 0);
-
-		//		if (data.bval[+Assistance::io__sprite_boolean::SHOWBOX]) {
-		//			al_draw_filled_circle(data.dval[+Assistance::io__sprite_double::POSX] - cx, data.dval[+Assistance::io__sprite_double::POSY] - cy, 0.1f * fabs(psf.get(Assistance::io__camera_float::SCALE_G) * sqrt(psf.get(Assistance::io__camera_float::SCALE_X) * psf.get(Assistance::io__camera_float::SCALE_Y)) * 0.20f), colorr);
-		//			al_draw_filled_circle(data.dval[+Assistance::io__sprite_double::POSX] - cx, data.dval[+Assistance::io__sprite_double::POSY] + cy, 0.1f * fabs(psf.get(Assistance::io__camera_float::SCALE_G) * sqrt(psf.get(Assistance::io__camera_float::SCALE_X) * psf.get(Assistance::io__camera_float::SCALE_Y)) * 0.20f), colorr);
-		//			al_draw_filled_circle(data.dval[+Assistance::io__sprite_double::POSX] + cx, data.dval[+Assistance::io__sprite_double::POSY] - cy, 0.1f * fabs(psf.get(Assistance::io__camera_float::SCALE_G) * sqrt(psf.get(Assistance::io__camera_float::SCALE_X) * psf.get(Assistance::io__camera_float::SCALE_Y)) * 0.20f), colorr);
-		//			al_draw_filled_circle(data.dval[+Assistance::io__sprite_double::POSX] + cx, data.dval[+Assistance::io__sprite_double::POSY] + cy, 0.1f * fabs(psf.get(Assistance::io__camera_float::SCALE_G) * sqrt(psf.get(Assistance::io__camera_float::SCALE_X) * psf.get(Assistance::io__camera_float::SCALE_Y)) * 0.20f), colorr);
-		//		}
-
-		//		if (data.bval[+Assistance::io__sprite_boolean::SHOWDOT])
-		//		{
-		//			al_draw_filled_circle(data.dval[+Assistance::io__sprite_double::POSX], data.dval[+Assistance::io__sprite_double::POSY], 0.1f * fabs(psf.get(Assistance::io__camera_float::SCALE_G) * sqrt(psf.get(Assistance::io__camera_float::SCALE_X) * psf.get(Assistance::io__camera_float::SCALE_Y)) * 0.20f), colorr);
-		//		}
-		//	}
-
-		//	camm.apply();
-		//}
 
 
 
@@ -574,16 +504,10 @@ namespace LSW {
 
 
 
-
-
-
-
-		///bool Text::is_gpath_raw = false;
-		///std::string Text::gpath;
 
 		void Text::_draw(const double targ_draw_xy[2])
 		{
-			al_draw_text(data.font, data.c, 1.0 * targ_draw_xy[0] / (data.d[+Assistance::io__text_double::SCALEG]), 1.0 * targ_draw_xy[1] / (data.d[+Assistance::io__text_double::SCALEG]), data.i[+Assistance::io__text_integer::MODE], data.str[+Assistance::io__text_string::STRING].c_str());
+			al_draw_text(data.font, data.c, 1.0 * targ_draw_xy[0] / (data.d[+Assistance::io__text_double::SCALEG]), 1.0 * targ_draw_xy[1] / (data.d[+Assistance::io__text_double::SCALEG]), data.i[+Assistance::io__text_integer::MODE], data.str[+Assistance::io__text_string::PROCESSED_STRING].c_str());
 		}
 		void Text::_interpretTags(std::string& s)
 		{
@@ -1094,12 +1018,10 @@ namespace LSW {
 			}
 
 			if (al_get_time() - data.d[+Assistance::io__text_double::LAST_INTERPRET] > data.d[+Assistance::io__text_double::UPDATETIME]) {
-				if (data.d[+Assistance::io__text_double::LAST_INTERPRET] == 0) data.d[+Assistance::io__text_double::LAST_INTERPRET] = al_get_time();
-				else {
-					if (al_get_time() - data.d[+Assistance::io__text_double::LAST_INTERPRET] > data.d[+Assistance::io__text_double::UPDATETIME] * 3) data.d[+Assistance::io__text_double::LAST_INTERPRET] = al_get_time();
-					else data.d[+Assistance::io__text_double::LAST_INTERPRET] += data.d[+Assistance::io__text_double::UPDATETIME];
-				}
-
+				
+				if (al_get_time() - data.d[+Assistance::io__text_double::LAST_INTERPRET] > data.d[+Assistance::io__text_double::UPDATETIME] * 3) data.d[+Assistance::io__text_double::LAST_INTERPRET] = al_get_time();
+				else data.d[+Assistance::io__text_double::LAST_INTERPRET] += data.d[+Assistance::io__text_double::UPDATETIME];
+				
 				std::string b4 = data.str[+Assistance::io__text_string::PROCESSED_STRING];
 				data.str[+Assistance::io__text_string::PROCESSED_STRING] = data.str[+Assistance::io__text_string::STRING];
 				_interpretTags(data.str[+Assistance::io__text_string::PROCESSED_STRING]);
@@ -1144,7 +1066,7 @@ namespace LSW {
 
 			if (!data.b[+Assistance::io__text_boolean::AFFECTED_BY_CAM]) preset.reset();
 
-			preset.set(Assistance::io__camera_float::SCALE_G, preset.get(Assistance::io__camera_float::SCALE_G) * data.d[+Assistance::io__text_double::SCALEG] * 1.0 / Constants::text_default_sharpness_font);
+			preset.set(Assistance::io__camera_float::SCALE_G,  preset.get(Assistance::io__camera_float::SCALE_G) * data.d[+Assistance::io__text_double::SCALEG] * 1.0 / Constants::text_default_sharpness_font);
 			preset.set(Assistance::io__camera_float::OFFSET_X, preset.get(Assistance::io__camera_float::OFFSET_X) * Constants::text_default_sharpness_font / data.d[+Assistance::io__text_double::SCALEG]);
 			preset.set(Assistance::io__camera_float::OFFSET_Y, preset.get(Assistance::io__camera_float::OFFSET_Y) * Constants::text_default_sharpness_font / data.d[+Assistance::io__text_double::SCALEG]);
 

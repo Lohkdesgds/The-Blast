@@ -29,8 +29,8 @@ namespace LSW {
 
 			thr_md_arg = new __display_routines();
 			thr_md_arg->insert(al_get_display_event_source(md->_getD()));
-			thr_md_arg->insert(logg.getEventSource());
 			thr_md_arg->insert(&evsrc);
+			thr_md_arg->insert(logg.getEvent());
 			thr_md_arg->start();
 
 			{

@@ -67,7 +67,7 @@ namespace LSW {
 
 		}
 
-		typedef __template_multiple_timers<1, 2, 2, 10> __display_routines;
+		typedef __template_multiple_timers<1, 2, 2, 5> __display_routines;
 		typedef __template_multiple_timers<1, 5, 30>	__collision_routines;
 		typedef __template_multiple_timers<1, 5, 5>		__keyboardmouse_routines;
 
