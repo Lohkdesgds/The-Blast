@@ -168,13 +168,17 @@ int main(int argc, const char* argv[])
 
 	float __progress = 0.00f;
 	std::thread __progress_bar([&__progress, &fonts] {
-		single_display* myd = new single_display(250, 45, ALLEGRO_WINDOWED | ALLEGRO_NOFRAME, 60);
+		single_display* myd = new single_display(300, 40, ALLEGRO_WINDOWED | ALLEGRO_NOFRAME, 60);
 		ALLEGRO_FONT* f;
+		float __smoothp = 0.00;
+		size_t frames_already_done = 0;
 		assert(fonts.get("DEFAULT", f));
-		while (__progress < 1.00) {
+		while (frames_already_done < 60 && (100.0f - __smoothp > 0.02f)) {
+			if (__progress == 1.00) frames_already_done++;
+			__smoothp = (__smoothp * 16.0 + __progress) / 17.0;
 			char tb[16];
-			sprintf_s(tb, "%02.2f%c", 100.0f * __progress, '%');
-			draw_simple_bar(__progress);
+			sprintf_s(tb, "%02.2f%c", 100.0f * __smoothp, '%');
+			draw_simple_bar(__smoothp);
 			draw_simple_txt(f, tb);
 			myd->flip();
 			Sleep(20);
@@ -186,7 +190,8 @@ int main(int argc, const char* argv[])
 
 	
 
-	cp.set(Assistance::io___float_camera::OFFSET_Y, 2.6);
+	//cp.set(Assistance::io___float_camera::OFFSET_Y, 2.6);
+	
 
 	logg << L::SLL << fsr(__FUNCSIG__) << "Initializing display, events and stuff..." << L::BLL;
 
@@ -242,7 +247,8 @@ int main(int argc, const char* argv[])
 	mysprite->apply(Assistance::io___double_sprite::SCALEG, 0.7);
 	//mysprite->apply(Assistance::io___double_sprite::POSX, 0.3 * sin(0.7 + 0.91 * al_get_time()));
 	//mysprite->apply(Assistance::io___double_sprite::POSY, -1.5 + 0.2 * cos(0.4 + 0.65 * al_get_time()));
-	mysprite->apply(Assistance::io___double_sprite::POSY, 2.80); // 3.20
+	//mysprite->apply(Assistance::io___double_sprite::POSY, 2.80); // 3.20
+	mysprite->apply(Assistance::io___double_sprite::POSY, 0.90); // 3.20
 
 	//draw_simple_bar(250, 45, 0.95f); _progress_bar->flip();
 	__progress = 0.998f;
@@ -261,7 +267,6 @@ int main(int argc, const char* argv[])
 
 	auto mytrack = tracks.create("randomtrack");
 	mytrack->set(track_s::LOADID, "MUSIC_0");
-	mytrack->set(track_p::PLAYING, true);
 
 	//draw_simple_bar(250, 45, 1.00f); _progress_bar->flip();
 	
@@ -288,12 +293,13 @@ int main(int argc, const char* argv[])
 
 	logg << L::SLL << fsr(__FUNCSIG__) << "Waiting the end of initialization..." << L::BLL;
 	while (!consol.awakened()) Sleep(20);
+	//mytrack->set(track_p::PLAYING, true);
 	logg << L::SLL << fsr(__FUNCSIG__) << "Started main loop." << L::BLL;
 
 	size_t counttt = 0;
 
 	while (consol.running()) {
-		Sleep(10);
+		Sleep(25);
 		
 
 		mytext->set(Assistance::_text_opt_str::SETSTRING, "Main loop counter:" + std::to_string(counttt++));
@@ -301,10 +307,12 @@ int main(int argc, const char* argv[])
 		//mysprite->apply(Assistance::io___double_sprite::POSX, 0.3 * sin(0.7 + 0.91 * al_get_time()));
 		//mysprite->apply(Assistance::io___double_sprite::POSY, - 1.5 + 0.2 * cos(0.4 + 0.65 * al_get_time()));
 
-		cp.set(Assistance::io___float_camera::ROTATION, cos(al_get_time()) * 0.05);
+		cp.set(Assistance::io___float_camera::ROTATION, al_get_time() * 0.25);
+		logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "ANG=" << (float)((int)(0.3 * (1800.0 / ALLEGRO_PI) * al_get_time())%3600)/10.0 << L::BL;
+		cp.set(Assistance::io___float_camera::ROTATION, 0.3 * al_get_time());
 
 		gcam.set(cp, 0);
-		gcam.apply();
+		gcam.apply(0);
 	}
 
 

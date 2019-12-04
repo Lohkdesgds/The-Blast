@@ -17,6 +17,7 @@
 #include <Windows.h>
 #include <vector>
 #include <memory>
+#include <math.h>
 
 #include "..\custom_abort\abort.h"
 #include "..\system\system.h"
@@ -27,7 +28,7 @@ namespace LSW {
 
 		namespace Assistance {
 
-			enum class io___float_camera    { SCALE_X, SCALE_Y, SCALE_G, OFFSET_X, OFFSET_Y, ROTATION, _MAX_CAM_OPT };
+			enum class io___float_camera    { SCALE_X, SCALE_Y, SCALE_G, OFFSET_X, OFFSET_Y, ROTATION, size };
 			
 			enum class io___vecstring_sprite{ ADDMULTIPLE, REMOVEMULTIPLE };
 			enum class io___string_sprite	{ ADD, REMOVE, SPRITE_ID };
@@ -157,17 +158,23 @@ namespace LSW {
 			//const std::string tags[] = { "%pos_x%", "%pos_y%", "%screen_pos_x%", "%screen_pos_y%","%is_following%", "%color_r%", "%color_g%", "%color_b%", "%color_a%", "%mode%", "%time%", "%is_using_buf%", "%g_b_res_x%", "%g_b_res_y%", "%base_refresh_rate%", "%fps%", "%tps%", "%tps_col%", "%tps_funcs%", "%tps_second%", "%tps_posupd%", "%sprite_frame%", "%cam_x%", "%cam_y%", "%cam_zoom%", "%cam_zoom_x%", "%cam_zoom_y%", "%curr_string%", "%last_string%", "%mouse_x%", "%mouse_y%", "%sprite_speed_x%", "%sprite_speed_y%", "%sprite_name%", "%entity_name%", "%entity_health%", "%num_images%", "%num_sprites%", "%num_texts%", "%num_tracks%", "%num_entities%", "%garbage_total%", "%garbage_images%", "%garbage_sprites%", "%garbage_texts%", "%garbage_tracks%", "%garbage_entities%" };
 		}
 
-		void draw_simple_bar(const float, const ALLEGRO_COLOR = al_map_rgb(0, 0, 0), const ALLEGRO_COLOR = al_map_rgb(0, 200, 0));
+		void draw_simple_bar(const float, const ALLEGRO_COLOR = al_map_rgb(0, 0, 0));
+		void draw_confuse_rectangle(const float, const float, const float, const float, const ALLEGRO_COLOR, const ALLEGRO_COLOR, const ALLEGRO_COLOR, const ALLEGRO_COLOR);
 		void draw_simple_txt(ALLEGRO_FONT*, const std::string, ALLEGRO_COLOR = al_map_rgb(255,255,255), const int = ALLEGRO_ALIGN_CENTER);
 
 		class camera_preset {
+			float p[+Assistance::io___float_camera::size] = { 1.0,1.0,1.0,0.0,0.0,0.0 };
+			ALLEGRO_TRANSFORM latest;
+
+			void _think_latest();
 		public:
-			float p[+Assistance::io___float_camera::_MAX_CAM_OPT] = { 1.0,1.0,1.0,0.0,0.0,0.0 };
 			std::vector<int> layers; // layers enabled
 
 			void set(const Assistance::io___float_camera, const float); // set a value to a property
+			void merge(const Assistance::io___float_camera, const float); // merge a value with a property
 			float get(const Assistance::io___float_camera);             // get a value for a property
 			void setLayer(const int, const bool);  // enables or disables a layer from drawing methods (sprites have to have layers)
+			ALLEGRO_TRANSFORM& quick();
 		};
 
 		// transformator has scale, pos and rotation transformations
@@ -184,7 +191,9 @@ namespace LSW {
 			void set(const camera_preset&, const int = 0);
 			void apply(const int);
 			void apply();
-			void applyNoSave(camera_preset);
+			void refreshquicks();
+			ALLEGRO_TRANSFORM applyNoSave(camera_preset);
+			void applyRaw(ALLEGRO_TRANSFORM*);
 			camera_preset& get(const int);
 			camera_preset& get();
 		};

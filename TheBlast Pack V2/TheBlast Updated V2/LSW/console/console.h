@@ -114,6 +114,8 @@ namespace LSW {
 
 			ALLEGRO_EVENT_SOURCE evsrc;
 
+			float ____temporary_mouse_pos[2] = { 0.0,0.0 };
+
 			void __l_thr_md();
 			void __l_thr_cl();
 			void __l_thr_kb();

@@ -408,8 +408,6 @@ namespace LSW {
 			gfile logg;
 			logg << L::SLL << fsr(__FUNCSIG__) << "Creating new display (blank)" << L::BLL;
 
-			// TODO: CHANGE TO LOAD FROM CONFIG!
-
 			int flag = Constants::start_display_default_mode;
 			__g_sys.__set_new_display_mode(flag);
 			auto u = __g_sys.__get_available_res();

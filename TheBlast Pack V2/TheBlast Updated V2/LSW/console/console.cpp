@@ -24,7 +24,7 @@ namespace LSW {
 
 			al_set_new_bitmap_flags(ALLEGRO_VIDEO_BITMAP);
 
-			gcam.apply();
+			//gcam.apply();
 
 			thr_md_arg = new __display_routines();
 			thr_md_arg->insert(al_get_display_event_source(md->_getD()));
@@ -41,9 +41,9 @@ namespace LSW {
 
 			logg << L::SLL << fsr(__FUNCSIG__) << "In the loop!" << L::BLL;
 
-			thr_md_upnrunnin = true;
 			al_set_target_backbuffer(md->_getD());
 			al_convert_bitmaps();
+			thr_md_upnrunnin = true;
 
 			for(bool localb = true; localb;)
 			{
@@ -78,6 +78,7 @@ namespace LSW {
 							// yes, merge
 						case ALLEGRO_EVENT_DISPLAY_RESIZE:
 							al_acknowledge_resize(md->_getD());
+							
 							gcam.apply();
 							logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "DISPLAYRESIZE got, acknowledged, done." << L::BL;
 
@@ -106,10 +107,12 @@ namespace LSW {
 
 				// locally check if dealable error
 				try {
-					al_set_target_backbuffer(md->_getD());
+					//al_set_target_backbuffer(md->_getD());
+					gcam.apply();
+					//al_draw_filled_rectangle(____temporary_mouse_pos[0] - 0.5, ____temporary_mouse_pos[1] - 0.05, ____temporary_mouse_pos[0], ____temporary_mouse_pos[1] + 0.1, al_map_rgb(0, 0, 255));
+					//al_draw_filled_rectangle(____temporary_mouse_pos[0], ____temporary_mouse_pos[1] - 0.1, ____temporary_mouse_pos[0] + 0.5, ____temporary_mouse_pos[1] + 0.05, al_map_rgb(0, 255, 0));
 					for (auto& i : sprites) i->self->draw(0);
 					for (auto& i : texts)  i->self->draw(0);
-
 					last_loop_had_error = 0;
 				}
 				catch (Abort::abort err)
@@ -276,6 +279,31 @@ namespace LSW {
 					if (ev.type == ALLEGRO_EVENT_KEY_DOWN) { // USE IN GAME
 
 						//printf_s("[THR_KBM] KEYDOWN= %d\n", ev.keyboard.keycode);
+
+						camera_preset cp;
+
+						switch (ev.keyboard.keycode) {
+						case ALLEGRO_KEY_1:
+							cp.set(Assistance::io___float_camera::ROTATION, 0.0 * ALLEGRO_PI);
+							gcam.set(cp, 0);
+							gcam.apply(0);
+							break;
+						case ALLEGRO_KEY_2:
+							cp.set(Assistance::io___float_camera::ROTATION, 0.5 * ALLEGRO_PI);
+							gcam.set(cp, 0);
+							gcam.apply(0);
+							break;
+						case ALLEGRO_KEY_3:
+							cp.set(Assistance::io___float_camera::ROTATION, 1.0 * ALLEGRO_PI);
+							gcam.set(cp, 0);
+							gcam.apply(0);
+							break;
+						case ALLEGRO_KEY_4:
+							cp.set(Assistance::io___float_camera::ROTATION, 1.5 * ALLEGRO_PI);
+							gcam.set(cp, 0);
+							gcam.apply(0);
+							break;
+						}
 					}
 					if (ev.type == ALLEGRO_EVENT_KEY_UP) { // USE IN GAME
 
@@ -300,8 +328,8 @@ namespace LSW {
 						//else                          logg.debug("[THR_KBM] KEYCHAR= %d", ev.keyboard.keycode);
 					}
 					if (ev.type == ALLEGRO_EVENT_MOUSE_AXES) {
-						mouse_pos[0] = (ev.mouse.x * 2.0f / display_x) - 1.0;
-						mouse_pos[1] = (ev.mouse.y * 2.0f / display_y) - 1.0;
+						____temporary_mouse_pos[0] = mouse_pos[0] = (ev.mouse.x * 2.0f / display_x) - 1.0;
+						____temporary_mouse_pos[1] = mouse_pos[1] = (ev.mouse.y * 2.0f / display_y) - 1.0;
 
 						//logg.debug("[THR_KBM] MOUSEAXIS dp={%d,%d} pos={%d,%d} rel={%.3f,%.3f}", ev.mouse.dx, ev.mouse.dy, ev.mouse.x, ev.mouse.y, mouse_pos[0], mouse_pos[1]);
 					}
@@ -382,7 +410,7 @@ namespace LSW {
 
 		bool Console::awakened()
 		{
-			return (md != nullptr);
+			return (md != nullptr && thr_md_upnrunnin /* TODO: add collision thread and keyboard */);
 		}
 
 		bool Console::running()

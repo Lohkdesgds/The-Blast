@@ -9,19 +9,33 @@ namespace LSW {
 
 
 
-		void draw_simple_bar(const float perc, const ALLEGRO_COLOR bg, const ALLEGRO_COLOR bar)
+		void draw_simple_bar(const float perc, const ALLEGRO_COLOR bg)
 		{
 			Camera gcam;
 			gcam.applyNoSave(camera_preset());
 			al_clear_to_color(bg);
-			al_draw_filled_rectangle(-0.99, -0.99, 2.0 * perc - 1.0, 0.99, bar);
+			ALLEGRO_COLOR clrs[] = { al_map_rgb(250 - perc * 200, 4, 5 + perc * 100),al_map_rgb(180 - perc * 140, 27, 80 + perc * 70),al_map_rgb(5, 200 + perc * 50, 0),al_map_rgb(115, 190 + perc * 50, 24) };
+			draw_confuse_rectangle(-0.98, -0.95, 1.96 * perc - 0.98, 0.95, clrs[0], clrs[1], clrs[2], clrs[3]);
+		}
+
+		void draw_confuse_rectangle(const float x1, const float y1, const float x2, const float y2,
+			const ALLEGRO_COLOR c1, const ALLEGRO_COLOR c2, const ALLEGRO_COLOR c3, const ALLEGRO_COLOR c4)
+		{
+			ALLEGRO_VERTEX v[] =
+			{
+				  { x1, y1, 0, 0, 0, c1}, //top left
+				  { x2, y1, 0, 0, 0, c3}, //top right
+				  { x1, y2, 0, 0, 0, c2}, //bottom left
+				  { x2, y2, 0, 0, 0, c4}  //bottom right
+			};
+			al_draw_prim(v, NULL, NULL, 0, 4, ALLEGRO_PRIM_TRIANGLE_STRIP);
 		}
 
 		void draw_simple_txt(ALLEGRO_FONT* f, const std::string s, ALLEGRO_COLOR c, const int flag)
 		{
 			Camera gcam;
 			camera_preset cp;
-			cp.set(Assistance::io___float_camera::SCALE_G, 0.3 / Constants::text_default_sharpness_font);
+			cp.set(Assistance::io___float_camera::SCALE_G, 0.2 / Constants::text_default_sharpness_font);
 			cp.set(Assistance::io___float_camera::SCALE_Y, 3.5);
 			gcam.applyNoSave(cp);
 			al_draw_text(f, c, 0, - 0.6 * Constants::text_default_sharpness_font, flag, s.c_str());
@@ -29,9 +43,42 @@ namespace LSW {
 		}
 
 
+		void camera_preset::_think_latest()
+		{
+			ALLEGRO_DISPLAY* d = al_get_current_display();
+			if (!d) return;
+
+			al_identity_transform(&latest);
+
+			al_build_transform(&latest,
+			(al_get_display_width(d) / 2) * (1.0 + get(Assistance::io___float_camera::OFFSET_X) * (al_get_display_width(d) * 0.5 * get(Assistance::io___float_camera::SCALE_X) * get(Assistance::io___float_camera::SCALE_G))),
+			(al_get_display_height(d) / 2) * (1.0 + get(Assistance::io___float_camera::OFFSET_Y) * (al_get_display_height(d) * 0.5 * get(Assistance::io___float_camera::SCALE_Y) * get(Assistance::io___float_camera::SCALE_G))),
+			(al_get_display_width(d) / 2) * get(Assistance::io___float_camera::SCALE_X) * get(Assistance::io___float_camera::SCALE_G),
+			(al_get_display_height(d) / 2) * get(Assistance::io___float_camera::SCALE_Y) * get(Assistance::io___float_camera::SCALE_G),
+			get(Assistance::io___float_camera::ROTATION));
+		}
+
 		void camera_preset::set(const Assistance::io___float_camera u, const float v)
 		{
 			p[+u] = v;
+			_think_latest();
+		}
+
+		void camera_preset::merge(const Assistance::io___float_camera u, const float v)
+		{
+			switch (u) {
+			case Assistance::io___float_camera::SCALE_X:
+			case Assistance::io___float_camera::SCALE_Y:
+			case Assistance::io___float_camera::SCALE_G:
+				p[+u] *= v;
+				break;				
+			case Assistance::io___float_camera::OFFSET_X:
+			case Assistance::io___float_camera::OFFSET_Y:
+			case Assistance::io___float_camera::ROTATION:
+				p[+u] += v;
+				break;
+			}
+			_think_latest();
 		}
 
 		float camera_preset::get(const Assistance::io___float_camera u)
@@ -58,6 +105,13 @@ namespace LSW {
 			}
 		}
 
+		ALLEGRO_TRANSFORM& camera_preset::quick()
+		{
+			return latest;
+		}
+
+
+		
 
 		void Camera::reset()
 		{
@@ -70,15 +124,30 @@ namespace LSW {
 			presets[i] = p;
 		}
 
+		
 		void Camera::apply(const int a)
 		{
 			lastapply = a;
 			camera_preset lastTransf = presets[a];
-			ALLEGRO_DISPLAY* d = al_get_current_display();
 
-			if (!d) return;// throw Abort::abort("al_get_current_display", "transformator::apply", "Display not found to apply transformation"); (should not do that just because it failed)
+			applyRaw(&lastTransf.quick());
+			/*ALLEGRO_DISPLAY* d = al_get_current_display();
 
+			if (!d) return;
+						
 			al_identity_transform(&g_t);
+
+			al_build_transform(&g_t,
+				(al_get_display_width(d)  / 2) * (1.0 + lastTransf.get(Assistance::io___float_camera::OFFSET_X) * (al_get_display_width(d)  * 0.5 * lastTransf.get(Assistance::io___float_camera::SCALE_X) * lastTransf.get(Assistance::io___float_camera::SCALE_G))),
+				(al_get_display_height(d) / 2) * (1.0 + lastTransf.get(Assistance::io___float_camera::OFFSET_Y) * (al_get_display_height(d) * 0.5 * lastTransf.get(Assistance::io___float_camera::SCALE_Y) * lastTransf.get(Assistance::io___float_camera::SCALE_G))),
+				(al_get_display_width(d) / 2) * lastTransf.get(Assistance::io___float_camera::SCALE_X) * lastTransf.get(Assistance::io___float_camera::SCALE_G),
+				(al_get_display_height(d) / 2) * lastTransf.get(Assistance::io___float_camera::SCALE_Y) * lastTransf.get(Assistance::io___float_camera::SCALE_G),
+				lastTransf.get(Assistance::io___float_camera::ROTATION));
+
+			al_use_transform(&g_t);*/
+
+			/*al_identity_transform(&g_t);
+
 
 			al_rotate_transform(&g_t,
 				lastTransf.get(Assistance::io___float_camera::ROTATION));
@@ -91,7 +160,8 @@ namespace LSW {
 				al_get_display_width(d) * 0.5 - lastTransf.get(Assistance::io___float_camera::OFFSET_X) * (al_get_display_width(d) * 0.5 * lastTransf.get(Assistance::io___float_camera::SCALE_X) * lastTransf.get(Assistance::io___float_camera::SCALE_G)),
 				al_get_display_height(d) * 0.5 - lastTransf.get(Assistance::io___float_camera::OFFSET_Y) * (al_get_display_height(d) * 0.5 * lastTransf.get(Assistance::io___float_camera::SCALE_Y) * lastTransf.get(Assistance::io___float_camera::SCALE_G)));
 
-			al_use_transform(&g_t);
+
+			al_use_transform(&g_t);*/
 		}
 
 		void Camera::apply()
@@ -99,27 +169,37 @@ namespace LSW {
 			apply(lastapply);
 		}
 
-		void Camera::applyNoSave(camera_preset lastTransf)
+		void Camera::refreshquicks()
+		{
+			for (auto& i : presets) i.second.merge(Assistance::io___float_camera::OFFSET_X, 0.0); // refresh
+		}
+
+		
+		ALLEGRO_TRANSFORM Camera::applyNoSave(camera_preset lastTransf)
 		{
 			ALLEGRO_DISPLAY* d = al_get_current_display();
 
-			if (!d) throw Abort::abort("al_get_current_display", "transformator::apply", "Display not found to apply transformation");
+			if (!d) return ALLEGRO_TRANSFORM();
 
 			al_identity_transform(&g_t);
 
-			al_rotate_transform(&g_t,
+			al_build_transform(&g_t,
+				(al_get_display_width(d) / 2) * (1.0 + lastTransf.get(Assistance::io___float_camera::OFFSET_X) * (al_get_display_width(d) * 0.5 * lastTransf.get(Assistance::io___float_camera::SCALE_X) * lastTransf.get(Assistance::io___float_camera::SCALE_G))),
+				(al_get_display_height(d) / 2) * (1.0 + lastTransf.get(Assistance::io___float_camera::OFFSET_Y) * (al_get_display_height(d) * 0.5 * lastTransf.get(Assistance::io___float_camera::SCALE_Y) * lastTransf.get(Assistance::io___float_camera::SCALE_G))),
+				(al_get_display_width(d) / 2) * lastTransf.get(Assistance::io___float_camera::SCALE_X) * lastTransf.get(Assistance::io___float_camera::SCALE_G),
+				(al_get_display_height(d) / 2) * lastTransf.get(Assistance::io___float_camera::SCALE_Y) * lastTransf.get(Assistance::io___float_camera::SCALE_G),
 				lastTransf.get(Assistance::io___float_camera::ROTATION));
 
-			al_scale_transform(&g_t,
-				al_get_display_width(d) * 0.5 * lastTransf.get(Assistance::io___float_camera::SCALE_X) * lastTransf.get(Assistance::io___float_camera::SCALE_G),
-				al_get_display_height(d) * 0.5 * lastTransf.get(Assistance::io___float_camera::SCALE_Y) * lastTransf.get(Assistance::io___float_camera::SCALE_G)); // SCALING NOT AS EXPECTED (multiplier by zoom is not being made by transformation!)
-
-			al_translate_transform(&g_t,
-				al_get_display_width(d) * 0.5 - lastTransf.get(Assistance::io___float_camera::OFFSET_X) * (al_get_display_width(d) * 0.5 * lastTransf.get(Assistance::io___float_camera::SCALE_X) * lastTransf.get(Assistance::io___float_camera::SCALE_G)),
-				al_get_display_height(d) * 0.5 - lastTransf.get(Assistance::io___float_camera::OFFSET_Y) * (al_get_display_height(d) * 0.5 * lastTransf.get(Assistance::io___float_camera::SCALE_Y) * lastTransf.get(Assistance::io___float_camera::SCALE_G)));
-
 			al_use_transform(&g_t);
+			return g_t;
 		}
+
+		void Camera::applyRaw(ALLEGRO_TRANSFORM* tr)
+		{
+			al_use_transform(tr);
+		}
+
+		
 
 		camera_preset& Camera::get(const int u)
 		{
@@ -386,29 +466,31 @@ namespace LSW {
 
 			ALLEGRO_BITMAP* rn = bmps.get();
 			Camera camm;
+			camera_preset psf = camm.get();
 
-			if (!data.bval[+Assistance::io___boolean_sprite::AFFECTED_BY_CAM]) camm.applyNoSave(camera_preset());
+			if (!data.bval[+Assistance::io___boolean_sprite::AFFECTED_BY_CAM]) psf = camera_preset();
 
 			float cx, cy, px, py, dsx, dsy, rot_rad;
 			int bmpx, bmpy;
-			bmpx =		al_get_bitmap_width(rn);
-			bmpy =		al_get_bitmap_height(rn);
+			bmpx = al_get_bitmap_width(rn);
+			bmpy = al_get_bitmap_height(rn);
 			if (bmpx <= 0 || bmpy <= 0) {
 				throw Abort::abort("al_get_bitmap_width|al_get_bitmap_height", "Sprite::draw", "Somehow the texture have < 0 width / height id=[" + this->sprite_id + "] size={" + std::to_string(bmpx) + "," + std::to_string(bmpy) + "}", 1);
 			}
 
-			cx =		1.0f * bmpx * ((data.dval[+Assistance::io___double_sprite::CENTERX] + 1.0) * 0.5);
-			cy =		1.0f * bmpy * ((data.dval[+Assistance::io___double_sprite::CENTERY] + 1.0) * 0.5);
-			rot_rad =	1.0f * data.dval[+Assistance::io___double_sprite::ROTATION] * ALLEGRO_PI / 180.0;
-			px =		1.0f * data.dval[+Assistance::io___double_sprite::POSX] * cos(rot_rad) + data.dval[+Assistance::io___double_sprite::POSY] * sin(rot_rad);
-			py =		1.0f * data.dval[+Assistance::io___double_sprite::POSY] * cos(rot_rad) - data.dval[+Assistance::io___double_sprite::POSX] * sin(rot_rad);
-			dsx =		1.0f * data.dval[+Assistance::io___double_sprite::SCALEX] * data.dval[+Assistance::io___double_sprite::SCALEG] * (1.0 / bmpx);
-			dsy =		1.0f * data.dval[+Assistance::io___double_sprite::SCALEY] * data.dval[+Assistance::io___double_sprite::SCALEG] * (1.0 / bmpy);
+			cx = 1.0f * bmpx * ((data.dval[+Assistance::io___double_sprite::CENTERX] + 1.0) * 0.5);
+			cy = 1.0f * bmpy * ((data.dval[+Assistance::io___double_sprite::CENTERY] + 1.0) * 0.5);
+			rot_rad = 1.0f * data.dval[+Assistance::io___double_sprite::ROTATION] * ALLEGRO_PI / 180.0;
+			px = 1.0f * data.dval[+Assistance::io___double_sprite::POSX] * cos(rot_rad) + data.dval[+Assistance::io___double_sprite::POSY] * sin(rot_rad);
+			py = 1.0f * data.dval[+Assistance::io___double_sprite::POSY] * cos(rot_rad) - data.dval[+Assistance::io___double_sprite::POSX] * sin(rot_rad);
+			dsx = 1.0f * data.dval[+Assistance::io___double_sprite::SCALEX] * data.dval[+Assistance::io___double_sprite::SCALEG] * (1.0 / bmpx);
+			dsy = 1.0f * data.dval[+Assistance::io___double_sprite::SCALEY] * data.dval[+Assistance::io___double_sprite::SCALEG] * (1.0 / bmpy);
 
 			// draw
+			camm.applyNoSave(psf);
 
 			if (data.bval[+Assistance::io___boolean_sprite::USE_TINTED_DRAWING])	al_draw_tinted_scaled_rotated_bitmap(rn, data.tint, cx, cy, px, py, dsx, dsy, rot_rad, 0);
-			else																    al_draw_scaled_rotated_bitmap       (rn,            cx, cy, px, py, dsx, dsy, rot_rad, 0);
+			else																    al_draw_scaled_rotated_bitmap(rn, cx, cy, px, py, dsx, dsy, rot_rad, 0);
 
 			// debug
 
@@ -435,6 +517,76 @@ namespace LSW {
 
 			camm.apply();
 		}
+		//	if (layer != is_layer) return;
+
+		//	ALLEGRO_BITMAP* rn = bmps.get();
+		//	Camera camm;
+		//	camera_preset psf = camm.get();
+
+		//	if (!data.bval[+Assistance::io___boolean_sprite::AFFECTED_BY_CAM]) {
+		//		psf = camera_preset();
+		//	}
+
+		//	float cx, cy/*, px, py, dsx, dsy, rot_rad*/;
+		//	int bmpx, bmpy;
+		//	bmpx =		al_get_bitmap_width(rn);
+		//	bmpy =		al_get_bitmap_height(rn);
+		//	if (bmpx <= 0 || bmpy <= 0) {
+		//		throw Abort::abort("al_get_bitmap_width|al_get_bitmap_height", "Sprite::draw", "Somehow the texture have < 0 width / height id=[" + this->sprite_id + "] size={" + std::to_string(bmpx) + "," + std::to_string(bmpy) + "}", 1);
+		//	}
+
+		//	//psf.merge(Assistance::io___float_camera::ROTATION, data.dval[+Assistance::io___double_sprite::ROTATION] * ALLEGRO_PI / 180.0);
+		//	psf.merge(Assistance::io___float_camera::SCALE_G, data.dval[+Assistance::io___double_sprite::SCALEG]);
+		//	psf.merge(Assistance::io___float_camera::SCALE_X, data.dval[+Assistance::io___double_sprite::SCALEX] * (1.0 / bmpx));
+		//	psf.merge(Assistance::io___float_camera::SCALE_Y, data.dval[+Assistance::io___double_sprite::SCALEY] * (1.0 / bmpy));
+		//	psf.merge(Assistance::io___float_camera::OFFSET_X, -data.dval[+Assistance::io___double_sprite::POSX]);
+		//	psf.merge(Assistance::io___float_camera::OFFSET_Y, -data.dval[+Assistance::io___double_sprite::POSY]);
+		//	psf.merge(Assistance::io___float_camera::ROTATION, data.dval[+Assistance::io___double_sprite::ROTATION] * ALLEGRO_PI / 180.0);
+
+
+		//	cx =		1.0f * bmpx * ((data.dval[+Assistance::io___double_sprite::CENTERX] + 1.0) * 0.5);
+		//	cy =		1.0f * bmpy * ((data.dval[+Assistance::io___double_sprite::CENTERY] + 1.0) * 0.5);
+		//	/*rot_rad =	1.0f * data.dval[+Assistance::io___double_sprite::ROTATION] * ALLEGRO_PI / 180.0;
+		//	px =		1.0f * data.dval[+Assistance::io___double_sprite::POSX] * cos(rot_rad) + data.dval[+Assistance::io___double_sprite::POSY] * sin(rot_rad);
+		//	py =		1.0f * data.dval[+Assistance::io___double_sprite::POSY] * cos(rot_rad) - data.dval[+Assistance::io___double_sprite::POSX] * sin(rot_rad);*/
+
+		//	///px = data.dval[+Assistance::io___double_sprite::POSX];
+		//	///py = data.dval[+Assistance::io___double_sprite::POSY];
+		//	//dsx =		1.0f * data.dval[+Assistance::io___double_sprite::SCALEX] * data.dval[+Assistance::io___double_sprite::SCALEG] * (1.0 / bmpx);
+		//	//dsy =		1.0f * data.dval[+Assistance::io___double_sprite::SCALEY] * data.dval[+Assistance::io___double_sprite::SCALEG] * (1.0 / bmpy);
+
+		//	// draw
+
+
+		//	camm.applyNoSave(psf);
+
+		//	if (data.bval[+Assistance::io___boolean_sprite::USE_TINTED_DRAWING])	al_draw_tinted_scaled_rotated_bitmap(rn, data.tint, cx, cy, 0, 0, 1.0, 1.0, 0, 0);
+		//	else																    al_draw_scaled_rotated_bitmap       (rn,            cx, cy, 0, 0, 1.0, 1.0, 0, 0);
+
+		//	// debug
+
+		//	if (data.bval[+Assistance::io___boolean_sprite::SHOWBOX] || data.bval[+Assistance::io___boolean_sprite::SHOWDOT])
+		//	{
+		//		ALLEGRO_COLOR colorr = al_map_rgb(0, 255, 0);
+
+		//		if (data.bval[+Assistance::io___boolean_sprite::IS_COLLIDING]) colorr = al_map_rgb(255, 0, 0);
+		//		//else if (al_get_time() - lastresetcollisioncall < Defaults::diff_time_show_last_resetCollision) colorr = al_map_rgb(255, 255, 0);
+
+		//		if (data.bval[+Assistance::io___boolean_sprite::SHOWBOX]) {
+		//			al_draw_filled_circle(data.dval[+Assistance::io___double_sprite::POSX] - cx, data.dval[+Assistance::io___double_sprite::POSY] - cy, 0.1f * fabs(psf.get(Assistance::io___float_camera::SCALE_G) * sqrt(psf.get(Assistance::io___float_camera::SCALE_X) * psf.get(Assistance::io___float_camera::SCALE_Y)) * 0.20f), colorr);
+		//			al_draw_filled_circle(data.dval[+Assistance::io___double_sprite::POSX] - cx, data.dval[+Assistance::io___double_sprite::POSY] + cy, 0.1f * fabs(psf.get(Assistance::io___float_camera::SCALE_G) * sqrt(psf.get(Assistance::io___float_camera::SCALE_X) * psf.get(Assistance::io___float_camera::SCALE_Y)) * 0.20f), colorr);
+		//			al_draw_filled_circle(data.dval[+Assistance::io___double_sprite::POSX] + cx, data.dval[+Assistance::io___double_sprite::POSY] - cy, 0.1f * fabs(psf.get(Assistance::io___float_camera::SCALE_G) * sqrt(psf.get(Assistance::io___float_camera::SCALE_X) * psf.get(Assistance::io___float_camera::SCALE_Y)) * 0.20f), colorr);
+		//			al_draw_filled_circle(data.dval[+Assistance::io___double_sprite::POSX] + cx, data.dval[+Assistance::io___double_sprite::POSY] + cy, 0.1f * fabs(psf.get(Assistance::io___float_camera::SCALE_G) * sqrt(psf.get(Assistance::io___float_camera::SCALE_X) * psf.get(Assistance::io___float_camera::SCALE_Y)) * 0.20f), colorr);
+		//		}
+
+		//		if (data.bval[+Assistance::io___boolean_sprite::SHOWDOT])
+		//		{
+		//			al_draw_filled_circle(data.dval[+Assistance::io___double_sprite::POSX], data.dval[+Assistance::io___double_sprite::POSY], 0.1f * fabs(psf.get(Assistance::io___float_camera::SCALE_G) * sqrt(psf.get(Assistance::io___float_camera::SCALE_X) * psf.get(Assistance::io___float_camera::SCALE_Y)) * 0.20f), colorr);
+		//		}
+		//	}
+
+		//	camm.apply();
+		//}
 
 
 
