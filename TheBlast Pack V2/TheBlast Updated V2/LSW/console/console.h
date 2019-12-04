@@ -22,6 +22,7 @@
 #include <locale>
 
 #include "..\organizer\organizer.h"
+#include "..\shared_constants\constants.h"
 
 #define BLACK al_map_rgb(0,0,0)
 
@@ -60,23 +61,15 @@ namespace LSW {
 
 		namespace Assistance {
 
-			struct __shared_routines {
-				size_t threadcount = 0;
-				std::mutex threadcountm;
-				bool should_exit = true;
-			};
+			enum class ro__thread_display_routines_timers { LOOPTRACK, CHECKKEEP, CHECKMEMORYBITMAP, UPDATELOGONSCREEN };
+			enum class ro__thread_collision_routines_timers { LOOPTRACK, CHECKKEEP, COLLISIONWORK };
+			enum class ro__thread_keyboardm_routines_timers { LOOPTRACK, CHECKKEEP, CHECKDISPLAYRESIZE };
 
-			enum class __display_routines_timers { LOOPTRACK, CHECKKEEP, CHECKMEMORYBITMAP };
-			enum class __collision_routines_timers { LOOPTRACK, CHECKKEEP, COLLISIONWORK };
-			enum class __keyboardm_routines_timers { LOOPTRACK, CHECKKEEP, CHECKDISPLAYRESIZE };
-
-			enum class __my_events{THRKBM_DISPLAY_SIZE = 512,THRDRW_GOT_FORCED_RESIZE}; // THRDRW -> event for the THREAD_DRAW
 		}
 
-		typedef __template_multiple_timers<1, 2, 2>     __display_routines;
+		typedef __template_multiple_timers<1, 2, 2, 10> __display_routines;
 		typedef __template_multiple_timers<1, 5, 30>	__collision_routines;
 		typedef __template_multiple_timers<1, 5, 5>		__keyboardmouse_routines;
-
 
 		typedef __template_static_vector<ALLEGRO_BITMAP>  Textures;
 		typedef __template_static_vector<ALLEGRO_FONT>    Fonts;
@@ -88,14 +81,17 @@ namespace LSW {
 
 
 
-
 		class Console {
-			single_display* md = nullptr; // HANDLED INTERNALLY ON THREAD
+			Display* md = nullptr; // HANDLED INTERNALLY ON THREAD
 
 			Textures gimg;
 			Camera gcam;
 
-			Assistance::__shared_routines thr_shared_arg; // shared
+			struct __shared_routines {
+				size_t threadcount = 0;
+				std::mutex threadcountm;
+				bool should_exit = true;
+			} thr_shared_arg; // shared
 
 			/// DISPLAY AND DRAW
 			std::thread* thr_md = nullptr; // unleash framerate
@@ -114,8 +110,6 @@ namespace LSW {
 
 			ALLEGRO_EVENT_SOURCE evsrc;
 
-			float ____temporary_mouse_pos[2] = { 0.0,0.0 };
-
 			void __l_thr_md();
 			void __l_thr_cl();
 			void __l_thr_kb();
@@ -123,12 +117,12 @@ namespace LSW {
 			Console();
 			~Console();
 
-			void launch();
+			void start();
 			//void launch(const std::function <void(void*)>, const std::function <void(void*)>, const std::function <void(void*)>); // display, events, kb?
-			void close();
+			void stop();
 
-			bool awakened();
-			bool running();
+			bool isOpen();
+			bool isRunning();
 		};
 
 	}

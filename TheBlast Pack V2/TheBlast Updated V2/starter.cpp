@@ -113,10 +113,6 @@ int main(int argc, const char* argv[])
 
 	gfile logg;
 
-	logg << L::SL << fsr(__FUNCSIG__, E::INFO) << "Testing INFO" << L::BL;
-	logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Testing DEBUG" << L::BL;
-	logg << L::SL << fsr(__FUNCSIG__, E::WARN) << "Testing WARN" << L::BL;
-	logg << L::SL << fsr(__FUNCSIG__, E::ERRR) << "Testing ERROR" << L::BL;
 	logg << L::SLL << fsr(__FUNCSIG__) << "App version: " << Constants::version_app << L::BLL;
 
 	logg << L::SLL << fsr(__FUNCSIG__) << "Initializing game..." << L::BLL;
@@ -147,13 +143,14 @@ int main(int argc, const char* argv[])
 	**************************************************************************************/
 
 
-	textures.setFuncs(Constants::lambda_bitmap_load, Constants::lambda_bitmap_unload);
-	fonts.setFuncs(Constants::lambda_font_load, Constants::lambda_font_unload);
-	samples.setFuncs(Constants::lambda_sample_load, Constants::lambda_sample_unload);
+	textures.set(Constants::lambda_bitmap_load, Constants::lambda_bitmap_unload);
+	fonts.set(Constants::lambda_font_load, Constants::lambda_font_unload);
+	samples.set(Constants::lambda_sample_load, Constants::lambda_sample_unload);
 
-	sprites.setFuncs(Constants::lambda_default_load<Sprite>, Constants::lambda_default_unload<Sprite>);
-	texts.setFuncs(Constants::lambda_default_load<Text>, Constants::lambda_default_unload<Text>);
-	tracks.setFuncs(Constants::lambda_default_load<Track>, Constants::lambda_default_unload<Track>);
+	sprites.set(Constants::lambda_default_load<Sprite>, Constants::lambda_default_unload<Sprite>);
+	texts.set(Constants::lambda_default_load<Text>, Constants::lambda_default_unload<Text>);
+	tracks.set(Constants::lambda_default_load<Track>, Constants::lambda_default_unload<Track>);
+
 
 	/*************************************************************************************
 
@@ -166,9 +163,10 @@ int main(int argc, const char* argv[])
 	// need this to draw progress bar
 	fonts.load("DEFAULT", "font.ttf");
 
+
 	float __progress = 0.00f;
 	std::thread __progress_bar([&__progress, &fonts] {
-		single_display* myd = new single_display(300, 40, ALLEGRO_WINDOWED | ALLEGRO_NOFRAME, 60);
+		Display* myd = new Display(300, 40, ALLEGRO_WINDOWED | ALLEGRO_NOFRAME, 60);
 		ALLEGRO_FONT* f;
 		float __smoothp = 0.00;
 		size_t frames_already_done = 0;
@@ -183,6 +181,10 @@ int main(int argc, const char* argv[])
 			myd->flip();
 			Sleep(20);
 		}
+		draw_simple_bar(1.0);
+		draw_simple_txt(f, "100%");
+		myd->flip();
+		Sleep(100);
 		delete myd;
 		});
 
@@ -190,7 +192,7 @@ int main(int argc, const char* argv[])
 
 	
 
-	//cp.set(Assistance::io___float_camera::OFFSET_Y, 2.6);
+	//cp.set(Assistance::io__camera_float::OFFSET_Y, 2.6);
 	
 
 	logg << L::SLL << fsr(__FUNCSIG__) << "Initializing display, events and stuff..." << L::BLL;
@@ -201,7 +203,6 @@ int main(int argc, const char* argv[])
 	textures.load("MOUSE", "mouse.png");
 	textures.load("MAIN_LOGO", "the_storm.png");
 
-	//draw_simple_bar(250, 45, 0.10f); _progress_bar->flip();
 
 	std::thread* lthr = nullptr;
 	float thrfloat = 0.00;
@@ -239,28 +240,29 @@ int main(int argc, const char* argv[])
 	auto mysprite = sprites.create("randomsprite");
 
 	lthr = new std::thread([&thrfloat, &__progress] {while (thrfloat != 1.00) { __progress = 0.87f + 0.10f * thrfloat; }});
-	mysprite->apply(Assistance::io___vecstring_sprite::ADDMULTIPLE, Tools::generateStringsFormat("PAUSE_##", 29), &thrfloat);
+	mysprite->set(Assistance::io__sprite_string_vector::ADDMULTIPLE, Tools::generateStringsFormat("PAUSE_##", 29), &thrfloat);
 	lthr->join(); delete lthr; lthr = nullptr; thrfloat = 0.00;
 
-	mysprite->apply(Assistance::io___string_sprite::SPRITE_ID, "randomsprite");
-	mysprite->apply(Assistance::io___boolean_sprite::DRAW, true);
-	mysprite->apply(Assistance::io___double_sprite::SCALEG, 0.7);
-	//mysprite->apply(Assistance::io___double_sprite::POSX, 0.3 * sin(0.7 + 0.91 * al_get_time()));
-	//mysprite->apply(Assistance::io___double_sprite::POSY, -1.5 + 0.2 * cos(0.4 + 0.65 * al_get_time()));
-	//mysprite->apply(Assistance::io___double_sprite::POSY, 2.80); // 3.20
-	mysprite->apply(Assistance::io___double_sprite::POSY, 0.90); // 3.20
+	mysprite->set(Assistance::io__sprite_string::ID, "randomsprite");
+	mysprite->set(Assistance::io__sprite_boolean::DRAW, true);
+	mysprite->set(Assistance::io__sprite_double::SCALEG, 0.7);
+	//mysprite->apply(Assistance::io__sprite_double::POSX, 0.3 * sin(0.7 + 0.91 * al_get_time()));
+	//mysprite->apply(Assistance::io__sprite_double::POSY, -1.5 + 0.2 * cos(0.4 + 0.65 * al_get_time()));
+	//mysprite->apply(Assistance::io__sprite_double::POSY, 2.80); // 3.20
+	mysprite->set(Assistance::io__sprite_double::POSY, 0.50); // 3.20
 
 	//draw_simple_bar(250, 45, 0.95f); _progress_bar->flip();
 	__progress = 0.998f;
 
 
 	auto mytext = texts.create("randomtext");
-	mytext->set(Assistance::_text_opt_str::SETFONT, "DEFAULT");
-	mytext->set(Assistance::_text_opt_str::SETSTRING, "TEST");
-	mytext->set(Assistance::_text_opt_str::SETID, "randomtext");
-	mytext->set(Assistance::_text_opt_bool::SHOW, true);
-	mytext->set(Assistance::_text_opt_db::SCALEG, 0.1);
-	mytext->set(Assistance::_text_opt_db::POSY, 3.3);
+	mytext->set(Assistance::io__text_string::FONT, "DEFAULT");
+	mytext->set(Assistance::io__text_string::STRING, "TEST");
+	mytext->set(Assistance::io__text_string::ID, "randomtext");
+	mytext->set(Assistance::io__text_boolean::SHOW, true);
+	mytext->set(Assistance::io__text_double::SCALEG, 0.1);
+	//mytext->set(Assistance::io__text_double::POSY, 3.3);
+	mytext->set(Assistance::io__text_double::POSY, 0.75);
 
 	//draw_simple_bar(250, 45, 0.98f); _progress_bar->flip();
 	__progress = 0.999f;
@@ -289,27 +291,27 @@ int main(int argc, const char* argv[])
 	
 
 	Console consol;
-	consol.launch();
+	consol.start();
 
 	logg << L::SLL << fsr(__FUNCSIG__) << "Waiting the end of initialization..." << L::BLL;
-	while (!consol.awakened()) Sleep(20);
+	while (!consol.isOpen()) Sleep(20);
 	//mytrack->set(track_p::PLAYING, true);
 	logg << L::SLL << fsr(__FUNCSIG__) << "Started main loop." << L::BLL;
 
 	size_t counttt = 0;
 
-	while (consol.running()) {
+	while (consol.isRunning()) {
 		Sleep(25);
 		
 
-		mytext->set(Assistance::_text_opt_str::SETSTRING, "Main loop counter:" + std::to_string(counttt++));
+		mytext->set(Assistance::io__text_string::STRING, "Main loop counter:" + std::to_string(counttt++));
 
-		//mysprite->apply(Assistance::io___double_sprite::POSX, 0.3 * sin(0.7 + 0.91 * al_get_time()));
-		//mysprite->apply(Assistance::io___double_sprite::POSY, - 1.5 + 0.2 * cos(0.4 + 0.65 * al_get_time()));
+		//mysprite->apply(Assistance::io__sprite_double::POSX, 0.3 * sin(0.7 + 0.91 * al_get_time()));
+		//mysprite->apply(Assistance::io__sprite_double::POSY, - 1.5 + 0.2 * cos(0.4 + 0.65 * al_get_time()));
 
-		cp.set(Assistance::io___float_camera::ROTATION, al_get_time() * 0.25);
+		cp.set(Assistance::io__camera_float::ROTATION, al_get_time() * 0.25);
 		logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "ANG=" << (float)((int)(0.3 * (1800.0 / ALLEGRO_PI) * al_get_time())%3600)/10.0 << L::BL;
-		cp.set(Assistance::io___float_camera::ROTATION, 0.3 * al_get_time());
+		cp.set(Assistance::io__camera_float::ROTATION, 0.3 * al_get_time());
 
 		gcam.set(cp, 0);
 		gcam.apply(0);

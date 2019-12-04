@@ -21,8 +21,7 @@ namespace LSW {
 		void draw_confuse_rectangle(const float x1, const float y1, const float x2, const float y2,
 			const ALLEGRO_COLOR c1, const ALLEGRO_COLOR c2, const ALLEGRO_COLOR c3, const ALLEGRO_COLOR c4)
 		{
-			ALLEGRO_VERTEX v[] =
-			{
+			ALLEGRO_VERTEX v[] = {
 				  { x1, y1, 0, 0, 0, c1}, //top left
 				  { x2, y1, 0, 0, 0, c3}, //top right
 				  { x1, y2, 0, 0, 0, c2}, //bottom left
@@ -35,8 +34,8 @@ namespace LSW {
 		{
 			Camera gcam;
 			camera_preset cp;
-			cp.set(Assistance::io___float_camera::SCALE_G, 0.2 / Constants::text_default_sharpness_font);
-			cp.set(Assistance::io___float_camera::SCALE_Y, 3.5);
+			cp.set(Assistance::io__camera_float::SCALE_G, 0.2 / Constants::text_default_sharpness_font);
+			cp.set(Assistance::io__camera_float::SCALE_Y, 3.5);
 			gcam.applyNoSave(cp);
 			al_draw_text(f, c, 0, - 0.6 * Constants::text_default_sharpness_font, flag, s.c_str());
 			gcam.apply();
@@ -51,37 +50,45 @@ namespace LSW {
 			al_identity_transform(&latest);
 
 			al_build_transform(&latest,
-			(al_get_display_width(d) / 2) * (1.0 + get(Assistance::io___float_camera::OFFSET_X) * (al_get_display_width(d) * 0.5 * get(Assistance::io___float_camera::SCALE_X) * get(Assistance::io___float_camera::SCALE_G))),
-			(al_get_display_height(d) / 2) * (1.0 + get(Assistance::io___float_camera::OFFSET_Y) * (al_get_display_height(d) * 0.5 * get(Assistance::io___float_camera::SCALE_Y) * get(Assistance::io___float_camera::SCALE_G))),
-			(al_get_display_width(d) / 2) * get(Assistance::io___float_camera::SCALE_X) * get(Assistance::io___float_camera::SCALE_G),
-			(al_get_display_height(d) / 2) * get(Assistance::io___float_camera::SCALE_Y) * get(Assistance::io___float_camera::SCALE_G),
-			get(Assistance::io___float_camera::ROTATION));
+			(al_get_display_width(d) / 2) * (1.0 + get(Assistance::io__camera_float::OFFSET_X) * (al_get_display_width(d) * 0.5 * get(Assistance::io__camera_float::SCALE_X) * get(Assistance::io__camera_float::SCALE_G))),
+			(al_get_display_height(d) / 2) * (1.0 + get(Assistance::io__camera_float::OFFSET_Y) * (al_get_display_height(d) * 0.5 * get(Assistance::io__camera_float::SCALE_Y) * get(Assistance::io__camera_float::SCALE_G))),
+			(al_get_display_width(d) / 2) * get(Assistance::io__camera_float::SCALE_X) * get(Assistance::io__camera_float::SCALE_G),
+			(al_get_display_height(d) / 2) * get(Assistance::io__camera_float::SCALE_Y) * get(Assistance::io__camera_float::SCALE_G),
+			get(Assistance::io__camera_float::ROTATION));
 		}
 
-		void camera_preset::set(const Assistance::io___float_camera u, const float v)
+		void camera_preset::reset()
+		{
+			p[0] = p[1] = p[2] = 1.0;
+			p[3] = p[4] = p[5] = 0.0;
+			al_identity_transform(&latest);
+			layers.clear();
+		}
+
+		void camera_preset::set(const Assistance::io__camera_float u, const float v)
 		{
 			p[+u] = v;
 			_think_latest();
 		}
 
-		void camera_preset::merge(const Assistance::io___float_camera u, const float v)
+		void camera_preset::merge(const Assistance::io__camera_float u, const float v)
 		{
 			switch (u) {
-			case Assistance::io___float_camera::SCALE_X:
-			case Assistance::io___float_camera::SCALE_Y:
-			case Assistance::io___float_camera::SCALE_G:
+			case Assistance::io__camera_float::SCALE_X:
+			case Assistance::io__camera_float::SCALE_Y:
+			case Assistance::io__camera_float::SCALE_G:
 				p[+u] *= v;
 				break;				
-			case Assistance::io___float_camera::OFFSET_X:
-			case Assistance::io___float_camera::OFFSET_Y:
-			case Assistance::io___float_camera::ROTATION:
+			case Assistance::io__camera_float::OFFSET_X:
+			case Assistance::io__camera_float::OFFSET_Y:
+			case Assistance::io__camera_float::ROTATION:
 				p[+u] += v;
 				break;
 			}
 			_think_latest();
 		}
 
-		float camera_preset::get(const Assistance::io___float_camera u)
+		float camera_preset::get(const Assistance::io__camera_float u)
 		{
 			return p[+u];
 		}
@@ -103,6 +110,16 @@ namespace LSW {
 					}
 				}
 			}
+		}
+
+		auto camera_preset::begin()
+		{
+			return layers.begin();
+		}
+
+		auto camera_preset::end()
+		{
+			return layers.end();
 		}
 
 		ALLEGRO_TRANSFORM& camera_preset::quick()
@@ -129,49 +146,12 @@ namespace LSW {
 		{
 			lastapply = a;
 			camera_preset lastTransf = presets[a];
-
-			applyRaw(&lastTransf.quick());
-			/*ALLEGRO_DISPLAY* d = al_get_current_display();
-
-			if (!d) return;
-						
-			al_identity_transform(&g_t);
-
-			al_build_transform(&g_t,
-				(al_get_display_width(d)  / 2) * (1.0 + lastTransf.get(Assistance::io___float_camera::OFFSET_X) * (al_get_display_width(d)  * 0.5 * lastTransf.get(Assistance::io___float_camera::SCALE_X) * lastTransf.get(Assistance::io___float_camera::SCALE_G))),
-				(al_get_display_height(d) / 2) * (1.0 + lastTransf.get(Assistance::io___float_camera::OFFSET_Y) * (al_get_display_height(d) * 0.5 * lastTransf.get(Assistance::io___float_camera::SCALE_Y) * lastTransf.get(Assistance::io___float_camera::SCALE_G))),
-				(al_get_display_width(d) / 2) * lastTransf.get(Assistance::io___float_camera::SCALE_X) * lastTransf.get(Assistance::io___float_camera::SCALE_G),
-				(al_get_display_height(d) / 2) * lastTransf.get(Assistance::io___float_camera::SCALE_Y) * lastTransf.get(Assistance::io___float_camera::SCALE_G),
-				lastTransf.get(Assistance::io___float_camera::ROTATION));
-
-			al_use_transform(&g_t);*/
-
-			/*al_identity_transform(&g_t);
-
-
-			al_rotate_transform(&g_t,
-				lastTransf.get(Assistance::io___float_camera::ROTATION));
-
-			al_scale_transform(&g_t,
-				al_get_display_width(d) * 0.5 * lastTransf.get(Assistance::io___float_camera::SCALE_X) * lastTransf.get(Assistance::io___float_camera::SCALE_G),
-				al_get_display_height(d) * 0.5 * lastTransf.get(Assistance::io___float_camera::SCALE_Y) * lastTransf.get(Assistance::io___float_camera::SCALE_G)); // SCALING NOT AS EXPECTED (multiplier by zoom is not being made by transformation!)
-
-			al_translate_transform(&g_t,
-				al_get_display_width(d) * 0.5 - lastTransf.get(Assistance::io___float_camera::OFFSET_X) * (al_get_display_width(d) * 0.5 * lastTransf.get(Assistance::io___float_camera::SCALE_X) * lastTransf.get(Assistance::io___float_camera::SCALE_G)),
-				al_get_display_height(d) * 0.5 - lastTransf.get(Assistance::io___float_camera::OFFSET_Y) * (al_get_display_height(d) * 0.5 * lastTransf.get(Assistance::io___float_camera::SCALE_Y) * lastTransf.get(Assistance::io___float_camera::SCALE_G)));
-
-
-			al_use_transform(&g_t);*/
+			applyNoSave(&lastTransf.quick());
 		}
 
 		void Camera::apply()
 		{
 			apply(lastapply);
-		}
-
-		void Camera::refreshquicks()
-		{
-			for (auto& i : presets) i.second.merge(Assistance::io___float_camera::OFFSET_X, 0.0); // refresh
 		}
 
 		
@@ -184,17 +164,17 @@ namespace LSW {
 			al_identity_transform(&g_t);
 
 			al_build_transform(&g_t,
-				(al_get_display_width(d) / 2) * (1.0 + lastTransf.get(Assistance::io___float_camera::OFFSET_X) * (al_get_display_width(d) * 0.5 * lastTransf.get(Assistance::io___float_camera::SCALE_X) * lastTransf.get(Assistance::io___float_camera::SCALE_G))),
-				(al_get_display_height(d) / 2) * (1.0 + lastTransf.get(Assistance::io___float_camera::OFFSET_Y) * (al_get_display_height(d) * 0.5 * lastTransf.get(Assistance::io___float_camera::SCALE_Y) * lastTransf.get(Assistance::io___float_camera::SCALE_G))),
-				(al_get_display_width(d) / 2) * lastTransf.get(Assistance::io___float_camera::SCALE_X) * lastTransf.get(Assistance::io___float_camera::SCALE_G),
-				(al_get_display_height(d) / 2) * lastTransf.get(Assistance::io___float_camera::SCALE_Y) * lastTransf.get(Assistance::io___float_camera::SCALE_G),
-				lastTransf.get(Assistance::io___float_camera::ROTATION));
+				(al_get_display_width(d) / 2) * (1.0 + lastTransf.get(Assistance::io__camera_float::OFFSET_X) * (al_get_display_width(d) * 0.5 * lastTransf.get(Assistance::io__camera_float::SCALE_X) * lastTransf.get(Assistance::io__camera_float::SCALE_G))),
+				(al_get_display_height(d) / 2) * (1.0 + lastTransf.get(Assistance::io__camera_float::OFFSET_Y) * (al_get_display_height(d) * 0.5 * lastTransf.get(Assistance::io__camera_float::SCALE_Y) * lastTransf.get(Assistance::io__camera_float::SCALE_G))),
+				(al_get_display_width(d) / 2) * lastTransf.get(Assistance::io__camera_float::SCALE_X) * lastTransf.get(Assistance::io__camera_float::SCALE_G),
+				(al_get_display_height(d) / 2) * lastTransf.get(Assistance::io__camera_float::SCALE_Y) * lastTransf.get(Assistance::io__camera_float::SCALE_G),
+				lastTransf.get(Assistance::io__camera_float::ROTATION));
 
 			al_use_transform(&g_t);
 			return g_t;
 		}
 
-		void Camera::applyRaw(ALLEGRO_TRANSFORM* tr)
+		void Camera::applyNoSave(ALLEGRO_TRANSFORM* tr)
 		{
 			al_use_transform(tr);
 		}
@@ -229,7 +209,7 @@ namespace LSW {
 			}
 			return copies[actual]->bmp;
 		}
-		ALLEGRO_BITMAP* Sprite::__sprite_smart_images::add(const std::string id)
+		ALLEGRO_BITMAP* Sprite::__sprite_smart_images::load(const std::string id)
 		{
 			__template_static_vector<ALLEGRO_BITMAP> imgs; // Textures
 
@@ -292,11 +272,11 @@ namespace LSW {
 		{
 			/*for (auto& i : dval) i = 0.0;
 			for (auto& j : bval) j = false;*/
-			dval[+Assistance::io___double_sprite::SCALEX] = 1.0;
-			dval[+Assistance::io___double_sprite::SCALEY] = 1.0;
-			dval[+Assistance::io___double_sprite::SCALEG] = 1.0;
-			//bval[+Assistance::io___boolean_sprite::DRAW] = false;
-			bval[+Assistance::io___boolean_sprite::AFFECTED_BY_CAM] = true;
+			dval[+Assistance::io__sprite_double::SCALEX] = 1.0;
+			dval[+Assistance::io__sprite_double::SCALEY] = 1.0;
+			dval[+Assistance::io__sprite_double::SCALEG] = 1.0;
+			//bval[+Assistance::io__sprite_boolean::DRAW] = false;
+			bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM] = true;
 		}
 
 
@@ -308,18 +288,18 @@ namespace LSW {
 			bmps.reset();
 		}
 
-		void Sprite::apply(const Assistance::io___vecstring_sprite u, const std::vector<std::string> v, float* perc)
+		void Sprite::set(const Assistance::io__sprite_string_vector u, const std::vector<std::string> v, float* perc)
 		{
 			if (perc) *perc = 0.00f;
 			size_t countt = 0;
 			switch (u) {
-			case Assistance::io___vecstring_sprite::ADDMULTIPLE:
+			case Assistance::io__sprite_string_vector::ADDMULTIPLE:
 				for (auto& i : v) {
-					bmps.add(i);
+					bmps.load(i);
 					if (perc) *perc = 1.00f * countt++ / v.size();
 				}
 				break;
-			case Assistance::io___vecstring_sprite::REMOVEMULTIPLE:
+			case Assistance::io__sprite_string_vector::REMOVEMULTIPLE:
 				for (auto& i : v) {
 					bmps.remove(i);
 					if (perc) *perc = 1.00f * countt++ / v.size();
@@ -329,24 +309,24 @@ namespace LSW {
 			if (perc) *perc = 1.00f;
 		}
 
-		void Sprite::apply(const Assistance::io___string_sprite u, const std::string v)
+		void Sprite::set(const Assistance::io__sprite_string u, const std::string v)
 		{
 			switch (u) {
-			case Assistance::io___string_sprite::ADD:
-				bmps.add(v);
+			case Assistance::io__sprite_string::ADD:
+				bmps.load(v);
 				break;
-			case Assistance::io___string_sprite::REMOVE:
+			case Assistance::io__sprite_string::REMOVE:
 				bmps.remove(v);
 				break;
-			case Assistance::io___string_sprite::SPRITE_ID:
+			case Assistance::io__sprite_string::ID:
 				sprite_id = v;
 				break;
 			}
 		}
-		void Sprite::apply(const Assistance::io___double_sprite u, const double v)
+		void Sprite::set(const Assistance::io__sprite_double u, const double v)
 		{
 			switch (u) {
-			case Assistance::io___double_sprite::ANIMATION_FPS:
+			case Assistance::io__sprite_double::ANIMATION_FPS:
 				bmps.setFPS(v);
 				break;
 			default:
@@ -354,10 +334,10 @@ namespace LSW {
 				break;
 			}
 		}
-		void Sprite::apply(const Assistance::io___boolean_sprite u, const bool v)
+		void Sprite::set(const Assistance::io__sprite_boolean u, const bool v)
 		{
 			switch (u) {
-			case Assistance::io___boolean_sprite::LOOPFRAMES:
+			case Assistance::io__sprite_boolean::LOOPFRAMES:
 				bmps.loop(v);
 				break;
 			default:
@@ -365,49 +345,49 @@ namespace LSW {
 				break;
 			}
 		}
-		void Sprite::apply(const Assistance::io___integer_sprite u, const int v)
+		void Sprite::set(const Assistance::io__sprite_integer u, const int v)
 		{
 			switch (u) {
-			case Assistance::io___integer_sprite::LAYER:
+			case Assistance::io__sprite_integer::LAYER:
 				layer = v;
 				break;
 			}
 		}
-		void Sprite::apply(const Assistance::io___size_sprite u, const size_t v)
+		void Sprite::set(const Assistance::io__sprite_sizet u, const size_t v)
 		{
 			switch (u) {
-			case Assistance::io___size_sprite::FRAME:
+			case Assistance::io__sprite_sizet::FRAME:
 				bmps.setFPS(-(int)(v));
 				break;
 			}
 		}
-		void Sprite::apply(const Assistance::io___color_sprite u, const ALLEGRO_COLOR v)
+		void Sprite::set(const Assistance::io__sprite_color u, const ALLEGRO_COLOR v)
 		{
 			switch (u) {
-			case Assistance::io___color_sprite::TINT:
+			case Assistance::io__sprite_color::TINT:
 				data.tint = v;
 				break;
 			}
 		}
 
-		bool Sprite::get(const Assistance::io___string_sprite u, std::string& v)
+		bool Sprite::get(const Assistance::io__sprite_string u, std::string& v)
 		{
 			switch (u) {
-			case Assistance::io___string_sprite::ADD:
-			case Assistance::io___string_sprite::REMOVE:
+			case Assistance::io__sprite_string::ADD:
+			case Assistance::io__sprite_string::REMOVE:
 				// no sense
 				return false;
-			case Assistance::io___string_sprite::SPRITE_ID:
+			case Assistance::io__sprite_string::ID:
 				v = sprite_id;
 				return true;
 			}
 			return false;
 		}
 
-		bool Sprite::get(const Assistance::io___double_sprite u, double& v)
+		bool Sprite::get(const Assistance::io__sprite_double u, double& v)
 		{
 			switch (u) {
-			case Assistance::io___double_sprite::ANIMATION_FPS:
+			case Assistance::io__sprite_double::ANIMATION_FPS:
 				// no way
 				return false;
 			default:
@@ -417,10 +397,10 @@ namespace LSW {
 			return false;
 		}
 
-		bool Sprite::get(const Assistance::io___boolean_sprite u, bool& v)
+		bool Sprite::get(const Assistance::io__sprite_boolean u, bool& v)
 		{
 			switch (u) {
-			case Assistance::io___boolean_sprite::LOOPFRAMES:
+			case Assistance::io__sprite_boolean::LOOPFRAMES:
 				// no way
 				return false;
 			default:
@@ -430,30 +410,30 @@ namespace LSW {
 			return false;
 		}
 
-		bool Sprite::get(const Assistance::io___integer_sprite u, int& v)
+		bool Sprite::get(const Assistance::io__sprite_integer u, int& v)
 		{
 			switch (u) {
-			case Assistance::io___integer_sprite::LAYER:
+			case Assistance::io__sprite_integer::LAYER:
 				v = layer;
 				return true;
 			}
 			return false;
 		}
 
-		bool Sprite::get(const Assistance::io___size_sprite u, size_t& v)
+		bool Sprite::get(const Assistance::io__sprite_sizet u, size_t& v)
 		{
 			switch (u) {
-			case Assistance::io___size_sprite::FRAME:
+			case Assistance::io__sprite_sizet::FRAME:
 				// no way
 				return false;
 			}
 			return false;
 		}
 
-		bool Sprite::get(const Assistance::io___color_sprite u, ALLEGRO_COLOR& v)
+		bool Sprite::get(const Assistance::io__sprite_color u, ALLEGRO_COLOR& v)
 		{
 			switch (u) {
-			case Assistance::io___color_sprite::TINT:
+			case Assistance::io__sprite_color::TINT:
 				v = data.tint;
 				return true;
 			}
@@ -468,7 +448,7 @@ namespace LSW {
 			Camera camm;
 			camera_preset psf = camm.get();
 
-			if (!data.bval[+Assistance::io___boolean_sprite::AFFECTED_BY_CAM]) psf = camera_preset();
+			if (!data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM]) psf = camera_preset();
 
 			float cx, cy, px, py, dsx, dsy, rot_rad;
 			int bmpx, bmpy;
@@ -478,40 +458,40 @@ namespace LSW {
 				throw Abort::abort("al_get_bitmap_width|al_get_bitmap_height", "Sprite::draw", "Somehow the texture have < 0 width / height id=[" + this->sprite_id + "] size={" + std::to_string(bmpx) + "," + std::to_string(bmpy) + "}", 1);
 			}
 
-			cx = 1.0f * bmpx * ((data.dval[+Assistance::io___double_sprite::CENTERX] + 1.0) * 0.5);
-			cy = 1.0f * bmpy * ((data.dval[+Assistance::io___double_sprite::CENTERY] + 1.0) * 0.5);
-			rot_rad = 1.0f * data.dval[+Assistance::io___double_sprite::ROTATION] * ALLEGRO_PI / 180.0;
-			px = 1.0f * data.dval[+Assistance::io___double_sprite::POSX] * cos(rot_rad) + data.dval[+Assistance::io___double_sprite::POSY] * sin(rot_rad);
-			py = 1.0f * data.dval[+Assistance::io___double_sprite::POSY] * cos(rot_rad) - data.dval[+Assistance::io___double_sprite::POSX] * sin(rot_rad);
-			dsx = 1.0f * data.dval[+Assistance::io___double_sprite::SCALEX] * data.dval[+Assistance::io___double_sprite::SCALEG] * (1.0 / bmpx);
-			dsy = 1.0f * data.dval[+Assistance::io___double_sprite::SCALEY] * data.dval[+Assistance::io___double_sprite::SCALEG] * (1.0 / bmpy);
+			cx = 1.0f * bmpx * ((data.dval[+Assistance::io__sprite_double::CENTERX] + 1.0) * 0.5);
+			cy = 1.0f * bmpy * ((data.dval[+Assistance::io__sprite_double::CENTERY] + 1.0) * 0.5);
+			rot_rad = 1.0f * data.dval[+Assistance::io__sprite_double::ROTATION] * ALLEGRO_PI / 180.0;
+			px = 1.0f * data.dval[+Assistance::io__sprite_double::POSX] * cos(rot_rad) + data.dval[+Assistance::io__sprite_double::POSY] * sin(rot_rad);
+			py = 1.0f * data.dval[+Assistance::io__sprite_double::POSY] * cos(rot_rad) - data.dval[+Assistance::io__sprite_double::POSX] * sin(rot_rad);
+			dsx = 1.0f * data.dval[+Assistance::io__sprite_double::SCALEX] * data.dval[+Assistance::io__sprite_double::SCALEG] * (1.0 / bmpx);
+			dsy = 1.0f * data.dval[+Assistance::io__sprite_double::SCALEY] * data.dval[+Assistance::io__sprite_double::SCALEG] * (1.0 / bmpy);
 
 			// draw
 			camm.applyNoSave(psf);
 
-			if (data.bval[+Assistance::io___boolean_sprite::USE_TINTED_DRAWING])	al_draw_tinted_scaled_rotated_bitmap(rn, data.tint, cx, cy, px, py, dsx, dsy, rot_rad, 0);
+			if (data.bval[+Assistance::io__sprite_boolean::USE_TINTED_DRAWING])	al_draw_tinted_scaled_rotated_bitmap(rn, data.tint, cx, cy, px, py, dsx, dsy, rot_rad, 0);
 			else																    al_draw_scaled_rotated_bitmap(rn, cx, cy, px, py, dsx, dsy, rot_rad, 0);
 
 			// debug
 
-			if (data.bval[+Assistance::io___boolean_sprite::SHOWBOX] || data.bval[+Assistance::io___boolean_sprite::SHOWDOT])
+			if (data.bval[+Assistance::io__sprite_boolean::SHOWBOX] || data.bval[+Assistance::io__sprite_boolean::SHOWDOT])
 			{
 				ALLEGRO_COLOR colorr = al_map_rgb(0, 255, 0);
 				camera_preset psf = camm.get();
 
-				if (data.bval[+Assistance::io___boolean_sprite::IS_COLLIDING]) colorr = al_map_rgb(255, 0, 0);
+				if (data.bval[+Assistance::io__sprite_boolean::IS_COLLIDING]) colorr = al_map_rgb(255, 0, 0);
 				//else if (al_get_time() - lastresetcollisioncall < Defaults::diff_time_show_last_resetCollision) colorr = al_map_rgb(255, 255, 0);
 
-				if (data.bval[+Assistance::io___boolean_sprite::SHOWBOX]) {
-					al_draw_filled_circle(px - cx * dsx, py - cy * dsy, 0.1f * fabs(psf.get(Assistance::io___float_camera::SCALE_G) * sqrt(psf.get(Assistance::io___float_camera::SCALE_X) * psf.get(Assistance::io___float_camera::SCALE_Y)) * 0.20f), colorr);
-					al_draw_filled_circle(px - cx * dsx, py + cy * dsy, 0.1f * fabs(psf.get(Assistance::io___float_camera::SCALE_G) * sqrt(psf.get(Assistance::io___float_camera::SCALE_X) * psf.get(Assistance::io___float_camera::SCALE_Y)) * 0.20f), colorr);
-					al_draw_filled_circle(px + cx * dsx, py - cy * dsy, 0.1f * fabs(psf.get(Assistance::io___float_camera::SCALE_G) * sqrt(psf.get(Assistance::io___float_camera::SCALE_X) * psf.get(Assistance::io___float_camera::SCALE_Y)) * 0.20f), colorr);
-					al_draw_filled_circle(px + cx * dsx, py + cy * dsy, 0.1f * fabs(psf.get(Assistance::io___float_camera::SCALE_G) * sqrt(psf.get(Assistance::io___float_camera::SCALE_X) * psf.get(Assistance::io___float_camera::SCALE_Y)) * 0.20f), colorr);
+				if (data.bval[+Assistance::io__sprite_boolean::SHOWBOX]) {
+					al_draw_filled_circle(px - cx * dsx, py - cy * dsy, 0.1f * fabs(psf.get(Assistance::io__camera_float::SCALE_G) * sqrt(psf.get(Assistance::io__camera_float::SCALE_X) * psf.get(Assistance::io__camera_float::SCALE_Y)) * 0.20f), colorr);
+					al_draw_filled_circle(px - cx * dsx, py + cy * dsy, 0.1f * fabs(psf.get(Assistance::io__camera_float::SCALE_G) * sqrt(psf.get(Assistance::io__camera_float::SCALE_X) * psf.get(Assistance::io__camera_float::SCALE_Y)) * 0.20f), colorr);
+					al_draw_filled_circle(px + cx * dsx, py - cy * dsy, 0.1f * fabs(psf.get(Assistance::io__camera_float::SCALE_G) * sqrt(psf.get(Assistance::io__camera_float::SCALE_X) * psf.get(Assistance::io__camera_float::SCALE_Y)) * 0.20f), colorr);
+					al_draw_filled_circle(px + cx * dsx, py + cy * dsy, 0.1f * fabs(psf.get(Assistance::io__camera_float::SCALE_G) * sqrt(psf.get(Assistance::io__camera_float::SCALE_X) * psf.get(Assistance::io__camera_float::SCALE_Y)) * 0.20f), colorr);
 				}
 
-				if (data.bval[+Assistance::io___boolean_sprite::SHOWDOT])
+				if (data.bval[+Assistance::io__sprite_boolean::SHOWDOT])
 				{
-					al_draw_filled_circle(px, py, 0.1f * fabs(psf.get(Assistance::io___float_camera::SCALE_G) * sqrt(psf.get(Assistance::io___float_camera::SCALE_X) * psf.get(Assistance::io___float_camera::SCALE_Y)) * 0.20f), colorr);
+					al_draw_filled_circle(px, py, 0.1f * fabs(psf.get(Assistance::io__camera_float::SCALE_G) * sqrt(psf.get(Assistance::io__camera_float::SCALE_X) * psf.get(Assistance::io__camera_float::SCALE_Y)) * 0.20f), colorr);
 				}
 			}
 
@@ -523,7 +503,7 @@ namespace LSW {
 		//	Camera camm;
 		//	camera_preset psf = camm.get();
 
-		//	if (!data.bval[+Assistance::io___boolean_sprite::AFFECTED_BY_CAM]) {
+		//	if (!data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM]) {
 		//		psf = camera_preset();
 		//	}
 
@@ -535,53 +515,53 @@ namespace LSW {
 		//		throw Abort::abort("al_get_bitmap_width|al_get_bitmap_height", "Sprite::draw", "Somehow the texture have < 0 width / height id=[" + this->sprite_id + "] size={" + std::to_string(bmpx) + "," + std::to_string(bmpy) + "}", 1);
 		//	}
 
-		//	//psf.merge(Assistance::io___float_camera::ROTATION, data.dval[+Assistance::io___double_sprite::ROTATION] * ALLEGRO_PI / 180.0);
-		//	psf.merge(Assistance::io___float_camera::SCALE_G, data.dval[+Assistance::io___double_sprite::SCALEG]);
-		//	psf.merge(Assistance::io___float_camera::SCALE_X, data.dval[+Assistance::io___double_sprite::SCALEX] * (1.0 / bmpx));
-		//	psf.merge(Assistance::io___float_camera::SCALE_Y, data.dval[+Assistance::io___double_sprite::SCALEY] * (1.0 / bmpy));
-		//	psf.merge(Assistance::io___float_camera::OFFSET_X, -data.dval[+Assistance::io___double_sprite::POSX]);
-		//	psf.merge(Assistance::io___float_camera::OFFSET_Y, -data.dval[+Assistance::io___double_sprite::POSY]);
-		//	psf.merge(Assistance::io___float_camera::ROTATION, data.dval[+Assistance::io___double_sprite::ROTATION] * ALLEGRO_PI / 180.0);
+		//	//psf.merge(Assistance::io__camera_float::ROTATION, data.dval[+Assistance::io__sprite_double::ROTATION] * ALLEGRO_PI / 180.0);
+		//	psf.merge(Assistance::io__camera_float::SCALE_G, data.dval[+Assistance::io__sprite_double::SCALEG]);
+		//	psf.merge(Assistance::io__camera_float::SCALE_X, data.dval[+Assistance::io__sprite_double::SCALEX] * (1.0 / bmpx));
+		//	psf.merge(Assistance::io__camera_float::SCALE_Y, data.dval[+Assistance::io__sprite_double::SCALEY] * (1.0 / bmpy));
+		//	psf.merge(Assistance::io__camera_float::OFFSET_X, -data.dval[+Assistance::io__sprite_double::POSX]);
+		//	psf.merge(Assistance::io__camera_float::OFFSET_Y, -data.dval[+Assistance::io__sprite_double::POSY]);
+		//	psf.merge(Assistance::io__camera_float::ROTATION, data.dval[+Assistance::io__sprite_double::ROTATION] * ALLEGRO_PI / 180.0);
 
 
-		//	cx =		1.0f * bmpx * ((data.dval[+Assistance::io___double_sprite::CENTERX] + 1.0) * 0.5);
-		//	cy =		1.0f * bmpy * ((data.dval[+Assistance::io___double_sprite::CENTERY] + 1.0) * 0.5);
-		//	/*rot_rad =	1.0f * data.dval[+Assistance::io___double_sprite::ROTATION] * ALLEGRO_PI / 180.0;
-		//	px =		1.0f * data.dval[+Assistance::io___double_sprite::POSX] * cos(rot_rad) + data.dval[+Assistance::io___double_sprite::POSY] * sin(rot_rad);
-		//	py =		1.0f * data.dval[+Assistance::io___double_sprite::POSY] * cos(rot_rad) - data.dval[+Assistance::io___double_sprite::POSX] * sin(rot_rad);*/
+		//	cx =		1.0f * bmpx * ((data.dval[+Assistance::io__sprite_double::CENTERX] + 1.0) * 0.5);
+		//	cy =		1.0f * bmpy * ((data.dval[+Assistance::io__sprite_double::CENTERY] + 1.0) * 0.5);
+		//	/*rot_rad =	1.0f * data.dval[+Assistance::io__sprite_double::ROTATION] * ALLEGRO_PI / 180.0;
+		//	px =		1.0f * data.dval[+Assistance::io__sprite_double::POSX] * cos(rot_rad) + data.dval[+Assistance::io__sprite_double::POSY] * sin(rot_rad);
+		//	py =		1.0f * data.dval[+Assistance::io__sprite_double::POSY] * cos(rot_rad) - data.dval[+Assistance::io__sprite_double::POSX] * sin(rot_rad);*/
 
-		//	///px = data.dval[+Assistance::io___double_sprite::POSX];
-		//	///py = data.dval[+Assistance::io___double_sprite::POSY];
-		//	//dsx =		1.0f * data.dval[+Assistance::io___double_sprite::SCALEX] * data.dval[+Assistance::io___double_sprite::SCALEG] * (1.0 / bmpx);
-		//	//dsy =		1.0f * data.dval[+Assistance::io___double_sprite::SCALEY] * data.dval[+Assistance::io___double_sprite::SCALEG] * (1.0 / bmpy);
+		//	///px = data.dval[+Assistance::io__sprite_double::POSX];
+		//	///py = data.dval[+Assistance::io__sprite_double::POSY];
+		//	//dsx =		1.0f * data.dval[+Assistance::io__sprite_double::SCALEX] * data.dval[+Assistance::io__sprite_double::SCALEG] * (1.0 / bmpx);
+		//	//dsy =		1.0f * data.dval[+Assistance::io__sprite_double::SCALEY] * data.dval[+Assistance::io__sprite_double::SCALEG] * (1.0 / bmpy);
 
 		//	// draw
 
 
 		//	camm.applyNoSave(psf);
 
-		//	if (data.bval[+Assistance::io___boolean_sprite::USE_TINTED_DRAWING])	al_draw_tinted_scaled_rotated_bitmap(rn, data.tint, cx, cy, 0, 0, 1.0, 1.0, 0, 0);
+		//	if (data.bval[+Assistance::io__sprite_boolean::USE_TINTED_DRAWING])	al_draw_tinted_scaled_rotated_bitmap(rn, data.tint, cx, cy, 0, 0, 1.0, 1.0, 0, 0);
 		//	else																    al_draw_scaled_rotated_bitmap       (rn,            cx, cy, 0, 0, 1.0, 1.0, 0, 0);
 
 		//	// debug
 
-		//	if (data.bval[+Assistance::io___boolean_sprite::SHOWBOX] || data.bval[+Assistance::io___boolean_sprite::SHOWDOT])
+		//	if (data.bval[+Assistance::io__sprite_boolean::SHOWBOX] || data.bval[+Assistance::io__sprite_boolean::SHOWDOT])
 		//	{
 		//		ALLEGRO_COLOR colorr = al_map_rgb(0, 255, 0);
 
-		//		if (data.bval[+Assistance::io___boolean_sprite::IS_COLLIDING]) colorr = al_map_rgb(255, 0, 0);
+		//		if (data.bval[+Assistance::io__sprite_boolean::IS_COLLIDING]) colorr = al_map_rgb(255, 0, 0);
 		//		//else if (al_get_time() - lastresetcollisioncall < Defaults::diff_time_show_last_resetCollision) colorr = al_map_rgb(255, 255, 0);
 
-		//		if (data.bval[+Assistance::io___boolean_sprite::SHOWBOX]) {
-		//			al_draw_filled_circle(data.dval[+Assistance::io___double_sprite::POSX] - cx, data.dval[+Assistance::io___double_sprite::POSY] - cy, 0.1f * fabs(psf.get(Assistance::io___float_camera::SCALE_G) * sqrt(psf.get(Assistance::io___float_camera::SCALE_X) * psf.get(Assistance::io___float_camera::SCALE_Y)) * 0.20f), colorr);
-		//			al_draw_filled_circle(data.dval[+Assistance::io___double_sprite::POSX] - cx, data.dval[+Assistance::io___double_sprite::POSY] + cy, 0.1f * fabs(psf.get(Assistance::io___float_camera::SCALE_G) * sqrt(psf.get(Assistance::io___float_camera::SCALE_X) * psf.get(Assistance::io___float_camera::SCALE_Y)) * 0.20f), colorr);
-		//			al_draw_filled_circle(data.dval[+Assistance::io___double_sprite::POSX] + cx, data.dval[+Assistance::io___double_sprite::POSY] - cy, 0.1f * fabs(psf.get(Assistance::io___float_camera::SCALE_G) * sqrt(psf.get(Assistance::io___float_camera::SCALE_X) * psf.get(Assistance::io___float_camera::SCALE_Y)) * 0.20f), colorr);
-		//			al_draw_filled_circle(data.dval[+Assistance::io___double_sprite::POSX] + cx, data.dval[+Assistance::io___double_sprite::POSY] + cy, 0.1f * fabs(psf.get(Assistance::io___float_camera::SCALE_G) * sqrt(psf.get(Assistance::io___float_camera::SCALE_X) * psf.get(Assistance::io___float_camera::SCALE_Y)) * 0.20f), colorr);
+		//		if (data.bval[+Assistance::io__sprite_boolean::SHOWBOX]) {
+		//			al_draw_filled_circle(data.dval[+Assistance::io__sprite_double::POSX] - cx, data.dval[+Assistance::io__sprite_double::POSY] - cy, 0.1f * fabs(psf.get(Assistance::io__camera_float::SCALE_G) * sqrt(psf.get(Assistance::io__camera_float::SCALE_X) * psf.get(Assistance::io__camera_float::SCALE_Y)) * 0.20f), colorr);
+		//			al_draw_filled_circle(data.dval[+Assistance::io__sprite_double::POSX] - cx, data.dval[+Assistance::io__sprite_double::POSY] + cy, 0.1f * fabs(psf.get(Assistance::io__camera_float::SCALE_G) * sqrt(psf.get(Assistance::io__camera_float::SCALE_X) * psf.get(Assistance::io__camera_float::SCALE_Y)) * 0.20f), colorr);
+		//			al_draw_filled_circle(data.dval[+Assistance::io__sprite_double::POSX] + cx, data.dval[+Assistance::io__sprite_double::POSY] - cy, 0.1f * fabs(psf.get(Assistance::io__camera_float::SCALE_G) * sqrt(psf.get(Assistance::io__camera_float::SCALE_X) * psf.get(Assistance::io__camera_float::SCALE_Y)) * 0.20f), colorr);
+		//			al_draw_filled_circle(data.dval[+Assistance::io__sprite_double::POSX] + cx, data.dval[+Assistance::io__sprite_double::POSY] + cy, 0.1f * fabs(psf.get(Assistance::io__camera_float::SCALE_G) * sqrt(psf.get(Assistance::io__camera_float::SCALE_X) * psf.get(Assistance::io__camera_float::SCALE_Y)) * 0.20f), colorr);
 		//		}
 
-		//		if (data.bval[+Assistance::io___boolean_sprite::SHOWDOT])
+		//		if (data.bval[+Assistance::io__sprite_boolean::SHOWDOT])
 		//		{
-		//			al_draw_filled_circle(data.dval[+Assistance::io___double_sprite::POSX], data.dval[+Assistance::io___double_sprite::POSY], 0.1f * fabs(psf.get(Assistance::io___float_camera::SCALE_G) * sqrt(psf.get(Assistance::io___float_camera::SCALE_X) * psf.get(Assistance::io___float_camera::SCALE_Y)) * 0.20f), colorr);
+		//			al_draw_filled_circle(data.dval[+Assistance::io__sprite_double::POSX], data.dval[+Assistance::io__sprite_double::POSY], 0.1f * fabs(psf.get(Assistance::io__camera_float::SCALE_G) * sqrt(psf.get(Assistance::io__camera_float::SCALE_X) * psf.get(Assistance::io__camera_float::SCALE_Y)) * 0.20f), colorr);
 		//		}
 		//	}
 
@@ -603,7 +583,7 @@ namespace LSW {
 
 		void Text::_draw(const double targ_draw_xy[2])
 		{
-			al_draw_text(ffont, color, 1.0 * targ_draw_xy[0] / (scale), 1.0 * targ_draw_xy[1] / (scale), mode, string.c_str());
+			al_draw_text(data.font, data.c, 1.0 * targ_draw_xy[0] / (data.d[+Assistance::io__text_double::SCALEG]), 1.0 * targ_draw_xy[1] / (data.d[+Assistance::io__text_double::SCALEG]), data.i[+Assistance::io__text_integer::MODE], data.str[+Assistance::io__text_string::STRING].c_str());
 		}
 		void Text::_interpretTags(std::string& s)
 		{
@@ -643,51 +623,51 @@ namespace LSW {
 					switch (found)
 					{
 					case +Assistance::tags_e::T_POSX:
-						sprintf_s(tempstr_c, "%.3lf", (pos[0] + off_plr[0] + cam.get().get(Assistance::io___float_camera::OFFSET_X)));
+						sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSX] + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX] + cam.get().get(Assistance::io__camera_float::OFFSET_X)));
 						break;
 					case +Assistance::tags_e::T_POSY:
-						sprintf_s(tempstr_c, "%.3lf", (pos[1] + off_plr[1] + cam.get().get(Assistance::io___float_camera::OFFSET_Y)));
+						sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSY] + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY] + cam.get().get(Assistance::io__camera_float::OFFSET_Y)));
 						break;
 					case +Assistance::tags_e::T_SCREEN_POSX:
-						sprintf_s(tempstr_c, "%.3lf", (pos[0] * (affected_by_camera ? (cam.get().get(Assistance::io___float_camera::SCALE_G) * cam.get().get(Assistance::io___float_camera::SCALE_X)) : 1.0) + off_plr[0] * (cam.get().get(Assistance::io___float_camera::SCALE_G) * cam.get().get(Assistance::io___float_camera::SCALE_X))));
+						sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSX] * (data.b[+Assistance::io__text_boolean::AFFECTED_BY_CAM] ? (cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_X)) : 1.0) + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX] * (cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_X))));
 						break;
 					case +Assistance::tags_e::T_SCREEN_POSY:
-						sprintf_s(tempstr_c, "%.3lf", (pos[1] * (affected_by_camera ? (cam.get().get(Assistance::io___float_camera::SCALE_G) * cam.get().get(Assistance::io___float_camera::SCALE_Y)) : 1.0) + off_plr[1] * (cam.get().get(Assistance::io___float_camera::SCALE_G) * cam.get().get(Assistance::io___float_camera::SCALE_Y))));
+						sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSY] * (data.b[+Assistance::io__text_boolean::AFFECTED_BY_CAM] ? (cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_Y)) : 1.0) + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY] * (cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_Y))));
 						break;
 
 					case +Assistance::tags_e::T_CAM_X:
-						sprintf_s(tempstr_c, "%.3lf", cam.get().get(Assistance::io___float_camera::OFFSET_X));
+						sprintf_s(tempstr_c, "%.3lf", cam.get().get(Assistance::io__camera_float::OFFSET_X));
 						break;
 					case +Assistance::tags_e::T_CAM_Y:
-						sprintf_s(tempstr_c, "%.3lf", cam.get().get(Assistance::io___float_camera::OFFSET_Y));
+						sprintf_s(tempstr_c, "%.3lf", cam.get().get(Assistance::io__camera_float::OFFSET_Y));
 						break;
 					case +Assistance::tags_e::T_CAM_ZOOM:
-						sprintf_s(tempstr_c, "%.3lf", cam.get().get(Assistance::io___float_camera::SCALE_G));
+						sprintf_s(tempstr_c, "%.3lf", cam.get().get(Assistance::io__camera_float::SCALE_G));
 						break;
 					case +Assistance::tags_e::T_CAM_ZOOMX:
-						sprintf_s(tempstr_c, "%.3lf", cam.get().get(Assistance::io___float_camera::SCALE_X));
+						sprintf_s(tempstr_c, "%.3lf", cam.get().get(Assistance::io__camera_float::SCALE_X));
 						break;
 					case +Assistance::tags_e::T_CAM_ZOOMY:
-						sprintf_s(tempstr_c, "%.3lf", cam.get().get(Assistance::io___float_camera::SCALE_Y));
+						sprintf_s(tempstr_c, "%.3lf", cam.get().get(Assistance::io__camera_float::SCALE_Y));
 						break;
 
 					case +Assistance::tags_e::T_ISFOLLOWING:
 						sprintf_s(tempstr_c, "%s", (follow ? "Y" : "N"));
 						break;
 					case +Assistance::tags_e::T_COLOR_R:
-						sprintf_s(tempstr_c, "%.3f", color.r);
+						sprintf_s(tempstr_c, "%.3f", data.c.r);
 						break;
 					case +Assistance::tags_e::T_COLOR_G:
-						sprintf_s(tempstr_c, "%.3f", color.g);
+						sprintf_s(tempstr_c, "%.3f", data.c.g);
 						break;
 					case +Assistance::tags_e::T_COLOR_B:
-						sprintf_s(tempstr_c, "%.3f", color.b);
+						sprintf_s(tempstr_c, "%.3f", data.c.b);
 						break;
 					case +Assistance::tags_e::T_COLOR_A:
-						sprintf_s(tempstr_c, "%.3f", color.a);
+						sprintf_s(tempstr_c, "%.3f", data.c.a);
 						break;
 					case +Assistance::tags_e::T_MODE:
-						sprintf_s(tempstr_c, "%d", mode);
+						sprintf_s(tempstr_c, "%d", data.i[+Assistance::io__text_integer::MODE]);
 						break;
 					case +Assistance::tags_e::T_TIME:
 						sprintf_s(tempstr_c, "%.3lf", al_get_time());
@@ -779,7 +759,7 @@ namespace LSW {
 					case +Assistance::tags_e::T_SPRITE_SPEEDX:
 						if (follow) {
 							double val;
-							follow->get(Assistance::io___double_sprite::SPEEDX, val);
+							follow->get(Assistance::io__sprite_double::SPEEDX, val);
 							sprintf_s(tempstr_c, "%.3lf", val);
 						}
 						else sprintf_s(tempstr_c, "UNDEF");
@@ -787,7 +767,7 @@ namespace LSW {
 					case +Assistance::tags_e::T_SPRITE_SPEEDY:
 						if (follow) {
 							double val;
-							follow->get(Assistance::io___double_sprite::SPEEDY, val);
+							follow->get(Assistance::io__sprite_double::SPEEDY, val);
 							sprintf_s(tempstr_c, "%.3lf", val);
 						}
 						else sprintf_s(tempstr_c, "UNDEF");
@@ -795,7 +775,7 @@ namespace LSW {
 					case +Assistance::tags_e::T_SPRITE_NAME:
 						if (follow) {
 							std::string temp;
-							follow->get(Assistance::io___string_sprite::SPRITE_ID, temp);
+							follow->get(Assistance::io__sprite_string::ID, temp);
 							sprintf_s(tempstr_c, "%s", temp.c_str());
 						}
 						else sprintf_s(tempstr_c, "UNDEF");
@@ -977,63 +957,32 @@ namespace LSW {
 			follow = u;
 		}
 
-		/*const bool Text::load(std::string s, const double siz)
-		{
-			gfile logg;
-			logg << L::SLL << freg("Text", "load") << "Verifying new loading of texture called " << s << "... (ID#" << (int)this << ")" << L::BLL;
 
-			if (!ffont) {
-				//Camera::camera_g cam;
 
-				logg << L::SLL << freg("Text", "load") << "Load allowed for " << s << "... (ID#" << (int)this << ")" << L::BLL;
 
-				_bpath = s;
-
-				Tools::interpret_path(s);
-				path = s;
-
-				bool aa = (ffont = al_load_ttf_font(s.c_str(), 1.0 * siz * Constants::text_default_sharpness_font / 20.0, 0));
-
-				//logg << L::SLL << freg("Text", "load") << " Settings: {LOADSUCCESS=" << (aa ? "Y" : "N") << ";ID=#" << (int)this << ";PATH=" << s << ";SIZE=" << 1000000.0 * siz * Defaults::sharpness_font / 20.0 << "E-6}" << L::BLL;
-				logg.flush();
-
-				return aa;
-			}
-			return true;
-		}
-
-		void Text::reload()
-		{
-			unload();
-			if (using_gpath) path.clear();
-
-			if (path.length() == 0) {
-				if (gpath.length() > 0)
-				{
-					using_gpath = true;
-					path = gpath;
-				}
-				else path = "C:\\Windows\\Fonts\\calibri.ttf";
-			}
-			load(path, scale);
-		}
-
-		void Text::_verify()
-		{
-			if (!ffont) {
-				reload();
-			}
-			if (using_gpath && gpath != _bpath)
-			{
-				reload();
-			}
-		}
-		*/
 		Text::Text()
 		{
 			gfile logg;
 			logg << L::SLL << fsr(__FUNCSIG__) << "Registered spawn of Text #" + std::to_string((size_t)this) << L::BLL;
 			logg.flush();
+
+			data.d[+Assistance::io__text_double::POSX] = 0.0;
+			data.d[+Assistance::io__text_double::POSY] = 0.0;
+			data.d[+Assistance::io__text_double::ROTATION] = 0.0;
+			data.d[+Assistance::io__text_double::SCALEG] = 1.0;
+			data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX] = 0.0;
+			data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY] = 0.0;
+			data.d[+Assistance::io__text_double::LAST_INTERPRET] = 0.0;
+			data.d[+Assistance::io__text_double::UPDATETIME] = 1.0 / 24;
+
+			data.i[+Assistance::io__text_integer::LAYER] = 0;
+			data.i[+Assistance::io__text_integer::MODE] = ALLEGRO_ALIGN_CENTER;
+
+			data.b[+Assistance::io__text_boolean::AFFECTED_BY_CAM] = true;
+			data.b[+Assistance::io__text_boolean::SHOW] = true;
+
+			data.font = nullptr;
+			data.c = al_map_rgb(255, 255, 255);
 		}
 
 		Text::~Text()
@@ -1042,186 +991,89 @@ namespace LSW {
 			logg << L::SLL << fsr(__FUNCSIG__) << "Registered despawn of Text #" + std::to_string((size_t)this)/* << ";ID=" << id */ << L::BLL;
 		}
 
-		/*void Text::verify(const bool reloadd)
-		{
-			if (reloadd) {
-				reload();
-				return;
-			}
-			if (final_scale != last_final_scale) {
-				unload();
-				last_final_scale = final_scale;
-			}
-			_verify();
-		}*/
 
-		void Text::unload()
+		void Text::set(const Assistance::io__text_string o, const std::string e)
 		{
-			if (ffont) {
-				al_destroy_font(ffont);
-				ffont = nullptr;
-			}
-		}
+			data.str[+o] = e;
 
-
-		void Text::set(const Assistance::_text_opt_str o, const std::string e)
-		{
 			switch (o) {
-			case Assistance::_text_opt_str::SETSTRING:
-				orig_str = e;
-				break;
-			case Assistance::_text_opt_str::SETID:
-				id = e;
-				break;
-			case Assistance::_text_opt_str::SETFOLLOW:
+			case Assistance::io__text_string::FOLLOW_SPRITE:
 				setFollow(e);
 				break;
-			case Assistance::_text_opt_str::SETFONT:
+			case Assistance::io__text_string::FONT:
 				__template_static_vector<ALLEGRO_FONT> fonts;
-				fonts.get(e, ffont);
-				break;
-			}
-		}
-		void Text::set(const Assistance::_text_opt_bool o, const bool e)
-		{
-			switch (o) {
-			case Assistance::_text_opt_bool::SHOW:
-				show = e;
-				break;
-			case Assistance::_text_opt_bool::AFFECTED_BY_CAM:
-				affected_by_camera = e;
-				break;
-			}
-		}
-		void Text::set(const Assistance::_text_opt_db o, const double e)
-		{
-			switch (o) {
-			case Assistance::_text_opt_db::POSX:
-				pos[0] = e;
-				break;
-			case Assistance::_text_opt_db::POSY:
-				pos[1] = e;
-				break;
-			case Assistance::_text_opt_db::SCALEG:
-				scale = e;
-				break;
-			case Assistance::_text_opt_db::ROTATION:
-				rot = e;
-				break;
-			case Assistance::_text_opt_db::UPDATETIME:
-				update_time = e;
-				break;
-			}
-		}
-		void Text::set(const Assistance::_text_opt_color o, const ALLEGRO_COLOR e)
-		{
-			switch (o) {
-			case Assistance::_text_opt_color::COLOR:
-				color = e;
-				break;
-			}
-		}
-		void Text::set(const Assistance::_text_opt_int o, const int e)
-		{
-			switch (o) {
-			case Assistance::_text_opt_int::MODE:
-				mode = e;
-				break;
-			case Assistance::_text_opt_int::LAYER:
-				layer = e;
+				fonts.get(e, data.font);
 				break;
 			}
 		}
 
-		void Text::get(const Assistance::_text_opt_str o, std::string& e)
+		void Text::set(const Assistance::io__text_boolean o, const bool e)
 		{
-			switch (o) {
-			case Assistance::_text_opt_str::SETSTRING:
-				e = string;
-				break;
-			case Assistance::_text_opt_str::SETID:
-				e = id;
-				break;
-			case Assistance::_text_opt_str::SETFOLLOW:
-				if (follow) follow->get(Assistance::io___string_sprite::SPRITE_ID, e);
-				break;
-			}
+			data.b[+o] = e;
 		}
-		void Text::get(const Assistance::_text_opt_bool o, bool& e)
+
+		void Text::set(const Assistance::io__text_double o, const double e)
 		{
-			switch (o) {
-			case Assistance::_text_opt_bool::SHOW:
-				e = show;
-				break;
-			case Assistance::_text_opt_bool::AFFECTED_BY_CAM:
-				e = affected_by_camera;
-				break;
-			}
+			data.d[+o] = e;
 		}
-		void Text::get(const Assistance::_text_opt_db o, double& e)
+
+		void Text::set(const Assistance::io__text_color o, const ALLEGRO_COLOR e)
 		{
-			switch (o) {
-			case Assistance::_text_opt_db::POSX:
-				e = pos[0];
-				break;
-			case Assistance::_text_opt_db::POSY:
-				e = pos[1];
-				break;
-			case Assistance::_text_opt_db::SCALEG:
-				e = scale;
-				break;
-			case Assistance::_text_opt_db::ROTATION:
-				e = rot;
-				break;
-			case Assistance::_text_opt_db::UPDATETIME:
-				e = update_time;
-				break;
-			}
+			data.c = e;
 		}
-		void Text::get(const Assistance::_text_opt_int o, int& e)
+
+		void Text::set(const Assistance::io__text_integer o, const int e)
 		{
-			switch (o) {
-			case Assistance::_text_opt_int::MODE:
-				e = mode;
-				break;
-			case Assistance::_text_opt_int::LAYER:
-				e = layer;
-				break;
-			}
+			data.i[+o] = e;
 		}
-		void Text::get(const Assistance::_text_opt_color o, ALLEGRO_COLOR& e)
+
+
+		void Text::get(const Assistance::io__text_string o, std::string& e)
 		{
-			switch (o) {
-			case Assistance::_text_opt_color::COLOR:
-				e = color;
-				break;
-			}
+			e = data.str[+o];
 		}
-		const bool Text::isEq(const Assistance::_text_opt_color e, const ALLEGRO_COLOR v)
+		void Text::get(const Assistance::io__text_boolean o, bool& e)
+		{
+			e = data.b[+o];
+		}
+		void Text::get(const Assistance::io__text_double o, double& e)
+		{
+			e = data.d[+o];
+		}
+		void Text::get(const Assistance::io__text_integer o, int& e)
+		{
+			e = data.i[+o];
+		}
+		void Text::get(const Assistance::io__text_color o, ALLEGRO_COLOR& e)
+		{
+			e = data.c;
+		}
+
+		const bool Text::isEq(const Assistance::io__text_color e, const ALLEGRO_COLOR v)
 		{
 			ALLEGRO_COLOR g;
 			get(e, g);
 			return ((g.r == v.r) && (g.g == v.g) && (g.b == v.b) && (g.a == v.a));
 		}
-		const bool Text::isEq(const Assistance::_text_opt_str e, const std::string v)
+		const bool Text::isEq(const Assistance::io__text_string e, const std::string v)
 		{
 			std::string g;
 			get(e, g);
 			return g == v;
 		}
-		const bool Text::isEq(const Assistance::_text_opt_bool e, const bool v)
+		const bool Text::isEq(const Assistance::io__text_boolean e, const bool v)
 		{
 			bool g;
 			get(e, g);
 			return g == v;
 		}
-		const bool Text::isEq(const Assistance::_text_opt_db e, const double v)
+		const bool Text::isEq(const Assistance::io__text_double e, const double v)
 		{
 			double g;
 			get(e, g);
 			return g == v;
 		}
-		const bool Text::isEq(const Assistance::_text_opt_int e, const int v)
+		const bool Text::isEq(const Assistance::io__text_integer e, const int v)
 		{
 			int g;
 			get(e, g);
@@ -1231,96 +1083,58 @@ namespace LSW {
 
 		void Text::draw(const int is_layer)
 		{
-			if (!show) return;
-			if (is_layer != layer) {
-				//lastinterpret = al_get_time() - update_time;
+			if (!data.b[+Assistance::io__text_boolean::SHOW]) return;
+			if (is_layer != data.i[+Assistance::io__text_integer::LAYER]) {
 				return;
 			}
 			if (follow) {
 				bool k;
-				follow->get(Assistance::io___boolean_sprite::DRAW, k);
+				follow->get(Assistance::io__sprite_boolean::DRAW, k);
 				if (!k) return;
 			}
 
-			if (al_get_time() - lastinterpret > update_time/* || str_upd*/) {
-				//str_upd = false;
-				if (lastinterpret == 0) lastinterpret = al_get_time();
+			if (al_get_time() - data.d[+Assistance::io__text_double::LAST_INTERPRET] > data.d[+Assistance::io__text_double::UPDATETIME]) {
+				if (data.d[+Assistance::io__text_double::LAST_INTERPRET] == 0) data.d[+Assistance::io__text_double::LAST_INTERPRET] = al_get_time();
 				else {
-					if (al_get_time() - lastinterpret > update_time * 3) lastinterpret = al_get_time();
-					else lastinterpret += update_time;
+					if (al_get_time() - data.d[+Assistance::io__text_double::LAST_INTERPRET] > data.d[+Assistance::io__text_double::UPDATETIME] * 3) data.d[+Assistance::io__text_double::LAST_INTERPRET] = al_get_time();
+					else data.d[+Assistance::io__text_double::LAST_INTERPRET] += data.d[+Assistance::io__text_double::UPDATETIME];
 				}
 
-				std::string b4 = string;
-				string = orig_str;
-				_interpretTags(string);/*
-				if (string != b4) {
-					str_upd = true;
-				}*/
+				std::string b4 = data.str[+Assistance::io__text_string::PROCESSED_STRING];
+				data.str[+Assistance::io__text_string::PROCESSED_STRING] = data.str[+Assistance::io__text_string::STRING];
+				_interpretTags(data.str[+Assistance::io__text_string::PROCESSED_STRING]);
 			}
 
-			while (rot > 360.0) rot -= 360.0;
-			while (rot < 0.0) rot += 360.0;
+			while (data.d[+Assistance::io__text_double::ROTATION] > 360.0) data.d[+Assistance::io__text_double::ROTATION] -= 360.0;
+			while (data.d[+Assistance::io__text_double::ROTATION] < 0.0) data.d[+Assistance::io__text_double::ROTATION] += 360.0;
+
+			// follow sprite stuff
+			double rotation = 0.0;
 
 			Camera cam;
 			camera_preset preset = cam.get();
-			//const int lastapply = cam.getLastApplyID();
 			ALLEGRO_BITMAP* d = al_get_target_bitmap();
 			if (!d) return;// throw "TEXT::DRAW - NO DISPLAY!";
 
-			/*if (usebuf) {
-
-				loadInternalBMP();
-				if (str_upd) {
-					ALLEGRO_BITMAP* me;
-					local_paint_i->get(me);
-					al_set_target_bitmap(me);
-					al_clear_to_color(al_map_rgba(0, 0, 0, 0));
-					cam.copy(Defaults::default_layer_backup, lastapply);
-					if (affected_by_camera)
-					{
-						cam.set(cam.getLastApplyID(), Camera::ZOOM, cam.get(lastapply, Camera::ZOOMX) * transf[1]);
-						cam.set(cam.getLastApplyID(), Camera::ZOOM, cam.get(lastapply, Camera::ZOOMY) * transf[2]);
-						cam.set(cam.getLastApplyID(), Camera::ZOOM, cam.get(lastapply, Camera::ZOOM) * transf[0] * 1.0 / Defaults::sharpness_font);
-						cam.set(cam.getLastApplyID(), Camera::OFFX, cam.get(lastapply, Camera::OFFX) * Defaults::sharpness_font);
-						cam.set(cam.getLastApplyID(), Camera::OFFY, cam.get(lastapply, Camera::OFFY) * Defaults::sharpness_font);
-					}
-					else {
-						cam.reset(lastapply);
-						cam.set(cam.getLastApplyID(), Camera::ZOOMX, transf[1]);
-						cam.set(cam.getLastApplyID(), Camera::ZOOMY, transf[2]);
-						cam.set(cam.getLastApplyID(), Camera::ZOOM, transf[0] * 1.0 / Defaults::sharpness_font);
-						cam.set(cam.getLastApplyID(), Camera::OFFX, 0.0);
-						cam.set(cam.getLastApplyID(), Camera::OFFY, 0.0);
-					}
-					cam.apply(lastapply);
-					_draw();
-					cam.copy(lastapply, Defaults::default_layer_backup);
-					cam.apply(lastapply);
-					al_set_target_bitmap(d);
-					cam.apply(lastapply);
-				}
-			}
-			else {*/
-
 			if (follow) {
-				follow->get(Assistance::io___double_sprite::POSX, off_plr[0]);
-				follow->get(Assistance::io___double_sprite::POSY, off_plr[1]);
-				follow->get(Assistance::io___double_sprite::ROTATION, ofr_plr);
+				follow->get(Assistance::io__sprite_double::POSX, data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX]);
+				follow->get(Assistance::io__sprite_double::POSY, data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY]);
+				follow->get(Assistance::io__sprite_double::ROTATION, rotation);
 			}
 			else {
-				off_plr[0] = off_plr[1] = 0.0;
+				data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX] = data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY] = 0.0;
 			}
 
-			double t_rotation_rad = (rot)*ALLEGRO_PI / 180.0;
-			double p_rotation_rad = (ofr_plr)*ALLEGRO_PI / 180.0;
+			double t_rotation_rad = (data.d[+Assistance::io__text_double::ROTATION])*ALLEGRO_PI / 180.0;
+			double p_rotation_rad = (rotation)*ALLEGRO_PI / 180.0;
 			double rotation_rad = t_rotation_rad + p_rotation_rad;
 
 			if (rotation_rad > ALLEGRO_PI * 2) rotation_rad -= ALLEGRO_PI * 2;
 			if (rotation_rad < 0) rotation_rad += ALLEGRO_PI * 2;
 
 			double pos_now[2];
-			pos_now[0] = 1.0 * Constants::text_default_sharpness_font * ((pos[0] * cos(p_rotation_rad) - pos[1] * sin(p_rotation_rad)) + off_plr[0]);
-			pos_now[1] = 1.0 * Constants::text_default_sharpness_font * ((-pos[0] * sin(p_rotation_rad) + pos[1] * cos(p_rotation_rad)) + off_plr[1]);
+			pos_now[0] = 1.0 * Constants::text_default_sharpness_font * ((data.d[+Assistance::io__text_double::POSX] * cos(p_rotation_rad) - data.d[+Assistance::io__text_double::POSY] * sin(p_rotation_rad)) + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX]);
+			pos_now[1] = 1.0 * Constants::text_default_sharpness_font * ((data.d[+Assistance::io__text_double::POSY] * cos(p_rotation_rad)) - data.d[+Assistance::io__text_double::POSX] * sin(p_rotation_rad) + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY]);
 
 
 			double targ_draw_xy[2];
@@ -1328,32 +1142,19 @@ namespace LSW {
 			targ_draw_xy[1] = -pos_now[0] * sin(rotation_rad) + pos_now[1] * cos(rotation_rad);
 
 
-			//cam.copy(Defaults::default_layer_backup, lastapply);
+			if (!data.b[+Assistance::io__text_boolean::AFFECTED_BY_CAM]) preset.reset();
 
-			if (affected_by_camera)
-			{
-				preset.set(Assistance::io___float_camera::SCALE_G, preset.get(Assistance::io___float_camera::SCALE_G) * scale * 1.0 / Constants::text_default_sharpness_font);
-				preset.set(Assistance::io___float_camera::OFFSET_X, preset.get(Assistance::io___float_camera::OFFSET_X) * Constants::text_default_sharpness_font / scale);
-				preset.set(Assistance::io___float_camera::OFFSET_Y, preset.get(Assistance::io___float_camera::OFFSET_Y) * Constants::text_default_sharpness_font / scale);
-			}
-			else {
-				preset = camera_preset();
-				preset.set(Assistance::io___float_camera::SCALE_G, scale * 1.0 / Constants::text_default_sharpness_font);
-			}
+			preset.set(Assistance::io__camera_float::SCALE_G, preset.get(Assistance::io__camera_float::SCALE_G) * data.d[+Assistance::io__text_double::SCALEG] * 1.0 / Constants::text_default_sharpness_font);
+			preset.set(Assistance::io__camera_float::OFFSET_X, preset.get(Assistance::io__camera_float::OFFSET_X) * Constants::text_default_sharpness_font / data.d[+Assistance::io__text_double::SCALEG]);
+			preset.set(Assistance::io__camera_float::OFFSET_Y, preset.get(Assistance::io__camera_float::OFFSET_Y) * Constants::text_default_sharpness_font / data.d[+Assistance::io__text_double::SCALEG]);
 
-			preset.set(Assistance::io___float_camera::ROTATION, preset.get(Assistance::io___float_camera::ROTATION) + rotation_rad);
+			preset.set(Assistance::io__camera_float::ROTATION, preset.get(Assistance::io__camera_float::ROTATION) + rotation_rad);
 			cam.applyNoSave(preset);
-
-			final_scale = scale;// *cam.get(lastapply, Camera::ZOOM);
-			//verify();
 
 			_draw(targ_draw_xy);
 
-			cam.apply();
 			al_set_target_bitmap(d);
 			cam.apply();
-
-			//}
 		}
 
 	}

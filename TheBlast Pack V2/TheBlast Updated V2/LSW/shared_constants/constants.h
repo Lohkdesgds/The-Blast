@@ -16,6 +16,11 @@ __TIME__
 
 namespace LSW {
 	namespace v4 {
+		namespace Assistance {
+			// this have to be global, come on
+			enum class ro__my_events { LOG_CLOUDLAUNCH_RAW = 512, THRKBM_DISPLAY_SIZE, THRDRW_GOT_FORCED_RESIZE }; // THRDRW -> event for the THREAD_DRAW
+		}
+
 		namespace Constants {
 
 			const std::string __interpret_date();
@@ -42,10 +47,13 @@ namespace LSW {
 
 			// loggger.h stuff
 			const std::string default_file_global_path = "%appdata%/Lohk's Studios/TheBlast/logs/latest.log";
-			//const size_t len_func = 15;
 			const size_t len_class = 45;
 			const size_t max_lines_stored_by_memlog = 20;
+			const size_t each_line_stored_by_memlog = 256;
 
+			// drawing.h stuff
+			const double text_default_sharpness_font = 2500.0;
+			const double text_timeout_interpret = 0.1;
 
 
 

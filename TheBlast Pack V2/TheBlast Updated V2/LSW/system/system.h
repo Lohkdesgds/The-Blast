@@ -84,7 +84,7 @@ namespace LSW {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> some raw stuff
 
-		class single_display {
+		class Display {
 			ALLEGRO_DISPLAY* d = nullptr;
 			std::mutex d_try;
 			int x, y, f, h;
@@ -97,9 +97,9 @@ namespace LSW {
 			void _print();
 			void __print_thr_autodel(ALLEGRO_BITMAP*, const std::string);
 		public:
-			single_display();
-			single_display(const int, const int, const int = Constants::start_display_default_mode, int = 0); // x, y, flags, hz
-			~single_display();
+			Display();
+			Display(const int, const int, const int = Constants::start_display_default_mode, int = 0); // x, y, flags, hz
+			~Display();
 
 			void restart();
 			void flip();

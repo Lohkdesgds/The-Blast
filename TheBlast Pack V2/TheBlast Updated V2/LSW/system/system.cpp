@@ -313,7 +313,7 @@ namespace LSW {
 			return l->options;
 		}
 
-		void single_display::_init(const int x, const int y, const int flag, int hz)
+		void Display::_init(const int x, const int y, const int flag, int hz)
 		{
 			if (d) {
 				al_destroy_display(d);
@@ -362,7 +362,7 @@ namespace LSW {
 			}
 		}
 		
-		void single_display::_print()
+		void Display::_print()
 		{
 			auto u = al_get_backbuffer(d);
 			std::string path = Constants::default_print_path;
@@ -373,7 +373,7 @@ namespace LSW {
 			tm tt;
 			auto v = localtime_s(&tt, &rt);
 
-			if (v != 0) throw Abort::abort("localtime_s", "single_display::_print", "Cannot get local time to name the print file!");
+			if (v != 0) throw Abort::abort("localtime_s", "Display::_print", "Cannot get local time to name the print file!");
 
 			path = path + std::to_string(tt.tm_year + 1900) + "_" + std::to_string(tt.tm_mon + 1) + "_" + std::to_string(tt.tm_mday) + "-" + std::to_string(tt.tm_hour) + "_" + std::to_string(tt.tm_min) + "_" + std::to_string(tt.tm_sec) + "-" + std::to_string((int)(GetTickCount64()%1000)) + ".jpg";
 			
@@ -396,14 +396,14 @@ namespace LSW {
 			printing = false;
 		}
 
-		void single_display::__print_thr_autodel(ALLEGRO_BITMAP* u, const std::string path)
+		void Display::__print_thr_autodel(ALLEGRO_BITMAP* u, const std::string path)
 		{
 			al_save_bitmap(path.c_str(), u);
 			al_destroy_bitmap(u);
 			printthrdone = true;
 		}
 
-		single_display::single_display()
+		Display::Display()
 		{
 			gfile logg;
 			logg << L::SLL << fsr(__FUNCSIG__) << "Creating new display (blank)" << L::BLL;
@@ -453,32 +453,32 @@ namespace LSW {
 			_init(md.x, md.y, -1, md.hz);
 		}
 
-		single_display::single_display(const int x, const int y, const int flag, int hz)
+		Display::Display(const int x, const int y, const int flag, int hz)
 		{
 			gfile logg;
 			logg << L::SLL << fsr(__FUNCSIG__) << "Creating new custom display [" << x << "x" << y << "@" << hz << " w/ " << flag << "]" << L::BLL;
 			_init(x, y, flag, hz);
 		}
-		single_display::~single_display()
+		Display::~Display()
 		{
 			close();
 		}
-		void single_display::restart()
+		void Display::restart()
 		{
 			close();
 			_init(this->x, this->y, this->f, this->h);
 		}
-		void single_display::flip()
+		void Display::flip()
 		{
 			al_flip_display();
 			if (printing) _print();
 			al_set_target_backbuffer(d);
 		}
-		void single_display::clear_to(const ALLEGRO_COLOR v)
+		void Display::clear_to(const ALLEGRO_COLOR v)
 		{
 			al_clear_to_color(v);
 		}
-		void single_display::close()
+		void Display::close()
 		{
 			gfile logg;
 			logg << L::SLL << fsr(__FUNCSIG__) << "Deleting display..." << L::BLL;
@@ -491,15 +491,15 @@ namespace LSW {
 			}
 			d_try.unlock();
 		}
-		bool single_display::exist()
+		bool Display::exist()
 		{
 			return (d);
 		}
-		void single_display::print()
+		void Display::print()
 		{
 			printing = true;
 		}
-		ALLEGRO_DISPLAY*& single_display::_getD()
+		ALLEGRO_DISPLAY*& Display::_getD()
 		{
 			return d;
 		}

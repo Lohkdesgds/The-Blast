@@ -83,17 +83,17 @@ namespace LSW {
 			}
 			~__template_multiple_timers()
 			{
-				stop_timers();
+				stop();
 				for (size_t p = 0; p < num_args; p++) al_destroy_timer(timers_p[p]);
 				al_destroy_timer(eachsec);
 				al_destroy_event_queue(queue);
 			}
-			void start_timers()
+			void start()
 			{
 				for (size_t p = 0; p < num_args; p++) al_start_timer(timers_p[p]);
 				al_start_timer(eachsec);
 			}
-			void stop_timers()
+			void stop()
 			{
 				for (size_t p = 0; p < num_args; p++) al_stop_timer(timers_p[p]);
 				al_stop_timer(eachsec);
@@ -120,7 +120,7 @@ namespace LSW {
 			{
 				return benchmark[calls_per_sec_pos];
 			}
-			void hasWaitEvent()
+			void hasEventWait()
 			{
 				rawcount[calls_per_sec_pos]++;
 
@@ -198,7 +198,7 @@ namespace LSW {
 				if (!(lastev.type == ALLEGRO_EVENT_TIMER)) return false;
 				return (lastev.timer.source == timers_p[t]);
 			}
-			ALLEGRO_EVENT soWhat()
+			ALLEGRO_EVENT getEventRaw()
 			{
 				return lastev;
 			}
@@ -232,7 +232,7 @@ namespace LSW {
 		public:
 			//~__template_static_vector() { clear(); }
 
-			void setFuncs(const std::function <bool(const char*, T*&)> hl, const std::function <void(T*&)> hd) {
+			void set(const std::function <bool(const char*, T*&)> hl, const std::function <void(T*&)> hd) {
 				assert(hl);
 				assert(hd);
 				data.load = hl;
@@ -297,7 +297,7 @@ namespace LSW {
 				data.dbm.unlock();
 				return false;
 			}
-			void del(const std::string id) {
+			void remove(const std::string id) {
 				for (size_t p = 0; p < data.db.size(); p++)
 				{
 					if (data.db[p]->id == id) {
