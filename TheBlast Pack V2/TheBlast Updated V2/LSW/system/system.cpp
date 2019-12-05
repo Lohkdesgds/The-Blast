@@ -15,7 +15,7 @@ namespace LSW {
 			char myself[1024];
 			GetModuleFileNameA(NULL, myself, 1024);
 
-			Tools::interpret_path(work);
+			Tools::interpretPath(work);
 			Tools::createPath(work);
 
 			auto err0 = fopen_s(&me, myself, "rb");
@@ -27,7 +27,7 @@ namespace LSW {
 
 			if (err0) {
 				if (me) fclose(me);
-				throw Abort::abort("fopen_s", "__systematic::__extract_package", "Cannot proceed with temp file to zip");
+				throw Abort::abort(__FUNCSIG__, "Can't extract file to a temporary place!");
 				return;
 			}
 
@@ -55,7 +55,7 @@ namespace LSW {
 
 				if (totalsiz-- <= 0) {
 					if (me) fclose(me);
-					throw Abort::abort("Tools::getFileSize", "__systematic::__extract_package", "File size isn't right!", 1);
+					throw Abort::abort(__FUNCSIG__, "File size isn't right! Your file might be incomplete!", 1);
 					return;
 				}
 			}
@@ -76,7 +76,7 @@ namespace LSW {
 			}
 			else {
 				if (me) fclose(me);
-				throw Abort::abort("null", "__systematic::__extract_package", "data pack not available inside .exe file");
+				throw Abort::abort(__FUNCSIG__, "Datapack not available inside .exe file!", 1);
 			}
 
 			if (me) fclose(me);
@@ -92,7 +92,7 @@ namespace LSW {
 			char myself[1024];
 			GetModuleFileNameA(NULL, myself, 1024);
 
-			Tools::interpret_path(work);
+			Tools::interpretPath(work);
 			Tools::createPath(work);
 
 			__ensure_warn_package();
@@ -101,7 +101,7 @@ namespace LSW {
 
 			if (err1) {
 				if (fi) fclose(fi);
-				throw Abort::abort("fopen_s", "__systematic::__nointernalzip_extract_package", "ZIP not found, can't proceed");
+				throw Abort::abort(__FUNCSIG__, "External ZIP not found, please report.");
 				return;
 			}
 
@@ -112,7 +112,7 @@ namespace LSW {
 		{
 			std::string work = Constants::start_zip_warning_file_txt;
 
-			Tools::interpret_path(work);
+			Tools::interpretPath(work);
 			Tools::createPath(work);
 
 			FILE* fp = nullptr;
@@ -123,33 +123,33 @@ namespace LSW {
 				fclose(fp);
 			}
 			else {
-				throw Abort::abort("fopen_s", "system::__ensure_warn_package", "Could not create the warning file (zip)");
+				throw Abort::abort(__FUNCSIG__, "Could not create the warning file (zip)");
 			}
 		}
 		bool __systematic::__loadPackage()
 		{
-			if (!initialized) throw Abort::abort("initialized", "system::__loadPackage", "Wasn't initialized properly!");
+			if (!initialized) throw Abort::abort(__FUNCSIG__, "Wasn't initialized properly!");
 
 
 			if (extracted_zip_at.length() == 0) {
 				__extract_package();
 			}
 
-			if (!PHYSFS_addToSearchPath(extracted_zip_at.c_str(), 1)) throw Abort::abort("PHYSFS_addToSearchPath", "system::__loadPackage", "Can't add datapack to internal search", 99);
+			if (!PHYSFS_addToSearchPath(extracted_zip_at.c_str(), 1)) throw Abort::abort(__FUNCSIG__, "Can't add datapack to internal search");
 
 			return true;
 		}
 
 		bool __systematic::__nointernalzip_loadPackage()
 		{
-			if (!initialized) throw Abort::abort("initialized", "system::__nointernalzip_loadPackage", "Wasn't initialized properly!");
+			if (!initialized) throw Abort::abort(__FUNCSIG__, "Wasn't initialized properly!");
 
 
 			if (extracted_zip_at.length() == 0) {
 				__nointernalzip_extract_package();
 			}
 
-			if (!PHYSFS_addToSearchPath(extracted_zip_at.c_str(), 1)) throw Abort::abort("PHYSFS_addToSearchPath", "system::__nointernalzip_loadPackage", "Can't add datapack to internal search");
+			if (!PHYSFS_addToSearchPath(extracted_zip_at.c_str(), 1)) throw Abort::abort(__FUNCSIG__, "Can't add datapack to internal search");
 
 			return true;
 		}
@@ -175,36 +175,36 @@ namespace LSW {
 			exit(EXIT_SUCCESS);
 		}
 
-		void __systematic::init_system()
+		void __systematic::initSystem()
 		{
 
 			if (!al_init())
-				throw Abort::abort("al_init", "system::system", "Failed to open the game");
+				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#01]");
 			if (!al_init_acodec_addon())
-				throw Abort::abort("al_init_acodec_addon", "system::system", "Failed to open the game");
+				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#02]");
 			if (!al_init_font_addon())
-				throw Abort::abort("al_init_font_addon", "system::system", "Failed to open the game");
+				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#03]");
 			if (!al_init_image_addon())
-				throw Abort::abort("al_init_image_addon", "system::system", "Failed to open the game");
+				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#04]");
 			if (!al_init_primitives_addon())
-				throw Abort::abort("al_init_primitives_addon", "system::system", "Failed to open the game");
+				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#05]");
 			if (!al_init_ttf_addon())
-				throw Abort::abort("al_init_ttf_addon", "system::system", "Failed to open the game");
+				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#06]");
 			if (!al_install_keyboard())
-				throw Abort::abort("al_install_keyboard", "system::system", "Failed to open the game");
+				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#07]");
 			if (!al_install_mouse())
-				throw Abort::abort("al_install_mouse", "system::system", "Failed to open the game");
+				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#08]");
 			if (!al_install_audio())
-				throw Abort::abort("al_install_audio", "system::system", "Failed to open the game");
+				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#09]");
 			if (!al_reserve_samples(Constants::start_audio_samples_max))
-				throw Abort::abort("al_reserve_samples", "system::system", "Failed to open the game");
+				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#10]");
 
 
 			char myself[1024];
 			GetModuleFileNameA(NULL, myself, 1024);
 
 			if (!already_set_physfs_root) {
-				if (!PHYSFS_init(myself)) throw Abort::abort("PHYSFS_init", "system::system", "Failed to set the datapack to run", 1); // already set the whole thing
+				if (!PHYSFS_init(myself)) throw Abort::abort(__FUNCSIG__, "Failed to set the datapack to run", 1);
 				already_set_physfs_root = true;
 			}
 
@@ -213,32 +213,32 @@ namespace LSW {
 				l = nullptr;
 			}
 
-			l = new Assistance::modes();
+			l = new modes();
 
 			initialized = true;
 
-			__set_new_display_mode(Constants::start_display_default_mode);
+			setNewDisplayMode(Constants::start_display_default_mode);
 
 			__loadPackage(); // extract and set zip on physfs
 
 			al_set_physfs_file_interface();
 		}
 
-		void __systematic::force_setzip()
+		void __systematic::forceInitWithNoZipAnyway()
 		{
 			__nointernalzip_loadPackage();
 			al_set_physfs_file_interface();
 		}
 
-		void __systematic::__set_new_display_mode(const int mds)
+		void __systematic::setNewDisplayMode(const int mds)
 		{
-			if (!initialized) throw Abort::abort("initialized", "system::__set_new_display_mode", "Wasn't initialized properly!");
+			if (!initialized) throw Abort::abort(__FUNCSIG__, "Wasn't initialized properly!");
 
 
-			if (!l) throw Abort::abort("struct modes* system::l", "system::__set_new_display_mode", "Shouldn't be NULL");
+			if (!l) throw Abort::abort(__FUNCSIG__, "Display modes shouldn't be NULL");
 
 			int nva = al_get_num_video_adapters();
-			if (nva < 1) throw Abort::abort("al_get_num_video_adapters", "system::system", "The number of modes was less than one.");
+			if (nva < 1) throw Abort::abort(__FUNCSIG__, "The number of display modes was less than one.");
 
 			l->options.clear();
 
@@ -249,7 +249,7 @@ namespace LSW {
 			for (int j = 0; j < num_modes; ++j) {
 				ALLEGRO_DISPLAY_MODE admode;
 				if (al_get_display_mode(j, &admode) == &admode) {
-					Assistance::__submode mod;
+					Assistance::display_mode mod;
 					mod.x = admode.width;
 					mod.y = admode.height;
 					mod.hz = admode.refresh_rate;
@@ -267,14 +267,14 @@ namespace LSW {
 			}
 		}
 
-		bool __systematic::__check_resolution_existance(const int x, const int y, const int hz)
+		bool __systematic::checkResolutionExistance(const int x, const int y, const int hz)
 		{
-			if (!initialized) throw Abort::abort("initialized", "system::__check_resolution_existance", "Wasn't initialized properly!");
+			if (!initialized) throw Abort::abort(__FUNCSIG__, "Wasn't initialized properly!");
 
 
-			if (!l) throw Abort::abort("struct modes* system::l", "system::__check_resolution_existance", "Shouldn't be NULL");
+			if (!l) throw Abort::abort(__FUNCSIG__, "Display modes shouldn't be NULL");
 
-			Assistance::__submode sm;
+			Assistance::display_mode sm;
 			sm.x = x;
 			sm.y = y;
 			sm.hz = hz;
@@ -304,12 +304,12 @@ namespace LSW {
 			return alright;
 		}
 
-		const auto __systematic::__get_available_res()
+		const auto __systematic::getAvailableResolutions()
 		{
-			if (!initialized) throw Abort::abort("initialized", "system::__get_available_res", "Wasn't initialized properly!");
+			if (!initialized) throw Abort::abort(__FUNCSIG__, "Wasn't initialized properly!");
 
 
-			if (!l) throw Abort::abort("struct modes* system::l", "system::__get_available_res", "Shouldn't be NULL");
+			if (!l) throw Abort::abort(__FUNCSIG__, "Display modes shouldn't be NULL");
 			return l->options;
 		}
 
@@ -320,9 +320,9 @@ namespace LSW {
 				d = nullptr;
 			}
 
-			if (flag > 0) __g_sys.__set_new_display_mode(flag);
+			if (flag > 0) __g_sys.setNewDisplayMode(flag);
 
-			auto u = __g_sys.__get_available_res();
+			auto u = __g_sys.getAvailableResolutions();
 
 			int tx, ty;
 			tx = x;
@@ -345,7 +345,7 @@ namespace LSW {
 				}
 			}
 
-			if (__g_sys.__check_resolution_existance(x, y, hz) || (flag & ALLEGRO_WINDOWED)) {
+			if (__g_sys.checkResolutionExistance(x, y, hz) || (flag & ALLEGRO_WINDOWED)) {
 				al_set_new_bitmap_flags(Constants::start_bitmap_default_mode);
 				al_set_new_display_refresh_rate(hz);
 				al_set_new_display_option(ALLEGRO_VSYNC, 2, ALLEGRO_SUGGEST);
@@ -358,7 +358,7 @@ namespace LSW {
 				this->h = hz;
 			}
 			else {
-				throw Abort::abort("system::__check_resolution_existance", "display::display", "Resolution not available.");
+				throw Abort::abort(__FUNCSIG__, "Invalid resolution, sorry!");
 			}
 		}
 		
@@ -366,14 +366,14 @@ namespace LSW {
 		{
 			auto u = al_get_backbuffer(d);
 			std::string path = Constants::default_print_path;
-			Tools::interpret_path(path);
+			Tools::interpretPath(path);
 			Tools::createPath(path);
 
 			auto rt = time(NULL);
 			tm tt;
 			auto v = localtime_s(&tt, &rt);
 
-			if (v != 0) throw Abort::abort("localtime_s", "Display::_print", "Cannot get local time to name the print file!");
+			if (v != 0) throw Abort::abort(__FUNCSIG__, "Can't set a proper name to save the screenshot!");
 
 			path = path + std::to_string(tt.tm_year + 1900) + "_" + std::to_string(tt.tm_mon + 1) + "_" + std::to_string(tt.tm_mday) + "-" + std::to_string(tt.tm_hour) + "_" + std::to_string(tt.tm_min) + "_" + std::to_string(tt.tm_sec) + "-" + std::to_string((int)(GetTickCount64()%1000)) + ".jpg";
 			
@@ -409,10 +409,10 @@ namespace LSW {
 			logg << L::SLL << fsr(__FUNCSIG__) << "Creating new display (blank)" << L::BLL;
 
 			int flag = Constants::start_display_default_mode;
-			__g_sys.__set_new_display_mode(flag);
-			auto u = __g_sys.__get_available_res();
+			__g_sys.setNewDisplayMode(flag);
+			auto u = __g_sys.getAvailableResolutions();
 
-			Assistance::__submode md;
+			Assistance::display_mode md;
 
 			Config config;
 			config.get(Assistance::conf_i::SCREEN_X, md.x, 0);
@@ -474,7 +474,7 @@ namespace LSW {
 			if (printing) _print();
 			al_set_target_backbuffer(d);
 		}
-		void Display::clear_to(const ALLEGRO_COLOR v)
+		void Display::clearTo(const ALLEGRO_COLOR v)
 		{
 			al_clear_to_color(v);
 		}
@@ -499,7 +499,7 @@ namespace LSW {
 		{
 			printing = true;
 		}
-		ALLEGRO_DISPLAY*& Display::_getD()
+		ALLEGRO_DISPLAY*& Display::getDisplay()
 		{
 			return d;
 		}
@@ -510,14 +510,14 @@ namespace LSW {
 			m.lock();
 			if (!c) {
 				std::string temporary = Constants::config_default_file;
-				Tools::interpret_path(temporary);
+				Tools::interpretPath(temporary);
 				Tools::createPath(temporary);
 
 				logg << L::SLL << fsr(__FUNCSIG__) << "Registered loading of Config file (global)" << L::BLL;
 				if (!(c = al_load_config_file(temporary.c_str())))
 				{
 					c = al_create_config();
-					if (!c) throw "at Config::Config [#" + std::to_string((size_t)this) + "]: Cannot load/create Config file!";
+					if (!c) throw Abort::abort(__FUNCSIG__, "Cannot load/create Config file!");
 					logg << L::SLL << fsr(__FUNCSIG__) << "Is this the first time you're opening this game? Registered first Config load." << L::BLL;
 
 					// set or load first values
@@ -533,7 +533,7 @@ namespace LSW {
 					set(Assistance::conf_ll::_TIMES_LIT, 0LL);
 
 					if (!al_save_config_file(temporary.c_str(), c)) {
-						throw "at Config::Config [#" + std::to_string((size_t)this) + "]: Cannot save Config file!";
+						throw Abort::abort(__FUNCSIG__, "Cannot save Config file!");
 					}
 				}
 				else {
@@ -551,7 +551,7 @@ namespace LSW {
 			if (c) {
 				m.lock();
 				std::string temporary = Constants::config_default_file;
-				Tools::interpret_path(temporary);
+				Tools::interpretPath(temporary);
 				Tools::createPath(temporary);
 				al_save_config_file(temporary.c_str(), c);
 				m.unlock();
@@ -560,7 +560,7 @@ namespace LSW {
 
 		void Config::set(const std::string e, const std::string v)
 		{
-			if (!c) throw "at Config::set [#" + std::to_string((size_t)this) + "]: Cannot set \"" + e + "\" as \"" + v + "\".";
+			if (!c) throw Abort::abort(__FUNCSIG__, "Cannot set \"" + e + "\" as \"" + v + "\".");
 			al_set_config_value(c, Constants::conf_string_default_txt.c_str(), e.c_str(), v.c_str());
 		}
 		void Config::set(const Assistance::conf_b e, const bool v)
@@ -586,7 +586,7 @@ namespace LSW {
 
 		void Config::get(const std::string e, std::string& v, const std::string defaul)
 		{
-			if (!c) throw "at Config::get [#" + std::to_string((size_t)this) + "]: Cannot get \"" + e + "\" as \"" + v + "\".";
+			if (!c) throw Abort::abort(__FUNCSIG__, "Cannot get \"" + e + "\" as \"" + v + "\".");
 			const char* chh = al_get_config_value(c, Constants::conf_string_default_txt.c_str(), e.c_str());
 			if (!chh) {
 				logg << L::SLL << "[CONF:GET()][WARN] There was no value to " << e << ", so the default value was set (" << defaul << ")." << L::BLL;
@@ -668,12 +668,13 @@ namespace LSW {
 
 
 
-		void lsw_init()
+		void lswInit()
 		{
 			gfile logg;
+			Config conf;
 
 			try {
-				__g_sys.init_system();
+				__g_sys.initSystem();
 			}
 			catch (Abort::abort a) {
 				if (a.getErrN() == 1) {
@@ -691,52 +692,49 @@ namespace LSW {
 
 					if (res == 1) {
 						try {
-							__g_sys.force_setzip();
+							__g_sys.forceInitWithNoZipAnyway();
 						}
 						catch (Abort::abort a) {
 
-							std::string ext_exp = std::string("Function gone wrong: " + a.function() + "\n\nFrom what exactly: " + a.from() + "\n\nExtended explanation: " + a.details());
+							std::string ext_exp = std::string("Function gone wrong: " + a.from() + "\n\nExplanation: " + a.details());
 
 							logg << L::SLL << fsr(__FUNCSIG__, E::ERRR) << "User tried to continue, but something went wrong anyway." << L::BLL;
 							logg << L::SLL << fsr(__FUNCSIG__, E::ERRR) << ext_exp << L::BLL;
 							logg.flush();
 
-							al_show_native_message_box(
-								nullptr,
-								"Something went wrong anyway!",
-								"Please report the following:",
-								ext_exp.c_str(),
-								NULL,
-								ALLEGRO_MESSAGEBOX_ERROR);
-
-							exit(EXIT_FAILURE);
+							forceExit("Something went wrong anyway!", "Please report the following:", ext_exp.c_str());
 						}
 					}
 					else {
 						logg << L::SLL << fsr(__FUNCSIG__) << "User abort." << L::BLL;
 						logg.flush();
 
-						exit(EXIT_FAILURE);
+						forceExit();
 					}
 				}
 				else {
-					std::string ext_exp = std::string("Function gone wrong: " + a.function() + "\n\nFrom what exactly: " + a.from() + "\n\nExtended explanation: " + a.details());
+					std::string ext_exp = std::string("Function gone wrong: " + a.from() + "\n\nExplanation: " + a.details());
 
 					logg << L::SLL << fsr(__FUNCSIG__, E::ERRR) << "Something went wrong opening the game." << L::BLL;
 					logg << L::SLL << fsr(__FUNCSIG__, E::ERRR) << ext_exp << L::BLL;
 					logg.flush();
 
-					al_show_native_message_box(
-						nullptr,
-						"Something went wrong!",
-						"Please report the following:",
-						ext_exp.c_str(),
-						NULL,
-						ALLEGRO_MESSAGEBOX_ERROR);
-
-					exit(EXIT_FAILURE);
+					forceExit("Something went wrong anyway!", "Please report the following:", ext_exp.c_str());
 				}
 			}
+		}
+		void forceExit(const char* windw, const char* title, const char* ext)
+		{
+			if (windw) {
+				al_show_native_message_box(
+					nullptr,
+					windw,
+					title,
+					ext,
+					NULL,
+					ALLEGRO_MESSAGEBOX_ERROR);
+			}
+			exit(EXIT_FAILURE);
 		}
 	}
 }

@@ -455,7 +455,7 @@ namespace LSW {
 			bmpx = al_get_bitmap_width(rn);
 			bmpy = al_get_bitmap_height(rn);
 			if (bmpx <= 0 || bmpy <= 0) {
-				throw Abort::abort("al_get_bitmap_width|al_get_bitmap_height", "Sprite::draw", "Somehow the texture have < 0 width / height id=[" + this->sprite_id + "] size={" + std::to_string(bmpx) + "," + std::to_string(bmpy) + "}", 1);
+				throw Abort::abort(__FUNCSIG__, "Somehow the texture have < 0 width / height id=[" + this->sprite_id + "] size={" + std::to_string(bmpx) + "," + std::to_string(bmpy) + "}", 1);
 			}
 
 			cx = 1.0f * bmpx * ((data.dval[+Assistance::io__sprite_double::CENTERX] + 1.0) * 0.5);
@@ -519,7 +519,7 @@ namespace LSW {
 			for (size_t p = local_t.find('%'); (p != std::string::npos); p = local_t.find('%'))
 			{
 				if (al_get_time() - timing > Constants::text_timeout_interpret) {
-					throw Abort::abort("null", "Text::_interprettags", "Failed interpreting " + s + "!");
+					throw Abort::abort(__FUNCSIG__, "Fatal error trying to interpret " + s + "!");
 					return;
 				}
 

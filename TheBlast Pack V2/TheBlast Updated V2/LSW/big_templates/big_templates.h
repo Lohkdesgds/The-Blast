@@ -20,30 +20,15 @@
 #include <thread>
 #include <functional>
 #include <locale>
+#include <mutex>
 
 #include "..\custom_abort\abort.h"
-#include "..\system\system.h"
+#include "small_templates.h"
 #include "..\logger\logger.h"
-
-#define BLACK	al_map_rgb(0,0,0)
-#define WHITE	al_map_rgb(255,255,255)
-#define GREEN	al_map_rgb(0,255,0)
-#define RED		al_map_rgb(255,0,0)
-#define BLUE	al_map_rgb(0,0,255)
 
 
 namespace LSW {
 	namespace v4 {
-
-		namespace Constants {
-
-			template<typename H> const auto lambda_null_load = [](const char* p, H*& r) -> bool { return false; };
-			template<typename H> const auto lambda_null_unload = [](H*& b) -> void { return; };
-			
-			template<typename K> const auto lambda_default_load = [](const char* p,K*& r) -> bool { return (r = new K()); };
-			template<typename K> const auto lambda_default_unload = [](K*& b) -> void { if (b) delete b; b = nullptr; };
-		}
-
 
 		/*************************************************************************************
 
@@ -238,7 +223,7 @@ namespace LSW {
 				data.load = hl;
 				data.unload = hd;
 			}
-			bool try_lock() {
+			bool tryLock() {
 				return data.dbm.try_lock();
 			}
 			size_t size() {
@@ -253,7 +238,7 @@ namespace LSW {
 			void unlock() {
 				data.dbm.unlock();
 			}
-			T* create(const std::string a, const std::string b = "") { return load(a, b); }
+			T* create(const std::string id, const std::string path = "") { return load(id, path); }
 			T* load(const std::string id, const std::string path = "")	{
 				T* b = nullptr;
 				bool r = get(id, b);

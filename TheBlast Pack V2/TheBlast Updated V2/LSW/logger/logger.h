@@ -11,12 +11,7 @@
 
 #include "..\tools\tools.h"
 #include "..\shared_constants\constants.h"
-
-#ifdef _DEBUG
-#define ISDEBUG true
-#else
-#define ISDEBUG false
-#endif
+#include "..\big_templates\small_templates.h"
 
 namespace LSW {
 	namespace v4 {
@@ -48,15 +43,13 @@ namespace LSW {
 				size_t memlinecount = 0;
 			};
 
-			static bool showconsole;
 			static _log g;
 
 			const bool start(const std::string&, const char* = "wb", const bool = true);
-			void printclock(const bool = true);
-			void showOnConsole(const bool);
+			void printClock(const bool = true);
 		public:
 			void close();
-			void push(const std::string&);
+			void push(const std::string&, const bool = Constants::_is_on_debug_mode);
 
 			void flush();
 			ALLEGRO_EVENT_SOURCE* getEvent();
@@ -79,7 +72,6 @@ namespace LSW {
 		*/
 
 		inline gfile::_log gfile::g;
-		inline bool gfile::showconsole = ISDEBUG;
 
 		
 		inline const bool gfile::start(const std::string& orig, const char* mode, const bool autopath) // easier
@@ -92,7 +84,7 @@ namespace LSW {
 
 			std::string s = orig;
 
-			Tools::interpret_path(s);
+			Tools::interpretPath(s);
 
 			g.f_m.lock();
 			if (g.f) {
@@ -105,29 +97,14 @@ namespace LSW {
 			g.f_m.unlock();
 			return (err == 0);
 		}
-		inline void gfile::printclock(const bool denyconsole)
+		inline void gfile::printClock(const bool denyconsole)
 		{
 			char temp[24];
 			SYSTEMTIME t;
 			GetLocalTime(&t);
 			sprintf_s(temp, "[%02d%02d%02d%02d%02d%02d]", t.wYear % 100, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond);
-			bool bckp = showconsole;
-			if (denyconsole) showconsole = false;
-			push(temp);
-			showconsole = bckp;
-		}
-		inline void gfile::showOnConsole(const bool u)
-		{
-			showconsole = u;
-			if (u) {
-				AllocConsole();
-				FILE* temphandle = stdout;
-				freopen_s(&temphandle, "CONOUT$", "w", stdout);
-
-				printf("Now showing on console.\n");
-				*this << L::SL << "Console output enabled! It can cause lag and/or lower FPS in game! Use for testing only!" << L::BL;
-			}
-			else FreeConsole();
+			
+			push(temp, !denyconsole);
 		}
 
 		
@@ -141,7 +118,7 @@ namespace LSW {
 			g.f_m.unlock();
 		}
 
-		inline void gfile::push(const std::string& s)
+		inline void gfile::push(const std::string& s, bool showconsole)
 		{
 			if (showconsole) {
 				for (auto& i : s) {
@@ -216,7 +193,7 @@ namespace LSW {
 			{
 			case L::SL:
 				g.each_call.lock();
-				printclock();
+				printClock();
 				break;
 			case L::BL:
 				push("\n");
@@ -227,12 +204,12 @@ namespace LSW {
 				flush();
 				break;
 			case L::PRTCLOCK:
-				printclock(false);
+				printClock(false);
 				break;
 			case L::SLL:
 				g.each_call.lock();
 				g.is_needed_lock = true;
-				printclock();
+				printClock();
 				break;
 			case L::BLL:
 				push("\n");

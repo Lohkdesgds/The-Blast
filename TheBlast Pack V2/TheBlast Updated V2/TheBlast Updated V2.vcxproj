@@ -200,6 +200,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LSW\big_templates\big_templates.h" />
+    <ClInclude Include="LSW\big_templates\small_templates.h" />
     <ClInclude Include="LSW\console\console.h" />
     <ClInclude Include="LSW\custom_abort\abort.h" />
     <ClInclude Include="LSW\drawing\drawing.h" />
@@ -209,9 +210,16 @@
     <ClInclude Include="LSW\sound\sound.h" />
     <ClInclude Include="LSW\system\system.h" />
     <ClInclude Include="LSW\tools\tools.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="TheBlast Updated V2.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="icon1.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

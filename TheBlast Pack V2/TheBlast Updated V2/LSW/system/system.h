@@ -19,10 +19,10 @@
 #include <thread>
 #include <mutex>
 
+#include "..\shared_constants\constants.h"
 #include "..\tools\tools.h"
 #include "..\custom_abort\abort.h"
 #include "..\logger\logger.h"
-#include "..\shared_constants\constants.h"
 
 namespace LSW {
 	namespace v4 {
@@ -30,16 +30,6 @@ namespace LSW {
 		// constants now at shared_constants\constants.h
 
 		namespace Assistance {
-
-			class __submode {
-			public:
-				int x = 0, y = 0, hz = 0;
-				bool operator==(__submode sm) { return (sm.x == x && sm.y == y && sm.hz == hz); }
-			};
-			struct modes {
-				std::vector<__submode> options;
-				int lastmode = Constants::start_display_default_mode;
-			};
 
 			enum class conf_b { HAD_ERROR, WAS_OSD_ON, WAS_FULLSCREEN };
 			enum class conf_f { LAST_VOLUME };
@@ -54,11 +44,21 @@ namespace LSW {
 			const std::string conf_s_str[] = { "last_version","playername","playercolor" };
 
 			const std::string conf_bool_s[] = { "false", "true" };
+
+			class display_mode {
+			public:
+				int x = 0, y = 0, hz = 0;
+				bool operator==(display_mode sm) { return (sm.x == x && sm.y == y && sm.hz == hz); }
+			};
 		}
 		
 
 		class __systematic {
-			Assistance::modes* l = nullptr;
+			struct modes {
+				std::vector<Assistance::display_mode> options;
+				int lastmode = Constants::start_display_default_mode;
+			} *l = nullptr;
+
 			std::string extracted_zip_at;
 			bool initialized = false;
 			bool already_set_physfs_root = false;
@@ -71,12 +71,12 @@ namespace LSW {
 		public:
 			~__systematic();
 
-			void init_system();
-			void force_setzip();
+			void initSystem();
+			void forceInitWithNoZipAnyway();
 
-			void __set_new_display_mode(const int);
-			bool __check_resolution_existance(const int, const int, const int);
-			const auto __get_available_res();
+			void setNewDisplayMode(const int);
+			bool checkResolutionExistance(const int, const int, const int);
+			const auto getAvailableResolutions();
 		};
 
 
@@ -103,13 +103,13 @@ namespace LSW {
 
 			void restart();
 			void flip();
-			void clear_to(const ALLEGRO_COLOR);
+			void clearTo(const ALLEGRO_COLOR);
 			void close();
 			bool exist();
 
 			void print();
 
-			ALLEGRO_DISPLAY*& _getD();
+			ALLEGRO_DISPLAY*& getDisplay();
 		};
 
 
@@ -149,6 +149,7 @@ namespace LSW {
 
 
 
-		void lsw_init(); // init everything
+		void lswInit(); // init everything
+		void forceExit(const char* = nullptr, const char* = "", const char* = "");
 	}
 }

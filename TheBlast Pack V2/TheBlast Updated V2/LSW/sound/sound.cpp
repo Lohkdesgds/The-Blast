@@ -3,120 +3,124 @@
 namespace LSW {
 	namespace v4 {
 
-		_all_track_voiceNmixer Track::vnm;
+		Mixer::controller Mixer::control;
 
+
+		Mixer::Mixer()
+		{
+			if (!control.device) {
+				control.device = al_create_voice(44100, ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF_2);
+				if (!control.device) {
+					throw Abort::abort(__FUNCSIG__, "Failed to create voice.");
+				}
+
+				control.mixing = al_create_mixer(44100, ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF_2);
+				if (!control.mixing) {
+					throw Abort::abort(__FUNCSIG__, "Failed to create mixer.");
+				}
+
+				if (!al_attach_mixer_to_voice(control.mixing, control.device)) {
+					throw Abort::abort(__FUNCSIG__, "Failed to set mixer in voice.");
+				}
+
+				float temp_vol_get;
+				Config conf;
+				conf.get(Assistance::conf_f::LAST_VOLUME, temp_vol_get, Constants::start_default_global_volume);
+				conf.set(Assistance::conf_f::LAST_VOLUME, temp_vol_get);
+
+				volume(temp_vol_get);
+			}
+
+		}
+
+		void Mixer::volume(const float v)
+		{
+			al_set_mixer_gain(control.mixing, v);
+		}
+
+		void Mixer::attachInstance(ALLEGRO_SAMPLE_INSTANCE* si)
+		{
+			al_attach_sample_instance_to_mixer(si, control.mixing);
+		}
 
 		Track::Track()
 		{
-			if (!vnm.voice) {
-				vnm.voice = al_create_voice(44100, ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF_2);
-				if (!vnm.voice) {
-					throw "at Track::load [#" + std::to_string((size_t)this) + ";ID=" + id + "]: Failed to create voice.";
-				}
-
-				vnm.mixer = al_create_mixer(44100, ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF_2);
-				if (!vnm.mixer) {
-					throw "at Track::load [#" + std::to_string((size_t)this) + ";ID=" + id + "]: Failed to create mixer.";
-				}
-
-				if (!al_attach_mixer_to_voice(vnm.mixer, vnm.voice)) {
-					throw "at Track::load [#" + std::to_string((size_t)this) + ";ID=" + id + "]: Failed to set mixer in voice.";
-				}
-
-				/*float temp_vol_get;
-				Config::Config conf;
-				conf.get(Config::LAST_VOLUME, temp_vol_get, Defaults::Sound::global_volume);
-				set(Sound::GLOBALVOLUME, temp_vol_get);*/
-
-				set(track_f::GLOBALVOLUME, 0.2);
-			}
-
-			/*if (mse) al_destroy_sample(mse);
-
-			mse = al_load_sample(path.c_str());
-			if (!mse) {
-				throw "at Track::load [#" + std::to_string((size_t)this) + ";ID=" + id + "]: Failed to load sample.";
-				return false;
-			}*/
+			Mixer mxr;
 
 			if (instance) unload();
 
 			instance = al_create_sample_instance(nullptr);
 			if (!instance) {
-				throw "at Track::load [#" + std::to_string((size_t)this) + ";ID=" + id + "]: Failed to create instance.";
+				throw Abort::abort(__FUNCSIG__, "Failed to create instance.");
 			}
 
-			al_attach_sample_instance_to_mixer(instance, vnm.mixer);
+			mxr.attachInstance(instance);
 			al_set_sample_instance_playing(instance, false);
 		}
 
 		void Track::unload()
 		{
-			if (instance) al_destroy_sample_instance(instance);
+			if (instance) {
+				al_detach_sample_instance(instance);
+				al_destroy_sample_instance(instance);
+			}
 			instance = nullptr;
 		}
 
-		void Track::set(const track_p e, const bool v)
+		void Track::set(const Assistance::io__track_boolean e, const bool v)
 		{
 			switch (e)
 			{
-			case track_p::PLAYING:
+			case Assistance::io__track_boolean::PLAYING:
 				if (!instance) {
-					throw "at Track::set [#" + std::to_string((size_t)this) + ";ID=" + id + "]: No instance loaded. Invalid operation (PLAYING).";
+					throw Abort::abort(__FUNCSIG__, "Failed to set PLAYING because there was no instance loaded.", 1);
 					return;
 				}
 				al_set_sample_instance_playing(instance, v);
 				break;
 			}
 		}
-		void Track::set(const track_f e, const float v)
+		void Track::set(const Assistance::io__track_float e, const float v)
 		{
 			switch (e)
 			{
-			case track_f::VOLUME:
+			case Assistance::io__track_float::VOLUME:
 				if (!instance) {
-					throw "at Track::set [#" + std::to_string((size_t)this) + ";ID=" + id + "]: No instance loaded. Invalid operation (VOLUME).";
+					throw Abort::abort(__FUNCSIG__, "Failed to set VOLUME because there was no instance loaded.", 1);
 					return;
 				}
 				al_set_sample_instance_gain(instance, v);
 				break;
-			case track_f::GLOBALVOLUME:
-				if (!vnm.mixer) {
-					throw "at Track::set [#" + std::to_string((size_t)this) + ";ID=" + id + "]: No mixer loaded. Invalid operation (GLOBALVOLUME).";
-					return;
-				}
-				al_set_mixer_gain(vnm.mixer, v);
-				break;
-			case track_f::SPEED:
+			case Assistance::io__track_float::SPEED:
 				if (!instance) {
-					throw "at Track::set [#" + std::to_string((size_t)this) + ";ID=" + id + "]: No instance loaded. Invalid operation (SPEED).";
+					throw Abort::abort(__FUNCSIG__, "Failed to set SPEED because there was no instance loaded.", 1);
 					return;
 				}
 				al_set_sample_instance_speed(instance, v);
 				break;
 			}
 		}
-		void Track::set(const track_i e, const track_i_0 v)
+		void Track::set(const Assistance::io__track_integer e, const Assistance::io__track_integer_modes v)
 		{
 			switch (e)
 			{
-			case track_i::PLAYMODE:
+			case Assistance::io__track_integer::PLAYMODE:
 				if (!instance) {
-					throw "at Track::set [#" + std::to_string((size_t)this) + ";ID=" + id + "]: No instance loaded. Invalid operation (PLAYMODE).";
+					throw Abort::abort(__FUNCSIG__, "Failed to set PLAYMODE because there was no instance loaded.", 1);
 					return;
 				}
 				al_set_sample_instance_playmode(instance, (ALLEGRO_PLAYMODE)v);
 				break;
 			}
 		}
-		void Track::set(const track_s e, const std::string v)
+		void Track::set(const Assistance::io__track_string e, const std::string v)
 		{
 			switch (e)
 			{
-			case track_s::ID:
+			case Assistance::io__track_string::ID:
 				id = v;
 				break;
-			case track_s::LOADID:
+			case Assistance::io__track_string::LOADID:
 				__template_static_vector<ALLEGRO_SAMPLE> tracks;
 				tracks.get(v, mse);
 				al_set_sample(instance, mse);
@@ -124,68 +128,61 @@ namespace LSW {
 			}
 		}
 
-		void Track::get(const track_p e, bool& v)
+		void Track::get(const Assistance::io__track_boolean e, bool& v)
 		{
 			switch (e)
 			{
-			case track_p::PLAYING:
+			case Assistance::io__track_boolean::PLAYING:
 				if (!instance) {
-					throw "at Track::get [#" + std::to_string((size_t)this) + ";ID=" + id + "]: No instance loaded. Invalid operation (PLAYING).";
+					throw Abort::abort(__FUNCSIG__, "Failed to get PLAYING because there was no instance loaded.", 1);
 					return;
 				}
 				v = al_get_sample_instance_playing(instance);
 				break;
 			}
 		}
-		void Track::get(const track_f e, float& v)
+		void Track::get(const Assistance::io__track_float e, float& v)
 		{
 			switch (e)
 			{
-			case track_f::VOLUME:
+			case Assistance::io__track_float::VOLUME:
 				if (!instance) {
-					throw "at Track::get [#" + std::to_string((size_t)this) + ";ID=" + id + "]: No instance loaded. Invalid operation (VOLUME).";
+					throw Abort::abort(__FUNCSIG__, "Failed to get VOLUME because there was no instance loaded.", 1);
 					return;
 				}
 				v = al_get_sample_instance_gain(instance);
 				break;
-			case track_f::GLOBALVOLUME:
-				if (!vnm.mixer) {
-					throw "at Track::get [#" + std::to_string((size_t)this) + ";ID=" + id + "]: No mixer loaded. Invalid operation (GLOBALVOLUME).";
-					return;
-				}
-				v = al_get_mixer_gain(vnm.mixer);
-				break;
-			case track_f::SPEED:
+			case Assistance::io__track_float::SPEED:
 				if (!instance) {
-					throw "at Track::get [#" + std::to_string((size_t)this) + ";ID=" + id + "]: No instance loaded. Invalid operation (SPEED).";
+					throw Abort::abort(__FUNCSIG__, "Failed to get SPEED because there was no instance loaded.", 1);
 					return;
 				}
 				v = al_get_sample_instance_speed(instance);
 				break;
 			}
 		}
-		void Track::get(const track_i e, int& v)
+		void Track::get(const Assistance::io__track_integer e, int& v)
 		{
 			switch (e)
 			{
-			case track_i::PLAYMODE:
+			case Assistance::io__track_integer::PLAYMODE:
 				if (!instance) {
-					throw "at Track::get [#" + std::to_string((size_t)this) + ";ID=" + id + "]: No instance loaded. Invalid operation (PLAYMODE).";
+					throw Abort::abort(__FUNCSIG__, "Failed to get PLAYMODE because there was no instance loaded.", 1);
 					return;
 				}
 				v = al_get_sample_instance_playmode(instance);
 				break;
 			}
 		}
-		void Track::get(const track_s e, std::string& v)
+		void Track::get(const Assistance::io__track_string e, std::string& v)
 		{
 			switch (e)
 			{
-			case track_s::ID:
+			case Assistance::io__track_string::ID:
 				v = id;
 				break;
 			}
 		}
 
-	}
+}
 }

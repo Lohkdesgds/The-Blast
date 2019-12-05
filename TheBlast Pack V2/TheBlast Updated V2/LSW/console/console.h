@@ -22,7 +22,6 @@
 #include <locale>
 
 #include "..\organizer\organizer.h"
-#include "..\shared_constants\constants.h"
 
 #define BLACK al_map_rgb(0,0,0)
 
@@ -34,31 +33,6 @@
 
 namespace LSW {
 	namespace v4 {
-
-		namespace Constants {
-
-			const auto lambda_bitmap_load = [](const char* p, ALLEGRO_BITMAP*& b) -> bool {
-				return ((b = al_load_bitmap(p)));
-			};
-			const auto lambda_bitmap_unload = [](ALLEGRO_BITMAP*& b) -> void {
-				if (al_is_system_installed() && b) { al_destroy_bitmap(b); }
-			};
-
-			const auto lambda_font_load = [](const char* p, ALLEGRO_FONT*& b) -> bool {
-				return ((b = al_load_ttf_font(p, 2500, 0)));
-			};
-			const auto lambda_font_unload = [](ALLEGRO_FONT*& b) -> void {
-				if (al_is_system_installed() && b) { al_destroy_font(b); }
-			};
-			
-			const auto lambda_sample_load = [](const char* p, ALLEGRO_SAMPLE*& b) -> bool {
-				return ((b = al_load_sample(p)));
-			};
-			const auto lambda_sample_unload = [](ALLEGRO_SAMPLE*& b) -> void {
-				if (al_is_system_installed() && b) { al_destroy_sample(b); }
-			};
-		}
-
 		namespace Assistance {
 
 			enum class ro__thread_display_routines_timers { LOOPTRACK, CHECKKEEP, CHECKMEMORYBITMAP, UPDATELOGONSCREEN };

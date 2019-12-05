@@ -10,11 +10,16 @@
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_native_dialog.h>
 #include <allegro5/allegro_ttf.h>
+
 #include <physfs.h>
+#include <string>
+#include <mutex>
 
 #include "..\custom_abort\abort.h"
-#include "..\system\system.h"
+#include "..\big_templates\small_templates.h"
 #include "..\big_templates\big_templates.h"
+#include "..\logger\logger.h"
+#include "..\system\system.h"
 
 namespace LSW {
 	namespace v4 {
@@ -30,20 +35,33 @@ namespace LSW {
 		
 		*/
 
-		enum class track_p { PLAYING };
-		enum class track_f { VOLUME, GLOBALVOLUME, SPEED };
-		enum class track_s { LOADID, ID };
-		enum class track_i { PLAYMODE };
-		enum class track_i_0 { ONCE = ALLEGRO_PLAYMODE_ONCE, LOOP = ALLEGRO_PLAYMODE_LOOP, BIDIR = ALLEGRO_PLAYMODE_BIDIR };
+		namespace Assistance {
 
-		struct _all_track_voiceNmixer {
-			ALLEGRO_VOICE* voice = nullptr; // soundcard
-			ALLEGRO_MIXER* mixer = nullptr; // mixer
+			enum class io__track_boolean { PLAYING };
+			enum class io__track_float { VOLUME, SPEED };
+			enum class io__track_string { LOADID, ID };
+			enum class io__track_integer { PLAYMODE };
+			enum class io__track_integer_modes { ONCE = ALLEGRO_PLAYMODE_ONCE, LOOP = ALLEGRO_PLAYMODE_LOOP, BIDIR = ALLEGRO_PLAYMODE_BIDIR };
+
+		}
+
+		class Mixer {
+			struct controller {
+				ALLEGRO_VOICE* device = nullptr;
+				ALLEGRO_MIXER* mixing = nullptr;
+				std::mutex nd;
+			};
+
+			static controller control;
+		public:
+			Mixer();
+
+			void volume(const float);
+			void attachInstance(ALLEGRO_SAMPLE_INSTANCE*);
 		};
+				
 
 		class Track {
-			static _all_track_voiceNmixer vnm;
-
 			ALLEGRO_SAMPLE* mse = nullptr;   // THE FILE
 			ALLEGRO_SAMPLE_INSTANCE* instance = nullptr;  // LOCAL PLAYBACK INSTANCE
 			std::string id;
@@ -51,15 +69,15 @@ namespace LSW {
 			Track();
 			void unload();
 
-			void set(const track_p, const bool);
-			void set(const track_f, const float);
-			void set(const track_i, const track_i_0);
-			void set(const track_s, const std::string);
+			void set(const Assistance::io__track_boolean, const bool);
+			void set(const Assistance::io__track_float, const float);
+			void set(const Assistance::io__track_integer, const Assistance::io__track_integer_modes);
+			void set(const Assistance::io__track_string, const std::string);
 
-			void get(const track_p, bool&);
-			void get(const track_f, float&);
-			void get(const track_i, int&);
-			void get(const track_s, std::string&);
+			void get(const Assistance::io__track_boolean, bool&);
+			void get(const Assistance::io__track_float, float&);
+			void get(const Assistance::io__track_integer, int&);
+			void get(const Assistance::io__track_string, std::string&);
 		};
 
 

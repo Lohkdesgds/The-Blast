@@ -44,7 +44,7 @@ namespace LSW {
 				CloseHandle(hFile);
 				return size.QuadPart;
 			}
-			bool GetFolderCSIDL(std::string& s, const int& u)
+			bool getFolderCSIDL(std::string& s, const int& u)
 			{
 				wchar_t Folder[1024];
 				HRESULT hr = SHGetFolderPathW(0, u, 0, 0, Folder);
@@ -72,7 +72,7 @@ namespace LSW {
 				str.clear();
 			}
 
-			void interpret_path(std::string& local_t)
+			void interpretPath(std::string& local_t)
 			{
 				for (size_t p = local_t.find('%'); (p != std::string::npos); p = local_t.find('%'))
 				{
@@ -108,13 +108,13 @@ namespace LSW {
 						switch (found)
 						{
 						case 0:
-							GetFolderCSIDL(path_to_add, CSIDL_APPDATA);
+							getFolderCSIDL(path_to_add, CSIDL_APPDATA);
 							break;
 						case 1:
-							GetFolderCSIDL(path_to_add, CSIDL_FONTS);
+							getFolderCSIDL(path_to_add, CSIDL_FONTS);
 							break;
 						case 2:
-							GetFolderCSIDL(path_to_add, CSIDL_MYPICTURES);
+							getFolderCSIDL(path_to_add, CSIDL_MYPICTURES);
 							break;
 						}
 
@@ -130,7 +130,7 @@ namespace LSW {
 				clearPath(local_t);
 			}
 
-			std::vector<std::string> generateStringsFormat(const std::string format, const size_t max, const size_t startat)
+			std::vector<std::string> genStrFormat(const std::string format, const size_t max, const size_t startat)
 			{
 				std::vector<std::string> rett;
 

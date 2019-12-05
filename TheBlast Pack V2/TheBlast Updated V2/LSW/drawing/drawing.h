@@ -20,8 +20,10 @@
 #include <math.h>
 
 #include "..\custom_abort\abort.h"
-#include "..\system\system.h"
+#include "..\big_templates\small_templates.h"
 #include "..\big_templates\big_templates.h"
+#include "..\logger\logger.h"
+#include "..\system\system.h"
 
 namespace LSW {
 	namespace v4 {

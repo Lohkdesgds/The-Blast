@@ -1,7 +1,16 @@
 #pragma once
 
 #include <string>
-#include <allegro5/allegro.h>
+#include <allegro5/allegro5.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_color.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_physfs.h>
+#include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_native_dialog.h>
+#include <allegro5/allegro_ttf.h>
 
 /*
 Useful to remember:
@@ -23,9 +32,38 @@ namespace LSW {
 
 		namespace Constants {
 
+			/* VERSIONING */
 			const std::string __interpret_date();
-
 			const std::string version_app = std::string("V2.0.0#") + __interpret_date();
+
+			/* PRETTY USEFUL LAMBDA STUFF */
+			const auto lambda_bitmap_load = [](const char* p, ALLEGRO_BITMAP*& b) -> bool {
+				return ((b = al_load_bitmap(p)));
+			};
+			const auto lambda_bitmap_unload = [](ALLEGRO_BITMAP*& b) -> void {
+				if (al_is_system_installed() && b) { al_destroy_bitmap(b); }
+			};
+
+			const auto lambda_font_load = [](const char* p, ALLEGRO_FONT*& b) -> bool {
+				return ((b = al_load_ttf_font(p, 2500, 0)));
+			};
+			const auto lambda_font_unload = [](ALLEGRO_FONT*& b) -> void {
+				if (al_is_system_installed() && b) { al_destroy_font(b); }
+			};
+
+			const auto lambda_sample_load = [](const char* p, ALLEGRO_SAMPLE*& b) -> bool {
+				return ((b = al_load_sample(p)));
+			};
+			const auto lambda_sample_unload = [](ALLEGRO_SAMPLE*& b) -> void {
+				if (al_is_system_installed() && b) { al_destroy_sample(b); }
+			};
+
+
+#ifdef _DEBUG
+			const bool _is_on_debug_mode = true;
+#else
+			const bool _is_on_debug_mode = false;
+#endif
 
 			// system.h stuff mostly
 			const int start_audio_samples_max = 8;
@@ -54,6 +92,9 @@ namespace LSW {
 			// drawing.h stuff
 			const double text_default_sharpness_font = 2500.0;
 			const double text_timeout_interpret = 0.1;
+
+			// sound.h stuff
+			const float start_default_global_volume = 0.5;
 
 
 

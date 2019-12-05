@@ -9,14 +9,12 @@ namespace LSW {
 		namespace Abort {
 
 			class abort {
-				std::string func;
 				std::string from_where;
-				std::string ddetails;
+				std::string dtls;
 				int errn = 0;
 			public:
-				abort(std::string, std::string, std::string = "", const int = 0); // what's wrong, where, an extended explanation, internal debug resolving (try catch dealing with the throw)
+				abort(std::string, std::string = "", const int = 0); // __FUNCSIG__ and what
 				std::string from();
-				std::string function();
 				std::string details();
 				int getErrN();
 			};

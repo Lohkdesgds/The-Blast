@@ -90,8 +90,18 @@
     <ClInclude Include="LSW\shared_constants\constants.h">
       <Filter>shared_constants</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="LSW\big_templates\small_templates.h">
+      <Filter>big_templates</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="TheBlast Updated V2.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="icon1.ico" />
   </ItemGroup>
 </Project>

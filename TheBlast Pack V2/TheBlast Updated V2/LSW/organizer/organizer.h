@@ -7,18 +7,19 @@ Namespaces:
 */
 
 // barebones (each)
-#include "..\tools\tools.h"
-#include "..\custom_abort\abort.h"
-#include "..\logger\logger.h"
+#include "..\shared_constants\constants.h"			// SOLO
+#include "..\tools\tools.h"							// SOLO
+#include "..\custom_abort\abort.h"					// SOLO
+#include "..\big_templates\small_templates.h"       // SOLO
+#include "..\logger\logger.h"						// DEP: CONST, TOOLS, SMALLTEMP
+#include "..\big_templates\big_templates.h"			// DEP: ABORT, SMALLTEMP, LOGG
 
-// helper (TEMPLATES DON'T KNOW WHAT THEY ARE)
-#include "..\big_templates\big_templates.h"
 
 // default
-#include "..\system\system.h"
-#include "..\drawing\drawing.h"
-#include "..\sound\sound.h"
+#include "..\system\system.h"						// DEP: CONST, TOOLS, ABORT, LOGG
+#include "..\drawing\drawing.h"						// DEP: ABORT, SMALLTEMP, TEMPLATE, LOGG, SYSTEM
+#include "..\sound\sound.h"							// DEP: ABORT, SMALLTEMP, TEMPLATE, LOGG, SYSTEM
 
 
 // the big thing
-#include "..\console\console.h"
+#include "..\console\console.h"						// DEP: @everyone (this)
