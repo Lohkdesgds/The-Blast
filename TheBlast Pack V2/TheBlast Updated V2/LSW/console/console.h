@@ -37,13 +37,13 @@ namespace LSW {
 
 			enum class ro__thread_display_routines_timers { LOOPTRACK, CHECKKEEP, CHECKMEMORYBITMAP, UPDATELOGONSCREEN };
 			enum class ro__thread_collision_routines_timers { LOOPTRACK, CHECKKEEP, COLLISIONWORK };
-			enum class ro__thread_keyboardm_routines_timers { LOOPTRACK, CHECKKEEP, CHECKDISPLAYRESIZE };
+			enum class ro__thread_keyboardm_routines_timers { LOOPTRACK, CHECKKEEP, UPDATEMOUSE };
 
 		}
 
 		typedef __template_multiple_timers<1, 2, 2, 5> __display_routines;
-		typedef __template_multiple_timers<1, 5, 30>	__collision_routines;
-		typedef __template_multiple_timers<1, 5, 5>		__keyboardmouse_routines;
+		typedef __template_multiple_timers<1, 5, 20>	__collision_routines;
+		typedef __template_multiple_timers<1, 5, 60>	__keyboardmouse_routines;
 
 		typedef __template_static_vector<ALLEGRO_BITMAP>  Textures;
 		typedef __template_static_vector<ALLEGRO_FONT>    Fonts;

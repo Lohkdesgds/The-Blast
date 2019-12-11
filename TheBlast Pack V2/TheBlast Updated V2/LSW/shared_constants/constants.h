@@ -27,7 +27,7 @@ namespace LSW {
 	namespace v4 {
 		namespace Assistance {
 			// this have to be global, come on
-			enum class ro__my_events { LOG_CLOUDLAUNCH_RAW = 512, THRKBM_DISPLAY_SIZE, THRDRW_GOT_FORCED_RESIZE }; // THRDRW -> event for the THREAD_DRAW
+			enum class ro__my_events { LOG_CLOUDLAUNCH_RAW = 512, THRKBM_DISPLAY_SIZE, THRDRW_GOT_FORCED_RESIZE, THRKBM_GETSTRINGINPUT /* <-- TO BE DONE */ }; // THRDRW -> event for the THREAD_DRAW
 		}
 
 		namespace Constants {
@@ -96,6 +96,7 @@ namespace LSW {
 			// sound.h stuff
 			const float start_default_global_volume = 0.5;
 
+			const size_t max_mouse_set_buttons = 8;
 
 
 			// not verified
@@ -115,7 +116,7 @@ namespace LSW {
 				const float global_volume = 0.50;
 			}
 
-			namespace Config {
+			namespace Database {
 				const std::string config_default_file = "%appdata%/Lohk's Studios/TheBlast/config/config.lohk";
 				const std::string conf_string_default_txt = "config";
 				const int conf_default_screen_siz[2] = { 1280,720 };

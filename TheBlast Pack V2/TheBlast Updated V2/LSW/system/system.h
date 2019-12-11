@@ -31,19 +31,21 @@ namespace LSW {
 
 		namespace Assistance {
 
-			enum class conf_b { HAD_ERROR, WAS_OSD_ON, WAS_FULLSCREEN };
-			enum class conf_f { LAST_VOLUME };
-			enum class conf_i { SCREEN_X, SCREEN_Y };
-			enum class conf_ll { _TIMES_LIT };
-			enum class conf_s { LAST_VERSION, LAST_PLAYERNAME, LAST_COLOR };
+			enum class io__conf_boolean { HAD_ERROR, WAS_OSD_ON, WAS_FULLSCREEN };
+			enum class io__conf_float { LAST_VOLUME };
+			enum class io__conf_integer { SCREEN_X, SCREEN_Y };
+			enum class io__conf_longlong { _TIMES_LIT };
+			enum class io__conf_string { LAST_VERSION, LAST_PLAYERNAME, LAST_COLOR };
+			enum class io__conf_mouse_boolean { MOUSE_0, MOUSE_1, MOUSE_2, MOUSE_3, MOUSE_4, MOUSE_5, MOUSE_6, MOUSE_7 }; // Constants::max_mouse_set_buttons
+			enum class io__conf_mouse_float { MOUSE_X, MOUSE_Y };
 
-			const std::string conf_b_str[] = { "had_error", "was_osd_on", "fullscreen" };
-			const std::string conf_f_str[] = { "last_volume" };
-			const std::string conf_i_str[] = { "screen_width","screen_height" };
-			const std::string conf_ll_str[] = { "times_open" };
-			const std::string conf_s_str[] = { "last_version","playername","playercolor" };
+			const std::string ro__conf_boolean_str[] = { "had_error", "was_osd_on", "fullscreen" };
+			const std::string ro__conf_float_str[] = { "last_volume" };
+			const std::string ro__conf_integer_str[] = { "screen_width","screen_height" };
+			const std::string ro__conf_longlong_str[] = { "times_open" };
+			const std::string ro__conf_string_str[] = { "last_version","playername","playercolor" };
 
-			const std::string conf_bool_s[] = { "false", "true" };
+			const std::string ro__conf_truefalse_str[] = { "false", "true" };
 
 			class display_mode {
 			public:
@@ -115,34 +117,51 @@ namespace LSW {
 
 		
 
-		class Config {
-			static ALLEGRO_CONFIG* c;
-			static std::mutex m;
+		class Database {
+
+			struct custom_data {
+				ALLEGRO_CONFIG* c = nullptr;
+				std::mutex m;
+				bool keys[ALLEGRO_KEY_MAX] = { false };
+				bool mouse[+Constants::max_mouse_set_buttons] = { false };
+				float mouse_axes[2] = { 0.0,0.0 };
+			};
+
+			static custom_data data;
 			gfile logg;
 		public:
-			Config();
-			~Config();
+			Database();
+			~Database();
 
 			void set(const std::string, const std::string);
-			void set(const Assistance::conf_b, const bool);
-			void set(const Assistance::conf_f, const float);
-			void set(const Assistance::conf_i, const int);
-			void set(const Assistance::conf_ll, const long long);
-			void set(const Assistance::conf_s, const std::string);
+			void set(const Assistance::io__conf_boolean, const bool);
+			void set(const Assistance::io__conf_float, const float);
+			void set(const Assistance::io__conf_integer, const int);
+			void set(const Assistance::io__conf_longlong, const long long);
+			void set(const Assistance::io__conf_string, const std::string);
+			void set(const int, const bool); // Allegro key
+			void set(const Assistance::io__conf_mouse_boolean, const bool);
+			void set(const Assistance::io__conf_mouse_float, const float);
 
 			void get(const std::string, std::string&, const std::string);
-			void get(const Assistance::conf_b, bool&, const bool);
-			void get(const Assistance::conf_f, float&, const float);
-			void get(const Assistance::conf_i, int&, const int);
-			void get(const Assistance::conf_ll, long long&, const long long);
-			void get(const Assistance::conf_s, std::string&, const std::string);
+			void get(const Assistance::io__conf_boolean, bool&, const bool);
+			void get(const Assistance::io__conf_float, float&, const float);
+			void get(const Assistance::io__conf_integer, int&, const int);
+			void get(const Assistance::io__conf_longlong, long long&, const long long);
+			void get(const Assistance::io__conf_string, std::string&, const std::string);
+			void get(const int, bool&, const bool); // Allegro key
+			void get(const Assistance::io__conf_mouse_boolean, bool&);
+			void get(const Assistance::io__conf_mouse_float, float&);
 
-			const bool isEq(const std::string, const std::string);
-			const bool isEq(const Assistance::conf_b, const bool);
-			const bool isEq(const Assistance::conf_f, const float);
-			const bool isEq(const Assistance::conf_i, const int);
-			const bool isEq(const Assistance::conf_ll, const long long);
-			const bool isEq(const Assistance::conf_s, const std::string);
+			bool isEq(const std::string, const std::string);
+			bool isEq(const Assistance::io__conf_boolean, const bool);
+			bool isEq(const Assistance::io__conf_float, const float);
+			bool isEq(const Assistance::io__conf_integer, const int);
+			bool isEq(const Assistance::io__conf_longlong, const long long);
+			bool isEq(const Assistance::io__conf_string, const std::string);
+			bool isEq(const int, const bool); // Allegro key
+			bool isEq(const Assistance::io__conf_mouse_boolean, const bool);
+			bool isEq(const Assistance::io__conf_mouse_float, const float);
 		};
 		
 

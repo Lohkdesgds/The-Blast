@@ -110,14 +110,17 @@ namespace LSW {
 					}
 				}
 			}
+			if (layers.size() > 0) {
+				std::sort(layers.begin(), layers.end(), [](int i, int j) {return i < j; });
+			}
 		}
 
-		auto camera_preset::begin()
+		std::vector<int>::iterator camera_preset::begin()
 		{
 			return layers.begin();
 		}
 
-		auto camera_preset::end()
+		std::vector<int>::iterator camera_preset::end()
 		{
 			return layers.end();
 		}
@@ -216,7 +219,7 @@ namespace LSW {
 
 			__custom_data* cd = new __custom_data();
 
-			imgs.get(id, cd->bmp);
+			if (!imgs.get(id, cd->bmp)) throw Abort::abort(__FUNCSIG__, "Couldn't add " + id + " to the sprite!");
 			cd->idc = id;
 
 
@@ -438,6 +441,48 @@ namespace LSW {
 				return true;
 			}
 			return false;
+		}
+
+		bool Sprite::isEq(const Assistance::io__sprite_string w, const std::string v)
+		{
+			std::string g;
+			get(w, g);
+			return g == v;
+		}
+
+		bool Sprite::isEq(const Assistance::io__sprite_double w, const double v)
+		{
+			double g;
+			get(w, g);
+			return g == v;
+		}
+
+		bool Sprite::isEq(const Assistance::io__sprite_boolean w, const bool v)
+		{
+			bool g;
+			get(w, g);
+			return g == v;
+		}
+
+		bool Sprite::isEq(const Assistance::io__sprite_integer w, const int v)
+		{
+			int g;
+			get(w, g);
+			return g == v;
+		}
+
+		bool Sprite::isEq(const Assistance::io__sprite_sizet w, const size_t v)
+		{
+			size_t g;
+			get(w, g);
+			return g == v;
+		}
+
+		bool Sprite::isEq(const Assistance::io__sprite_color w, const ALLEGRO_COLOR v)
+		{
+			ALLEGRO_COLOR g;
+			get(w, g);
+			return ((g.a == v.a) && (g.r == v.r) && (g.g == v.g) && (g.b == v.b));
 		}
 
 		void Sprite::draw(const int is_layer)

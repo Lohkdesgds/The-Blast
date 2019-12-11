@@ -11,6 +11,7 @@
 #include <allegro5/allegro_native_dialog.h>
 #include <allegro5/allegro_ttf.h>
 #include <physfs.h>
+#include <algorithm>    // std::sort
 
 #include <string>
 #include <map>
@@ -93,8 +94,8 @@ __slice("%garbage_tracks%", +tags_e::T_TRACKS_GARBAGE), __slice("%garbage_entiti
 			void setLayer(const int, const bool);
 			
 			// for(auto& i : this)
-			auto begin();
-			auto end();
+			std::vector<int>::iterator begin();
+			std::vector<int>::iterator end();
 
 			// quicker get
 			ALLEGRO_TRANSFORM& quick();
@@ -182,6 +183,13 @@ __slice("%garbage_tracks%", +tags_e::T_TRACKS_GARBAGE), __slice("%garbage_entiti
 			bool get(const Assistance::io__sprite_integer, int&);
 			bool get(const Assistance::io__sprite_sizet, size_t&);
 			bool get(const Assistance::io__sprite_color, ALLEGRO_COLOR&);
+
+			bool isEq(const Assistance::io__sprite_string, const std::string);
+			bool isEq(const Assistance::io__sprite_double, const double);
+			bool isEq(const Assistance::io__sprite_boolean, const bool);
+			bool isEq(const Assistance::io__sprite_integer, const int);
+			bool isEq(const Assistance::io__sprite_sizet, const size_t);
+			bool isEq(const Assistance::io__sprite_color, const ALLEGRO_COLOR);
 
 			void draw(const int);
 		};

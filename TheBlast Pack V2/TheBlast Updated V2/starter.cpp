@@ -199,7 +199,11 @@ int main(int argc, const char* argv[])
 		__progress = 0.01f;
 
 
-
+		cp.setLayer(2, true);
+		cp.setLayer(3, true);
+		cp.setLayer(0, true);
+		cp.setLayer(1, true);
+		cp.setLayer(99, true);
 		//cp.set(Assistance::io__camera_float::OFFSET_Y, 2.6);
 
 
@@ -243,6 +247,13 @@ int main(int argc, const char* argv[])
 
 		//draw_simple_bar(250, 45, 0.92f); _progress_bar->flip();
 		__progress = 0.997f;
+
+		auto mouse = sprites.create("MOUSE");
+		mouse->set(Assistance::io__sprite_boolean::FOLLOWMOUSE, true);
+		mouse->set(Assistance::io__sprite_boolean::AFFECTED_BY_CAM, false);
+		mouse->set(Assistance::io__sprite_double::SCALEG, 0.2);
+		mouse->set(Assistance::io__sprite_string::ADD, "MOUSE"); 
+		mouse->set(Assistance::io__sprite_integer::LAYER, 99);
 
 
 		auto mysprite = sprites.create("randomsprite");

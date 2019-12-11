@@ -114,9 +114,9 @@ namespace LSW {
 								gcam.apply();
 								logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "DISPLAYRESIZE got, acknowledged, done." << L::BL;
 
-								Config config;
-								config.set(Assistance::conf_i::SCREEN_X, al_get_display_width(md->getDisplay()));
-								config.set(Assistance::conf_i::SCREEN_Y, al_get_display_height(md->getDisplay()));
+								Database config;
+								config.set(Assistance::io__conf_integer::SCREEN_X, al_get_display_width(md->getDisplay()));
+								config.set(Assistance::io__conf_integer::SCREEN_Y, al_get_display_height(md->getDisplay()));
 
 								{
 									ALLEGRO_EVENT ev;
@@ -140,9 +140,12 @@ namespace LSW {
 					// locally check if dealable error
 					try {
 						gcam.apply();
+						camera_preset ww = gcam.get();
 
-						for (auto& i : sprites) i->self->draw(0);
-						for (auto& i : texts)  i->self->draw(0);
+						for (auto& k : ww) {
+							for (auto& i : sprites) i->self->draw(k);
+							for (auto& i : texts)  i->self->draw(k);
+						}
 						last_loop_had_error = 0;
 					}
 					catch (Abort::abort err)
@@ -260,6 +263,8 @@ namespace LSW {
 		{
 			try {
 				gfile logg;
+				Sprites sprites;
+				Database conf;
 
 				logg << L::SLL << fsr(__FUNCSIG__) << "Initializing..." << L::BLL;
 
@@ -279,7 +284,6 @@ namespace LSW {
 
 				int display_x = 1280;
 				int display_y = 720;
-				float mouse_pos[2] = { 0.0,0.0 };
 				bool isscreenfullscreen = false;
 
 				thr_kb_arg->start();
@@ -300,14 +304,19 @@ namespace LSW {
 					else if (thr_kb_arg->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::CHECKKEEP))
 					{
 						localb = !thr_shared_arg.should_exit;
-						//printf_s("[THR_KBM] CHECKKEEP called\n");
 					}
-					else if (thr_kb_arg->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::CHECKDISPLAYRESIZE))
+					else if (thr_kb_arg->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::UPDATEMOUSE))
 					{
-						/*if (md) {
-							display_x = al_get_display_width(md->getDisplay());
-							display_y = al_get_display_height(md->getDisplay());
-						}*/
+						float _temp[2];
+						conf.get(Assistance::io__conf_mouse_float::MOUSE_X, _temp[0]);
+						conf.get(Assistance::io__conf_mouse_float::MOUSE_Y, _temp[1]);
+
+						for (auto& i : sprites) {
+							if (i->self->isEq(Assistance::io__sprite_boolean::FOLLOWMOUSE, true)) {
+								i->self->set(Assistance::io__sprite_double::POSX, _temp[0]);
+								i->self->set(Assistance::io__sprite_double::POSY, _temp[1]);
+							}
+						}
 					}
 
 					else { // not a timer ///DEBUG NOW
@@ -319,67 +328,42 @@ namespace LSW {
 							display_y = ev.user.data2;
 						}
 						if (ev.type == ALLEGRO_EVENT_KEY_DOWN) { // USE IN GAME
-
-							//printf_s("[THR_KBM] KEYDOWN= %d\n", ev.keyboard.keycode);
-
-							camera_preset cp;
-
-							switch (ev.keyboard.keycode) {
-							case ALLEGRO_KEY_1:
-								cp.set(Assistance::io__camera_float::ROTATION, 0.0 * ALLEGRO_PI);
-								gcam.set(cp, 0);
-								gcam.apply(0);
-								break;
-							case ALLEGRO_KEY_2:
-								cp.set(Assistance::io__camera_float::ROTATION, 0.5 * ALLEGRO_PI);
-								gcam.set(cp, 0);
-								gcam.apply(0);
-								break;
-							case ALLEGRO_KEY_3:
-								cp.set(Assistance::io__camera_float::ROTATION, 1.0 * ALLEGRO_PI);
-								gcam.set(cp, 0);
-								gcam.apply(0);
-								break;
-							case ALLEGRO_KEY_4:
-								cp.set(Assistance::io__camera_float::ROTATION, 1.5 * ALLEGRO_PI);
-								gcam.set(cp, 0);
-								gcam.apply(0);
-								break;
-							}
+							conf.set(ev.keyboard.keycode, true);
 						}
 						if (ev.type == ALLEGRO_EVENT_KEY_UP) { // USE IN GAME
+							conf.set(ev.keyboard.keycode, false);
 
 							switch (ev.keyboard.keycode) {
 							case ALLEGRO_KEY_F11:
-								//al_set_display_flag(md->getDisplay(), ALLEGRO_FULLSCREEN_WINDOW, (isscreenfullscreen = !isscreenfullscreen));
-								// cast an event on the queue of everybody
+							{
 								ALLEGRO_EVENT ev;
 								ev.type = +Assistance::ro__my_events::THRDRW_GOT_FORCED_RESIZE;
 								ev.user.data1 = (isscreenfullscreen = !isscreenfullscreen);
 								al_emit_user_event(&evsrc, &ev, NULL);
+							}
 								break;
 							case ALLEGRO_KEY_F2:
+							{
 								md->print();
+							}
 								break;
 							}
 						}
 
-						if (ev.type == ALLEGRO_EVENT_KEY_CHAR) {
+						if (ev.type == ALLEGRO_EVENT_KEY_CHAR) { // keyboard input
 							//const char* actch = al_keycode_to_name(ev.keyboard.keycode); // prints literally key name KEY26 A B C
 							//if (ev.keyboard.unichar > 32) logg.debug("[THR_KBM] KEYCHAR= %d ~= %c", ev.keyboard.keycode, ev.keyboard.unichar);
 							//else                          logg.debug("[THR_KBM] KEYCHAR= %d", ev.keyboard.keycode);
 						}
 						if (ev.type == ALLEGRO_EVENT_MOUSE_AXES) {
-							mouse_pos[0] = (ev.mouse.x * 2.0f / display_x) - 1.0;
-							mouse_pos[1] = (ev.mouse.y * 2.0f / display_y) - 1.0;
-
-							//logg.debug("[THR_KBM] MOUSEAXIS dp={%d,%d} pos={%d,%d} rel={%.3f,%.3f}", ev.mouse.dx, ev.mouse.dy, ev.mouse.x, ev.mouse.y, mouse_pos[0], mouse_pos[1]);
+							conf.set(Assistance::io__conf_mouse_float::MOUSE_X, (ev.mouse.x * 2.0f / display_x) - 1.0);
+							conf.set(Assistance::io__conf_mouse_float::MOUSE_Y, (ev.mouse.y * 2.0f / display_y) - 1.0);
 						}
 						if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
-							//logg.debug("[THR_KBM] MOUSEDOWN= %d", ev.mouse.button);
+							conf.set(+((Assistance::io__conf_mouse_boolean)ev.mouse.button), true);
 						}
 						if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
-							//logg.debug("[THR_KBM] MOUSEDOWN= %d", ev.mouse.button);
+							conf.set(+((Assistance::io__conf_mouse_boolean)ev.mouse.button), false);
 						}
 					}
 				}

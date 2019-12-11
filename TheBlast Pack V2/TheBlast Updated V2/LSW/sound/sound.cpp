@@ -24,9 +24,9 @@ namespace LSW {
 				}
 
 				float temp_vol_get;
-				Config conf;
-				conf.get(Assistance::conf_f::LAST_VOLUME, temp_vol_get, Constants::start_default_global_volume);
-				conf.set(Assistance::conf_f::LAST_VOLUME, temp_vol_get);
+				Database conf;
+				conf.get(Assistance::io__conf_float::LAST_VOLUME, temp_vol_get, Constants::start_default_global_volume);
+				conf.set(Assistance::io__conf_float::LAST_VOLUME, temp_vol_get);
 
 				volume(temp_vol_get);
 			}

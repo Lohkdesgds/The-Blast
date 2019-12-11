@@ -2,9 +2,7 @@
 
 namespace LSW {
 	namespace v4 {
-		ALLEGRO_CONFIG* Config::c = nullptr;
-		std::mutex Config::m;
-
+		Database::custom_data Database::data;
 
 		void __systematic::__extract_package(float* perc)
 		{
@@ -414,9 +412,9 @@ namespace LSW {
 
 			Assistance::display_mode md;
 
-			Config config;
-			config.get(Assistance::conf_i::SCREEN_X, md.x, 0);
-			config.get(Assistance::conf_i::SCREEN_Y, md.y, 0);
+			Database config;
+			config.get(Assistance::io__conf_integer::SCREEN_X, md.x, 0);
+			config.get(Assistance::io__conf_integer::SCREEN_Y, md.y, 0);
 
 			
 			if (md.x != 0 && md.y != 0) {
@@ -504,90 +502,102 @@ namespace LSW {
 			return d;
 		}
 
-		Config::Config()
+		Database::Database()
 		{
-			logg << L::SL << fsr(__FUNCSIG__ )<< "Registered spawn of Config ID#" + std::to_string((size_t)this) << L::BL;
-			m.lock();
-			if (!c) {
+			logg << L::SL << fsr(__FUNCSIG__ )<< "Registered spawn of Database ID#" + std::to_string((size_t)this) << L::BL;
+			data.m.lock();
+			if (!data.c) {
 				std::string temporary = Constants::config_default_file;
 				Tools::interpretPath(temporary);
 				Tools::createPath(temporary);
 
-				logg << L::SLL << fsr(__FUNCSIG__) << "Registered loading of Config file (global)" << L::BLL;
-				if (!(c = al_load_config_file(temporary.c_str())))
+				logg << L::SLL << fsr(__FUNCSIG__) << "Registered loading of Database file (global)" << L::BLL;
+				if (!(data.c = al_load_config_file(temporary.c_str())))
 				{
-					c = al_create_config();
-					if (!c) throw Abort::abort(__FUNCSIG__, "Cannot load/create Config file!");
-					logg << L::SLL << fsr(__FUNCSIG__) << "Is this the first time you're opening this game? Registered first Config load." << L::BLL;
+					data.c = al_create_config();
+					if (!data.c) throw Abort::abort(__FUNCSIG__, "Cannot load/create Database file!");
+					logg << L::SLL << fsr(__FUNCSIG__) << "Is this the first time you're opening this game? Registered first Database load." << L::BLL;
 
 					// set or load first values
-					set(Assistance::conf_b::HAD_ERROR, true); // then texture download starts			// USED
-					set(Assistance::conf_b::WAS_OSD_ON, false);											// USED
-					set(Assistance::conf_b::WAS_FULLSCREEN, true);										// USED
-					set(Assistance::conf_f::LAST_VOLUME, 0.5);
-					set(Assistance::conf_s::LAST_VERSION, Constants::version_app);						// nah
-					set(Assistance::conf_s::LAST_PLAYERNAME, "Player");
-					set(Assistance::conf_s::LAST_COLOR, "GREEN");
-					set(Assistance::conf_i::SCREEN_X, 0);
-					set(Assistance::conf_i::SCREEN_Y, 0);
-					set(Assistance::conf_ll::_TIMES_LIT, 0LL);
+					set(Assistance::io__conf_boolean::HAD_ERROR, true); // then texture download starts			// USED
+					set(Assistance::io__conf_boolean::WAS_OSD_ON, false);											// USED
+					set(Assistance::io__conf_boolean::WAS_FULLSCREEN, true);										// USED
+					set(Assistance::io__conf_float::LAST_VOLUME, 0.5);
+					set(Assistance::io__conf_string::LAST_VERSION, Constants::version_app);						// nah
+					set(Assistance::io__conf_string::LAST_PLAYERNAME, "Player");
+					set(Assistance::io__conf_string::LAST_COLOR, "GREEN");
+					set(Assistance::io__conf_integer::SCREEN_X, 0);
+					set(Assistance::io__conf_integer::SCREEN_Y, 0);
+					set(Assistance::io__conf_longlong::_TIMES_LIT, 0LL);
 
-					if (!al_save_config_file(temporary.c_str(), c)) {
-						throw Abort::abort(__FUNCSIG__, "Cannot save Config file!");
+					if (!al_save_config_file(temporary.c_str(), data.c)) {
+						throw Abort::abort(__FUNCSIG__, "Cannot save Database file!");
 					}
 				}
 				else {
 					long long ll;
-					get(Assistance::conf_ll::_TIMES_LIT, ll, 0LL);
+					get(Assistance::io__conf_longlong::_TIMES_LIT, ll, 0LL);
 					ll++;
-					set(Assistance::conf_ll::_TIMES_LIT, ll);
+					set(Assistance::io__conf_longlong::_TIMES_LIT, ll);
 				}
 			}
-			m.unlock();
+			data.m.unlock();
 		}
-		Config::~Config()
+		Database::~Database()
 		{
-			logg << L::SL << fsr(__FUNCSIG__) << "Registered despawn of Config ID#" + std::to_string((size_t)this) << L::BL;
-			if (c) {
-				m.lock();
+			logg << L::SL << fsr(__FUNCSIG__) << "Registered despawn of Database ID#" + std::to_string((size_t)this) << L::BL;
+			if (data.c) {
+				data.m.lock();
 				std::string temporary = Constants::config_default_file;
 				Tools::interpretPath(temporary);
 				Tools::createPath(temporary);
-				al_save_config_file(temporary.c_str(), c);
-				m.unlock();
+				al_save_config_file(temporary.c_str(), data.c);
+				data.m.unlock();
 			}
 		}
 
-		void Config::set(const std::string e, const std::string v)
+		void Database::set(const std::string e, const std::string v)
 		{
-			if (!c) throw Abort::abort(__FUNCSIG__, "Cannot set \"" + e + "\" as \"" + v + "\".");
-			al_set_config_value(c, Constants::conf_string_default_txt.c_str(), e.c_str(), v.c_str());
+			if (!data.c) throw Abort::abort(__FUNCSIG__, "Cannot set \"" + e + "\" as \"" + v + "\".");
+			al_set_config_value(data.c, Constants::conf_string_default_txt.c_str(), e.c_str(), v.c_str());
 		}
-		void Config::set(const Assistance::conf_b e, const bool v)
+		void Database::set(const Assistance::io__conf_boolean e, const bool v)
 		{
-			set(Assistance::conf_b_str[+e], Assistance::conf_bool_s[(int)v]);
+			set(Assistance::ro__conf_boolean_str[+e], Assistance::ro__conf_truefalse_str[(int)v]);
 		}
-		void Config::set(const Assistance::conf_f e, const float v)
+		void Database::set(const Assistance::io__conf_float e, const float v)
 		{
-			set(Assistance::conf_f_str[+e], std::to_string(v));
+			set(Assistance::ro__conf_float_str[+e], std::to_string(v));
 		}
-		void Config::set(const Assistance::conf_i e, const int v)
+		void Database::set(const Assistance::io__conf_integer e, const int v)
 		{
-			set(Assistance::conf_i_str[+e], std::to_string(v));
+			set(Assistance::ro__conf_integer_str[+e], std::to_string(v));
 		}
-		void Config::set(const Assistance::conf_ll e, const long long v)
+		void Database::set(const Assistance::io__conf_longlong e, const long long v)
 		{
-			set(Assistance::conf_ll_str[+e], std::to_string(v));
+			set(Assistance::ro__conf_longlong_str[+e], std::to_string(v));
 		}
-		void Config::set(const Assistance::conf_s e, const std::string v)
+		void Database::set(const Assistance::io__conf_string e, const std::string v)
 		{
-			set(Assistance::conf_s_str[+e], v);
+			set(Assistance::ro__conf_string_str[+e], v);
+		}
+		void Database::set(const int al_keycod, const bool v)
+		{
+			if (al_keycod >= 0 && al_keycod < ALLEGRO_KEY_MAX) data.keys[al_keycod] = v;
+		}
+		void Database::set(const Assistance::io__conf_mouse_boolean e, const bool v)
+		{
+			data.mouse[+e] = v;
+		}
+		void Database::set(const Assistance::io__conf_mouse_float e, const float v)
+		{
+			data.mouse_axes[+e] = v;
 		}
 
-		void Config::get(const std::string e, std::string& v, const std::string defaul)
+		void Database::get(const std::string e, std::string& v, const std::string defaul)
 		{
-			if (!c) throw Abort::abort(__FUNCSIG__, "Cannot get \"" + e + "\" as \"" + v + "\".");
-			const char* chh = al_get_config_value(c, Constants::conf_string_default_txt.c_str(), e.c_str());
+			if (!data.c) throw Abort::abort(__FUNCSIG__, "Cannot get \"" + e + "\" as \"" + v + "\".");
+			const char* chh = al_get_config_value(data.c, Constants::conf_string_default_txt.c_str(), e.c_str());
 			if (!chh) {
 				logg << L::SLL << "[CONF:GET()][WARN] There was no value to " << e << ", so the default value was set (" << defaul << ")." << L::BLL;
 				set(e, defaul);
@@ -596,72 +606,107 @@ namespace LSW {
 			}
 			v = chh;
 		}
-		void Config::get(const Assistance::conf_b e, bool& v, const bool defaul)
+		void Database::get(const Assistance::io__conf_boolean e, bool& v, const bool defaul)
 		{
 			std::string output;
-			get(Assistance::conf_b_str[+e], output, Assistance::conf_bool_s[(int)defaul]);
-			v = (output == Assistance::conf_bool_s[1 /*true*/]);
+			get(Assistance::ro__conf_boolean_str[+e], output, Assistance::ro__conf_truefalse_str[(int)defaul]);
+			v = (output == Assistance::ro__conf_truefalse_str[1 /*true*/]);
 		}
-		void Config::get(const Assistance::conf_f e, float& v, const float defaul)
+		void Database::get(const Assistance::io__conf_float e, float& v, const float defaul)
 		{
 			std::string output;
-			get(Assistance::conf_f_str[+e], output, std::to_string(defaul));
+			get(Assistance::ro__conf_float_str[+e], output, std::to_string(defaul));
 			v = atof(output.c_str());
 		}
-		void Config::get(const Assistance::conf_i e, int& v, const int defaul)
+		void Database::get(const Assistance::io__conf_integer e, int& v, const int defaul)
 		{
 			std::string output;
-			get(Assistance::conf_i_str[+e], output, std::to_string(defaul));
+			get(Assistance::ro__conf_integer_str[+e], output, std::to_string(defaul));
 			v = atoi(output.c_str());
 		}
-		void Config::get(const Assistance::conf_ll e, long long& v, const long long defaul)
+		void Database::get(const Assistance::io__conf_longlong e, long long& v, const long long defaul)
 		{
 			std::string output;
-			get(Assistance::conf_ll_str[+e], output, std::to_string(defaul));
+			get(Assistance::ro__conf_longlong_str[+e], output, std::to_string(defaul));
 			v = atoll(output.c_str());
 		}
-		void Config::get(const Assistance::conf_s e, std::string& v, const std::string defaul)
+		void Database::get(const Assistance::io__conf_string e, std::string& v, const std::string defaul)
 		{
 			std::string output;
-			get(Assistance::conf_s_str[+e], output, defaul);
+			get(Assistance::ro__conf_string_str[+e], output, defaul);
 			v = output;
 		}
 
+		void Database::get(const int al_keycod, bool& v, const bool defaul)
+		{
+			if (al_keycod >= 0 && al_keycod < ALLEGRO_KEY_MAX) v = data.keys[al_keycod];
+			else v = defaul;
+		}
+		void Database::get(const Assistance::io__conf_mouse_boolean e, bool& v)
+		{
+			v = data.mouse[+e];
+		}
+		void Database::get(const Assistance::io__conf_mouse_float e, float& v)
+		{
+			v = data.mouse_axes[+e];
+		}
 
-		const bool Config::isEq(const std::string e, const std::string v)
+
+		bool Database::isEq(const std::string e, const std::string v)
 		{
 			std::string oth;
 			get(e, oth, v); // meh
 			return oth == v;
 		}
-		const bool Config::isEq(const Assistance::conf_b e, const bool v)
+		bool Database::isEq(const Assistance::io__conf_boolean e, const bool v)
 		{
 			bool oth;
 			get(e, oth, v); // meh
 			return oth == v;
 		}
-		const bool Config::isEq(const Assistance::conf_f e, const float v)
+		bool Database::isEq(const Assistance::io__conf_float e, const float v)
 		{
 			float oth;
 			get(e, oth, v); // meh
 			return oth == v;
 		}
-		const bool Config::isEq(const Assistance::conf_i e, const int v)
+		bool Database::isEq(const Assistance::io__conf_integer e, const int v)
 		{
 			int oth;
 			get(e, oth, v); // meh
 			return oth == v;
 		}
-		const bool Config::isEq(const Assistance::conf_ll e, const long long v)
+		bool Database::isEq(const Assistance::io__conf_longlong e, const long long v)
 		{
 			long long oth;
 			get(e, oth, v); // meh
 			return oth == v;
 		}
-		const bool Config::isEq(const Assistance::conf_s e, const std::string v)
+		bool Database::isEq(const Assistance::io__conf_string e, const std::string v)
 		{
 			std::string oth;
 			get(e, oth, v); // meh
+			return oth == v;
+		}
+
+		bool Database::isEq(const int e, const bool v)
+		{
+			bool oth;
+			get(e, oth, v); // meh
+			return oth == v;
+		}
+
+		bool Database::isEq(const Assistance::io__conf_mouse_boolean e, const bool v)
+		{
+			bool oth;
+			get(e, oth); // meh
+			return oth == v;
+		}
+
+		bool Database::isEq(const Assistance::io__conf_mouse_float e, const float v)
+		{
+			float oth;
+			get(e, oth); // meh
 			return oth == v;
 		}
 
@@ -671,7 +716,7 @@ namespace LSW {
 		void lswInit()
 		{
 			gfile logg;
-			Config conf;
+			Database conf;
 
 			try {
 				__g_sys.initSystem();
