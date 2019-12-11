@@ -39,11 +39,13 @@ namespace LSW {
 			enum class ro__thread_collision_routines_timers { LOOPTRACK, CHECKKEEP, COLLISIONWORK };
 			enum class ro__thread_keyboardm_routines_timers { LOOPTRACK, CHECKKEEP, UPDATEMOUSE };
 
+			enum class io__thread_ids{ALL=-1,DRAWING,COLLIDING,USERINPUT};
+
 		}
 
-		typedef __template_multiple_timers<1, 2, 2, 5> __display_routines;
-		typedef __template_multiple_timers<1, 5, 20>	__collision_routines;
-		typedef __template_multiple_timers<1, 5, 60>	__keyboardmouse_routines;
+		typedef __template_multiple_timers<1, 2, 2, 5>													__display_routines;
+		typedef __template_multiple_timers<1, 5, Constants::internal_collision_positioning_time_update>	__collision_routines;
+		typedef __template_multiple_timers<1, 5, 60>													__keyboardmouse_routines;
 
 		typedef __template_static_vector<ALLEGRO_BITMAP>  Textures;
 		typedef __template_static_vector<ALLEGRO_FONT>    Fonts;
@@ -71,16 +73,21 @@ namespace LSW {
 			std::thread* thr_md = nullptr; // unleash framerate
 			bool thr_md_upnrunnin = false;
 			__display_routines* thr_md_arg; // already in here oops, HANDLED INTERNALLY ON THREAD
+			std::function<void(void)> smth_to_load; // load textures here
+			bool has_smth_to_load = false; // has somethign to load
+			bool pause_thr_md = false;
 
 			/// COLLISION AND SPRITES
 			std::thread* thr_cl = nullptr; // unleash collision work
 			bool thr_cl_upnrunnin = false;
 			__collision_routines* thr_cl_arg; // already in here oops, HANDLED INTERNALLY ON THREAD
+			bool pause_thr_cl = false;
 			
 			/// KEYBOARD, MOUSE AND STUFF
 			std::thread* thr_kb = nullptr; // unleash collision work
 			bool thr_kb_upnrunnin = false;
 			__keyboardmouse_routines* thr_kb_arg; // already in here oops, HANDLED INTERNALLY ON THREAD
+			bool pause_thr_kb = false;
 
 			ALLEGRO_EVENT_SOURCE evsrc;
 
@@ -97,6 +104,12 @@ namespace LSW {
 
 			bool isOpen();
 			bool isRunning();
+
+			void throwToLoad(std::function<void(void)>);
+			bool hasSmthToLoad();
+
+			void pauseThread(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);
+			void resumeThread(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);
 		};
 
 	}

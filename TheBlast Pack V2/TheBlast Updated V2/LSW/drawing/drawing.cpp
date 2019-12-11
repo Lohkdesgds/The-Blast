@@ -334,6 +334,18 @@ namespace LSW {
 				break;
 			default:
 				data.dval[+u] = v;
+				// target set to value
+				switch (+u) {
+				case +Assistance::io__sprite_double::POSX:
+					data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] = v;
+					break;
+				case +Assistance::io__sprite_double::POSY:
+					data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] = v;
+					break;
+				case +Assistance::io__sprite_double::ROTATION:
+					data.dtarg[+Assistance::ro__sprite_target_double::TARG_ROTATION] = v;
+					break;
+				}
 				break;
 			}
 		}
@@ -495,6 +507,21 @@ namespace LSW {
 
 			if (!data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM]) psf = camera_preset();
 
+
+			double timee = al_get_time();
+			double dt = timee - data.dtarg[+Assistance::ro__sprite_target_double::INTERN_LASTDRAW];
+			data.dtarg[+Assistance::ro__sprite_target_double::INTERN_LASTDRAW] = timee;
+
+			double perc_run = Constants::internal_collision_positioning_time_update * dt; // ex: 5 per sec * 0.2 (1/5 sec) = 1, so posx = actual posx...
+			if (perc_run > 1.0) perc_run = 1.0; // 1.0 is "set value"
+			if (perc_run < 1.0 / 10000) perc_run = 1.0 / 10000; // can't be infinitely smooth right? come on
+
+			data.dval[+Assistance::io__sprite_double::POSX] = (1.0 - perc_run) * data.dval[+Assistance::io__sprite_double::POSX] + perc_run * data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX];
+			data.dval[+Assistance::io__sprite_double::POSY] = (1.0 - perc_run) * data.dval[+Assistance::io__sprite_double::POSY] + perc_run * data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY];
+			data.dval[+Assistance::io__sprite_double::ROTATION] = (1.0 - perc_run) * data.dval[+Assistance::io__sprite_double::ROTATION] + perc_run * data.dtarg[+Assistance::ro__sprite_target_double::TARG_ROTATION];
+
+
+
 			float cx, cy, px, py, dsx, dsy, rot_rad;
 			int bmpx, bmpy;
 			bmpx = al_get_bitmap_width(rn);
@@ -506,8 +533,10 @@ namespace LSW {
 			cx = 1.0f * bmpx * ((data.dval[+Assistance::io__sprite_double::CENTERX] + 1.0) * 0.5);
 			cy = 1.0f * bmpy * ((data.dval[+Assistance::io__sprite_double::CENTERY] + 1.0) * 0.5);
 			rot_rad = 1.0f * data.dval[+Assistance::io__sprite_double::ROTATION] * ALLEGRO_PI / 180.0;
-			px = 1.0f * data.dval[+Assistance::io__sprite_double::POSX] * cos(rot_rad) + data.dval[+Assistance::io__sprite_double::POSY] * sin(rot_rad);
-			py = 1.0f * data.dval[+Assistance::io__sprite_double::POSY] * cos(rot_rad) - data.dval[+Assistance::io__sprite_double::POSX] * sin(rot_rad);
+			/*px = 1.0f * data.dval[+Assistance::io__sprite_double::POSX] * cos(rot_rad) + data.dval[+Assistance::io__sprite_double::POSY] * sin(rot_rad);
+			py = 1.0f * data.dval[+Assistance::io__sprite_double::POSY] * cos(rot_rad) - data.dval[+Assistance::io__sprite_double::POSX] * sin(rot_rad);*/
+			px = data.dval[+Assistance::io__sprite_double::POSX];
+			py = data.dval[+Assistance::io__sprite_double::POSY];
 			dsx = 1.0f * data.dval[+Assistance::io__sprite_double::SCALEX] * data.dval[+Assistance::io__sprite_double::SCALEG] * (1.0 / bmpx);
 			dsy = 1.0f * data.dval[+Assistance::io__sprite_double::SCALEY] * data.dval[+Assistance::io__sprite_double::SCALEG] * (1.0 / bmpy);
 
@@ -541,6 +570,21 @@ namespace LSW {
 			}
 
 			camm.apply();
+		}
+
+		void Sprite::process() // later: be a target, so drawing it will get there (based on framerate)
+		{
+			Camera gcam;
+			auto psf = gcam.get();
+			if (!data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM]) psf = camera_preset();
+
+			data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] += data.dval[+Assistance::io__sprite_double::SPEEDX];
+			data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] += data.dval[+Assistance::io__sprite_double::SPEEDY];
+
+			data.dtarg[+Assistance::ro__sprite_target_double::TARG_ROTATION] += data.dval[+Assistance::io__sprite_double::SPEEDROT];
+
+			data.dval[+Assistance::io__sprite_double::SPEEDX] *= data.dval[+Assistance::io__sprite_double::SMOOTHNESS_X] * psf.get(Assistance::io__camera_float::SLIPPERINESS);
+			data.dval[+Assistance::io__sprite_double::SPEEDY] *= data.dval[+Assistance::io__sprite_double::SMOOTHNESS_Y] * psf.get(Assistance::io__camera_float::SLIPPERINESS);
 		}
 
 
@@ -1053,9 +1097,9 @@ namespace LSW {
 		void Text::draw(const int is_layer)
 		{
 			if (!data.b[+Assistance::io__text_boolean::SHOW]) return;
-			if (is_layer != data.i[+Assistance::io__text_integer::LAYER]) {
-				return;
-			}
+			if (!data.font) return;
+			if (is_layer != data.i[+Assistance::io__text_integer::LAYER]) return;
+
 			if (follow) {
 				bool k;
 				follow->get(Assistance::io__sprite_boolean::DRAW, k);

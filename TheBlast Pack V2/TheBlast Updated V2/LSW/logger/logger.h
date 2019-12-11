@@ -130,7 +130,12 @@ namespace LSW {
 
 					if (i == '\n') {
 						ALLEGRO_EVENT evv;
-						sprintf_s(g.memline[g.memlinecount].line, g.now.c_str());
+
+						size_t pp = 0;
+						for (auto& i : g.now) {
+							g.memline[g.memlinecount].line[pp++] = i;
+							if (pp >= 256) break;
+						}
 						
 						evv.user.data1 = (intptr_t)g.memline[g.memlinecount].line;
 						evv.user.data2 = (intptr_t)&g.memline[g.memlinecount].event_color;

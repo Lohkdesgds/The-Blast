@@ -76,6 +76,8 @@ namespace LSW {
 			void initSystem();
 			void forceInitWithNoZipAnyway();
 
+			void setInterface();
+
 			void setNewDisplayMode(const int);
 			bool checkResolutionExistance(const int, const int, const int);
 			const auto getAvailableResolutions();

@@ -66,6 +66,13 @@ namespace LSW {
 
 				for (bool localb = true; localb;)
 				{
+					while (pause_thr_md) Sleep(10);
+
+					if (has_smth_to_load) {
+						smth_to_load();
+						has_smth_to_load = false;
+					}
+
 					if (thr_md_arg->hasEvent()) {
 
 						if (thr_md_arg->isThisThis(+Assistance::ro__thread_display_routines_timers::LOOPTRACK))
@@ -202,12 +209,15 @@ namespace LSW {
 		{
 			try {
 				gfile logg;
+				Sprites sprites;
 
 				logg << L::SLL << fsr(__FUNCSIG__) << "Initializing..." << L::BLL;
 
 				thr_shared_arg.threadcountm.lock();
 				thr_shared_arg.threadcount++;
 				thr_shared_arg.threadcountm.unlock();
+
+				size_t last_loop_had_error = 0;
 
 				thr_cl_arg = new __collision_routines();
 				thr_cl_arg->insert(&evsrc);
@@ -220,6 +230,8 @@ namespace LSW {
 
 				for (bool localb = true; localb;)
 				{
+					while (pause_thr_cl) Sleep(10);
+
 					thr_cl_arg->hasEventWait();
 
 					if (thr_cl_arg->isThisThis(+Assistance::ro__thread_collision_routines_timers::LOOPTRACK))
@@ -233,11 +245,23 @@ namespace LSW {
 					}
 					else if (thr_cl_arg->isThisThis(+Assistance::ro__thread_collision_routines_timers::COLLISIONWORK))
 					{
-						//printf_s("[THR_COL] COLLISIONWORK called\n");
+						try {
+							gcam.apply();
+							camera_preset ww = gcam.get();
 
-						// work on timed collision stuff
+							for (auto& k : ww) {
+								for (auto& i : sprites) i->self->process();
+							}
+							last_loop_had_error = 0;
+						}
+						catch (Abort::abort err)
+						{
+							logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "Got updating pos exception! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::BLL;
 
-
+							if (err.getErrN() == 1 && (last_loop_had_error < 10)) {
+								last_loop_had_error++;
+							}
+						}
 					}
 				}
 				logg << L::SLL << fsr(__FUNCSIG__) << "Closing stuff!" << L::BLL;
@@ -295,6 +319,8 @@ namespace LSW {
 
 				for (bool localb = true; localb;)
 				{
+					while (pause_thr_kb) Sleep(10);
+
 					thr_kb_arg->hasEventWait();
 
 					if (thr_kb_arg->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::LOOPTRACK))
@@ -405,7 +431,7 @@ namespace LSW {
 
 			// start threads
 			thr_md = new std::thread([=] {__l_thr_md(); }); // working on
-			///thr_cl = new std::thread([=] {__l_thr_cl(); }); // not ready yet
+			thr_cl = new std::thread([=] {__l_thr_cl(); }); // not ready yet
 			thr_kb = new std::thread([=] {__l_thr_kb(); }); // working on
 
 			al_set_target_bitmap(NULL);
@@ -441,7 +467,7 @@ namespace LSW {
 
 		bool Console::isOpen()
 		{
-			return (md != nullptr && thr_md_upnrunnin /* TODO: add collision thread and keyboard */);
+			return (md != nullptr && thr_md_upnrunnin && thr_cl_upnrunnin && thr_kb_upnrunnin);
 		}
 
 		bool Console::isRunning()
@@ -452,6 +478,62 @@ namespace LSW {
 			}
 			return stillrunning;
 		}
+
+		void Console::throwToLoad(std::function<void(void)> f)
+		{
+			for (size_t p = 0; p < 100 && has_smth_to_load; p++) {
+				Sleep(50);
+			}
+			if (has_smth_to_load) {
+				throw Abort::abort(__FUNCSIG__, "Had something to do and coulnd't end task!");
+				return;
+			}
+			smth_to_load = f;
+			has_smth_to_load = true;
+		}
+
+		bool Console::hasSmthToLoad()
+		{
+			return has_smth_to_load;
+		}
+
+		void Console::pauseThread(const Assistance::io__thread_ids o)
+		{
+			switch (o) {
+			case Assistance::io__thread_ids::ALL:
+				pause_thr_md = pause_thr_cl = pause_thr_kb = true;
+				break;
+			case Assistance::io__thread_ids::DRAWING:
+				pause_thr_md = true;
+				break;
+			case Assistance::io__thread_ids::COLLIDING:
+				pause_thr_cl = true;
+				break;
+			case Assistance::io__thread_ids::USERINPUT:
+				pause_thr_kb = true;
+				break;
+			}
+		}
+
+		void Console::resumeThread(const Assistance::io__thread_ids o)
+		{
+			switch (o) {
+			case Assistance::io__thread_ids::ALL:
+				pause_thr_md = pause_thr_cl = pause_thr_kb = false;
+				break;
+			case Assistance::io__thread_ids::DRAWING:
+				pause_thr_md = false;
+				break;
+			case Assistance::io__thread_ids::COLLIDING:
+				pause_thr_cl = false;
+				break;
+			case Assistance::io__thread_ids::USERINPUT:
+				pause_thr_kb = false;
+				break;
+			}
+		}
+
+		
 
 	}
 }

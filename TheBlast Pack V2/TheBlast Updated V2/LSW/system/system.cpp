@@ -228,6 +228,11 @@ namespace LSW {
 			al_set_physfs_file_interface();
 		}
 
+		void __systematic::setInterface()
+		{
+			al_set_physfs_file_interface();
+		}
+
 		void __systematic::setNewDisplayMode(const int mds)
 		{
 			if (!initialized) throw Abort::abort(__FUNCSIG__, "Wasn't initialized properly!");
@@ -770,6 +775,9 @@ namespace LSW {
 		}
 		void forceExit(const char* windw, const char* title, const char* ext)
 		{
+			gfile logg;
+			logg << L::SLL << fsr(__FUNCSIG__, E::ERRR) << "FAILED: " << windw << ": " << title << "; " << ext << L::BLL;
+			logg.flush();
 			if (windw) {
 				al_show_native_message_box(
 					nullptr,

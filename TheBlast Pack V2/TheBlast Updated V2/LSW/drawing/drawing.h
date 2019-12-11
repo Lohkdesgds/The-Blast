@@ -31,11 +31,12 @@ namespace LSW {
 
 		namespace Assistance {
 
-			enum class io__camera_float			{ SCALE_X, SCALE_Y, SCALE_G, OFFSET_X, OFFSET_Y, ROTATION, size };
+			enum class io__camera_float			{ SCALE_X, SCALE_Y, SCALE_G, OFFSET_X, OFFSET_Y, ROTATION, SLIPPERINESS, size };
 			
 			enum class io__sprite_string_vector	{ ADDMULTIPLE, REMOVEMULTIPLE };
 			enum class io__sprite_string		{ ADD, REMOVE, ID };
 			enum class io__sprite_double		{ POSX, POSY, SCALEX, SCALEY, CENTERX, CENTERY, SCALEG, ROTATION /*DEGREES*/, SPEEDX, SPEEDY, SPEEDROT, SMOOTHNESS_X, SMOOTHNESS_Y, size, /* since here they are not Sprite exactly stuff*/ ANIMATION_FPS };
+			enum class ro__sprite_target_double { TARG_POSX, TARG_POSY, TARG_ROTATION, INTERN_LASTDRAW, size};
 			enum class io__sprite_boolean		{ DRAW, COLLIDE, IS_COLLIDING, AFFECTED_BY_COLLISION, AFFECTED_BY_CAM, SHOWDOT, SHOWBOX, FOLLOWMOUSE, FOLLOWKEYBOARD, USE_TINTED_DRAWING, size, /* since here they are not Sprite exactly stuff*/ LOOPFRAMES };
 			enum class io__sprite_integer		{ LAYER, size };
 			enum class io__sprite_sizet			{ SIZE, FRAME, size };
@@ -81,7 +82,7 @@ __slice("%garbage_tracks%", +tags_e::T_TRACKS_GARBAGE), __slice("%garbage_entiti
 		void draw_simple_txt(ALLEGRO_FONT*, const std::string, ALLEGRO_COLOR = al_map_rgb(255,255,255), const int = ALLEGRO_ALIGN_CENTER);
 
 		class camera_preset {
-			float p[+Assistance::io__camera_float::size] = { 1.0,1.0,1.0,0.0,0.0,0.0 };
+			float p[+Assistance::io__camera_float::size] = { 1.0,1.0,1.0,0.0,0.0,0.0,1.0 };
 			ALLEGRO_TRANSFORM latest;
 			std::vector<int> layers; // layers enabled
 
@@ -132,6 +133,7 @@ __slice("%garbage_tracks%", +tags_e::T_TRACKS_GARBAGE), __slice("%garbage_entiti
 			class __sprite_smart_data {
 			public:
 				double dval[+Assistance::io__sprite_double::size] = { 0.0 };
+				double dtarg[+Assistance::ro__sprite_target_double::size] = { 0.0 };
 				bool bval[+Assistance::io__sprite_boolean::size] = { false };
 				ALLEGRO_COLOR tint = al_map_rgb(255, 255, 255);
 
@@ -192,6 +194,7 @@ __slice("%garbage_tracks%", +tags_e::T_TRACKS_GARBAGE), __slice("%garbage_entiti
 			bool isEq(const Assistance::io__sprite_color, const ALLEGRO_COLOR);
 
 			void draw(const int);
+			void process(); // movement
 		};
 
 

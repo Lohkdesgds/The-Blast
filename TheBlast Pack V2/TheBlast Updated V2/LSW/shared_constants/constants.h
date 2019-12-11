@@ -98,6 +98,8 @@ namespace LSW {
 
 			const size_t max_mouse_set_buttons = 8;
 
+			const size_t internal_collision_positioning_time_update = 10; /*20*/
+
 
 			// not verified
 
