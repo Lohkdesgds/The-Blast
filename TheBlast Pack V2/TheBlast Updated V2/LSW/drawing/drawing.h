@@ -83,7 +83,7 @@ __slice("%garbage_tracks%", +tags_e::T_TRACKS_GARBAGE), __slice("%garbage_entiti
 
 		class camera_preset {
 			float p[+Assistance::io__camera_float::size] = { 1.0,1.0,1.0,0.0,0.0,0.0,1.0 };
-			ALLEGRO_TRANSFORM latest;
+			ALLEGRO_TRANSFORM latest = ALLEGRO_TRANSFORM();
 			std::vector<int> layers; // layers enabled
 
 			void _think_latest(); // guaranteed ALLEGRO_TRANSFORM ready to use (less thinking when already set up)

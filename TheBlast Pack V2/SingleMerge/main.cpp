@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 	auto err1 = fopen_s(&b, b_s.c_str(), "rb");
 	std::string defu = "\n%LSW_DATA\n";
 
-	if (err0 == 0 && err1 == 0) {
+	if (err0 == 0 && err1 == 0 && a && b) {
 		char buf[512];
 		bool still = true;
 
@@ -45,8 +45,8 @@ int main(int argc, char* argv[])
 		std::cout << "Something went wrong. One of the files failed to be opened." << std::endl;
 	}
 
-	fclose(a);
-	fclose(b);
+	if (a) fclose(a);
+	if (b) fclose(b);
 
 
 	Sleep(10000);

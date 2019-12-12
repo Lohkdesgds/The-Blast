@@ -209,6 +209,7 @@ namespace LSW {
 			template<typename Q = T> struct _i {
 				std::vector< _d<Q>* >					db;
 				std::mutex                              dbm;
+				bool                                    dbmv = false; // verifier
 				std::function<bool(const char*, Q*&)>	load; // cast void if different
 				std::function<void(Q*&)>				unload;
 			};
@@ -224,7 +225,7 @@ namespace LSW {
 				data.unload = hd;
 			}
 			bool tryLock() {
-				return data.dbm.try_lock();
+				return (data.dbmv = data.dbm.try_lock());
 			}
 			size_t size() {
 				return data.db.size();
@@ -236,7 +237,9 @@ namespace LSW {
 				return data.db.end();
 			}
 			void unlock() {
-				data.dbm.unlock();
+				if (!data.dbmv) throw Abort::abort(__FUNCSIG__, "MUTEX UNLOCKED WHEN TRYING TO UNLOCK!");
+				else data.dbm.unlock();
+				data.dbmv = false;
 			}
 			T* customLoad(const std::string id, std::function<bool(T*&)> f) {
 				T* b = nullptr;

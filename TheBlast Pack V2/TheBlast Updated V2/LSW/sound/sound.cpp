@@ -170,7 +170,7 @@ namespace LSW {
 					throw Abort::abort(__FUNCSIG__, "Failed to get PLAYMODE because there was no instance loaded.", 1);
 					return;
 				}
-				v = al_get_sample_instance_playmode(instance);
+				v = (int)al_get_sample_instance_playmode(instance);
 				break;
 			}
 		}

@@ -636,32 +636,32 @@ namespace LSW {
 					switch (found)
 					{
 					case +Assistance::tags_e::T_POSX:
-						sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSX] + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX] + cam.get().get(Assistance::io__camera_float::OFFSET_X)));
+						sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSX] + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX] + (double)cam.get().get(Assistance::io__camera_float::OFFSET_X)));
 						break;
 					case +Assistance::tags_e::T_POSY:
-						sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSY] + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY] + cam.get().get(Assistance::io__camera_float::OFFSET_Y)));
+						sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSY] + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY] + (double)cam.get().get(Assistance::io__camera_float::OFFSET_Y)));
 						break;
 					case +Assistance::tags_e::T_SCREEN_POSX:
-						sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSX] * (data.b[+Assistance::io__text_boolean::AFFECTED_BY_CAM] ? (cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_X)) : 1.0) + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX] * (cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_X))));
+						sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSX] * (data.b[+Assistance::io__text_boolean::AFFECTED_BY_CAM] ? (double)(cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_X)) : 1.0) + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX] * (double)(cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_X))));
 						break;
 					case +Assistance::tags_e::T_SCREEN_POSY:
-						sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSY] * (data.b[+Assistance::io__text_boolean::AFFECTED_BY_CAM] ? (cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_Y)) : 1.0) + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY] * (cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_Y))));
+						sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSY] * (data.b[+Assistance::io__text_boolean::AFFECTED_BY_CAM] ? (double)(cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_Y)) : 1.0) + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY] * (double)(cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_Y))));
 						break;
 
 					case +Assistance::tags_e::T_CAM_X:
-						sprintf_s(tempstr_c, "%.3lf", cam.get().get(Assistance::io__camera_float::OFFSET_X));
+						sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::OFFSET_X));
 						break;
 					case +Assistance::tags_e::T_CAM_Y:
-						sprintf_s(tempstr_c, "%.3lf", cam.get().get(Assistance::io__camera_float::OFFSET_Y));
+						sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::OFFSET_Y));
 						break;
 					case +Assistance::tags_e::T_CAM_ZOOM:
-						sprintf_s(tempstr_c, "%.3lf", cam.get().get(Assistance::io__camera_float::SCALE_G));
+						sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::SCALE_G));
 						break;
 					case +Assistance::tags_e::T_CAM_ZOOMX:
-						sprintf_s(tempstr_c, "%.3lf", cam.get().get(Assistance::io__camera_float::SCALE_X));
+						sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::SCALE_X));
 						break;
 					case +Assistance::tags_e::T_CAM_ZOOMY:
-						sprintf_s(tempstr_c, "%.3lf", cam.get().get(Assistance::io__camera_float::SCALE_Y));
+						sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::SCALE_Y));
 						break;
 
 					case +Assistance::tags_e::T_ISFOLLOWING:

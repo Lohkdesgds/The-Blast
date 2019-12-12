@@ -22,7 +22,7 @@ namespace LSW {
 		
 		struct __c_entry {
 			std::string str;
-			ALLEGRO_COLOR c;
+			ALLEGRO_COLOR c = al_map_rgb(255,255,255);
 		};
 
 		class gfile {
@@ -32,9 +32,10 @@ namespace LSW {
 				std::mutex f_m, each_call, evsrc_m;
 				bool store_log = true;
 				bool is_needed_lock = false;
+				bool eachcall_safety_locked = false;
 				std::string now;
 				//std::vector<std::string> lines;
-				ALLEGRO_EVENT_SOURCE evsrc;
+				ALLEGRO_EVENT_SOURCE evsrc = ALLEGRO_EVENT_SOURCE();
 				bool started_evsrc = false;
 				struct lines {
 					char line[Constants::each_line_stored_by_memlog] = { 0 };
@@ -199,10 +200,16 @@ namespace LSW {
 			{
 			case L::SL:
 				g.each_call.lock();
+				g.eachcall_safety_locked = true;
 				printClock();
 				break;
 			case L::BL:
 				push("\n");
+				if (!g.eachcall_safety_locked) {
+					push("\n---------- FATAL WARN ----------\nMUTEX WAS NOT LOCKED! THE CODE HAS ERRORS!");	flush();
+					throw Abort::abort(__FUNCSIG__, "FATAL ERROR MUTEX SHOULDN'T BE UNLOCKED IF IT WASN'T PREVIOUSLY!");
+				}
+				g.eachcall_safety_locked = false;
 				g.each_call.unlock();
 				break;
 			case L::ERRDV:
@@ -214,12 +221,18 @@ namespace LSW {
 				break;
 			case L::SLL:
 				g.each_call.lock();
+				g.eachcall_safety_locked = true;
 				g.is_needed_lock = true;
 				printClock();
 				break;
 			case L::BLL:
 				push("\n");
 				g.is_needed_lock = false;
+				if (!g.eachcall_safety_locked) {
+					push("\n---------- FATAL WARN ----------\nMUTEX WAS NOT LOCKED! THE CODE HAS ERRORS!");	flush();
+					throw Abort::abort(__FUNCSIG__, "FATAL ERROR MUTEX SHOULDN'T BE UNLOCKED IF IT WASN'T PREVIOUSLY!");
+				}
+				g.eachcall_safety_locked = false;
 				g.each_call.unlock();
 				flush();
 				break;

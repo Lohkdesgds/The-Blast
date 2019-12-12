@@ -331,7 +331,8 @@ namespace LSW {
 			tx = x;
 			ty = y;
 
-			if (hz == 0) {
+			if (hz < 0) {
+				hz = 0;
 				for (auto& i : u) {
 					bool higher = ((i.x > tx && i.y >= ty) || (i.x >= tx && i.y > ty));
 					bool equall = (i.x == tx && i.y == ty);
@@ -352,13 +353,19 @@ namespace LSW {
 				al_set_new_bitmap_flags(Constants::start_bitmap_default_mode);
 				al_set_new_display_refresh_rate(hz);
 				al_set_new_display_option(ALLEGRO_VSYNC, 2, ALLEGRO_SUGGEST);
-				d = al_create_display(x, y);
+				if (d = al_create_display(x, y)) {
+					gfile logg;
+					logg << L::SLL << fsr(__FUNCSIG__) << "Created display successfully: " << x << "x" << y << "@" << (hz == 0 ? "auto" : std::to_string(hz)) << ";flags=" << flag << L::BLL;
+				}
+				else {
+					throw Abort::abort(__FUNCSIG__, "Could not create display!");
+				}
 				al_convert_bitmaps();
 
 				this->x = x;
 				this->y = y;
 				this->f = flag;
-				this->h = hz;
+				this->h = al_get_display_refresh_rate(d);
 			}
 			else {
 				throw Abort::abort(__FUNCSIG__, "Invalid resolution, sorry!");
@@ -448,8 +455,8 @@ namespace LSW {
 				}
 			}
 			if (md.hz == 0){ // both before failed, search for another option afaik
-				logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "Failed to find a supported refresh rate. Going with 60 hz instead." << L::BLL;
-				md.hz = 60;
+				logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "Failed to find a supported refresh rate. Trying automatic instead." << L::BLL;
+				md.hz = 0;
 			}
 
 

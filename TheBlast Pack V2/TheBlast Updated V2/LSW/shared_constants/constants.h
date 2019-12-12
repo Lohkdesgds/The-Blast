@@ -36,29 +36,7 @@ namespace LSW {
 			const std::string __interpret_date();
 			const std::string version_app = std::string("V2.0.0#") + __interpret_date();
 
-			/* PRETTY USEFUL LAMBDA STUFF */
-			const auto lambda_bitmap_load = [](const char* p, ALLEGRO_BITMAP*& b) -> bool {
-				return ((b = al_load_bitmap(p)));
-			};
-			const auto lambda_bitmap_unload = [](ALLEGRO_BITMAP*& b) -> void {
-				if (al_is_system_installed() && b) { al_destroy_bitmap(b); }
-			};
-
-			const auto lambda_font_load = [](const char* p, ALLEGRO_FONT*& b) -> bool {
-				return ((b = al_load_ttf_font(p, 2500, 0)));
-			};
-			const auto lambda_font_unload = [](ALLEGRO_FONT*& b) -> void {
-				if (al_is_system_installed() && b) { al_destroy_font(b); }
-			};
-
-			const auto lambda_sample_load = [](const char* p, ALLEGRO_SAMPLE*& b) -> bool {
-				return ((b = al_load_sample(p)));
-			};
-			const auto lambda_sample_unload = [](ALLEGRO_SAMPLE*& b) -> void {
-				if (al_is_system_installed() && b) { al_destroy_sample(b); }
-			};
-
-
+			
 #ifdef _DEBUG
 			const bool _is_on_debug_mode = true;
 #else
@@ -68,7 +46,7 @@ namespace LSW {
 			// system.h stuff mostly
 			const int start_audio_samples_max = 8;
 			const int start_display_default_mode = ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE | WAY;
-			const int start_bitmap_default_mode = ALLEGRO_VIDEO_BITMAP | ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR;
+			const int start_bitmap_default_mode = ALLEGRO_VIDEO_BITMAP | ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR | ALLEGRO_MIPMAP;
 			const bool start_force_720p = true;
 
 			const std::string __match_unmatch = "_DATA";
@@ -90,7 +68,7 @@ namespace LSW {
 			const size_t each_line_stored_by_memlog = 140;
 
 			// drawing.h stuff
-			const double text_default_sharpness_font = 2500.0;
+			const double text_default_sharpness_font = 75.0; // 2500
 			const double text_timeout_interpret = 0.1;
 
 			// sound.h stuff
@@ -99,6 +77,33 @@ namespace LSW {
 			const size_t max_mouse_set_buttons = 8;
 
 			const size_t internal_collision_positioning_time_update = 10; /*20*/
+
+
+
+
+
+
+			/* PRETTY USEFUL LAMBDA STUFF */
+			const auto lambda_bitmap_load = [](const char* p, ALLEGRO_BITMAP*& b) -> bool {
+				return ((b = al_load_bitmap(p)));
+			};
+			const auto lambda_bitmap_unload = [](ALLEGRO_BITMAP*& b) -> void {
+				if (al_is_system_installed() && b) { al_destroy_bitmap(b); }
+			};
+
+			const auto lambda_font_load = [](const char* p, ALLEGRO_FONT*& b) -> bool {
+				return ((b = al_load_ttf_font(p, text_default_sharpness_font, 0)));
+			};
+			const auto lambda_font_unload = [](ALLEGRO_FONT*& b) -> void {
+				if (al_is_system_installed() && b) { al_destroy_font(b); }
+			};
+
+			const auto lambda_sample_load = [](const char* p, ALLEGRO_SAMPLE*& b) -> bool {
+				return ((b = al_load_sample(p)));
+			};
+			const auto lambda_sample_unload = [](ALLEGRO_SAMPLE*& b) -> void {
+				if (al_is_system_installed() && b) { al_destroy_sample(b); }
+			};
 
 
 			// not verified
@@ -238,7 +243,7 @@ namespace LSW {
 				std::string date = __DATE__;
 				std::string time = __TIME__;
 
-				char monthr[16];
+				char monthr[16] = { '\0' };
 				int year, monthn, day, hour, min, sec;
 
 				sscanf_s(date.c_str(), "%s %d %d", monthr, 16, &day, &year);

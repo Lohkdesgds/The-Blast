@@ -61,7 +61,7 @@ namespace LSW {
 			Display* md = nullptr; // HANDLED INTERNALLY ON THREAD
 
 			Textures gimg;
-			Camera gcam;
+			Camera gcam = Camera();
 
 			struct __shared_routines {
 				size_t threadcount = 0;
@@ -79,23 +79,23 @@ namespace LSW {
 			/// DISPLAY AND DRAW
 			std::thread* thr_md = nullptr; // unleash framerate
 			bool thr_md_upnrunnin = false;
-			__display_routines* thr_md_arg; // already in here oops, HANDLED INTERNALLY ON THREAD
+			__display_routines* thr_md_arg = nullptr; // already in here oops, HANDLED INTERNALLY ON THREAD
 			bool pause_thr_md = false;
 
 			/// COLLISION AND SPRITES
 			std::thread* thr_cl = nullptr; // unleash collision work
 			bool thr_cl_upnrunnin = false;
-			__collision_routines* thr_cl_arg; // already in here oops, HANDLED INTERNALLY ON THREAD
+			__collision_routines* thr_cl_arg = nullptr; // already in here oops, HANDLED INTERNALLY ON THREAD
 			bool pause_thr_cl = false;
 			
 			/// KEYBOARD, MOUSE AND STUFF
 			std::thread* thr_kb = nullptr; // unleash collision work
 			bool thr_kb_upnrunnin = false;
-			__keyboardmouse_routines* thr_kb_arg; // already in here oops, HANDLED INTERNALLY ON THREAD
+			__keyboardmouse_routines* thr_kb_arg = nullptr; // already in here oops, HANDLED INTERNALLY ON THREAD
 			bool pause_thr_kb = false;
 
 
-			ALLEGRO_EVENT_SOURCE evsrc;
+			ALLEGRO_EVENT_SOURCE evsrc = ALLEGRO_EVENT_SOURCE();
 
 			void __l_thr_md();
 			void __l_thr_cl();
