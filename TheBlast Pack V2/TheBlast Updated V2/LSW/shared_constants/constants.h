@@ -86,8 +86,8 @@ namespace LSW {
 			// loggger.h stuff
 			const std::string default_file_global_path = "%appdata%/Lohk's Studios/TheBlast/logs/latest.log";
 			const size_t len_class = 45;
-			const size_t max_lines_stored_by_memlog = 20;
-			const size_t each_line_stored_by_memlog = 256;
+			const size_t max_lines_stored_by_memlog = 10;
+			const size_t each_line_stored_by_memlog = 140;
 
 			// drawing.h stuff
 			const double text_default_sharpness_font = 2500.0;

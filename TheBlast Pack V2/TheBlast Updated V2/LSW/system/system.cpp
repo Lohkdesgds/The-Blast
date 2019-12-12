@@ -776,7 +776,7 @@ namespace LSW {
 		void forceExit(const char* windw, const char* title, const char* ext)
 		{
 			gfile logg;
-			logg << L::SLL << fsr(__FUNCSIG__, E::ERRR) << "FAILED: " << windw << ": " << title << "; " << ext << L::BLL;
+			logg << L::SLL << fsr(__FUNCSIG__, windw ? E::ERRR : E::WARN) << "FORCEEXIT: " << (windw ? windw : "NULL") << ": " << (title ? title : "NULL") << "; " << (ext ? ext : "NULL") << L::BLL;
 			logg.flush();
 			if (windw) {
 				al_show_native_message_box(
@@ -786,8 +786,9 @@ namespace LSW {
 					ext,
 					NULL,
 					ALLEGRO_MESSAGEBOX_ERROR);
+				exit(EXIT_FAILURE);
 			}
-			exit(EXIT_FAILURE);
+			exit(EXIT_SUCCESS);
 		}
 	}
 }

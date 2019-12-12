@@ -238,6 +238,24 @@ namespace LSW {
 			void unlock() {
 				data.dbm.unlock();
 			}
+			T* customLoad(const std::string id, std::function<bool(T*&)> f) {
+				T* b = nullptr;
+				bool r = get(id, b);
+
+				if (!r) {
+					_d<T>* dt = new _d<T>();
+					dt->id = id;
+
+					r = f(dt->self);
+					if (!r || !dt->self) throw Abort::abort(__FUNCSIG__, "Can't load a resource! id=" + id);
+					b = dt->self;
+
+					data.dbm.lock();
+					data.db.push_back(dt);
+					data.dbm.unlock();
+				}
+				return b;
+			}
 			T* create(const std::string id, const std::string path = "") { return load(id, path); }
 			T* load(const std::string id, const std::string path = "")	{
 				T* b = nullptr;
@@ -248,8 +266,7 @@ namespace LSW {
 					dt->id = id;
 
 					r = data.load(path.c_str(), dt->self);
-					assert(r);
-					assert(dt->self);
+					if (!r || !dt->self) throw Abort::abort(__FUNCSIG__, "Can't load a resource! id=" + id + ";path=" + path);
 					b = dt->self;
 
 					data.dbm.lock();

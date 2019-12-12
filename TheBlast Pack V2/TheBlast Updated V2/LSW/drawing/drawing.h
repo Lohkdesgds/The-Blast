@@ -121,12 +121,7 @@ __slice("%garbage_tracks%", +tags_e::T_TRACKS_GARBAGE), __slice("%garbage_entiti
 			camera_preset& get(const int);
 			camera_preset& get();
 		};
-
-
-		/*
-		TODO:
-		work on a way to transform the bitmaps like a camera transform with a camera transform combined? Maybe...?
-		*/
+		
 
 		class Sprite {
 

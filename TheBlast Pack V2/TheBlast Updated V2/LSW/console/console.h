@@ -68,13 +68,18 @@ namespace LSW {
 				std::mutex threadcountm;
 				bool should_exit = true;
 			} thr_shared_arg; // shared
+			
+			/// SHARED
+			std::function<void(void)> smth_to_load; // load textures here
+			int has_smth_to_load = -1; // has somethign to load
+			std::function<void(void)> howto_unload; // die how?
+			bool hasset_howto_unload = false;
+
 
 			/// DISPLAY AND DRAW
 			std::thread* thr_md = nullptr; // unleash framerate
 			bool thr_md_upnrunnin = false;
 			__display_routines* thr_md_arg; // already in here oops, HANDLED INTERNALLY ON THREAD
-			std::function<void(void)> smth_to_load; // load textures here
-			bool has_smth_to_load = false; // has somethign to load
 			bool pause_thr_md = false;
 
 			/// COLLISION AND SPRITES
@@ -88,6 +93,7 @@ namespace LSW {
 			bool thr_kb_upnrunnin = false;
 			__keyboardmouse_routines* thr_kb_arg; // already in here oops, HANDLED INTERNALLY ON THREAD
 			bool pause_thr_kb = false;
+
 
 			ALLEGRO_EVENT_SOURCE evsrc;
 
@@ -105,7 +111,8 @@ namespace LSW {
 			bool isOpen();
 			bool isRunning();
 
-			void throwToLoad(std::function<void(void)>);
+			void throwToLoad(const Assistance::io__thread_ids, std::function<void(void)>);
+			void setUnloadWay(std::function<void(void)>);
 			bool hasSmthToLoad();
 
 			void pauseThread(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);

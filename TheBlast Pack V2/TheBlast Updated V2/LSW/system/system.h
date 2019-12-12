@@ -171,6 +171,6 @@ namespace LSW {
 
 
 		void lswInit(); // init everything
-		void forceExit(const char* = nullptr, const char* = "", const char* = "");
+		void forceExit(const char* = nullptr, const char* = nullptr, const char* = nullptr);
 	}
 }

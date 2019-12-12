@@ -21,17 +21,25 @@ namespace LSW {
 				md = new Display();
 				Sprites sprites;
 				Texts texts;
-				//Textures textures;
 
-				al_set_new_bitmap_flags(ALLEGRO_VIDEO_BITMAP);
-				Text* const mtt = texts.create("lastlogtext");
+				al_set_target_backbuffer(md->getDisplay());
 
-				//gcam.apply();
+				al_set_new_bitmap_flags(ALLEGRO_VIDEO_BITMAP | ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR/* | ALLEGRO_MIPMAP*/); // MIPMAP not working well? lmao
+				//al_set_new_bitmap_format(ALLEGRO_PIXEL_FORMAT_RGBA_8888);
 
 				thr_md_arg = new __display_routines();
 				thr_md_arg->insert(al_get_display_event_source(md->getDisplay()));
 				thr_md_arg->insert(&evsrc);
 				thr_md_arg->insert(logg.getEvent());
+
+
+				// verify if there's something to load before anything
+				if (has_smth_to_load == +Assistance::io__thread_ids::DRAWING) {
+					smth_to_load();
+					has_smth_to_load = -1;
+				}
+
+
 				thr_md_arg->start();
 
 				{
@@ -42,12 +50,10 @@ namespace LSW {
 					al_emit_user_event(&evsrc, &ev, NULL);
 				}
 
-				logg << L::SLL << fsr(__FUNCSIG__) << "In the loop!" << L::BLL;
+				logg << L::SLL << fsr(__FUNCSIG__) << "Creating local stuff..." << L::BLL;
+				
 
-				al_set_target_backbuffer(md->getDisplay());
-				al_convert_bitmaps();
-
-
+				Text* const mtt = texts.create("lastlogtext");
 				mtt->set(Assistance::io__text_string::FONT, "DEFAULT");
 				mtt->set(Assistance::io__text_string::STRING, "Syncronization in progress... (LOG)");
 				mtt->set(Assistance::io__text_string::ID, "lastlogtext");
@@ -59,18 +65,20 @@ namespace LSW {
 				mtt->set(Assistance::io__text_double::UPDATETIME, 1.0 / 5);
 				mtt->set(Assistance::io__text_boolean::AFFECTED_BY_CAM, false);
 
-				std::string mtt_s;
+				std::string mtt_s = "No new information";
 
 
+
+				logg << L::SLL << fsr(__FUNCSIG__) << "In the loop!" << L::BLL;
 				thr_md_upnrunnin = true;
 
 				for (bool localb = true; localb;)
 				{
 					while (pause_thr_md) Sleep(10);
 
-					if (has_smth_to_load) {
+					if (has_smth_to_load == +Assistance::io__thread_ids::DRAWING) {
 						smth_to_load();
-						has_smth_to_load = false;
+						has_smth_to_load = -1;
 					}
 
 					if (thr_md_arg->hasEvent()) {
@@ -178,6 +186,8 @@ namespace LSW {
 
 				logg << L::SLL << fsr(__FUNCSIG__) << "Closing stuff!" << L::BLL;
 
+				if (hasset_howto_unload) howto_unload();				
+
 				delete md;
 				md = nullptr;
 
@@ -221,6 +231,13 @@ namespace LSW {
 
 				thr_cl_arg = new __collision_routines();
 				thr_cl_arg->insert(&evsrc);
+
+				// verify if there's something to load before anything
+				if (has_smth_to_load == +Assistance::io__thread_ids::COLLIDING) {
+					smth_to_load();
+					has_smth_to_load = -1;
+				}
+
 				thr_cl_arg->start();
 
 
@@ -230,6 +247,10 @@ namespace LSW {
 
 				for (bool localb = true; localb;)
 				{
+					if (has_smth_to_load == +Assistance::io__thread_ids::COLLIDING) {
+						smth_to_load();
+						has_smth_to_load = -1;
+					}
 					while (pause_thr_cl) Sleep(10);
 
 					thr_cl_arg->hasEventWait();
@@ -290,6 +311,10 @@ namespace LSW {
 				Sprites sprites;
 				Database conf;
 
+				int display_x = 1280;
+				int display_y = 720;
+				bool isscreenfullscreen = false;
+
 				logg << L::SLL << fsr(__FUNCSIG__) << "Initializing..." << L::BLL;
 
 				thr_shared_arg.threadcountm.lock();
@@ -304,11 +329,11 @@ namespace LSW {
 				thr_kb_arg->insert(al_get_mouse_event_source());
 				thr_kb_arg->insert(&evsrc);
 
-
-
-				int display_x = 1280;
-				int display_y = 720;
-				bool isscreenfullscreen = false;
+				// verify if there's something to load before anything
+				if (has_smth_to_load == +Assistance::io__thread_ids::USERINPUT) {
+					smth_to_load();
+					has_smth_to_load = -1;
+				}
 
 				thr_kb_arg->start();
 
@@ -319,6 +344,10 @@ namespace LSW {
 
 				for (bool localb = true; localb;)
 				{
+					if (has_smth_to_load == +Assistance::io__thread_ids::USERINPUT) {
+						smth_to_load();
+						has_smth_to_load = -1;
+					}
 					while (pause_thr_kb) Sleep(10);
 
 					thr_kb_arg->hasEventWait();
@@ -479,22 +508,29 @@ namespace LSW {
 			return stillrunning;
 		}
 
-		void Console::throwToLoad(std::function<void(void)> f)
+		void Console::throwToLoad(const Assistance::io__thread_ids which, std::function<void(void)> f)
 		{
-			for (size_t p = 0; p < 100 && has_smth_to_load; p++) {
+			for (size_t p = 0; p < 100 && hasSmthToLoad(); p++) {
 				Sleep(50);
 			}
-			if (has_smth_to_load) {
+			if (has_smth_to_load >= 0) {
 				throw Abort::abort(__FUNCSIG__, "Had something to do and coulnd't end task!");
 				return;
 			}
 			smth_to_load = f;
-			has_smth_to_load = true;
+			has_smth_to_load = +which;
+			if (has_smth_to_load < 0) has_smth_to_load = +Assistance::io__thread_ids::DRAWING;
+		}
+
+		void Console::setUnloadWay(std::function<void(void)> f)
+		{
+			howto_unload = f;
+			hasset_howto_unload = true;
 		}
 
 		bool Console::hasSmthToLoad()
 		{
-			return has_smth_to_load;
+			return has_smth_to_load >= 0;
 		}
 
 		void Console::pauseThread(const Assistance::io__thread_ids o)

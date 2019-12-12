@@ -157,9 +157,30 @@ int main(int argc, const char* argv[])
 		tracks.set(Constants::lambda_default_load<Track>, Constants::lambda_default_unload<Track>);
 
 
-		consol.throwToLoad([&]() {
+
+
+
+
+
+		logg << L::SLL << fsr(__FUNCSIG__) << "Setting up load/unload function... (faster unload)" << L::BLL;
+
+		consol.setUnloadWay([&textures, &sprites, &texts, &fonts]() { sprites.clear(); texts.clear(); fonts.clear(); textures.clear(); });
+		consol.throwToLoad(Assistance::io__thread_ids::DRAWING, []() {
+
+			// raw allegro stuff
+			Textures textures;
+			Fonts fonts;
+			Samples samples;
+
+			// controllers
+			Tracks tracks;
+
+			gfile logg;
+
+			logg << L::SLL << fsr(__FUNCSIG__) << "Loading resources (lambda after function)" << L::BLL;
 
 			__g_sys.setInterface();
+
 
 			/*************************************************************************************
 
@@ -168,19 +189,22 @@ int main(int argc, const char* argv[])
 
 			**************************************************************************************/
 
+			// REALLY IMPORTANT TO LOAD BEFORE EVERYTHING, REALLY!
+			draw_simple_txt(fonts.load("DEFAULT", "font.ttf"), "LOADING...");
+			al_flip_display();
+			samples.load("LOADING", "musics/loading.ogg");
+
 
 			// need this to draw progress bar
-			fonts.load("DEFAULT", "font.ttf");
-			samples.load("LOADING", "musics/loading.ogg");
 			auto __introtrack = tracks.create("INTRO0");
 			__introtrack->set(Assistance::io__track_string::LOADID, "LOADING");
 			__introtrack->set(Assistance::io__track_boolean::PLAYING, true);
 			__introtrack->set(Assistance::io__track_integer::PLAYMODE, Assistance::io__track_integer_modes::LOOP);
 
 
-			float __progress = 0.00f;
-			bool hasProgressBarWorked = false;
-			std::thread __progress_bar([&__progress, &fonts, &hasProgressBarWorked] {
+			//float __progress = 0.00f;
+			//bool hasProgressBarWorked = false;
+			/*std::thread __progress_bar([&__progress, &fonts, &hasProgressBarWorked] {
 				Display* myd = new Display(300, 40, ALLEGRO_WINDOWED | ALLEGRO_NOFRAME, 60);
 				ALLEGRO_FONT* f;
 				float __smoothp = 0.00;
@@ -221,31 +245,20 @@ int main(int argc, const char* argv[])
 					Sleep(100);
 				}
 				delete myd;
-				});
+				});*/
 
-			__progress = 0.01f;
-
-
-			cp.setLayer(2, true);
-			cp.setLayer(3, true);
-			cp.setLayer(0, true);
-			cp.setLayer(1, true);
-			cp.setLayer(99, true);
-			//cp.set(Assistance::io__camera_float::OFFSET_Y, 2.6);
-
+			///__progress = 0.01f;
 
 			logg << L::SLL << fsr(__FUNCSIG__) << "Initializing display, events and stuff..." << L::BLL;
 
-			textures.load("BACKGROUND_START", "background_gameplay_start.png");
+			/*textures.load("BACKGROUND_START", "background_gameplay_start.png");
 			textures.load("BAR_OFF", "bar_single_one.png");
 			textures.load("BAR_ON", "bar_single_one_on.png");
 			textures.load("MOUSE", "mouse.png");
 			textures.load("MAIN_LOGO", "the_storm.png");
 
-
 			std::thread* lthr = nullptr;
 			float thrfloat = 0.00;
-
 			__progress = 0.03f;
 
 			lthr = new std::thread([&thrfloat, &__progress] {while (thrfloat != 1.00) { __progress = 0.03f + 0.05f * thrfloat; }});
@@ -260,34 +273,77 @@ int main(int argc, const char* argv[])
 			textures.load(Tools::genStrFormat("PAUSE_##", 29), Tools::genStrFormat("pause/pause_##.png", 29), &thrfloat);
 			lthr->join(); delete lthr; lthr = nullptr; thrfloat = 0.00;
 
+			*/
+
+			auto atlas_wild = textures.load("ATLAS0", "atlas0.png");
+			for (int q = 0; q < 8; q++) {
+				for (int p = 0; p < 4; p++) {
+					if ((q < 7) || (p == 0)) textures.customLoad("PAUSE_" + std::string((p + q * 4) < 10 ? "0" : "") + std::to_string(p + q * 4),
+						[&atlas_wild, &p, &q](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, p * 512, q * 128, 512, 128)); }
+					);
+				}
+			}
+			for (int q = 0; q < 22; q++) {
+				for (int p = 0; p < 4; p++) {
+					if ((q < 21) || (p == 0)) textures.customLoad("LOGO_" + std::string((p + q * 4) < 10 ? "0" : "") + std::to_string(p + q * 4),
+						[&atlas_wild, &p, &q](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, p * 512, q * 128, 512, 128)); }
+					);
+				}
+			}
+			textures.customLoad("BACKGROUND_START", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild,    0, 2560, 2048, 1154)); });
+			textures.customLoad("BAR_OFF",          [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild,  512, 1408, 1024,  128)); });
+			textures.customLoad("BAR_ON",           [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild,  512, 1280, 1024,  128)); });
+			textures.customLoad("MOUSE",            [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1536, 1024,  256,  256)); });
+			textures.customLoad("MAIN_LOGO",        [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild,  512, 1024, 1024,  512)); });
+
+			textures.customLoad("BLOCK_00",         [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild,    0, 1024, 512, 512)); }); /// DIRT
+			textures.customLoad("BLOCK_01",         [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild,    0, 1536, 512, 512)); }); /// BLOCK
+			textures.customLoad("BLOCK_02",         [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 2048, 1536, 512, 512)); }); ///	LIFE
+			textures.customLoad("BLOCK_03",         [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild,  512, 2048, 512, 512)); }); /// ?
+			textures.customLoad("BLOCK_04",         [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild,  512, 2048, 512, 512)); }); /// ?
+			textures.customLoad("BLOCK_05",         [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1024, 2048, 512, 512)); }); /// X
+			textures.customLoad("BLOCK_06",         [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild,  512, 1536, 512, 512)); }); /// DESTR 1
+			textures.customLoad("BLOCK_07",         [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1024, 1536, 512, 512)); }); /// DESTR 2
+			textures.customLoad("BLOCK_08",         [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1536, 1536, 512, 512)); }); /// DESTR 3
+			textures.customLoad("BLOCK_09",         [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild,    0, 2048, 512, 512)); }); /// DESTR 4
+
+
+
 			// 0.97
-			__progress = 0.990f;
-			samples.load("JUMP", "musics/jump_01.wav");
-			__progress = 0.9915f;
+			///__progress = 0.990f;
+			samples.load("JUMP",    "musics/jump_01.wav");
+			///__progress = 0.9915f;
 			samples.load("MUSIC_0", "musics/music_01.ogg");
-			__progress = 0.993f;
+			///__progress = 0.993f;
 			samples.load("MUSIC_1", "musics/music_02.ogg");
-			__progress = 0.9945f;
+			///__progress = 0.9945f;
 			samples.load("MUSIC_2", "musics/music_03.ogg");
-			__progress = 0.9960f;
-			samples.load("WALK", "musics/walk_01.wav");
+			///__progress = 0.9960f;
+			samples.load("WALK",    "musics/walk_01.wav");
 
 			//draw_simple_bar(250, 45, 0.92f); _progress_bar->flip();
-			__progress = 0.997f;
+			///__progress = 0.997f;
 
-			
+			al_convert_bitmaps();
 
-			__progress = 1.00f;
-			logg << L::SLL << fsr(__FUNCSIG__) << "Ending progress bar..." << L::BLL;
+			logg << L::SLL << fsr(__FUNCSIG__) << "Loaded everything." << L::BLL;
+
+			///__progress = 1.00f;
+			/*logg << L::SLL << fsr(__FUNCSIG__) << "Ending progress bar..." << L::BLL;
 			if (!hasProgressBarWorked) {
 				logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "Note: FONT was not available? How?" << L::BLL;
 				logg.flush();
-			}
-			__progress_bar.join(); // sync loading screen, can die
+			}*/
+			///__progress_bar.join(); // sync loading screen, can die
 
 		});
 
+		logg << L::SLL << fsr(__FUNCSIG__) << "Launching threads..." << L::BLL;
+
 		consol.start();
+
+		logg << L::SLL << fsr(__FUNCSIG__) << "Waiting initialization to be done..." << L::BLL;
+		while (!consol.isOpen()) Sleep(20);
 		
 
 		//draw_simple_bar(250, 45, 1.00f); _progress_bar->flip();
@@ -302,17 +358,24 @@ int main(int argc, const char* argv[])
 		/*************************************************************************************
 
 			# Main thread stuff:
-			> Game has started!
+			> Loading last resources...
 
 		**************************************************************************************/
 
 
 
-		logg << L::SLL << fsr(__FUNCSIG__) << "Waiting the end of initialization..." << L::BLL;
-		while (!consol.isOpen()) Sleep(20);
-		logg << L::SLL << fsr(__FUNCSIG__) << "Waiting last load..." << L::BLL;
+		cp.setLayer(2, true);
+		cp.setLayer(3, true);
+		cp.setLayer(0, true);
+		cp.setLayer(1, true);
+		cp.setLayer(99, true);
+		//cp.set(Assistance::io__camera_float::OFFSET_Y, 2.6);
+
+
+		
+		logg << L::SLL << fsr(__FUNCSIG__) << "Waiting lambda load to end..." << L::BLL;
 		while (consol.hasSmthToLoad()) Sleep(20);
-		logg << L::SLL << fsr(__FUNCSIG__) << "Tweaking last settings..." << L::BLL;
+		logg << L::SLL << fsr(__FUNCSIG__) << "Preparing sprites and starting game... (finally)" << L::BLL;
 
 		consol.pauseThread();
 
@@ -327,6 +390,7 @@ int main(int argc, const char* argv[])
 
 		auto mysprite = sprites.create("randomsprite");
 		mysprite->set(Assistance::io__sprite_string_vector::ADDMULTIPLE, Tools::genStrFormat("PAUSE_##", 29));
+		//mysprite->set(Assistance::io__sprite_string::ADD, "PAUSE_00");
 		mysprite->set(Assistance::io__sprite_string::ID, "randomsprite");
 		mysprite->set(Assistance::io__sprite_boolean::DRAW, true);
 		mysprite->set(Assistance::io__sprite_double::SCALEG, 0.7);
@@ -347,7 +411,6 @@ int main(int argc, const char* argv[])
 		//mytext->set(Assistance::io__text_double::POSY, 3.3);
 		mytext->set(Assistance::io__text_double::POSY, 0.75);
 
-		//draw_simple_bar(250, 45, 0.98f); _progress_bar->flip();
 
 		auto mytrack = tracks.create("randomtrack");
 		mytrack->set(Assistance::io__track_string::LOADID, "MUSIC_0");
@@ -355,7 +418,15 @@ int main(int argc, const char* argv[])
 		consol.resumeThread();
 
 
-		logg << L::SLL << fsr(__FUNCSIG__) << "Ready to go!" << L::BLL;
+		/*************************************************************************************
+
+			# Main thread ready:
+			> Game has "started"!
+
+		**************************************************************************************/
+
+
+		logg << L::SLL << fsr(__FUNCSIG__) << "Ready to go! Starting main!" << L::BLL;
 
 
 		size_t counttt = 0;
