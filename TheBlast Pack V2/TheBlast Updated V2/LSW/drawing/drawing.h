@@ -77,9 +77,9 @@ __slice("%num_entities%", +tags_e::T_ENTITIES_LOADED), __slice("%garbage_total%"
 __slice("%garbage_tracks%", +tags_e::T_TRACKS_GARBAGE), __slice("%garbage_entities%", +tags_e::T_ENTITIES_GARBAGE) };
 		}
 
-		void draw_simple_bar(const float, const ALLEGRO_COLOR = al_map_rgb(0, 0, 0));
+		void draw_simple_bar(const float, const ALLEGRO_COLOR = al_map_rgb(0, 0, 0), const float = 0.98, const float = 0.95); // w, h
 		void draw_confuse_rectangle(const float, const float, const float, const float, const ALLEGRO_COLOR, const ALLEGRO_COLOR, const ALLEGRO_COLOR, const ALLEGRO_COLOR);
-		void draw_simple_txt(ALLEGRO_FONT*, const std::string, ALLEGRO_COLOR = al_map_rgb(255,255,255), const int = ALLEGRO_ALIGN_CENTER);
+		void draw_simple_txt(ALLEGRO_FONT*, const std::string, ALLEGRO_COLOR = al_map_rgb(255,255,255), const int = ALLEGRO_ALIGN_CENTER, const float = 0.2);
 
 		class camera_preset {
 			float p[+Assistance::io__camera_float::size] = { 1.0,1.0,1.0,0.0,0.0,0.0,1.0 };

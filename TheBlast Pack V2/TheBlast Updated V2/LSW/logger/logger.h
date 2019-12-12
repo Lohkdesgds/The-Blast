@@ -131,10 +131,11 @@ namespace LSW {
 					if (i == '\n') {
 						ALLEGRO_EVENT evv;
 
+						memset(g.memline[g.memlinecount].line, '\0', Constants::each_line_stored_by_memlog);
 						size_t pp = 0;
 						for (auto& i : g.now) {
 							g.memline[g.memlinecount].line[pp++] = i;
-							if (pp >= 256) break;
+							if (pp >= Constants::each_line_stored_by_memlog) break;
 						}
 						
 						evv.user.data1 = (intptr_t)g.memline[g.memlinecount].line;

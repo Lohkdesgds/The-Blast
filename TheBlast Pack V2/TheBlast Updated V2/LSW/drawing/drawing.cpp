@@ -9,13 +9,13 @@ namespace LSW {
 
 
 
-		void draw_simple_bar(const float perc, const ALLEGRO_COLOR bg)
+		void draw_simple_bar(const float perc, const ALLEGRO_COLOR bg, const float w, const float h)
 		{
 			Camera gcam;
 			gcam.applyNoSave(camera_preset());
 			al_clear_to_color(bg);
 			ALLEGRO_COLOR clrs[] = { al_map_rgb(250 - perc * 200, 4, 5 + perc * 100),al_map_rgb(180 - perc * 140, 27, 80 + perc * 70),al_map_rgb(5, 200 + perc * 50, 0),al_map_rgb(115, 190 + perc * 50, 24) };
-			draw_confuse_rectangle(-0.98, -0.95, 1.96 * perc - 0.98, 0.95, clrs[0], clrs[1], clrs[2], clrs[3]);
+			draw_confuse_rectangle(-w, -h, 2 * w * perc - w, h, clrs[0], clrs[1], clrs[2], clrs[3]);
 		}
 
 		void draw_confuse_rectangle(const float x1, const float y1, const float x2, const float y2,
@@ -30,12 +30,12 @@ namespace LSW {
 			al_draw_prim(v, NULL, NULL, 0, 4, ALLEGRO_PRIM_TRIANGLE_STRIP);
 		}
 
-		void draw_simple_txt(ALLEGRO_FONT* f, const std::string s, ALLEGRO_COLOR c, const int flag)
+		void draw_simple_txt(ALLEGRO_FONT* f, const std::string s, ALLEGRO_COLOR c, const int flag, const float scale)
 		{
 			Camera gcam;
 			camera_preset cp;
-			cp.set(Assistance::io__camera_float::SCALE_G, 0.2 / Constants::text_default_sharpness_font);
-			cp.set(Assistance::io__camera_float::SCALE_Y, 3.5);
+			cp.set(Assistance::io__camera_float::SCALE_G, scale / Constants::text_default_sharpness_font);
+			cp.set(Assistance::io__camera_float::SCALE_Y, 2.5);
 			gcam.applyNoSave(cp);
 			al_draw_text(f, c, 0, - 0.6 * Constants::text_default_sharpness_font, flag, s.c_str());
 			gcam.apply();
