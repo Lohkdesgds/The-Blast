@@ -37,7 +37,7 @@ namespace LSW {
 			enum class io__sprite_string		{ ADD, REMOVE, ID };
 			enum class io__sprite_double		{ POSX, POSY, SCALEX, SCALEY, CENTERX, CENTERY, SCALEG, ROTATION /*DEGREES*/, SPEEDX, SPEEDY, SPEEDROT, SMOOTHNESS_X, SMOOTHNESS_Y, size, /* since here they are not Sprite exactly stuff*/ ANIMATION_FPS };
 			enum class ro__sprite_target_double { TARG_POSX, TARG_POSY, TARG_ROTATION, INTERN_LASTDRAW, size};
-			enum class io__sprite_boolean		{ DRAW, COLLIDE, IS_COLLIDING, AFFECTED_BY_COLLISION, AFFECTED_BY_CAM, SHOWDOT, SHOWBOX, FOLLOWMOUSE, FOLLOWKEYBOARD, USE_TINTED_DRAWING, size, /* since here they are not Sprite exactly stuff*/ LOOPFRAMES };
+			enum class io__sprite_boolean		{ DRAW, COLLIDE, AFFECTED_BY_COLLISION, AFFECTED_BY_CAM, SHOWDOT, SHOWBOX, FOLLOWMOUSE, FOLLOWKEYBOARD, USE_TINTED_DRAWING, IS_COLLIDING, size, /* since here they are not Sprite exactly stuff*/ LOOPFRAMES, HAS_DONE_LOOPONCE };
 			enum class io__sprite_integer		{ LAYER, size };
 			enum class io__sprite_sizet			{ SIZE, FRAME, size };
 			enum class io__sprite_color			{ TINT, size };
@@ -141,6 +141,7 @@ __slice("%garbage_tracks%", +tags_e::T_TRACKS_GARBAGE), __slice("%garbage_entiti
 				double lastcall = 0;
 				size_t actual = 0;
 				bool loopin = true;
+				bool hasdoneloop = false;
 
 				struct  __custom_data { // local yes
 					ALLEGRO_BITMAP* bmp = nullptr;
@@ -154,6 +155,7 @@ __slice("%garbage_tracks%", +tags_e::T_TRACKS_GARBAGE), __slice("%garbage_entiti
 				void remove(const std::string);
 				void setFPS(const double = 0); // 0 = no cycle, < 0 = static one (-1 == first aka 0), x > 0 = x changes per sec
 				void loop(const bool = true);
+				bool hasloopended();
 				void reset(); // default settings
 				void clear(); // copies.clear();
 			};

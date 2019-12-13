@@ -64,6 +64,7 @@ namespace LSW {
 				mtt->set(Assistance::io__text_integer::MODE, +Assistance::io___alignment_text::ALIGN_LEFT);
 				mtt->set(Assistance::io__text_double::UPDATETIME, 1.0 / 5);
 				mtt->set(Assistance::io__text_boolean::AFFECTED_BY_CAM, false);
+				mtt->set(Assistance::io__text_integer::LAYER, -10);
 
 				std::string mtt_s = "No new information";
 
@@ -531,6 +532,19 @@ namespace LSW {
 		bool Console::hasSmthToLoad()
 		{
 			return has_smth_to_load >= 0;
+		}
+
+		size_t Console::getCallsPerSecondOnThread(const Assistance::io__thread_ids o)
+		{
+			switch (o) {
+			case Assistance::io__thread_ids::DRAWING:
+				return thr_md_arg->getNumCalls();
+			case Assistance::io__thread_ids::COLLIDING:
+				return thr_cl_arg->getNumCalls();
+			case Assistance::io__thread_ids::USERINPUT:
+				return thr_kb_arg->getNumCalls();
+			}
+			return 0;
 		}
 
 		void Console::pauseThread(const Assistance::io__thread_ids o)

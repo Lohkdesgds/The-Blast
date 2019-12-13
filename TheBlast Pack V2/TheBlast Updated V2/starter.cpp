@@ -10,97 +10,8 @@ extern "C" {
 	_declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
 }
 
-// example FS
-/*static void show_image(ALLEGRO_BITMAP* bmp)
-{
-	ALLEGRO_EVENT_QUEUE* queue;
-	ALLEGRO_EVENT event;
 
-	queue = al_create_event_queue();
-	al_register_event_source(queue, al_get_keyboard_event_source());
-
-	while (true) {
-		al_clear_to_color(al_map_rgb(0, 0, 0));
-		al_draw_bitmap(bmp, 0, 0, 0);
-		al_flip_display();
-		if (al_get_next_event(queue, &event)) {
-			if (event.type == ALLEGRO_EVENT_KEY_DOWN
-				&& event.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
-				break;
-			}
-		}
-	}
-
-	al_destroy_event_queue(queue);
-}
-
-static void print_file(ALLEGRO_FS_ENTRY* entry)
-{
-	int mode = al_get_fs_entry_mode(entry);
-	time_t now = time(NULL);
-	time_t atime = al_get_fs_entry_atime(entry);
-	time_t ctime = al_get_fs_entry_ctime(entry);
-	time_t mtime = al_get_fs_entry_mtime(entry);
-	const char* name = al_get_fs_entry_name(entry);
-	off_t size = al_get_fs_entry_size(entry);
-
-	printf_s("%-36s %s%s%s%s%s%s %8u %8u %8u %8u\n",
-		name,
-		mode & ALLEGRO_FILEMODE_READ ? "r" : ".",
-		mode & ALLEGRO_FILEMODE_WRITE ? "w" : ".",
-		mode & ALLEGRO_FILEMODE_EXECUTE ? "x" : ".",
-		mode & ALLEGRO_FILEMODE_HIDDEN ? "h" : ".",
-		mode & ALLEGRO_FILEMODE_ISFILE ? "f" : ".",
-		mode & ALLEGRO_FILEMODE_ISDIR ? "d" : ".",
-		(unsigned)(now - ctime),
-		(unsigned)(now - mtime),
-		(unsigned)(now - atime),
-		(unsigned)size);
-}
-
-static void listdir(ALLEGRO_FS_ENTRY* entry)
-{
-	ALLEGRO_FS_ENTRY* next;
-
-	al_open_directory(entry);
-	while (1) {
-		next = al_read_directory(entry);
-		if (!next)
-			break;
-
-		print_file(next);
-		if (al_get_fs_entry_mode(next) & ALLEGRO_FILEMODE_ISDIR)
-			listdir(next);
-		al_destroy_fs_entry(next);
-	}
-	al_close_directory(entry);
-}
-
-// main
-ALLEGRO_FS_ENTRY* entry;
-
-
-	 //Make future calls to al_fopen() on this thread go to the PhysicsFS
-	 //backend.
-
-
-	 //List the contents of our example zip recursively.
-
-printf_s("%-36s %-6s %8s %8s %8s %8s\n",
-	"name", "flags", "ctime", "mtime", "atime", "size");
-printf_s(
-	"------------------------------------ "
-	"------ "
-	"-------- "
-	"-------- "
-	"-------- "
-	"--------\n");
-entry = al_create_fs_entry("");
-listdir(entry);
-al_destroy_fs_entry(entry);
-
-
-*/
+enum class main_gamemodes { LOADING = -1, MENU, OPTIONS, PAUSE, GAMING };
 
 int main(int argc, const char* argv[])
 {
@@ -132,7 +43,8 @@ int main(int argc, const char* argv[])
 
 		// others
 		Camera gcam;
-		camera_preset cp;
+		//camera_preset cp;
+
 		Mixer mixer; // init audio mixer
 
 		Console consol;
@@ -157,17 +69,12 @@ int main(int argc, const char* argv[])
 		tracks.set(Constants::lambda_default_load<Track>, Constants::lambda_default_unload<Track>);
 
 
-
-
-
-
-
 		logg << L::SLL << fsr(__FUNCSIG__) << "Setting up load/unload function... (faster unload)" << L::BLL;
 
 		consol.setUnloadWay([&textures, &sprites, &texts, &fonts]() { sprites.clear(); texts.clear(); fonts.clear(); textures.clear(); });
 		consol.throwToLoad(Assistance::io__thread_ids::DRAWING, []() {
 
-			const double animsize[2] = {0.35, 0.07};
+			const double animsize[2] = { 0.35, 0.07 };
 
 			// raw allegro stuff
 			Textures textures;
@@ -252,7 +159,7 @@ int main(int argc, const char* argv[])
 				delete myd;
 				});*/
 
-			///__progress = 0.01f;
+				///__progress = 0.01f;
 
 			logg << L::SLL << fsr(__FUNCSIG__) << "Initializing display, events and stuff..." << L::BLL;
 
@@ -283,7 +190,7 @@ int main(int argc, const char* argv[])
 			draw_simple_bar(0.10, al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Loading atlas...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
 
 			auto atlas_wild = textures.load("ATLAS0", "atlas0.png");
-			
+
 			for (int q = 0; q < 8; q++) {
 				for (int p = 0; p < 4; p++) {
 					if ((q < 7) || (p == 0)) {
@@ -291,7 +198,7 @@ int main(int argc, const char* argv[])
 							[&atlas_wild, &p, &q](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, p * 512, q * 128, 512, 128)); }
 						);
 
-						draw_simple_bar(0.10 + ((p + q * 4) * 0.25f/31), al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Loading pause animation #" + std::string((p + q * 4) < 10 ? "0" : "") + std::to_string(p + q * 4) + "...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
+						draw_simple_bar(0.10 + ((p + q * 4) * 0.25f / 31), al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Loading pause animation #" + std::string((p + q * 4) < 10 ? "0" : "") + std::to_string(p + q * 4) + "...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
 					}
 				}
 			}
@@ -299,7 +206,7 @@ int main(int argc, const char* argv[])
 				for (int p = 0; p < 4; p++) {
 					if ((q < 21) || (p == 0)) {
 						textures.customLoad("LOGO_" + std::string((p + q * 4) < 10 ? "0" : "") + std::to_string(p + q * 4),
-							[&atlas_wild, &p, &q](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, p * 512, q * 128, 512, 128)); }
+							[&atlas_wild, &p, &q](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, p * 512 + 2048, q * 128, 512, 128)); }
 						);
 
 						draw_simple_bar(0.35 + ((p + q * 4) * 0.45f / 87), al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Loading logo animation #" + std::string((p + q * 4) < 10 ? "0" : "") + std::to_string(p + q * 4) + "...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
@@ -310,30 +217,30 @@ int main(int argc, const char* argv[])
 			draw_simple_bar(0.80, al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Loading main textures...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
 
 
-			textures.customLoad("BACKGROUND_START", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild,    0, 2560, 2048, 1154)); });
-			textures.customLoad("BAR_OFF",          [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild,  512, 1408, 1024,  128)); });
-			textures.customLoad("BAR_ON",           [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild,  512, 1280, 1024,  128)); });
-			textures.customLoad("MOUSE",            [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1536, 1024,  256,  256)); });
-			textures.customLoad("MAIN_LOGO",        [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild,  512, 1024, 1024,  512)); });
+			textures.customLoad("BACKGROUND_START", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 0, 2560, 2048, 1154)); });
+			textures.customLoad("BAR_OFF", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512, 1408, 1024, 128)); });
+			textures.customLoad("BAR_ON", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512, 1280, 1024, 128)); });
+			textures.customLoad("MOUSE", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1536, 1024, 256, 256)); });
+			textures.customLoad("MAIN_LOGO", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512, 1024, 1024, 512)); });
 
 
 			draw_simple_bar(0.85, al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Loading blocks...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
 
-			textures.customLoad("BLOCK_00",         [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild,    0, 1024, 512, 512)); }); /// DIRT
-			textures.customLoad("BLOCK_01",         [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild,    0, 1536, 512, 512)); }); /// BLOCK
-			textures.customLoad("BLOCK_02",         [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 2048, 1536, 512, 512)); }); ///	LIFE
-			textures.customLoad("BLOCK_03",         [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild,  512, 2048, 512, 512)); }); /// ?
-			textures.customLoad("BLOCK_04",         [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild,  512, 2048, 512, 512)); }); /// ?
-			textures.customLoad("BLOCK_05",         [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1024, 2048, 512, 512)); }); /// X
-			textures.customLoad("BLOCK_06",         [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild,  512, 1536, 512, 512)); }); /// DESTR 1
-			textures.customLoad("BLOCK_07",         [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1024, 1536, 512, 512)); }); /// DESTR 2
-			textures.customLoad("BLOCK_08",         [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1536, 1536, 512, 512)); }); /// DESTR 3
-			textures.customLoad("BLOCK_09",         [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild,    0, 2048, 512, 512)); }); /// DESTR 4
+			textures.customLoad("BLOCK_00", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 0, 1024, 512, 512)); }); /// DIRT
+			textures.customLoad("BLOCK_01", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 0, 1536, 512, 512)); }); /// BLOCK
+			textures.customLoad("BLOCK_02", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 2048, 1536, 512, 512)); }); ///	LIFE
+			textures.customLoad("BLOCK_03", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512, 2048, 512, 512)); }); /// ?
+			textures.customLoad("BLOCK_04", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512, 2048, 512, 512)); }); /// ?
+			textures.customLoad("BLOCK_05", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1024, 2048, 512, 512)); }); /// X
+			textures.customLoad("BLOCK_06", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512, 1536, 512, 512)); }); /// DESTR 1
+			textures.customLoad("BLOCK_07", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1024, 1536, 512, 512)); }); /// DESTR 2
+			textures.customLoad("BLOCK_08", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1536, 1536, 512, 512)); }); /// DESTR 3
+			textures.customLoad("BLOCK_09", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 0, 2048, 512, 512)); }); /// DESTR 4
 
 
 
 			draw_simple_bar(0.87, al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Loading jump...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
-			samples.load("JUMP",    "musics/jump_01.wav");
+			samples.load("JUMP", "musics/jump_01.wav");
 			draw_simple_bar(0.89, al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Loading main menu music...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
 			samples.load("MUSIC_0", "musics/music_01.ogg");
 			draw_simple_bar(0.91, al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Loading alt menu music...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
@@ -341,10 +248,8 @@ int main(int argc, const char* argv[])
 			draw_simple_bar(0.93, al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Loading game music...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
 			samples.load("MUSIC_2", "musics/music_03.ogg");
 			draw_simple_bar(0.95, al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Loading walk...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
-			samples.load("WALK",    "musics/walk_01.wav");
+			samples.load("WALK", "musics/walk_01.wav");
 
-			//draw_simple_bar(250, 45, 0.92f); _progress_bar->flip();
-			///__progress = 0.997f;
 
 			draw_simple_bar(0.98, al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Verifying self existance...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
 
@@ -354,15 +259,8 @@ int main(int argc, const char* argv[])
 
 			draw_simple_bar(0.99, al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Starting game...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
 
-			///__progress = 1.00f;
-			/*logg << L::SLL << fsr(__FUNCSIG__) << "Ending progress bar..." << L::BLL;
-			if (!hasProgressBarWorked) {
-				logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "Note: FONT was not available? How?" << L::BLL;
-				logg.flush();
-			}*/
-			///__progress_bar.join(); // sync loading screen, can die
 
-		});
+			});
 
 		logg << L::SLL << fsr(__FUNCSIG__) << "Launching threads..." << L::BLL;
 
@@ -370,15 +268,11 @@ int main(int argc, const char* argv[])
 
 		logg << L::SLL << fsr(__FUNCSIG__) << "Waiting initialization to be done..." << L::BLL;
 		while (!consol.isOpen()) Sleep(20);
-		
-
-		//draw_simple_bar(250, 45, 1.00f); _progress_bar->flip();
 
 
-		//Sleep(2000);
-
-		/*delete _progress_bar;
-		_progress_bar = nullptr;*/
+		logg << L::SLL << fsr(__FUNCSIG__) << "Waiting lambda load to end..." << L::BLL;
+		while (consol.hasSmthToLoad()) Sleep(20);
+		logg << L::SLL << fsr(__FUNCSIG__) << "Preparing sprites and starting game... (finally)" << L::BLL;
 
 
 		/*************************************************************************************
@@ -388,44 +282,82 @@ int main(int argc, const char* argv[])
 
 		**************************************************************************************/
 
-
-
-		cp.setLayer(2, true);
+		/*cp.setLayer(2, true);
 		cp.setLayer(3, true);
 		cp.setLayer(0, true);
 		cp.setLayer(1, true);
-		cp.setLayer(99, true);
+		cp.setLayer(99, true);*/
 		//cp.set(Assistance::io__camera_float::OFFSET_Y, 2.6);
 
 
-		
-		logg << L::SLL << fsr(__FUNCSIG__) << "Waiting lambda load to end..." << L::BLL;
-		while (consol.hasSmthToLoad()) Sleep(20);
-		logg << L::SLL << fsr(__FUNCSIG__) << "Preparing sprites and starting game... (finally)" << L::BLL;
-
 		consol.pauseThread();
+		
+		{
+			camera_preset cp = camera_preset();
 
-		auto mouse = sprites.create("MOUSE");
-		mouse->set(Assistance::io__sprite_boolean::FOLLOWMOUSE, true);
-		mouse->set(Assistance::io__sprite_boolean::AFFECTED_BY_CAM, false);
-		mouse->set(Assistance::io__sprite_double::SCALEG, 0.2);
-		mouse->set(Assistance::io__sprite_string::ADD, "MOUSE");
-		mouse->set(Assistance::io__sprite_integer::LAYER, 99);
-		mouse->set(Assistance::io__sprite_double::SPEEDROT, 15.0 / 10);
+			// loading
+			cp.setLayer(-50, true);
+			gcam.set(cp, +main_gamemodes::LOADING);
+
+			// menu
+			cp = camera_preset();
+			cp.setLayer(-10, true);
+			cp.setLayer(99, true); // mouse
+			gcam.set(cp, +main_gamemodes::MENU);
+
+			// options
+			cp = camera_preset();
+			cp.setLayer(-9, true);
+			cp.setLayer(99, true); // mouse
+			gcam.set(cp, +main_gamemodes::OPTIONS);
+
+			// pause
+			cp = camera_preset();
+			cp.setLayer(-1, true);
+			cp.setLayer(99, true); // mouse
+			gcam.set(cp, +main_gamemodes::PAUSE);
+
+			// game
+			cp = camera_preset();
+			cp.setLayer(0, true);
+			gcam.set(cp, +main_gamemodes::GAMING);
+		}
+
+		gcam.apply(+main_gamemodes::LOADING); // first
 
 
-		auto mysprite = sprites.create("randomsprite");
-		mysprite->set(Assistance::io__sprite_string_vector::ADDMULTIPLE, Tools::genStrFormat("PAUSE_##", 29));
-		//mysprite->set(Assistance::io__sprite_string::ADD, "PAUSE_00");
-		mysprite->set(Assistance::io__sprite_string::ID, "randomsprite");
-		mysprite->set(Assistance::io__sprite_boolean::DRAW, true);
-		mysprite->set(Assistance::io__sprite_double::SCALEG, 0.7);
-		//mysprite->apply(Assistance::io__sprite_double::POSX, 0.3 * sin(0.7 + 0.91 * al_get_time()));
-		//mysprite->apply(Assistance::io__sprite_double::POSY, -1.5 + 0.2 * cos(0.4 + 0.65 * al_get_time()));
-		//mysprite->apply(Assistance::io__sprite_double::POSY, 2.80); // 3.20
-		mysprite->set(Assistance::io__sprite_double::POSY, 0.50); // 3.20
 
-		//draw_simple_bar(250, 45, 0.95f); _progress_bar->flip();
+		{
+			Sprite* s = sprites.create("MOUSE");
+			s->set(Assistance::io__sprite_boolean::FOLLOWMOUSE, true);
+			s->set(Assistance::io__sprite_boolean::AFFECTED_BY_CAM, false);
+			s->set(Assistance::io__sprite_double::SCALEG, 0.2);
+			s->set(Assistance::io__sprite_string::ADD, "MOUSE");
+			s->set(Assistance::io__sprite_integer::LAYER, 99);
+			s->set(Assistance::io__sprite_double::SPEEDROT, 15.0 / 10);
+		}
+
+		{
+			Sprite* s = sprites.create("PAUSE_ANIM");
+			s->set(Assistance::io__sprite_string_vector::ADDMULTIPLE, Tools::genStrFormat("PAUSE_##", 29));
+			s->set(Assistance::io__sprite_string::ID, "PAUSE_ANIM");
+			s->set(Assistance::io__sprite_double::SCALEG, 0.55);
+			s->set(Assistance::io__sprite_double::POSY, -0.35);
+			s->set(Assistance::io__sprite_double::ANIMATION_FPS, 24);
+			s->set(Assistance::io__sprite_integer::LAYER, -10);
+		}
+
+		{
+			Sprite* s = sprites.create("LOADING_ANIM");
+			s->set(Assistance::io__sprite_string_vector::ADDMULTIPLE, Tools::genStrFormat("LOGO_##", 85));
+			s->set(Assistance::io__sprite_string::ID, "LOADING_ANIM");
+			s->set(Assistance::io__sprite_double::SCALEG, 0.4);
+			s->set(Assistance::io__sprite_double::SCALEX, 1.4);
+			s->set(Assistance::io__sprite_integer::LAYER, -50);
+			s->set(Assistance::io__sprite_double::ANIMATION_FPS, 20);
+			s->set(Assistance::io__sprite_boolean::LOOPFRAMES, false);
+		}
+
 
 
 		auto mytext = texts.create("randomtext");
@@ -434,8 +366,8 @@ int main(int argc, const char* argv[])
 		mytext->set(Assistance::io__text_string::ID, "randomtext");
 		mytext->set(Assistance::io__text_boolean::SHOW, true);
 		mytext->set(Assistance::io__text_double::SCALEG, 0.1);
-		//mytext->set(Assistance::io__text_double::POSY, 3.3);
-		mytext->set(Assistance::io__text_double::POSY, 0.75);
+		mytext->set(Assistance::io__text_double::POSY, 0.65);
+		mytext->set(Assistance::io__text_integer::LAYER, -10);
 
 
 		auto mytrack = tracks.create("randomtrack");
@@ -451,31 +383,51 @@ int main(int argc, const char* argv[])
 
 		**************************************************************************************/
 
+		main_gamemodes modern = main_gamemodes::LOADING;
+
 
 		logg << L::SLL << fsr(__FUNCSIG__) << "Ready to go! Starting main!" << L::BLL;
 
+		// LOADING PART
+		{
+			Sprite* s = nullptr;
+			if (!sprites.get("LOADING_ANIM", s)) throw Abort::abort(__FUNCSIG__, "It wasn't supposed to not find a sprite here!");
+
+			bool b = false;
+			do {
+				s->get(Assistance::io__sprite_boolean::HAS_DONE_LOOPONCE, b);
+			} while (!b && consol.isRunning());
+
+			Sleep(2000);
+			gcam.apply(+main_gamemodes::MENU);
+			modern = main_gamemodes::MENU;
+		}
+
 
 		size_t counttt = 0;
+		auto copy = gcam.get(); // later idk just have a copy here k?
+
 		//__introtrack->set(io__track_boolean::PLAYING, false);
 
 		while (consol.isRunning()) {
 			Sleep(25);
 
 
-			mytext->set(Assistance::io__text_string::STRING, "Main loop counter:" + std::to_string(counttt++));
+			mytext->set(Assistance::io__text_string::STRING, "COUNTER " + std::to_string(counttt++) + " | FPS = " + std::to_string(consol.getCallsPerSecondOnThread(Assistance::io__thread_ids::DRAWING)));
 
 			//mysprite->apply(Assistance::io__sprite_double::POSX, 0.3 * sin(0.7 + 0.91 * al_get_time()));
 			//mysprite->apply(Assistance::io__sprite_double::POSY, - 1.5 + 0.2 * cos(0.4 + 0.65 * al_get_time()));
 
-			cp.set(Assistance::io__camera_float::ROTATION, al_get_time() * 0.25);
+			//cp.set(Assistance::io__camera_float::ROTATION, al_get_time() * 0.25);
 			//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "ANG=" << (float)((int)(0.3 * (1800.0 / ALLEGRO_PI) * al_get_time())%3600)/10.0 << L::BL;
-			cp.set(Assistance::io__camera_float::ROTATION, 0.3 * al_get_time());
+			//cp.set(Assistance::io__camera_float::ROTATION, 0.3 * al_get_time());
+			gcam.get().set(Assistance::io__camera_float::ROTATION, 0.3 * al_get_time());
+			gcam.apply();
 
-			gcam.set(cp, 0);
+			//gcam.set(cp, 0);
 			//gcam.apply(0);
 		}
-
-
+		
 
 		logg << L::SLL << fsr(__FUNCSIG__) << "Closing game..." << L::BLL;
 

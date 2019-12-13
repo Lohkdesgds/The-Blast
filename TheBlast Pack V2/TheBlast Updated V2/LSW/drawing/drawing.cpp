@@ -204,9 +204,21 @@ namespace LSW {
 			if (lastcall == 0 || difftimeanim <= 0) lastcall = now;
 
 			if (difftimeanim > 0 && siz > 1) {
+				if ((now - lastcall) > difftimeanim * 10) { // skip if so far behind
+					lastcall = now - difftimeanim * 10;
+				}
 				while ((now - lastcall) > difftimeanim)
 				{
-					if (++actual == siz) actual = 0;
+					if (!loopin) {
+						if (actual < siz - 1) actual++;
+						else {
+							hasdoneloop = true;
+						}
+					}
+					else {
+						if (++actual >= siz) actual = 0;
+					}
+
 					lastcall += difftimeanim;
 				}
 			}
@@ -244,6 +256,7 @@ namespace LSW {
 		}
 		void Sprite::__sprite_smart_images::setFPS(const double v)
 		{
+			lastcall = 0;
 			if (v < 0) {
 				difftimeanim = 0;
 				actual = -(int)v;
@@ -258,6 +271,13 @@ namespace LSW {
 		void Sprite::__sprite_smart_images::loop(const bool b)
 		{
 			loopin = b;
+			hasdoneloop = false;
+		}
+		bool Sprite::__sprite_smart_images::hasloopended()
+		{
+			bool r = hasdoneloop;
+			hasdoneloop = false;
+			return r;
 		}
 		void Sprite::__sprite_smart_images::reset()
 		{
@@ -355,6 +375,9 @@ namespace LSW {
 			case Assistance::io__sprite_boolean::LOOPFRAMES:
 				bmps.loop(v);
 				break;
+			case Assistance::io__sprite_boolean::HAS_DONE_LOOPONCE:
+				// nothing to do
+				break;
 			default:
 				data.bval[+u] = v;
 				break;
@@ -418,6 +441,9 @@ namespace LSW {
 			case Assistance::io__sprite_boolean::LOOPFRAMES:
 				// no way
 				return false;
+			case Assistance::io__sprite_boolean::HAS_DONE_LOOPONCE:
+				v = bmps.hasloopended();
+				return true;
 			default:
 				v = data.bval[+u];
 				return true;

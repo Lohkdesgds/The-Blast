@@ -115,6 +115,8 @@ namespace LSW {
 			void setUnloadWay(std::function<void(void)>);
 			bool hasSmthToLoad();
 
+			size_t getCallsPerSecondOnThread(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);
+
 			void pauseThread(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);
 			void resumeThread(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);
 		};
