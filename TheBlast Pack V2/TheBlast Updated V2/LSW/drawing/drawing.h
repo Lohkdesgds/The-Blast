@@ -62,19 +62,16 @@ namespace LSW {
 				const int i() const { return p; }
 			};
 
-			enum class tags_e {T_POSX,T_POSY,T_SCREEN_POSX,T_SCREEN_POSY,T_ISFOLLOWING,T_COLOR_R,T_COLOR_G,T_COLOR_B,T_COLOR_A,T_MODE,T_TIME,T_ISUSINGBUF,T_GB_RESX,T_GB_RESY,T_REFRESHRATE,T_FPS,T_TPS_COUNT,T_TPS_COLLISION,T_TPS_FUNCTIONS,T_TPS_SECOND_TAKEN,T_TPS_POSUPDATE,
-T_SPRITE_FRAME,T_CAM_X,T_CAM_Y,T_CAM_ZOOM,T_CAM_ZOOMX,T_CAM_ZOOMY,T_CURRSTRING,T_LASTSTRING,T_MOUSE_X,T_MOUSE_Y,T_SPRITE_SPEEDX,T_SPRITE_SPEEDY,T_SPRITE_NAME,T_SPRITE_ENTITY_NAME,T_SPRITE_ENTITY_HEALTH,T_IMAGES_LOADED,T_SPRITES_LOADED,T_TEXTS_LOADED,T_TRACKS_LOADED,T_ENTITIES_LOADED,
-T_GARBAGE_TOTAL,T_IMAGES_GARBAGE,T_SPRITES_GARBAGE,T_TEXTS_GARBAGE,T_TRACKS_GARBAGE,T_ENTITIES_GARBAGE };
+			enum class tags_e {T_POSX,T_POSY,T_SCREEN_POSX,T_SCREEN_POSY,T_ISFOLLOWING,T_COLOR_R,T_COLOR_G,T_COLOR_B,T_COLOR_A,T_MODE,T_TIME,T_ISUSINGBUF,T_GB_RESX,T_GB_RESY,T_REFRESHRATE,T_FPS,T_TPS,T_UPS,T_SPRITE_FRAME,T_CAM_X,T_CAM_Y,T_CAM_ZOOM,T_CAM_ZOOMX,T_CAM_ZOOMY,
+				T_CURRSTRING,T_LASTSTRING,T_MOUSE_X,T_MOUSE_Y,T_SPRITE_SPEEDX,T_SPRITE_SPEEDY,T_SPRITE_NAME,T_SPRITE_ENTITY_NAME,T_SPRITE_ENTITY_HEALTH,T_IMAGES_LOADED,T_SPRITES_LOADED,T_TEXTS_LOADED,T_TRACKS_LOADED,T_ENTITIES_LOADED };
 
 			const __slice tags[] = { __slice("%pos_x%", +tags_e::T_POSX),  __slice("%pos_y%", +tags_e::T_POSY), __slice("%screen_pos_x%", +tags_e::T_SCREEN_POSX), __slice("%screen_pos_y%", +tags_e::T_SCREEN_POSY), __slice("%is_following%", +tags_e::T_ISFOLLOWING),
 __slice("%color_r%", +tags_e::T_COLOR_R), __slice("%color_g%", +tags_e::T_COLOR_G), __slice("%color_b%", +tags_e::T_COLOR_B), __slice("%color_a%", +tags_e::T_COLOR_A), __slice("%mode%", +tags_e::T_MODE), __slice("%time%", +tags_e::T_TIME), __slice("%is_using_buf%", +tags_e::T_ISUSINGBUF),
-__slice("%g_b_res_x%", +tags_e::T_GB_RESX), __slice("%g_b_res_y%", +tags_e::T_GB_RESY), __slice("%base_refresh_rate%", +tags_e::T_REFRESHRATE), __slice("%fps%", +tags_e::T_FPS), __slice("%tps%", +tags_e::T_TPS_COUNT), __slice("%tps_col%", +tags_e::T_TPS_COLLISION),
-__slice("%tps_funcs%", +tags_e::T_TPS_FUNCTIONS), __slice("%tps_second%", +tags_e::T_TPS_SECOND_TAKEN), __slice("%tps_posupd%", +tags_e::T_TPS_POSUPDATE), __slice("%sprite_frame%", +tags_e::T_SPRITE_FRAME), __slice("%cam_x%", +tags_e::T_CAM_X), __slice("%cam_y%", +tags_e::T_CAM_Y),
+__slice("%g_b_res_x%", +tags_e::T_GB_RESX), __slice("%g_b_res_y%", +tags_e::T_GB_RESY), __slice("%base_refresh_rate%", +tags_e::T_REFRESHRATE), __slice("%fps%", +tags_e::T_FPS), __slice("%tps%", +tags_e::T_TPS), __slice("%ups%", +tags_e::T_UPS), __slice("%sprite_frame%", +tags_e::T_SPRITE_FRAME), __slice("%cam_x%", +tags_e::T_CAM_X), __slice("%cam_y%", +tags_e::T_CAM_Y),
 __slice("%cam_zoom%", +tags_e::T_CAM_ZOOM), __slice("%cam_zoom_x%", +tags_e::T_CAM_ZOOMX), __slice("%cam_zoom_y%", +tags_e::T_CAM_ZOOMY), __slice("%curr_string%", +tags_e::T_CURRSTRING), __slice("%last_string%", +tags_e::T_LASTSTRING), __slice("%mouse_x%", +tags_e::T_MOUSE_X),
 __slice("%mouse_y%", +tags_e::T_MOUSE_Y),  __slice("%sprite_speed_x%", +tags_e::T_SPRITE_SPEEDX), __slice("%sprite_speed_y%", +tags_e::T_SPRITE_SPEEDY), __slice("%sprite_name%", +tags_e::T_SPRITE_NAME), __slice("%entity_name%", +tags_e::T_SPRITE_ENTITY_NAME),
 __slice("%entity_health%", +tags_e::T_SPRITE_ENTITY_HEALTH), __slice("%num_images%", +tags_e::T_IMAGES_LOADED), __slice("%num_sprites%", +tags_e::T_SPRITES_LOADED), __slice("%num_texts%", +tags_e::T_TEXTS_LOADED), __slice("%num_tracks%", +tags_e::T_TRACKS_LOADED),
-__slice("%num_entities%", +tags_e::T_ENTITIES_LOADED), __slice("%garbage_total%", +tags_e::T_GARBAGE_TOTAL), __slice("%garbage_images%", +tags_e::T_IMAGES_GARBAGE), __slice("%garbage_sprites%", +tags_e::T_SPRITES_GARBAGE), __slice("%garbage_texts%", +tags_e::T_TEXTS_GARBAGE),
-__slice("%garbage_tracks%", +tags_e::T_TRACKS_GARBAGE), __slice("%garbage_entities%", +tags_e::T_ENTITIES_GARBAGE) };
+__slice("%num_entities%", +tags_e::T_ENTITIES_LOADED) };
 		}
 
 		void draw_simple_bar(const float, const ALLEGRO_COLOR = al_map_rgb(0, 0, 0), const float = 0.98, const float = 0.95); // w, h
@@ -218,7 +215,7 @@ __slice("%garbage_tracks%", +tags_e::T_TRACKS_GARBAGE), __slice("%garbage_entiti
 			void setFollow(Sprite*);
 		public:
 			Text();
-			~Text();
+			//~Text();
 			
 			void set(const Assistance::io__text_string, const std::string);
 			void set(const Assistance::io__text_boolean, const bool);

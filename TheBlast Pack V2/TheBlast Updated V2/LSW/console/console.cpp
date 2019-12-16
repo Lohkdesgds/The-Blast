@@ -6,6 +6,7 @@ namespace LSW {
 		void Console::__l_thr_md()
 		{
 			try {
+				Database conf;
 				gfile logg;
 
 				logg << L::SLL << fsr(__FUNCSIG__) << "Initializing..." << L::BLL;
@@ -86,7 +87,8 @@ namespace LSW {
 
 						if (thr_md_arg->isThisThis(+Assistance::ro__thread_display_routines_timers::LOOPTRACK))
 						{
-							logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "LOOPSCHECK: " << thr_md_arg->getNumCalls() << " frames per second" << L::BL;
+							//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "LOOPSCHECK: " << thr_md_arg->getNumCalls() << " frames per second" << L::BL;
+							conf.set(Assistance::io__db_statistics_sizet::FRAMESPERSECOND, thr_md_arg->getNumCalls());
 						}
 						else if (thr_md_arg->isThisThis(+Assistance::ro__thread_display_routines_timers::CHECKKEEP))
 						{
@@ -130,10 +132,6 @@ namespace LSW {
 								gcam.apply();
 								logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "DISPLAYRESIZE got, acknowledged, done." << L::BL;
 
-								Database config;
-								config.set(Assistance::io__conf_integer::SCREEN_X, al_get_display_width(md->getDisplay()));
-								config.set(Assistance::io__conf_integer::SCREEN_Y, al_get_display_height(md->getDisplay()));
-
 								{
 									ALLEGRO_EVENT ev;
 									ev.type = +Assistance::ro__my_events::THRKBM_DISPLAY_SIZE;
@@ -141,6 +139,12 @@ namespace LSW {
 									ev.user.data2 = al_get_display_height(md->getDisplay());
 									al_emit_user_event(&evsrc, &ev, NULL);
 								}
+
+								conf.set(Assistance::io__conf_integer::SCREEN_X, al_get_display_width(md->getDisplay()));
+								conf.set(Assistance::io__conf_integer::SCREEN_Y, al_get_display_height(md->getDisplay()));
+								conf.set(Assistance::io__conf_integer::SCREEN_FLAGS, al_get_display_flags(md->getDisplay()));
+								conf.flush();
+
 								break;
 							}
 						}
@@ -221,6 +225,7 @@ namespace LSW {
 			try {
 				gfile logg;
 				Sprites sprites;
+				Database conf;
 
 				logg << L::SLL << fsr(__FUNCSIG__) << "Initializing..." << L::BLL;
 
@@ -258,7 +263,8 @@ namespace LSW {
 
 					if (thr_cl_arg->isThisThis(+Assistance::ro__thread_collision_routines_timers::LOOPTRACK))
 					{
-						logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "LOOPSCHECK: " << thr_cl_arg->getNumCalls() << " collisions and verifications per sec" << L::BL;
+						//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "LOOPSCHECK: " << thr_cl_arg->getNumCalls() << " collisions and verifications per sec" << L::BL;
+						conf.set(Assistance::io__db_statistics_sizet::COLLISIONSPERSECOND, thr_cl_arg->getNumCalls());
 					}
 					else if (thr_cl_arg->isThisThis(+Assistance::ro__thread_collision_routines_timers::CHECKKEEP))
 					{
@@ -316,6 +322,12 @@ namespace LSW {
 				int display_y = 720;
 				bool isscreenfullscreen = false;
 
+				{
+					int __s;
+					conf.get(Assistance::io__conf_integer::SCREEN_FLAGS, __s, 0);
+					isscreenfullscreen = (__s & ALLEGRO_FULLSCREEN_WINDOW) || (__s & ALLEGRO_FULLSCREEN);
+				}
+
 				logg << L::SLL << fsr(__FUNCSIG__) << "Initializing..." << L::BLL;
 
 				thr_shared_arg.threadcountm.lock();
@@ -355,7 +367,8 @@ namespace LSW {
 
 					if (thr_kb_arg->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::LOOPTRACK))
 					{
-						logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "LOOPSCHECK: " << thr_kb_arg->getNumCalls() << " events per sec" << L::BL;
+						//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "LOOPSCHECK: " << thr_kb_arg->getNumCalls() << " events per sec" << L::BL;
+						conf.set(Assistance::io__db_statistics_sizet::USEREVENTSPERSECOND, thr_kb_arg->getNumCalls());
 					}
 					else if (thr_kb_arg->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::CHECKKEEP))
 					{
@@ -364,8 +377,8 @@ namespace LSW {
 					else if (thr_kb_arg->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::UPDATEMOUSE))
 					{
 						float _temp[2];
-						conf.get(Assistance::io__conf_mouse_float::MOUSE_X, _temp[0]);
-						conf.get(Assistance::io__conf_mouse_float::MOUSE_Y, _temp[1]);
+						conf.get(Assistance::io__db_mouse_float::MOUSE_X, _temp[0]);
+						conf.get(Assistance::io__db_mouse_float::MOUSE_Y, _temp[1]);
 
 						for (auto& i : sprites) {
 							if (i->self->isEq(Assistance::io__sprite_boolean::FOLLOWMOUSE, true)) {
@@ -412,14 +425,14 @@ namespace LSW {
 							//else                          logg.debug("[THR_KBM] KEYCHAR= %d", ev.keyboard.keycode);
 						}
 						if (ev.type == ALLEGRO_EVENT_MOUSE_AXES) {
-							conf.set(Assistance::io__conf_mouse_float::MOUSE_X, (ev.mouse.x * 2.0f / display_x) - 1.0);
-							conf.set(Assistance::io__conf_mouse_float::MOUSE_Y, (ev.mouse.y * 2.0f / display_y) - 1.0);
+							conf.set(Assistance::io__db_mouse_float::MOUSE_X, (ev.mouse.x * 2.0f / display_x) - 1.0);
+							conf.set(Assistance::io__db_mouse_float::MOUSE_Y, (ev.mouse.y * 2.0f / display_y) - 1.0);
 						}
 						if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
-							conf.set(+((Assistance::io__conf_mouse_boolean)ev.mouse.button), true);
+							conf.set(+((Assistance::io__db_mouse_boolean)ev.mouse.button), true);
 						}
 						if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
-							conf.set(+((Assistance::io__conf_mouse_boolean)ev.mouse.button), false);
+							conf.set(+((Assistance::io__db_mouse_boolean)ev.mouse.button), false);
 						}
 					}
 				}

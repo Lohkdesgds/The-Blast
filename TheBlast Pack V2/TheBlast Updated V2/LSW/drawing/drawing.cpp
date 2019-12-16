@@ -265,7 +265,7 @@ namespace LSW {
 				difftimeanim = 0;
 			}
 			else {
-				difftimeanim = 1.0 / v;
+				difftimeanim = v;
 			}
 		}
 		void Sprite::__sprite_smart_images::loop(const bool b)
@@ -655,6 +655,7 @@ namespace LSW {
 					}
 
 					Camera cam;
+					Database conf;
 					ALLEGRO_DISPLAY* d = al_get_current_display();
 					char tempstr_c[128];
 					//gfile logg;
@@ -723,35 +724,25 @@ namespace LSW {
 						break;
 					case +Assistance::tags_e::T_FPS:
 					{
-						/*Display::big_display disp;
-						double t;
-						disp.get(Display::FPS, t);
-						sprintf_s(tempstr_c, "%.2lf", t);*/
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
+						size_t t;
+						conf.get(Assistance::io__db_statistics_sizet::FRAMESPERSECOND, t);
+						sprintf_s(tempstr_c, "%zu", t);
 					}
 					break;
-
-					case +Assistance::tags_e::T_TPS_COUNT:
-						//sprintf_s(tempstr_c, "%u", bev._getEventLog().loops_per_second);
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
+					case +Assistance::tags_e::T_TPS:
+					{
+						size_t t;
+						conf.get(Assistance::io__db_statistics_sizet::COLLISIONSPERSECOND, t);
+						sprintf_s(tempstr_c, "%zu", t);
+					}
 						break;
-					case +Assistance::tags_e::T_TPS_COLLISION:
-						//sprintf_s(tempstr_c, "%.3lf", bev._getEventLog().collisionTimer_tps);
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
+					case +Assistance::tags_e::T_UPS:
+					{
+						size_t t;
+						conf.get(Assistance::io__db_statistics_sizet::USEREVENTSPERSECOND, t);
+						sprintf_s(tempstr_c, "%zu", t);
+					}
 						break;
-					case +Assistance::tags_e::T_TPS_FUNCTIONS:
-						//sprintf_s(tempstr_c, "%.3lf", bev._getEventLog().functionsTimer_tps);
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
-						break;
-					case +Assistance::tags_e::T_TPS_SECOND_TAKEN:
-						//sprintf_s(tempstr_c, "%.3lf", bev._getEventLog().calcLoopsTimer_tps);
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
-						break;
-					case +Assistance::tags_e::T_TPS_POSUPDATE:
-						//sprintf_s(tempstr_c, "%.3lf", bev._getEventLog().updatePosTimer_tps);
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
-						break;
-
 					case +Assistance::tags_e::T_SPRITE_FRAME:
 						/*if (follow) sprintf_s(tempstr_c, "%lu", follow->_lastFrameNumber());
 						else sprintf_s(tempstr_c, "NOT_AVAILABLE");*/
@@ -759,18 +750,16 @@ namespace LSW {
 						break;
 					case +Assistance::tags_e::T_MOUSE_X:
 					{
-						/*float x;
-						bev.getMouse(x, Events::X);
-						sprintf_s(tempstr_c, "%.3f", x);*/
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
+						float x;
+						conf.get(Assistance::io__db_mouse_float::MOUSE_X, x);
+						sprintf_s(tempstr_c, "%.3f", x);
 					}
 					break;
 					case +Assistance::tags_e::T_MOUSE_Y:
 					{
-						/*float y;
-						bev.getMouse(y, Events::Y);
-						sprintf_s(tempstr_c, "%.3f", y);*/
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
+						float y;
+						conf.get(Assistance::io__db_mouse_float::MOUSE_Y, y);
+						sprintf_s(tempstr_c, "%.3f", y);
 					}
 					break;
 					case +Assistance::tags_e::T_LASTSTRING:
@@ -778,7 +767,7 @@ namespace LSW {
 						/*std::string str;
 						bev.getLastString(str);
 						sprintf_s(tempstr_c, "%s", str.c_str());*/
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
+						sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
 					}
 					break;
 					case +Assistance::tags_e::T_CURRSTRING:
@@ -792,7 +781,7 @@ namespace LSW {
 						for (int p = 0; p < u; p++) tempstr_c[p] = '.';
 
 						sprintf_s(tempstr_c + u, 128 - u, "%s", (str.substr((str.length() >= 20) ? str.length() - 19 - u : 0) + '\0').c_str());*/
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
+						sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
 					}
 					break;
 					case +Assistance::tags_e::T_SPRITE_SPEEDX:
@@ -801,7 +790,7 @@ namespace LSW {
 							follow->get(Assistance::io__sprite_double::SPEEDX, val);
 							sprintf_s(tempstr_c, "%.3lf", val);
 						}
-						else sprintf_s(tempstr_c, "UNDEF");
+						else sprintf_s(tempstr_c, "NOT_AVAILABLE");
 						break;
 					case +Assistance::tags_e::T_SPRITE_SPEEDY:
 						if (follow) {
@@ -809,7 +798,7 @@ namespace LSW {
 							follow->get(Assistance::io__sprite_double::SPEEDY, val);
 							sprintf_s(tempstr_c, "%.3lf", val);
 						}
-						else sprintf_s(tempstr_c, "UNDEF");
+						else sprintf_s(tempstr_c, "NOT_AVAILABLE");
 						break;
 					case +Assistance::tags_e::T_SPRITE_NAME:
 						if (follow) {
@@ -817,7 +806,7 @@ namespace LSW {
 							follow->get(Assistance::io__sprite_string::ID, temp);
 							sprintf_s(tempstr_c, "%s", temp.c_str());
 						}
-						else sprintf_s(tempstr_c, "UNDEF");
+						else sprintf_s(tempstr_c, "NOT_AVAILABLE");
 						break;
 					case +Assistance::tags_e::T_SPRITE_ENTITY_HEALTH: ///TODO
 						/*if (follow) {
@@ -832,7 +821,7 @@ namespace LSW {
 							else sprintf_s(tempstr_c, "UNDEF");
 						}
 						else sprintf_s(tempstr_c, "UNDEF");*/
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
+						sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
 						break;
 					case +Assistance::tags_e::T_SPRITE_ENTITY_NAME:
 						/*if (follow) {
@@ -848,14 +837,14 @@ namespace LSW {
 							else sprintf_s(tempstr_c, "UNDEF");
 						}
 						else sprintf_s(tempstr_c, "UNDEF");*/
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
+						sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
 						break;
 					case +Assistance::tags_e::T_IMAGES_LOADED:
 					{
 						/*d_images_database img_data;
 						size_t t = img_data.work().work().size();
 						sprintf_s(tempstr_c, "%lu", t);*/
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
+						sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
 					}
 					break;
 					case +Assistance::tags_e::T_SPRITES_LOADED:
@@ -863,7 +852,7 @@ namespace LSW {
 						/*d_sprite_database spr_data;
 						size_t t = spr_data.work().work().size();
 						sprintf_s(tempstr_c, "%lu", t);*/
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
+						sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
 					}
 					break;
 					case +Assistance::tags_e::T_TEXTS_LOADED:
@@ -871,7 +860,7 @@ namespace LSW {
 						/*d_texts_database txt_data;
 						size_t t = txt_data.work().work().size();
 						sprintf_s(tempstr_c, "%lu", t);*/
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
+						sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
 					}
 					break;
 					case +Assistance::tags_e::T_TRACKS_LOADED:
@@ -879,7 +868,7 @@ namespace LSW {
 						/*d_musics_database msk_data;
 						size_t t = msk_data.work().work().size();
 						sprintf_s(tempstr_c, "%lu", t);*/
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
+						sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
 					}
 					break;
 					case +Assistance::tags_e::T_ENTITIES_LOADED:
@@ -887,67 +876,9 @@ namespace LSW {
 						/*d_entity_database ent_data;
 						size_t t = ent_data.work().work().size();
 						sprintf_s(tempstr_c, "%lu", t);*/
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
+						sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
 					}
 					break;
-					case +Assistance::tags_e::T_GARBAGE_TOTAL:
-					{
-						/*d_entity_database ent_data;
-						d_images_database img_data;
-						d_musics_database msk_data;
-						d_sprite_database spr_data;
-						d_texts_database txt_data;
-
-						size_t sprs = spr_data.work().check_weak_count();
-						size_t imgs = img_data.work().check_weak_count();
-						size_t txts = txt_data.work().check_weak_count();
-						size_t msks = msk_data.work().check_weak_count();
-						size_t ents = ent_data.work().check_weak_count();
-
-						size_t t = sprs + imgs + txts + msks + ents;
-
-						sprintf_s(tempstr_c, "%lu", t);*/
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
-					}
-					break;
-					case +Assistance::tags_e::T_IMAGES_GARBAGE:
-					{
-						/*d_images_database img_data;
-						size_t t = img_data.work().check_weak_count();
-						sprintf_s(tempstr_c, "%lu", t);*/
-					}
-					break;
-					case +Assistance::tags_e::T_SPRITES_GARBAGE:
-					{
-						/*d_sprite_database spr_data;
-						size_t t = spr_data.work().check_weak_count();
-						sprintf_s(tempstr_c, "%lu", t);*/
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
-					}
-					break;
-					case +Assistance::tags_e::T_TEXTS_GARBAGE:
-					{
-						/*d_texts_database txt_data;
-						size_t t = txt_data.work().check_weak_count();
-						sprintf_s(tempstr_c, "%lu", t);*/
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
-					}
-					break;
-					case +Assistance::tags_e::T_TRACKS_GARBAGE:
-					{
-						/*d_musics_database msk_data;
-						size_t t = msk_data.work().check_weak_count();
-						sprintf_s(tempstr_c, "%lu", t);*/
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
-					}
-					break;
-					case +Assistance::tags_e::T_ENTITIES_GARBAGE:
-					{
-						/*d_entity_database ent_data;
-						size_t t = ent_data.work().check_weak_count();
-						sprintf_s(tempstr_c, "%lu", t);*/
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
-					}
 					}
 
 					substitute = tempstr_c;
@@ -1001,9 +932,9 @@ namespace LSW {
 
 		Text::Text()
 		{
-			gfile logg;
+			/*gfile logg;
 			logg << L::SLL << fsr(__FUNCSIG__) << "Registered spawn of Text #" + std::to_string((size_t)this) << L::BLL;
-			logg.flush();
+			logg.flush();*/
 
 			data.d[+Assistance::io__text_double::POSX] = 0.0;
 			data.d[+Assistance::io__text_double::POSY] = 0.0;
@@ -1024,11 +955,11 @@ namespace LSW {
 			data.c = al_map_rgb(255, 255, 255);
 		}
 
-		Text::~Text()
+		/*Text::~Text()
 		{
 			gfile logg;
-			logg << L::SLL << fsr(__FUNCSIG__) << "Registered despawn of Text #" + std::to_string((size_t)this)/* << ";ID=" << id */ << L::BLL;
-		}
+			logg << L::SLL << fsr(__FUNCSIG__) << "Registered despawn of Text #" + std::to_string((size_t)this)/* << ";ID=" << id / << L::BLL;
+		}*/
 
 
 		void Text::set(const Assistance::io__text_string o, const std::string e)

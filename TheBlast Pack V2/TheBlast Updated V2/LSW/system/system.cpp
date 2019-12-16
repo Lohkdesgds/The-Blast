@@ -413,54 +413,66 @@ namespace LSW {
 			printthrdone = true;
 		}
 
-		Display::Display()
+		Display::Display() // automatic from config
 		{
 			gfile logg;
 			logg << L::SLL << fsr(__FUNCSIG__) << "Creating new display (blank)" << L::BLL;
 
-			int flag = Constants::start_display_default_mode;
-			__g_sys.setNewDisplayMode(flag);
-			auto u = __g_sys.getAvailableResolutions();
+			int flag = 0;
 
 			Assistance::display_mode md;
 
 			Database config;
 			config.get(Assistance::io__conf_integer::SCREEN_X, md.x, 0);
 			config.get(Assistance::io__conf_integer::SCREEN_Y, md.y, 0);
+			config.get(Assistance::io__conf_integer::SCREEN_PREF_HZ, md.hz, 0);
+			config.get(Assistance::io__conf_integer::SCREEN_FLAGS, flag, Constants::start_display_default_mode);
+			flag |= Constants::start_display_obligatory_flag_mode; // obligatory flags like OpenGL and Resizable
+
+			__g_sys.setNewDisplayMode(flag);
+			auto u = __g_sys.getAvailableResolutions();
 
 			
-			if (md.x != 0 && md.y != 0) {
-				logg << L::SLL << fsr(__FUNCSIG__) << "Found config from config file. Searching available refresh rates..." << L::BLL;
-				md.hz = 0;
-				for (auto& i : u) {
-					if ((i.x == md.x && i.y == md.y)) {
-						if (i.hz > md.hz) {
-							md.hz = i.hz;
+			if (md.x > 16 && md.y > 9) {
+				logg << L::SLL << fsr(__FUNCSIG__) << "Found config from config file." << (md.hz != 0 ? " Got refresh rate set!" : "Getting automatic refresh rate information...") << L::BLL;
+
+				if (md.hz == 0) {
+					for (auto& i : u) {
+						if ((i.x == md.x && i.y == md.y)) {
+							if (i.hz > md.hz) {
+								md.hz = i.hz;
+								config.set(Assistance::io__conf_integer::SCREEN_PREF_HZ, md.hz);
+							}
 						}
 					}
 				}
 			}
 			else if (Constants::start_force_720p)
 			{
-				logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "No config file found. 720P is set to default, so, searching available refresh rates..." << L::BLL;
+				logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "No config file found  or invalid one. 720P is set to default, so, searching available refresh rates..." << L::BLL;
 				md.x = 1280;
 				md.y = 720;
 				md.hz = 0;
+				config.set(Assistance::io__conf_integer::SCREEN_X, md.x);
+				config.set(Assistance::io__conf_integer::SCREEN_Y, md.y);
 				for (auto& i : u) {
 					if ((i.x == md.x && i.y == md.y)) {
 						if (i.hz > md.hz) {
 							md.hz = i.hz;
+							config.set(Assistance::io__conf_integer::SCREEN_PREF_HZ, md.hz);
 						}
 					}
 				}
 			}
 			if (md.hz == 0){ // both before failed, search for another option afaik
-				logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "Failed to find a supported refresh rate. Trying automatic instead." << L::BLL;
+				logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "Failed to find a exact value for refresh rate. Trying automatic instead." << L::BLL;
 				md.hz = 0;
 			}
 
 
 			_init(md.x, md.y, -1, md.hz);
+
+			if (d) config.flush();
 		}
 
 		Display::Display(const int x, const int y, const int flag, int hz)
@@ -516,7 +528,8 @@ namespace LSW {
 
 		Database::Database()
 		{
-			logg << L::SL << fsr(__FUNCSIG__ )<< "Registered spawn of Database ID#" + std::to_string((size_t)this) << L::BL;
+			if (data.dbcount++ == 0) logg << L::SL << fsr(__FUNCSIG__ )<< "Registered spawn of first Database ID#" + std::to_string((size_t)this) << L::BL;
+
 			data.m.lock();
 			if (!data.c) {
 				std::string temporary = Constants::config_default_file;
@@ -532,8 +545,7 @@ namespace LSW {
 
 					// set or load first values
 					set(Assistance::io__conf_boolean::HAD_ERROR, true); // then texture download starts			// USED
-					set(Assistance::io__conf_boolean::WAS_OSD_ON, false);											// USED
-					set(Assistance::io__conf_boolean::WAS_FULLSCREEN, true);										// USED
+					set(Assistance::io__conf_boolean::WAS_OSD_ON, false);										// USED
 					set(Assistance::io__conf_float::LAST_VOLUME, 0.5);
 					set(Assistance::io__conf_string::LAST_VERSION, Constants::version_app);						// nah
 					set(Assistance::io__conf_string::LAST_PLAYERNAME, "Player");
@@ -541,6 +553,8 @@ namespace LSW {
 					set(Assistance::io__conf_integer::SCREEN_X, 0);
 					set(Assistance::io__conf_integer::SCREEN_Y, 0);
 					set(Assistance::io__conf_longlong::_TIMES_LIT, 0LL);
+					set(Assistance::io__conf_integer::SCREEN_FLAGS, Constants::start_display_default_mode);
+					set(Assistance::io__conf_integer::SCREEN_PREF_HZ, 0);
 
 					if (!al_save_config_file(temporary.c_str(), data.c)) {
 						throw Abort::abort(__FUNCSIG__, "Cannot save Database file!");
@@ -557,15 +571,34 @@ namespace LSW {
 		}
 		Database::~Database()
 		{
-			logg << L::SL << fsr(__FUNCSIG__) << "Registered despawn of Database ID#" + std::to_string((size_t)this) << L::BL;
-			if (data.c) {
-				data.m.lock();
-				std::string temporary = Constants::config_default_file;
-				Tools::interpretPath(temporary);
-				Tools::createPath(temporary);
-				al_save_config_file(temporary.c_str(), data.c);
-				data.m.unlock();
+			if (--data.dbcount == 0) {
+				logg << L::SL << fsr(__FUNCSIG__) << "Registered despawn of last Database ID#" + std::to_string((size_t)this) << L::BL;
 			}
+		}
+
+		void Database::flush()
+		{
+			if (data.savethr) {
+				if (!data.savethrdone) return;
+
+				data.savethr->join();
+				delete data.savethr;
+				data.savethr = nullptr;
+			}
+
+			data.savethrdone = false;
+			data.savethr = new std::thread([=] {
+				if (data.c) {
+					data.m.lock();
+					std::string temporary = Constants::config_default_file;
+					Tools::interpretPath(temporary);
+					Tools::createPath(temporary);
+					al_save_config_file(temporary.c_str(), data.c);
+					data.m.unlock();
+				}
+				data.savethrdone = true;
+			});
+			
 		}
 
 		void Database::set(const std::string e, const std::string v)
@@ -597,13 +630,18 @@ namespace LSW {
 		{
 			if (al_keycod >= 0 && al_keycod < ALLEGRO_KEY_MAX) data.keys[al_keycod] = v;
 		}
-		void Database::set(const Assistance::io__conf_mouse_boolean e, const bool v)
+		void Database::set(const Assistance::io__db_mouse_boolean e, const bool v)
 		{
 			data.mouse[+e] = v;
 		}
-		void Database::set(const Assistance::io__conf_mouse_float e, const float v)
+		void Database::set(const Assistance::io__db_mouse_float e, const float v)
 		{
-			data.mouse_axes[+e] = v;
+			data.db_mouse_axes[+e] = v;
+		}
+
+		void Database::set(const Assistance::io__db_statistics_sizet e, const size_t v)
+		{
+			if (e != Assistance::io__db_statistics_sizet::size) data.db_statistics_sizet[+e] = v;
 		}
 
 		void Database::get(const std::string e, std::string& v, const std::string defaul)
@@ -654,13 +692,18 @@ namespace LSW {
 			if (al_keycod >= 0 && al_keycod < ALLEGRO_KEY_MAX) v = data.keys[al_keycod];
 			else v = defaul;
 		}
-		void Database::get(const Assistance::io__conf_mouse_boolean e, bool& v)
+		void Database::get(const Assistance::io__db_mouse_boolean e, bool& v)
 		{
 			v = data.mouse[+e];
 		}
-		void Database::get(const Assistance::io__conf_mouse_float e, float& v)
+		void Database::get(const Assistance::io__db_mouse_float e, float& v)
 		{
-			v = data.mouse_axes[+e];
+			v = data.db_mouse_axes[+e];
+		}
+
+		void Database::get(const Assistance::io__db_statistics_sizet e, size_t& v)
+		{
+			if (e != Assistance::io__db_statistics_sizet::size) v = data.db_statistics_sizet[+e];
 		}
 
 
@@ -708,17 +751,24 @@ namespace LSW {
 			return oth == v;
 		}
 
-		bool Database::isEq(const Assistance::io__conf_mouse_boolean e, const bool v)
+		bool Database::isEq(const Assistance::io__db_mouse_boolean e, const bool v)
 		{
 			bool oth;
 			get(e, oth); // meh
 			return oth == v;
 		}
 
-		bool Database::isEq(const Assistance::io__conf_mouse_float e, const float v)
+		bool Database::isEq(const Assistance::io__db_mouse_float e, const float v)
 		{
 			float oth;
 			get(e, oth); // meh
+			return oth == v;
+		}
+
+		bool Database::isEq(const Assistance::io__db_statistics_sizet e, const size_t v)
+		{
+			size_t oth;
+			get(e, oth);
 			return oth == v;
 		}
 

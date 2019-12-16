@@ -48,6 +48,7 @@ int main(int argc, const char* argv[])
 		Mixer mixer; // init audio mixer
 
 		Console consol;
+		Database conf;
 
 		logg << L::SLL << fsr(__FUNCSIG__) << "Setting up template functions..." << L::BLL;
 
@@ -343,7 +344,7 @@ int main(int argc, const char* argv[])
 			s->set(Assistance::io__sprite_string::ID, "PAUSE_ANIM");
 			s->set(Assistance::io__sprite_double::SCALEG, 0.55);
 			s->set(Assistance::io__sprite_double::POSY, -0.35);
-			s->set(Assistance::io__sprite_double::ANIMATION_FPS, 24);
+			s->set(Assistance::io__sprite_double::ANIMATION_FPS, 1.0/24);
 			s->set(Assistance::io__sprite_integer::LAYER, -10);
 		}
 
@@ -354,7 +355,7 @@ int main(int argc, const char* argv[])
 			s->set(Assistance::io__sprite_double::SCALEG, 0.4);
 			s->set(Assistance::io__sprite_double::SCALEX, 1.4);
 			s->set(Assistance::io__sprite_integer::LAYER, -50);
-			s->set(Assistance::io__sprite_double::ANIMATION_FPS, 20);
+			s->set(Assistance::io__sprite_double::ANIMATION_FPS, 1.0/20);
 			s->set(Assistance::io__sprite_boolean::LOOPFRAMES, false);
 		}
 
@@ -368,6 +369,7 @@ int main(int argc, const char* argv[])
 		mytext->set(Assistance::io__text_double::SCALEG, 0.1);
 		mytext->set(Assistance::io__text_double::POSY, 0.65);
 		mytext->set(Assistance::io__text_integer::LAYER, -10);
+		mytext->set(Assistance::io__text_double::UPDATETIME, 1.0/20);
 
 
 		auto mytrack = tracks.create("randomtrack");
@@ -413,7 +415,8 @@ int main(int argc, const char* argv[])
 			Sleep(25);
 
 
-			mytext->set(Assistance::io__text_string::STRING, "COUNTER " + std::to_string(counttt++) + " | FPS = " + std::to_string(consol.getCallsPerSecondOnThread(Assistance::io__thread_ids::DRAWING)));
+			//mytext->set(Assistance::io__text_string::STRING, "COUNTER " + std::to_string(counttt++) + " | FPS = " + std::to_string(consol.getCallsPerSecondOnThread(Assistance::io__thread_ids::DRAWING)));
+			mytext->set(Assistance::io__text_string::STRING, "FPS: %fps% | TPS: %tps% | UPS: %ups%");
 
 			//mysprite->apply(Assistance::io__sprite_double::POSX, 0.3 * sin(0.7 + 0.91 * al_get_time()));
 			//mysprite->apply(Assistance::io__sprite_double::POSY, - 1.5 + 0.2 * cos(0.4 + 0.65 * al_get_time()));
@@ -435,11 +438,14 @@ int main(int argc, const char* argv[])
 		sprites.clear();
 		fonts.clear();
 		texts.clear();
+		conf.flush();
 	}
 	catch (Abort::abort a)
 	{
 		forceExit("Something went wrong at MAIN!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
 	}
+
+	
 
 	return 0;
 }

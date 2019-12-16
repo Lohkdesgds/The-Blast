@@ -46,6 +46,7 @@ namespace LSW {
 			// system.h stuff mostly
 			const int start_audio_samples_max = 8;
 			const int start_display_default_mode = ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE | WAY;
+			const int start_display_obligatory_flag_mode = ALLEGRO_RESIZABLE | WAY;
 			const int start_bitmap_default_mode = ALLEGRO_VIDEO_BITMAP | ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR | ALLEGRO_MIPMAP;
 			const bool start_force_720p = true;
 
