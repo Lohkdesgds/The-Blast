@@ -847,5 +847,20 @@ namespace LSW {
 			}
 			exit(EXIT_SUCCESS);
 		}
+		void alert(const char* windw, const char* title, const char* ext)
+		{
+			gfile logg;
+			logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "ALERT: " << (windw ? windw : "NULL") << ": " << (title ? title : "NULL") << "; " << (ext ? ext : "NULL") << L::BLL;
+			logg.flush();
+			if (windw) {
+				al_show_native_message_box(
+					nullptr,
+					windw,
+					title,
+					ext,
+					NULL,
+					ALLEGRO_MESSAGEBOX_WARN);
+			}
+		}
 	}
 }

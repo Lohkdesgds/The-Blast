@@ -31,13 +31,13 @@ namespace LSW {
 
 		namespace Assistance {
 
-			enum class io__camera_float			{ SCALE_X, SCALE_Y, SCALE_G, OFFSET_X, OFFSET_Y, ROTATION, SLIPPERINESS, size };
+			enum class io__camera_float			{ SCALE_X, SCALE_Y, SCALE_G, OFFSET_X, OFFSET_Y, ROTATION_RAD, SLIPPERINESS, size };
 			
 			enum class io__sprite_string_vector	{ ADDMULTIPLE, REMOVEMULTIPLE };
 			enum class io__sprite_string		{ ADD, REMOVE, ID };
-			enum class io__sprite_double		{ POSX, POSY, SCALEX, SCALEY, CENTERX, CENTERY, SCALEG, ROTATION /*DEGREES*/, SPEEDX, SPEEDY, SPEEDROT, SMOOTHNESS_X, SMOOTHNESS_Y, size, /* since here they are not Sprite exactly stuff*/ ANIMATION_FPS };
+			enum class io__sprite_double		{ POSX, POSY, SCALEX, SCALEY, CENTERX, CENTERY, SCALEG, ROTATION /*DEGREES*/, SPEEDX, SPEEDY, SPEEDROT, SMOOTHNESS_X, SMOOTHNESS_Y, RO_LAST_MOUSE_COLLISION, RO_LAST_OTHERS_COLLISION, RO_MOUSE_DISTANCE_X, RO_MOUSE_DISTANCE_Y, RO_DISTANCE_COLLISION_X, RO_DISTANCE_COLLISION_Y, size, /* since here they are not Sprite exactly stuff*/ ANIMATION_FPS };
 			enum class ro__sprite_target_double { TARG_POSX, TARG_POSY, TARG_ROTATION, INTERN_LASTDRAW, size};
-			enum class io__sprite_boolean		{ DRAW, COLLIDE, AFFECTED_BY_COLLISION, AFFECTED_BY_CAM, SHOWDOT, SHOWBOX, FOLLOWMOUSE, FOLLOWKEYBOARD, USE_TINTED_DRAWING, IS_COLLIDING, size, /* since here they are not Sprite exactly stuff*/ LOOPFRAMES, HAS_DONE_LOOPONCE };
+			enum class io__sprite_boolean		{ DRAW, COLLIDE_OTHERS, COLLIDE_MOUSE, AFFECTED_BY_COLLISION, AFFECTED_BY_CAM, SHOWDOT, SHOWBOX, FOLLOWMOUSE, FOLLOWKEYBOARD, USE_TINTED_DRAWING, RO_IS_MOUSE_COLLIDING, RO_IS_OTHERS_COLLIDING, size, /* since here they are not Sprite exactly stuff*/ LOOPFRAMES, HAS_DONE_LOOPONCE };
 			enum class io__sprite_integer		{ LAYER, size };
 			enum class io__sprite_sizet			{ SIZE, FRAME, size };
 			enum class io__sprite_color			{ TINT, size };
@@ -77,18 +77,20 @@ __slice("%num_entities%", +tags_e::T_ENTITIES_LOADED) };
 		void draw_simple_bar(const float, const ALLEGRO_COLOR = al_map_rgb(0, 0, 0), const float = 0.98, const float = 0.95); // w, h
 		void draw_confuse_rectangle(const float, const float, const float, const float, const ALLEGRO_COLOR, const ALLEGRO_COLOR, const ALLEGRO_COLOR, const ALLEGRO_COLOR);
 		void draw_simple_txt(ALLEGRO_FONT*, const std::string, ALLEGRO_COLOR = al_map_rgb(255,255,255), const int = ALLEGRO_ALIGN_CENTER, const float = 0.2);
+		ALLEGRO_TRANSFORM easyTransform(ALLEGRO_DISPLAY* const, const float, const float, const float, const float, const float);
+		void matrix_draw_help();
 
 		class camera_preset {
 			float p[+Assistance::io__camera_float::size] = { 1.0,1.0,1.0,0.0,0.0,0.0,1.0 };
 			ALLEGRO_TRANSFORM latest = ALLEGRO_TRANSFORM();
 			std::vector<int> layers; // layers enabled
 
-			void _think_latest(); // guaranteed ALLEGRO_TRANSFORM ready to use (less thinking when already set up)
 		public:
+			void refresh(); // guaranteed ALLEGRO_TRANSFORM ready to use (less thinking when already set up)
 			void reset();
 			void set(const Assistance::io__camera_float, const float);
 			void merge(const Assistance::io__camera_float, const float);
-			float get(const Assistance::io__camera_float);
+			float get(const Assistance::io__camera_float) const;
 			void setLayer(const int, const bool);
 			
 			// for(auto& i : this)
@@ -121,7 +123,7 @@ __slice("%num_entities%", +tags_e::T_ENTITIES_LOADED) };
 		
 
 		class Sprite {
-
+			
 			class __sprite_smart_data {
 			public:
 				double dval[+Assistance::io__sprite_double::size] = { 0.0 };
@@ -162,6 +164,8 @@ __slice("%num_entities%", +tags_e::T_ENTITIES_LOADED) };
 
 			std::string sprite_id;
 			int layer = 0;
+
+			bool fastIsColliding(camera_preset);
 		public:
 			~Sprite();
 
@@ -188,7 +192,8 @@ __slice("%num_entities%", +tags_e::T_ENTITIES_LOADED) };
 			bool isEq(const Assistance::io__sprite_color, const ALLEGRO_COLOR);
 
 			void draw(const int);
-			void process(); // movement
+			void process(const int, camera_preset); // movement
+
 		};
 
 

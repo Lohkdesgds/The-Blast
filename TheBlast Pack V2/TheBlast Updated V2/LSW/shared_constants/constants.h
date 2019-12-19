@@ -21,6 +21,7 @@ __TIME__
 
 
 #define WAY ALLEGRO_OPENGL
+#define FORCEDEBUG
 
 
 namespace LSW {
@@ -36,8 +37,10 @@ namespace LSW {
 			const std::string __interpret_date();
 			const std::string version_app = std::string("V2.0.0#") + __interpret_date();
 
-			
+		
 #ifdef _DEBUG
+			const bool _is_on_debug_mode = true;
+#elif defined FORCEDEBUG
 			const bool _is_on_debug_mode = true;
 #else
 			const bool _is_on_debug_mode = false;

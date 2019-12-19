@@ -67,6 +67,19 @@ namespace LSW {
 				mtt->set(Assistance::io__text_boolean::AFFECTED_BY_CAM, false);
 				mtt->set(Assistance::io__text_integer::LAYER, -10);
 
+				/*Text* const osd = texts.create("osd_stuff");
+				osd->set(Assistance::io__text_string::FONT, "DEFAULT");
+				osd->set(Assistance::io__text_string::STRING, "<information lmao test test>");
+				osd->set(Assistance::io__text_string::ID, "osd_stuff");
+				osd->set(Assistance::io__text_boolean::SHOW, true);
+				osd->set(Assistance::io__text_double::SCALEG, 0.025);
+				osd->set(Assistance::io__text_double::POSY, 0.935);
+				osd->set(Assistance::io__text_double::POSX, -1.0);
+				osd->set(Assistance::io__text_integer::MODE, +Assistance::io___alignment_text::ALIGN_LEFT);
+				osd->set(Assistance::io__text_double::UPDATETIME, 1.0 / 10);
+				osd->set(Assistance::io__text_boolean::AFFECTED_BY_CAM, false);
+				osd->set(Assistance::io__text_integer::LAYER, -10);*/
+
 				std::string mtt_s = "No new information";
 
 
@@ -166,6 +179,7 @@ namespace LSW {
 							for (auto& i : sprites) i->self->draw(k);
 							for (auto& i : texts)  i->self->draw(k);
 						}
+
 						last_loop_had_error = 0;
 					}
 					catch (Abort::abort err)
@@ -184,6 +198,8 @@ namespace LSW {
 
 					sprites.unlock();
 
+
+					matrix_draw_help();
 					md->flip();
 
 					//Sleep(50);
@@ -276,9 +292,12 @@ namespace LSW {
 						try {
 							gcam.apply();
 							camera_preset ww = gcam.get();
+							//float rr = ww.get(Assistance::io__camera_float::ROTATION_RAD); // adjustment because canvas has been rotated so mouse will be at normal and stuff offset by this
 
 							for (auto& k : ww) {
-								for (auto& i : sprites) i->self->process();
+								for (auto& i : sprites) {
+									i->self->process(k, ww);
+								}
 							}
 							last_loop_had_error = 0;
 						}
@@ -427,6 +446,8 @@ namespace LSW {
 						if (ev.type == ALLEGRO_EVENT_MOUSE_AXES) {
 							conf.set(Assistance::io__db_mouse_float::MOUSE_X, (ev.mouse.x * 2.0f / display_x) - 1.0);
 							conf.set(Assistance::io__db_mouse_float::MOUSE_Y, (ev.mouse.y * 2.0f / display_y) - 1.0);
+							conf.set(Assistance::io__db_mouse_float::RAW_MOUSE_X, ev.mouse.x);
+							conf.set(Assistance::io__db_mouse_float::RAW_MOUSE_Y, ev.mouse.y);
 						}
 						if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
 							conf.set(+((Assistance::io__db_mouse_boolean)ev.mouse.button), true);

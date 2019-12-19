@@ -25,6 +25,8 @@ int main(int argc, const char* argv[])
 
 		gfile logg;
 
+		alert("BETA/ALPHA", "This is a beta or alpha version of the game.", "There might be some issues here and there, so be nice and report to @Lohkdesgds at Twitter, Gamejolt or GitHub! Thanks!");
+
 		logg << L::SLL << fsr(__FUNCSIG__) << "App version: " << Constants::version_app << L::BLL;
 
 		logg << L::SLL << fsr(__FUNCSIG__) << "Initializing game..." << L::BLL;
@@ -304,6 +306,7 @@ int main(int argc, const char* argv[])
 			cp = camera_preset();
 			cp.setLayer(-10, true);
 			cp.setLayer(99, true); // mouse
+			//cp.set(Assistance::io__camera_float::OFFSET_X, 0.4);
 			gcam.set(cp, +main_gamemodes::MENU);
 
 			// options
@@ -324,14 +327,13 @@ int main(int argc, const char* argv[])
 			gcam.set(cp, +main_gamemodes::GAMING);
 		}
 
-		gcam.apply(+main_gamemodes::LOADING); // first
-
 
 
 		{
 			Sprite* s = sprites.create("MOUSE");
 			s->set(Assistance::io__sprite_boolean::FOLLOWMOUSE, true);
 			s->set(Assistance::io__sprite_boolean::AFFECTED_BY_CAM, false);
+			s->set(Assistance::io__sprite_boolean::DRAW, false); // no draw for now
 			s->set(Assistance::io__sprite_double::SCALEG, 0.2);
 			s->set(Assistance::io__sprite_string::ADD, "MOUSE");
 			s->set(Assistance::io__sprite_integer::LAYER, 99);
@@ -342,6 +344,7 @@ int main(int argc, const char* argv[])
 			Sprite* s = sprites.create("PAUSE_ANIM");
 			s->set(Assistance::io__sprite_string_vector::ADDMULTIPLE, Tools::genStrFormat("PAUSE_##", 29));
 			s->set(Assistance::io__sprite_string::ID, "PAUSE_ANIM");
+			s->set(Assistance::io__sprite_boolean::DRAW, true);
 			s->set(Assistance::io__sprite_double::SCALEG, 0.55);
 			s->set(Assistance::io__sprite_double::POSY, -0.35);
 			s->set(Assistance::io__sprite_double::ANIMATION_FPS, 1.0/24);
@@ -352,6 +355,7 @@ int main(int argc, const char* argv[])
 			Sprite* s = sprites.create("LOADING_ANIM");
 			s->set(Assistance::io__sprite_string_vector::ADDMULTIPLE, Tools::genStrFormat("LOGO_##", 85));
 			s->set(Assistance::io__sprite_string::ID, "LOADING_ANIM");
+			s->set(Assistance::io__sprite_boolean::DRAW, true);
 			s->set(Assistance::io__sprite_double::SCALEG, 0.4);
 			s->set(Assistance::io__sprite_double::SCALEX, 1.4);
 			s->set(Assistance::io__sprite_integer::LAYER, -50);
@@ -385,20 +389,22 @@ int main(int argc, const char* argv[])
 
 		**************************************************************************************/
 
-		main_gamemodes modern = main_gamemodes::LOADING;
+		main_gamemodes modern = main_gamemodes::LOADING; // CHANGE TO LOADING ON FINAL VERSION
 
 
 		logg << L::SLL << fsr(__FUNCSIG__) << "Ready to go! Starting main!" << L::BLL;
 
 		// LOADING PART
+		if (modern == main_gamemodes::LOADING) // shh skip
 		{
 			Sprite* s = nullptr;
 			if (!sprites.get("LOADING_ANIM", s)) throw Abort::abort(__FUNCSIG__, "It wasn't supposed to not find a sprite here!");
 
 			bool b = false;
 			do {
+				gcam.apply(+modern); // first
 				s->get(Assistance::io__sprite_boolean::HAS_DONE_LOOPONCE, b);
-			} while (!b && consol.isRunning());
+			} while (!b && consol.isRunning() && modern == main_gamemodes::LOADING);
 
 			Sleep(2000);
 			gcam.apply(+main_gamemodes::MENU);
@@ -421,11 +427,14 @@ int main(int argc, const char* argv[])
 			//mysprite->apply(Assistance::io__sprite_double::POSX, 0.3 * sin(0.7 + 0.91 * al_get_time()));
 			//mysprite->apply(Assistance::io__sprite_double::POSY, - 1.5 + 0.2 * cos(0.4 + 0.65 * al_get_time()));
 
-			//cp.set(Assistance::io__camera_float::ROTATION, al_get_time() * 0.25);
+			//cp.set(Assistance::io__camera_float::ROTATION_RAD, al_get_time() * 0.25);
 			//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "ANG=" << (float)((int)(0.3 * (1800.0 / ALLEGRO_PI) * al_get_time())%3600)/10.0 << L::BL;
-			//cp.set(Assistance::io__camera_float::ROTATION, 0.3 * al_get_time());
-			gcam.get().set(Assistance::io__camera_float::ROTATION, 0.3 * al_get_time());
-			gcam.apply();
+			//cp.set(Assistance::io__camera_float::ROTATION_RAD, 0.3 * al_get_time());
+			gcam.get().set(Assistance::io__camera_float::OFFSET_X, 0.45 * cos(0.3*al_get_time()));
+			//gcam.get().set(Assistance::io__camera_float::OFFSET_Y, 0.14 * sin(0.2*al_get_time()));
+			gcam.get().set(Assistance::io__camera_float::SCALE_G, 0.7 + 0.4 * sin(al_get_time() * 0.33));
+			gcam.get().set(Assistance::io__camera_float::ROTATION_RAD, (al_get_time() * 0.03));
+			gcam.apply(+modern);
 
 			//gcam.set(cp, 0);
 			//gcam.apply(0);

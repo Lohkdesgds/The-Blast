@@ -40,7 +40,7 @@ namespace LSW {
 
 			// on memory while running
 			enum class io__db_mouse_boolean { MOUSE_0, MOUSE_1, MOUSE_2, MOUSE_3, MOUSE_4, MOUSE_5, MOUSE_6, MOUSE_7 }; // Constants::max_mouse_set_buttons
-			enum class io__db_mouse_float { MOUSE_X, MOUSE_Y };
+			enum class io__db_mouse_float { MOUSE_X, MOUSE_Y, RAW_MOUSE_X, RAW_MOUSE_Y };
 			enum class io__db_statistics_sizet { FRAMESPERSECOND, COLLISIONSPERSECOND, USEREVENTSPERSECOND, size};
 
 			const std::string ro__conf_boolean_str[] = { "had_error", "was_osd_on" };
@@ -132,7 +132,7 @@ namespace LSW {
 				bool mouse[+Constants::max_mouse_set_buttons] = { false };
 
 				// memory only
-				float db_mouse_axes[2] = { 0.0,0.0 };
+				float db_mouse_axes[4] = { 0.0 };
 				size_t db_statistics_sizet[+Assistance::io__db_statistics_sizet::size] = { 0 };
 
 				size_t dbcount = 0;
@@ -194,5 +194,6 @@ namespace LSW {
 
 		void lswInit(); // init everything
 		void forceExit(const char* = nullptr, const char* = nullptr, const char* = nullptr);
+		void alert(const char*, const char*, const char*);
 	}
 }
