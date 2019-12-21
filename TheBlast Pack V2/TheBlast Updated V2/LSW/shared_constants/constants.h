@@ -21,7 +21,7 @@ __TIME__
 
 
 #define WAY ALLEGRO_OPENGL
-#define FORCEDEBUG
+//#define FORCEDEBUG
 
 
 namespace LSW {
@@ -73,7 +73,7 @@ namespace LSW {
 
 			// drawing.h stuff
 			const double text_default_sharpness_font = 75.0; // 2500
-			const double text_timeout_interpret = 0.1;
+			const double text_timeout_interpret = 0.5;
 
 			// sound.h stuff
 			const float start_default_global_volume = 0.5;

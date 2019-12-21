@@ -17,8 +17,8 @@ Namespaces:
 
 // default
 #include "..\system\system.h"						// DEP: CONST, TOOLS, ABORT, LOGG
-#include "..\drawing\drawing.h"						// DEP: ABORT, SMALLTEMP, TEMPLATE, LOGG, SYSTEM
 #include "..\sound\sound.h"							// DEP: ABORT, SMALLTEMP, TEMPLATE, LOGG, SYSTEM
+#include "..\drawing\drawing.h"						// DEP: ABORT, SMALLTEMP, TEMPLATE, LOGG, SYSTEM, SOUND
 
 
 // the big thing

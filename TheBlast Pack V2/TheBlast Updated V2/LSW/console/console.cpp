@@ -9,7 +9,7 @@ namespace LSW {
 				Database conf;
 				gfile logg;
 
-				logg << L::SLL << fsr(__FUNCSIG__) << "Initializing..." << L::BLL;
+				logg << L::SLF << fsr(__FUNCSIG__) << "Initializing..." << L::ELF;
 
 				thr_shared_arg.threadcountm.lock();
 				thr_shared_arg.threadcount++;
@@ -17,7 +17,7 @@ namespace LSW {
 
 				size_t last_loop_had_error = 0;
 
-				logg << L::SLL << fsr(__FUNCSIG__) << "Creating display..." << L::BLL;
+				logg << L::SLF << fsr(__FUNCSIG__) << "Creating display..." << L::ELF;
 
 				md = new Display();
 				Sprites sprites;
@@ -51,7 +51,7 @@ namespace LSW {
 					al_emit_user_event(&evsrc, &ev, NULL);
 				}
 
-				logg << L::SLL << fsr(__FUNCSIG__) << "Creating local stuff..." << L::BLL;
+				logg << L::SLF << fsr(__FUNCSIG__) << "Creating local stuff..." << L::ELF;
 				
 
 				Text* const mtt = texts.create("lastlogtext");
@@ -62,29 +62,29 @@ namespace LSW {
 				mtt->set(Assistance::io__text_double::SCALEG, 0.03);
 				mtt->set(Assistance::io__text_double::POSY, 0.965);
 				mtt->set(Assistance::io__text_double::POSX, -1.0);
-				mtt->set(Assistance::io__text_integer::MODE, +Assistance::io___alignment_text::ALIGN_LEFT);
+				mtt->set(Assistance::io__text_integer::MODE, +Assistance::io__alignment_text::ALIGN_LEFT);
 				mtt->set(Assistance::io__text_double::UPDATETIME, 1.0 / 5);
 				mtt->set(Assistance::io__text_boolean::AFFECTED_BY_CAM, false);
 				mtt->set(Assistance::io__text_integer::LAYER, -10);
 
-				/*Text* const osd = texts.create("osd_stuff");
+				Text* const osd = texts.create("osd_stuff0");
 				osd->set(Assistance::io__text_string::FONT, "DEFAULT");
-				osd->set(Assistance::io__text_string::STRING, "<information lmao test test>");
-				osd->set(Assistance::io__text_string::ID, "osd_stuff");
+				osd->set(Assistance::io__text_string::STRING, "FPS:%fps%,TPS:%tps%,UPS:%ups% | M:%mouse_x%,%mouse_y% | CAM: %cam_x%,%cam_y%@~%cam_zoom_combined% | DISPLAY: %curr_res_x%:%curr_res_y%@%curr_refresh_rate% | I:%num_images%,S:%num_sprites%,T:%num_texts%,A:%num_tracks% | STR: %curr_string%[%last_string%]");
+				osd->set(Assistance::io__text_string::ID, "osd_stuff0");
 				osd->set(Assistance::io__text_boolean::SHOW, true);
 				osd->set(Assistance::io__text_double::SCALEG, 0.025);
 				osd->set(Assistance::io__text_double::POSY, 0.935);
 				osd->set(Assistance::io__text_double::POSX, -1.0);
-				osd->set(Assistance::io__text_integer::MODE, +Assistance::io___alignment_text::ALIGN_LEFT);
-				osd->set(Assistance::io__text_double::UPDATETIME, 1.0 / 10);
+				osd->set(Assistance::io__text_integer::MODE, +Assistance::io__alignment_text::ALIGN_LEFT);
+				osd->set(Assistance::io__text_double::UPDATETIME, 1.0 / 2);
 				osd->set(Assistance::io__text_boolean::AFFECTED_BY_CAM, false);
-				osd->set(Assistance::io__text_integer::LAYER, -10);*/
+				osd->set(Assistance::io__text_integer::LAYER, -10);
 
 				std::string mtt_s = "No new information";
 
 
 
-				logg << L::SLL << fsr(__FUNCSIG__) << "In the loop!" << L::BLL;
+				logg << L::SLF << fsr(__FUNCSIG__) << "In the loop!" << L::ELF;
 				thr_md_upnrunnin = true;
 
 				for (bool localb = true; localb;)
@@ -100,7 +100,7 @@ namespace LSW {
 
 						if (thr_md_arg->isThisThis(+Assistance::ro__thread_display_routines_timers::LOOPTRACK))
 						{
-							//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "LOOPSCHECK: " << thr_md_arg->getNumCalls() << " frames per second" << L::BL;
+							//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "LOOPSCHECK: " << thr_md_arg->getNumCalls() << " frames per second" << L::EL;
 							conf.set(Assistance::io__db_statistics_sizet::FRAMESPERSECOND, thr_md_arg->getNumCalls());
 						}
 						else if (thr_md_arg->isThisThis(+Assistance::ro__thread_display_routines_timers::CHECKKEEP))
@@ -125,7 +125,7 @@ namespace LSW {
 							switch (ev.type) {
 							case ALLEGRO_EVENT_DISPLAY_CLOSE:
 								thr_shared_arg.should_exit = true;
-								logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "DISPLAYCLOSE event got. Set to turn off soon." << L::BL;
+								logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "DISPLAYCLOSE event got. Set to turn off soon." << L::EL;
 								break;
 
 							case +Assistance::ro__my_events::LOG_CLOUDLAUNCH_RAW:
@@ -143,7 +143,7 @@ namespace LSW {
 								al_acknowledge_resize(md->getDisplay());
 
 								gcam.apply();
-								logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "DISPLAYRESIZE got, acknowledged, done." << L::BL;
+								logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "DISPLAYRESIZE got, acknowledged, done." << L::EL;
 
 								{
 									ALLEGRO_EVENT ev;
@@ -185,7 +185,10 @@ namespace LSW {
 					catch (Abort::abort err)
 					{
 
-						logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "Got draw exception! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::BLL;
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got draw exception! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
+						logg.flush();
+
+						alert("EXCEPTION!", "There was a exception!", ("This exception is skippable, but keep in mind that this is not good. Please report:\n\n" + ("Got draw exception! {" + err.from() + "," + err.details() + ",#" + std::to_string(err.getErrN()) + "}")).c_str());
 
 						if (err.getErrN() == 1 && (last_loop_had_error < 10)) {
 							//md->restart();
@@ -199,13 +202,14 @@ namespace LSW {
 					sprites.unlock();
 
 
-					matrix_draw_help();
+					if (conf.isEq(Assistance::io__conf_boolean::WAS_OSD_ON, true)) matrix_draw_help();
+
 					md->flip();
 
 					//Sleep(50);
 				}
 
-				logg << L::SLL << fsr(__FUNCSIG__) << "Closing stuff!" << L::BLL;
+				logg << L::SLF << fsr(__FUNCSIG__) << "Closing stuff!" << L::ELF;
 
 				if (hasset_howto_unload) howto_unload();				
 
@@ -228,7 +232,7 @@ namespace LSW {
 				//textures.clear();
 
 				thr_md_upnrunnin = false;
-				logg << L::SLL << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::BLL;
+				logg << L::SLF << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::ELF;
 			}
 			catch (Abort::abort a)
 			{
@@ -243,7 +247,7 @@ namespace LSW {
 				Sprites sprites;
 				Database conf;
 
-				logg << L::SLL << fsr(__FUNCSIG__) << "Initializing..." << L::BLL;
+				logg << L::SLF << fsr(__FUNCSIG__) << "Initializing..." << L::ELF;
 
 				thr_shared_arg.threadcountm.lock();
 				thr_shared_arg.threadcount++;
@@ -263,7 +267,7 @@ namespace LSW {
 				thr_cl_arg->start();
 
 
-				logg << L::SLL << fsr(__FUNCSIG__) << "In the loop!" << L::BLL;
+				logg << L::SLF << fsr(__FUNCSIG__) << "In the loop!" << L::ELF;
 
 				thr_cl_upnrunnin = true;
 
@@ -279,7 +283,7 @@ namespace LSW {
 
 					if (thr_cl_arg->isThisThis(+Assistance::ro__thread_collision_routines_timers::LOOPTRACK))
 					{
-						//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "LOOPSCHECK: " << thr_cl_arg->getNumCalls() << " collisions and verifications per sec" << L::BL;
+						//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "LOOPSCHECK: " << thr_cl_arg->getNumCalls() << " collisions and verifications per sec" << L::EL;
 						conf.set(Assistance::io__db_statistics_sizet::COLLISIONSPERSECOND, thr_cl_arg->getNumCalls());
 					}
 					else if (thr_cl_arg->isThisThis(+Assistance::ro__thread_collision_routines_timers::CHECKKEEP))
@@ -294,16 +298,23 @@ namespace LSW {
 							camera_preset ww = gcam.get();
 							//float rr = ww.get(Assistance::io__camera_float::ROTATION_RAD); // adjustment because canvas has been rotated so mouse will be at normal and stuff offset by this
 
+							for (auto& i : sprites) i->self->clearUp();
+
 							for (auto& k : ww) {
 								for (auto& i : sprites) {
 									i->self->process(k, ww);
+
+									for (auto& j : sprites)
+									{
+										i->self->collideWith(k, j->self);
+									}
 								}
 							}
 							last_loop_had_error = 0;
 						}
 						catch (Abort::abort err)
 						{
-							logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "Got updating pos exception! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::BLL;
+							logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got updating pos exception! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
 
 							if (err.getErrN() == 1 && (last_loop_had_error < 10)) {
 								last_loop_had_error++;
@@ -311,7 +322,7 @@ namespace LSW {
 						}
 					}
 				}
-				logg << L::SLL << fsr(__FUNCSIG__) << "Closing stuff!" << L::BLL;
+				logg << L::SLF << fsr(__FUNCSIG__) << "Closing stuff!" << L::ELF;
 
 				delete thr_cl_arg;
 
@@ -322,7 +333,7 @@ namespace LSW {
 				thr_shared_arg.threadcountm.unlock();
 
 				thr_cl_upnrunnin = false;
-				logg << L::SLL << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::BLL;
+				logg << L::SLF << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::ELF;
 			}
 			catch (Abort::abort a)
 			{
@@ -347,7 +358,7 @@ namespace LSW {
 					isscreenfullscreen = (__s & ALLEGRO_FULLSCREEN_WINDOW) || (__s & ALLEGRO_FULLSCREEN);
 				}
 
-				logg << L::SLL << fsr(__FUNCSIG__) << "Initializing..." << L::BLL;
+				logg << L::SLF << fsr(__FUNCSIG__) << "Initializing..." << L::ELF;
 
 				thr_shared_arg.threadcountm.lock();
 				thr_shared_arg.threadcount++;
@@ -370,7 +381,7 @@ namespace LSW {
 				thr_kb_arg->start();
 
 
-				logg << L::SLL << fsr(__FUNCSIG__) << "In the loop!" << L::BLL;
+				logg << L::SLF << fsr(__FUNCSIG__) << "In the loop!" << L::ELF;
 
 				thr_kb_upnrunnin = true;
 
@@ -386,7 +397,7 @@ namespace LSW {
 
 					if (thr_kb_arg->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::LOOPTRACK))
 					{
-						//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "LOOPSCHECK: " << thr_kb_arg->getNumCalls() << " events per sec" << L::BL;
+						//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "LOOPSCHECK: " << thr_kb_arg->getNumCalls() << " events per sec" << L::EL;
 						conf.set(Assistance::io__db_statistics_sizet::USEREVENTSPERSECOND, thr_kb_arg->getNumCalls());
 					}
 					else if (thr_kb_arg->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::CHECKKEEP))
@@ -457,7 +468,7 @@ namespace LSW {
 						}
 					}
 				}
-				logg << L::SLL << fsr(__FUNCSIG__) << "Closing stuff!" << L::BLL;
+				logg << L::SLF << fsr(__FUNCSIG__) << "Closing stuff!" << L::ELF;
 
 				delete thr_kb_arg;
 
@@ -468,7 +479,7 @@ namespace LSW {
 				thr_shared_arg.threadcountm.unlock();
 
 				thr_kb_upnrunnin = false;
-				logg << L::SLL << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::BLL;
+				logg << L::SLF << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::ELF;
 			}
 			catch (Abort::abort a)
 			{

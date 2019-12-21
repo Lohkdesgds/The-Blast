@@ -17,7 +17,7 @@ namespace LSW {
 	namespace v4 {
 
 
-		enum class L { BL, SL, ERRDV, PRTCLOCK, SLL, BLL };
+		enum class L { EL, SL, SLF, ELF };
 		enum class E { INFO, WARN, ERRR, DEBUG };
 		
 		struct __c_entry {
@@ -29,9 +29,9 @@ namespace LSW {
 			struct _log {
 				FILE* f = nullptr;
 				std::string path = "log.log"; // temp
-				std::mutex f_m, each_call, evsrc_m;
+				std::mutex f_m, eachcall, evsrc_m;
 				bool store_log = true;
-				bool is_needed_lock = false;
+				bool do_save_on_file = false;
 				bool eachcall_safety_locked = false;
 				std::string now;
 				//std::vector<std::string> lines;
@@ -119,7 +119,7 @@ namespace LSW {
 			g.f_m.unlock();
 		}
 
-		inline void gfile::push(const std::string& s, bool showconsole)
+		inline void gfile::push(const std::string& s, const bool showconsole)
 		{
 			if (showconsole) {
 				for (auto& i : s) {
@@ -151,7 +151,7 @@ namespace LSW {
 				}
 			}
 
-			if (!g.is_needed_lock) return;
+			if (!g.do_save_on_file) return;
 
 			if (!g.f)
 				if (!start(Constants::default_file_global_path)) return;
@@ -198,42 +198,35 @@ namespace LSW {
 		{
 			switch (u)
 			{
-			case L::SL:
-				g.each_call.lock();
+			case L::SL: // START LINE
+				g.eachcall.lock();
 				g.eachcall_safety_locked = true;
 				printClock();
 				break;
-			case L::BL:
+			case L::EL: // END LINE
 				push("\n");
 				if (!g.eachcall_safety_locked) {
 					push("\n---------- FATAL WARN ----------\nMUTEX WAS NOT LOCKED! THE CODE HAS ERRORS!");	flush();
 					throw Abort::abort(__FUNCSIG__, "FATAL ERROR MUTEX SHOULDN'T BE UNLOCKED IF IT WASN'T PREVIOUSLY!");
 				}
 				g.eachcall_safety_locked = false;
-				g.each_call.unlock();
+				g.eachcall.unlock();
 				break;
-			case L::ERRDV:
-				push("\n---------- ERROR ----------\n");
-				flush();
-				break;
-			case L::PRTCLOCK:
-				printClock(false);
-				break;
-			case L::SLL:
-				g.each_call.lock();
+			case L::SLF: // START LINE AND SAVE ON FILE
+				g.eachcall.lock();
 				g.eachcall_safety_locked = true;
-				g.is_needed_lock = true;
+				g.do_save_on_file = true;
 				printClock();
 				break;
-			case L::BLL:
+			case L::ELF: // END LINE AND SAVE ON FILE
 				push("\n");
-				g.is_needed_lock = false;
+				g.do_save_on_file = false;
 				if (!g.eachcall_safety_locked) {
 					push("\n---------- FATAL WARN ----------\nMUTEX WAS NOT LOCKED! THE CODE HAS ERRORS!");	flush();
 					throw Abort::abort(__FUNCSIG__, "FATAL ERROR MUTEX SHOULDN'T BE UNLOCKED IF IT WASN'T PREVIOUSLY!");
 				}
 				g.eachcall_safety_locked = false;
-				g.each_call.unlock();
+				g.eachcall.unlock();
 				flush();
 				break;
 			}

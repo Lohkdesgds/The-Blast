@@ -27,9 +27,9 @@ int main(int argc, const char* argv[])
 
 		alert("BETA/ALPHA", "This is a beta or alpha version of the game.", "There might be some issues here and there, so be nice and report to @Lohkdesgds at Twitter, Gamejolt or GitHub! Thanks!");
 
-		logg << L::SLL << fsr(__FUNCSIG__) << "App version: " << Constants::version_app << L::BLL;
+		logg << L::SLF << fsr(__FUNCSIG__) << "App version: " << Constants::version_app << L::ELF;
 
-		logg << L::SLL << fsr(__FUNCSIG__) << "Initializing game..." << L::BLL;
+		logg << L::SLF << fsr(__FUNCSIG__) << "Initializing game..." << L::ELF;
 
 		lswInit();
 
@@ -52,7 +52,7 @@ int main(int argc, const char* argv[])
 		Console consol;
 		Database conf;
 
-		logg << L::SLL << fsr(__FUNCSIG__) << "Setting up template functions..." << L::BLL;
+		logg << L::SLF << fsr(__FUNCSIG__) << "Setting up template functions..." << L::ELF;
 
 		/*************************************************************************************
 
@@ -72,7 +72,7 @@ int main(int argc, const char* argv[])
 		tracks.set(Constants::lambda_default_load<Track>, Constants::lambda_default_unload<Track>);
 
 
-		logg << L::SLL << fsr(__FUNCSIG__) << "Setting up load/unload function... (faster unload)" << L::BLL;
+		logg << L::SLF << fsr(__FUNCSIG__) << "Setting up load/unload function... (faster unload)" << L::ELF;
 
 		consol.setUnloadWay([&textures, &sprites, &texts, &fonts]() { sprites.clear(); texts.clear(); fonts.clear(); textures.clear(); });
 		consol.throwToLoad(Assistance::io__thread_ids::DRAWING, []() {
@@ -89,7 +89,7 @@ int main(int argc, const char* argv[])
 
 			gfile logg;
 
-			logg << L::SLL << fsr(__FUNCSIG__) << "Loading resources (lambda after function)" << L::BLL;
+			logg << L::SLF << fsr(__FUNCSIG__) << "Loading resources (lambda after function)" << L::ELF;
 
 			__g_sys.setInterface();
 
@@ -146,7 +146,7 @@ int main(int argc, const char* argv[])
 				else {
 					hasProgressBarWorked = false;
 					gfile logg;
-					logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "FAILED TO RUN CUSTOM PROGRESS BAR! Trying to continue anyway." << L::BLL;
+					logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "FAILED TO RUN CUSTOM PROGRESS BAR! Trying to continue anyway." << L::ELF;
 					logg.flush();
 					while (frames_already_done < 60 && (100.0f - __smoothp > 0.02f)) {
 						if (__progress == 1.00) frames_already_done++;
@@ -164,7 +164,7 @@ int main(int argc, const char* argv[])
 
 				///__progress = 0.01f;
 
-			logg << L::SLL << fsr(__FUNCSIG__) << "Initializing display, events and stuff..." << L::BLL;
+			logg << L::SLF << fsr(__FUNCSIG__) << "Initializing display, events and stuff..." << L::ELF;
 
 			/*textures.load("BACKGROUND_START", "background_gameplay_start.png");
 			textures.load("BAR_OFF", "bar_single_one.png");
@@ -258,24 +258,24 @@ int main(int argc, const char* argv[])
 
 			al_convert_bitmaps();
 
-			logg << L::SLL << fsr(__FUNCSIG__) << "Loaded everything." << L::BLL;
+			logg << L::SLF << fsr(__FUNCSIG__) << "Loaded everything." << L::ELF;
 
 			draw_simple_bar(0.99, al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Starting game...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
 
 
 			});
 
-		logg << L::SLL << fsr(__FUNCSIG__) << "Launching threads..." << L::BLL;
+		logg << L::SLF << fsr(__FUNCSIG__) << "Launching threads..." << L::ELF;
 
 		consol.start();
 
-		logg << L::SLL << fsr(__FUNCSIG__) << "Waiting initialization to be done..." << L::BLL;
+		logg << L::SLF << fsr(__FUNCSIG__) << "Waiting initialization to be done..." << L::ELF;
 		while (!consol.isOpen()) Sleep(20);
 
 
-		logg << L::SLL << fsr(__FUNCSIG__) << "Waiting lambda load to end..." << L::BLL;
+		logg << L::SLF << fsr(__FUNCSIG__) << "Waiting lambda load to end..." << L::ELF;
 		while (consol.hasSmthToLoad()) Sleep(20);
-		logg << L::SLL << fsr(__FUNCSIG__) << "Preparing sprites and starting game... (finally)" << L::BLL;
+		logg << L::SLF << fsr(__FUNCSIG__) << "Preparing sprites and starting game... (finally)" << L::ELF;
 
 
 		/*************************************************************************************
@@ -333,7 +333,7 @@ int main(int argc, const char* argv[])
 			Sprite* s = sprites.create("MOUSE");
 			s->set(Assistance::io__sprite_boolean::FOLLOWMOUSE, true);
 			s->set(Assistance::io__sprite_boolean::AFFECTED_BY_CAM, false);
-			s->set(Assistance::io__sprite_boolean::DRAW, false); // no draw for now
+			s->set(Assistance::io__sprite_boolean::DRAW, true); // no draw for now
 			s->set(Assistance::io__sprite_double::SCALEG, 0.2);
 			s->set(Assistance::io__sprite_string::ADD, "MOUSE");
 			s->set(Assistance::io__sprite_integer::LAYER, 99);
@@ -392,7 +392,7 @@ int main(int argc, const char* argv[])
 		main_gamemodes modern = main_gamemodes::LOADING; // CHANGE TO LOADING ON FINAL VERSION
 
 
-		logg << L::SLL << fsr(__FUNCSIG__) << "Ready to go! Starting main!" << L::BLL;
+		logg << L::SLF << fsr(__FUNCSIG__) << "Ready to go! Starting main!" << L::ELF;
 
 		// LOADING PART
 		if (modern == main_gamemodes::LOADING) // shh skip
@@ -418,17 +418,17 @@ int main(int argc, const char* argv[])
 		//__introtrack->set(io__track_boolean::PLAYING, false);
 
 		while (consol.isRunning()) {
-			Sleep(25);
+			Sleep(7);
 
 
-			//mytext->set(Assistance::io__text_string::STRING, "COUNTER " + std::to_string(counttt++) + " | FPS = " + std::to_string(consol.getCallsPerSecondOnThread(Assistance::io__thread_ids::DRAWING)));
-			mytext->set(Assistance::io__text_string::STRING, "FPS: %fps% | TPS: %tps% | UPS: %ups%");
+			mytext->set(Assistance::io__text_string::STRING, "Counting here lmao " + std::to_string(counttt++) + "!");
+			//mytext->set(Assistance::io__text_string::STRING, "FPS: %fps% | TPS: %tps% | UPS: %ups%");
 
 			//mysprite->apply(Assistance::io__sprite_double::POSX, 0.3 * sin(0.7 + 0.91 * al_get_time()));
 			//mysprite->apply(Assistance::io__sprite_double::POSY, - 1.5 + 0.2 * cos(0.4 + 0.65 * al_get_time()));
 
 			//cp.set(Assistance::io__camera_float::ROTATION_RAD, al_get_time() * 0.25);
-			//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "ANG=" << (float)((int)(0.3 * (1800.0 / ALLEGRO_PI) * al_get_time())%3600)/10.0 << L::BL;
+			//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "ANG=" << (float)((int)(0.3 * (1800.0 / ALLEGRO_PI) * al_get_time())%3600)/10.0 << L::EL;
 			//cp.set(Assistance::io__camera_float::ROTATION_RAD, 0.3 * al_get_time());
 			gcam.get().set(Assistance::io__camera_float::OFFSET_X, 0.45 * cos(0.3*al_get_time()));
 			//gcam.get().set(Assistance::io__camera_float::OFFSET_Y, 0.14 * sin(0.2*al_get_time()));
@@ -441,7 +441,7 @@ int main(int argc, const char* argv[])
 		}
 		
 
-		logg << L::SLL << fsr(__FUNCSIG__) << "Closing game..." << L::BLL;
+		logg << L::SLF << fsr(__FUNCSIG__) << "Closing game..." << L::ELF;
 
 		textures.clear();
 		sprites.clear();

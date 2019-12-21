@@ -127,7 +127,7 @@ namespace LSW {
 						eachsec_doubleverif = timee - 1.0;
 
 						gfile logg;
-						logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "Can't keep up! Somewhere is having some trouble keeping the loops! Running " << (diff - 1.0) << " second(s) behind." << L::BLL;
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Can't keep up! Somewhere is having some trouble keeping the loops! Running " << (diff - 1.0) << " second(s) behind." << L::ELF;
 						//printf_s("[WARN] Can't keep up! Somewhere is having some trouble keeping the loops!\n");
 					}
 
@@ -162,7 +162,7 @@ namespace LSW {
 							gfile logg;
 
 							eachsec_doubleverif = timee - 1.0;
-							logg << L::SLL << fsr(__FUNCSIG__, E::WARN) << "Can't keep up! Somewhere is having some trouble keeping the loops! Running " << (diff - 1.0) << " second(s) behind." << L::BLL;
+							logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Can't keep up! Somewhere is having some trouble keeping the loops! Running " << (diff - 1.0) << " second(s) behind." << L::ELF;
 						}
 
 						eachsec_doubleverif += 1.0;

@@ -94,33 +94,33 @@ namespace LSW {
 			cam.applyNoSave(org);
 
 			// +
-			al_draw_line(-5, 0, 5, 0, co, 0.015);
-			al_draw_line(0, -5, 0, 5, co, 0.015);
+			al_draw_line(-5, 0, 5, 0, co, 0.007);
+			al_draw_line(0, -5, 0, 5, co, 0.007);
 
 			// |---|
-			al_draw_line(-1, 0.1, -1, -0.1, co, 0.01);
-			al_draw_line(1, 0.1, 1, -0.1, co, 0.01);
-			al_draw_line(0.1, -1, -0.1, -1, co, 0.01);
-			al_draw_line(0.1, 1, -0.1, 1, co, 0.01);
+			al_draw_line(-1, 0.1, -1, -0.1, co, 0.007);
+			al_draw_line(1, 0.1, 1, -0.1, co, 0.007);
+			al_draw_line(0.1, -1, -0.1, -1, co, 0.007);
+			al_draw_line(0.1, 1, -0.1, 1, co, 0.007);
 
 			// mouse
-			al_draw_filled_circle(m[0], m[1], 0.025, al_map_rgba_f(0.75, 0, 0, 0.75)); // mouse is different color
+			al_draw_filled_circle(m[0], m[1], 0.018, al_map_rgba_f(0.75, 0, 0, 0.75)); // mouse is different color
 
 			cam.applyNoSave(psf);
 
 			// +
-			al_draw_line(-5, 0, 5, 0, cp, 0.02);
-			al_draw_line(0, -5, 0, 5, cp, 0.02);
+			al_draw_line(-5, 0, 5, 0, cp, 0.01);
+			al_draw_line(0, -5, 0, 5, cp, 0.01);
 
 			// x
-			al_draw_line(-0.1, 0.1, 0.1, -0.1, cp, 0.017);
-			al_draw_line(-0.1, -0.1, 0.1, 0.1, cp, 0.017);
+			al_draw_line(-0.1, 0.1, 0.1, -0.1, cp, 0.008);
+			al_draw_line(-0.1, -0.1, 0.1, 0.1, cp, 0.008);
 
 			// |---|
-			al_draw_line(-1, 0.1, -1, -0.1, cp, 0.01);
-			al_draw_line(1, 0.1, 1, -0.1, cp, 0.01);
-			al_draw_line(0.1, -1, -0.1, -1, cp, 0.01);
-			al_draw_line(0.1, 1, -0.1, 1, cp, 0.01);
+			al_draw_line(-1, 0.1, -1, -0.1, cp, 0.005);
+			al_draw_line(1, 0.1, 1, -0.1, cp, 0.005);
+			al_draw_line(0.1, -1, -0.1, -1, cp, 0.005);
+			al_draw_line(0.1, 1, -0.1, 1, cp, 0.005);
 
 
 			cam.apply();
@@ -342,6 +342,10 @@ namespace LSW {
 			}
 			return copies[actual]->bmp;
 		}
+		size_t Sprite::__sprite_smart_images::lastFrame()
+		{
+			return actual;
+		}
 		ALLEGRO_BITMAP* Sprite::__sprite_smart_images::load(const std::string id)
 		{
 			__template_static_vector<ALLEGRO_BITMAP> imgs; // Textures
@@ -411,16 +415,18 @@ namespace LSW {
 
 		Sprite::__sprite_smart_data::__sprite_smart_data()
 		{
-			/*for (auto& i : dval) i = 0.0;
-			for (auto& j : bval) j = false;*/
+			Database conf;
+			bool debugging = false;
+			conf.get(Assistance::io__conf_boolean::WAS_OSD_ON, debugging, Constants::_is_on_debug_mode);
+			debugging |= Constants::_is_on_debug_mode;
+						
 			dval[+Assistance::io__sprite_double::SCALEX] = 1.0;
 			dval[+Assistance::io__sprite_double::SCALEY] = 1.0;
 			dval[+Assistance::io__sprite_double::SCALEG] = 1.0;
-			//bval[+Assistance::io__sprite_boolean::DRAW] = false;
 			bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM] = true;
 			bval[+Assistance::io__sprite_boolean::COLLIDE_MOUSE] = true;
-			bval[+Assistance::io__sprite_boolean::SHOWBOX] = Constants::_is_on_debug_mode;
-			bval[+Assistance::io__sprite_boolean::SHOWDOT] = Constants::_is_on_debug_mode;
+			bval[+Assistance::io__sprite_boolean::SHOWBOX] = debugging;
+			bval[+Assistance::io__sprite_boolean::SHOWDOT] = debugging;
 		}
 
 
@@ -466,9 +472,9 @@ namespace LSW {
 					data.dval[+Assistance::io__sprite_double::RO_LAST_MOUSE_COLLISION] = al_get_time();
 
 					// DEBUGGING
-					gfile logg;
+					///gfile logg;
 
-					logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << sprite_id << " COLLIDING!" << L::BL;
+					///logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << sprite_id << " COLLIDING!" << L::EL;
 				}
 			}
 			else {
@@ -605,6 +611,12 @@ namespace LSW {
 			}
 			return false;
 		}
+		bool Sprite::get(const Assistance::ro__sprite_target_double u, double& v)
+		{
+			if (u == Assistance::ro__sprite_target_double::size) return false;
+			v = data.dtarg[+u];
+			return true;
+		}
 		bool Sprite::get(const Assistance::io__sprite_boolean u, bool& v)
 		{
 			switch (u) {
@@ -633,8 +645,8 @@ namespace LSW {
 		{
 			switch (u) {
 			case Assistance::io__sprite_sizet::FRAME:
-				// no way
-				return false;
+				v = bmps.lastFrame();
+				return true;
 			}
 			return false;
 		}
@@ -767,8 +779,19 @@ namespace LSW {
 			camm.apply();
 		}
 
+		void Sprite::clearUp()
+		{
+			data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = false;
+			data.bval[+Assistance::io__sprite_boolean::RO_IS_MOUSE_COLLIDING] = false;
+			data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] = 2.0 * data.dval[+Assistance::io__sprite_double::SCALEX] * data.dval[+Assistance::io__sprite_double::SCALEG];
+			data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] = 2.0 * data.dval[+Assistance::io__sprite_double::SCALEY] * data.dval[+Assistance::io__sprite_double::SCALEG];
+
+		}
+
 		void Sprite::process(const int is_layer, camera_preset psf) // later: be a target, so drawing it will get there (based on framerate)
 		{
+			if (layer != is_layer) return;
+
 			if (!data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM]) psf = camera_preset();
 
 			data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] += data.dval[+Assistance::io__sprite_double::SPEEDX];
@@ -779,7 +802,49 @@ namespace LSW {
 			data.dval[+Assistance::io__sprite_double::SPEEDX] *= data.dval[+Assistance::io__sprite_double::SMOOTHNESS_X] * psf.get(Assistance::io__camera_float::SLIPPERINESS);
 			data.dval[+Assistance::io__sprite_double::SPEEDY] *= data.dval[+Assistance::io__sprite_double::SMOOTHNESS_Y] * psf.get(Assistance::io__camera_float::SLIPPERINESS);
 
-			if (layer == is_layer) fastIsColliding(psf);
+			fastIsColliding(psf);
+		}
+
+		void Sprite::collideWith(const int is_layer, Sprite* const mf)
+		{
+			if (layer != is_layer) return;
+			if (!data.bval[+Assistance::io__sprite_boolean::COLLIDE_OTHERS]) return;
+			if (!mf) throw Abort::abort(__FUNCSIG__, "SPRITE* was null! (shouldn't be)", 1);
+			//if (mf->isEq(Assistance::io__sprite_boolean::COLLIDE_OTHERS, false)) return; // static block?
+
+
+			double otherpos[2] = { 0.0 };
+			double otherscl[3] = { 1.0 };
+
+
+			mf->get(Assistance::ro__sprite_target_double::TARG_POSX, otherpos[0]);
+			mf->get(Assistance::ro__sprite_target_double::TARG_POSY, otherpos[1]);
+
+			mf->get(Assistance::io__sprite_double::SCALEX, otherscl[0]);
+			mf->get(Assistance::io__sprite_double::SCALEY, otherscl[1]);
+			mf->get(Assistance::io__sprite_double::SCALEG, otherscl[2]);
+
+			otherscl[0] *= otherscl[2];
+			otherscl[1] *= otherscl[2];
+			otherscl[2] = 1.0; // just to be sure nothing wrong happens
+
+
+			double dxx = (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX]) - otherpos[0]; // data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]
+			double dyy = (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY]) - otherpos[1]; // data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]
+
+			if (sqrt(dxx * dyy) < sqrt(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] * data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y])) {
+				data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] = dxx;
+				data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] = dyy;
+			}
+
+
+			data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] |= (
+				(fabs(dxx) < 0.5 * (data.dval[+Assistance::io__sprite_double::SCALEX] * data.dval[+Assistance::io__sprite_double::SCALEG] + otherscl[0])) &&
+				(fabs(dyy) < 0.5 * (data.dval[+Assistance::io__sprite_double::SCALEY] * data.dval[+Assistance::io__sprite_double::SCALEG] + otherscl[1]))
+				);
+
+
+
 		}
 
 
@@ -795,290 +860,258 @@ namespace LSW {
 		}
 		void Text::_interpretTags(std::string& s)
 		{
-			std::string local_t = s;
-
-			std::vector<size_t> posicoes;
 			double timing = al_get_time();
+			std::string fina = s;
 
-			for (size_t p = local_t.find('%'); (p != std::string::npos); p = local_t.find('%'))
+			for (bool b = true; b;)
 			{
-				if (al_get_time() - timing > Constants::text_timeout_interpret) {
-					throw Abort::abort(__FUNCSIG__, "Fatal error trying to interpret " + s + "!");
+				b = false;
+				for (size_t q = 0; q < +Assistance::tags_e::size; q++)
+				{
+					size_t poss = 0;
+					if ((poss = fina.find(Assistance::tags[q].s())) != std::string::npos)
+					{
+						b = true;
+						Camera cam;
+						Database conf;
+						ALLEGRO_DISPLAY* d = al_get_current_display();
+						char tempstr_c[128];
+						//gfile logg;
+
+						switch (q)
+						{
+						case +Assistance::tags_e::T_POSX:
+							sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSX] + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX] + (double)cam.get().get(Assistance::io__camera_float::OFFSET_X)));
+							break;
+						case +Assistance::tags_e::T_POSY:
+							sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSY] + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY] + (double)cam.get().get(Assistance::io__camera_float::OFFSET_Y)));
+							break;
+						case +Assistance::tags_e::T_SCREEN_POSX:
+							sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSX] * (data.b[+Assistance::io__text_boolean::AFFECTED_BY_CAM] ? (double)(cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_X)) : 1.0) + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX] * (double)(cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_X))));
+							break;
+						case +Assistance::tags_e::T_SCREEN_POSY:
+							sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSY] * (data.b[+Assistance::io__text_boolean::AFFECTED_BY_CAM] ? (double)(cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_Y)) : 1.0) + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY] * (double)(cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_Y))));
+							break;
+
+						case +Assistance::tags_e::T_CAM_X:
+							sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::OFFSET_X));
+							break;
+						case +Assistance::tags_e::T_CAM_Y:
+							sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::OFFSET_Y));
+							break;
+						case +Assistance::tags_e::T_CAM_ZOOM:
+							sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::SCALE_G) * sqrt(cam.get().get(Assistance::io__camera_float::SCALE_X) * cam.get().get(Assistance::io__camera_float::SCALE_Y)));
+							break;
+						case +Assistance::tags_e::T_CAM_ZOOMG:
+							sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::SCALE_G));
+							break;
+						case +Assistance::tags_e::T_CAM_ZOOMX:
+							sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::SCALE_X));
+							break;
+						case +Assistance::tags_e::T_CAM_ZOOMY:
+							sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::SCALE_Y));
+							break;
+
+						case +Assistance::tags_e::T_ISFOLLOWING:
+							sprintf_s(tempstr_c, "%s", (follow ? "Y" : "N"));
+							break;
+						case +Assistance::tags_e::T_COLOR_R:
+							sprintf_s(tempstr_c, "%.3f", data.c.r);
+							break;
+						case +Assistance::tags_e::T_COLOR_G:
+							sprintf_s(tempstr_c, "%.3f", data.c.g);
+							break;
+						case +Assistance::tags_e::T_COLOR_B:
+							sprintf_s(tempstr_c, "%.3f", data.c.b);
+							break;
+						case +Assistance::tags_e::T_COLOR_A:
+							sprintf_s(tempstr_c, "%.3f", data.c.a);
+							break;
+						case +Assistance::tags_e::T_MODE:
+							sprintf_s(tempstr_c, "%d", data.i[+Assistance::io__text_integer::MODE]);
+							break;
+						case +Assistance::tags_e::T_TIME:
+							sprintf_s(tempstr_c, "%.3lf", al_get_time());
+							break;
+
+						case +Assistance::tags_e::T_GB_RESX:
+							sprintf_s(tempstr_c, "%d", (d ? al_get_display_width(d) : -1));
+							break;
+						case +Assistance::tags_e::T_GB_RESY:
+							sprintf_s(tempstr_c, "%d", (d ? al_get_display_height(d) : -1));
+							break;
+						case +Assistance::tags_e::T_REFRESHRATE:
+							sprintf_s(tempstr_c, "%d", ((d) ? al_get_display_refresh_rate(d) : -1));
+							break;
+						case +Assistance::tags_e::T_FPS:
+						{
+							size_t t;
+							conf.get(Assistance::io__db_statistics_sizet::FRAMESPERSECOND, t);
+							sprintf_s(tempstr_c, "%zu", t);
+						}
+						break;
+						case +Assistance::tags_e::T_TPS:
+						{
+							size_t t;
+							conf.get(Assistance::io__db_statistics_sizet::COLLISIONSPERSECOND, t);
+							sprintf_s(tempstr_c, "%zu", t);
+						}
+						break;
+						case +Assistance::tags_e::T_UPS:
+						{
+							size_t t;
+							conf.get(Assistance::io__db_statistics_sizet::USEREVENTSPERSECOND, t);
+							sprintf_s(tempstr_c, "%zu", t);
+						}
+						break;
+						case +Assistance::tags_e::T_SPRITE_FRAME:
+							if (follow) {
+								size_t f;
+								follow->get(Assistance::io__sprite_sizet::FRAME, f);
+								sprintf_s(tempstr_c, "%zu", f);
+							}
+							else sprintf_s(tempstr_c, "NULL");
+							break;
+						case +Assistance::tags_e::T_MOUSE_X:
+						{
+							float x;
+							conf.get(Assistance::io__db_mouse_float::MOUSE_X, x);
+							sprintf_s(tempstr_c, "%.3f", x);
+						}
+						break;
+						case +Assistance::tags_e::T_MOUSE_Y:
+						{
+							float y;
+							conf.get(Assistance::io__db_mouse_float::MOUSE_Y, y);
+							sprintf_s(tempstr_c, "%.3f", y);
+						}
+						break;
+						case +Assistance::tags_e::T_LASTSTRING:
+						{
+							/*std::string str;
+							bev.getLastString(str);
+							sprintf_s(tempstr_c, "%s", str.c_str());*/
+							sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
+						}
+						break;
+						case +Assistance::tags_e::T_CURRSTRING:
+						{
+							/*std::string str;
+							bev.getCurrentString(str);
+							int u = (str.length()) / 20;
+							if (u > 3) u = 3;
+							if (u < 0) u = 0;
+
+							for (int p = 0; p < u; p++) tempstr_c[p] = '.';
+
+							sprintf_s(tempstr_c + u, 128 - u, "%s", (str.substr((str.length() >= 20) ? str.length() - 19 - u : 0) + '\0').c_str());*/
+							sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
+						}
+						break;
+						case +Assistance::tags_e::T_SPRITE_SPEEDX:
+							if (follow) {
+								double val;
+								follow->get(Assistance::io__sprite_double::SPEEDX, val);
+								sprintf_s(tempstr_c, "%.3lf", val);
+							}
+							else sprintf_s(tempstr_c, "NULL");
+							break;
+						case +Assistance::tags_e::T_SPRITE_SPEEDY:
+							if (follow) {
+								double val;
+								follow->get(Assistance::io__sprite_double::SPEEDY, val);
+								sprintf_s(tempstr_c, "%.3lf", val);
+							}
+							else sprintf_s(tempstr_c, "NULL");
+							break;
+						case +Assistance::tags_e::T_SPRITE_NAME:
+							if (follow) {
+								std::string temp;
+								follow->get(Assistance::io__sprite_string::ID, temp);
+								sprintf_s(tempstr_c, "%s", temp.c_str());
+							}
+							else sprintf_s(tempstr_c, "NULL");
+							break;
+						case +Assistance::tags_e::T_SPRITE_ENTITY_HEALTH:
+							/*if (follow) {
+								Entities::entity* ent = nullptr;
+								void* trash = nullptr;
+								follow->get(Sprite::ENTITY, trash);
+								ent = (Entities::entity*)trash;
+
+								if (ent) {
+									sprintf_s(tempstr_c, "%.1lf", 10.0 * ent->getMyHealth());
+								}
+								else sprintf_s(tempstr_c, "UNDEF");
+							}
+							else sprintf_s(tempstr_c, "UNDEF");*/
+							sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
+							break;
+						case +Assistance::tags_e::T_SPRITE_ENTITY_NAME:
+							/*if (follow) {
+
+								Entities::entity* ent = nullptr;
+								void* trash = nullptr;
+								follow->get(Sprite::ENTITY, trash);
+								ent = (Entities::entity*)trash;
+
+								if (ent) {
+									sprintf_s(tempstr_c, "%s", ent->getMyName().c_str());
+								}
+								else sprintf_s(tempstr_c, "UNDEF");
+							}
+							else sprintf_s(tempstr_c, "UNDEF");*/
+							sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
+							break;
+						case +Assistance::tags_e::T_TEXTURES_LOADED:
+						{
+							__template_static_vector<ALLEGRO_BITMAP> Textures;
+							sprintf_s(tempstr_c, "%zu", Textures.size());
+						}
+						break;
+						case +Assistance::tags_e::T_FONTS_LOADED:
+						{
+							__template_static_vector<ALLEGRO_FONT> Fonts;
+							sprintf_s(tempstr_c, "%zu", Fonts.size());
+						}
+						break;
+						case +Assistance::tags_e::T_SAMPLES_LOADED:
+						{
+							__template_static_vector<ALLEGRO_SAMPLE> Samples;
+							sprintf_s(tempstr_c, "%zu", Samples.size());
+						}
+						break;
+						case +Assistance::tags_e::T_SPRITES_LOADED:
+						{
+							__template_static_vector<Sprite> Sprites;
+							sprintf_s(tempstr_c, "%zu", Sprites.size());
+						}
+						break;
+						case +Assistance::tags_e::T_TEXTS_LOADED:
+						{
+							__template_static_vector<Text> Texts;
+							sprintf_s(tempstr_c, "%zu", Texts.size());
+						}
+						break;
+						case +Assistance::tags_e::T_TRACKS_LOADED:
+						{
+							__template_static_vector<Track> Tracks;
+							sprintf_s(tempstr_c, "%zu", Tracks.size());
+						}
+						break;
+						}
+
+
+						if (fina.length() > (poss + Assistance::tags[q].s().length()))  fina = fina.substr(0, poss) + tempstr_c + fina.substr(poss + Assistance::tags[q].s().length());
+						else														    fina = fina.substr(0, poss) + tempstr_c;
+					}
+				}
+				if (al_get_time() - timing > Constants::text_timeout_interpret) { // should be fine, because it is probably impossible to take 500 ms to interpret a string, come on, less than 2 fps?
+					throw Abort::abort(__FUNCSIG__, "Took too long interpreting '" + s + "'! [Stopped at '" + fina + "']");
 					return;
 				}
-
-				if (p == 0 || (local_t[p - 1] != '\\')) {
-					std::string elsee = local_t.substr(p);
-					std::string substitute;
-
-					size_t found = 0;
-					bool rfound = false;
-					for (auto& i : Assistance::tags)
-					{
-						if (elsee.find(i.s()) == 0)
-						{
-							rfound = true;
-							break;
-						}
-						found++;
-					}
-
-					Camera cam;
-					Database conf;
-					ALLEGRO_DISPLAY* d = al_get_current_display();
-					char tempstr_c[128];
-					//gfile logg;
-
-					switch (found)
-					{
-					case +Assistance::tags_e::T_POSX:
-						sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSX] + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX] + (double)cam.get().get(Assistance::io__camera_float::OFFSET_X)));
-						break;
-					case +Assistance::tags_e::T_POSY:
-						sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSY] + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY] + (double)cam.get().get(Assistance::io__camera_float::OFFSET_Y)));
-						break;
-					case +Assistance::tags_e::T_SCREEN_POSX:
-						sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSX] * (data.b[+Assistance::io__text_boolean::AFFECTED_BY_CAM] ? (double)(cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_X)) : 1.0) + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX] * (double)(cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_X))));
-						break;
-					case +Assistance::tags_e::T_SCREEN_POSY:
-						sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSY] * (data.b[+Assistance::io__text_boolean::AFFECTED_BY_CAM] ? (double)(cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_Y)) : 1.0) + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY] * (double)(cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_Y))));
-						break;
-
-					case +Assistance::tags_e::T_CAM_X:
-						sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::OFFSET_X));
-						break;
-					case +Assistance::tags_e::T_CAM_Y:
-						sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::OFFSET_Y));
-						break;
-					case +Assistance::tags_e::T_CAM_ZOOM:
-						sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::SCALE_G));
-						break;
-					case +Assistance::tags_e::T_CAM_ZOOMX:
-						sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::SCALE_X));
-						break;
-					case +Assistance::tags_e::T_CAM_ZOOMY:
-						sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::SCALE_Y));
-						break;
-
-					case +Assistance::tags_e::T_ISFOLLOWING:
-						sprintf_s(tempstr_c, "%s", (follow ? "Y" : "N"));
-						break;
-					case +Assistance::tags_e::T_COLOR_R:
-						sprintf_s(tempstr_c, "%.3f", data.c.r);
-						break;
-					case +Assistance::tags_e::T_COLOR_G:
-						sprintf_s(tempstr_c, "%.3f", data.c.g);
-						break;
-					case +Assistance::tags_e::T_COLOR_B:
-						sprintf_s(tempstr_c, "%.3f", data.c.b);
-						break;
-					case +Assistance::tags_e::T_COLOR_A:
-						sprintf_s(tempstr_c, "%.3f", data.c.a);
-						break;
-					case +Assistance::tags_e::T_MODE:
-						sprintf_s(tempstr_c, "%d", data.i[+Assistance::io__text_integer::MODE]);
-						break;
-					case +Assistance::tags_e::T_TIME:
-						sprintf_s(tempstr_c, "%.3lf", al_get_time());
-						break;
-
-					case +Assistance::tags_e::T_GB_RESX:
-						sprintf_s(tempstr_c, "%d", (d ? al_get_display_width(d) : -1));
-						break;
-					case +Assistance::tags_e::T_GB_RESY:
-						sprintf_s(tempstr_c, "%d", (d ? al_get_display_height(d) : -1));
-						break;
-					case +Assistance::tags_e::T_REFRESHRATE:
-						sprintf_s(tempstr_c, "%d", ((d) ? al_get_display_refresh_rate(d) : -1));
-						break;
-					case +Assistance::tags_e::T_FPS:
-					{
-						size_t t;
-						conf.get(Assistance::io__db_statistics_sizet::FRAMESPERSECOND, t);
-						sprintf_s(tempstr_c, "%zu", t);
-					}
-					break;
-					case +Assistance::tags_e::T_TPS:
-					{
-						size_t t;
-						conf.get(Assistance::io__db_statistics_sizet::COLLISIONSPERSECOND, t);
-						sprintf_s(tempstr_c, "%zu", t);
-					}
-						break;
-					case +Assistance::tags_e::T_UPS:
-					{
-						size_t t;
-						conf.get(Assistance::io__db_statistics_sizet::USEREVENTSPERSECOND, t);
-						sprintf_s(tempstr_c, "%zu", t);
-					}
-						break;
-					case +Assistance::tags_e::T_SPRITE_FRAME:
-						/*if (follow) sprintf_s(tempstr_c, "%lu", follow->_lastFrameNumber());
-						else sprintf_s(tempstr_c, "NOT_AVAILABLE");*/
-						sprintf_s(tempstr_c, "NOT_AVAILABLE");
-						break;
-					case +Assistance::tags_e::T_MOUSE_X:
-					{
-						float x;
-						conf.get(Assistance::io__db_mouse_float::MOUSE_X, x);
-						sprintf_s(tempstr_c, "%.3f", x);
-					}
-					break;
-					case +Assistance::tags_e::T_MOUSE_Y:
-					{
-						float y;
-						conf.get(Assistance::io__db_mouse_float::MOUSE_Y, y);
-						sprintf_s(tempstr_c, "%.3f", y);
-					}
-					break;
-					case +Assistance::tags_e::T_LASTSTRING:
-					{
-						/*std::string str;
-						bev.getLastString(str);
-						sprintf_s(tempstr_c, "%s", str.c_str());*/
-						sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
-					}
-					break;
-					case +Assistance::tags_e::T_CURRSTRING:
-					{
-						/*std::string str;
-						bev.getCurrentString(str);
-						int u = (str.length()) / 20;
-						if (u > 3) u = 3;
-						if (u < 0) u = 0;
-
-						for (int p = 0; p < u; p++) tempstr_c[p] = '.';
-
-						sprintf_s(tempstr_c + u, 128 - u, "%s", (str.substr((str.length() >= 20) ? str.length() - 19 - u : 0) + '\0').c_str());*/
-						sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
-					}
-					break;
-					case +Assistance::tags_e::T_SPRITE_SPEEDX:
-						if (follow) {
-							double val;
-							follow->get(Assistance::io__sprite_double::SPEEDX, val);
-							sprintf_s(tempstr_c, "%.3lf", val);
-						}
-						else sprintf_s(tempstr_c, "NOT_AVAILABLE");
-						break;
-					case +Assistance::tags_e::T_SPRITE_SPEEDY:
-						if (follow) {
-							double val;
-							follow->get(Assistance::io__sprite_double::SPEEDY, val);
-							sprintf_s(tempstr_c, "%.3lf", val);
-						}
-						else sprintf_s(tempstr_c, "NOT_AVAILABLE");
-						break;
-					case +Assistance::tags_e::T_SPRITE_NAME:
-						if (follow) {
-							std::string temp;
-							follow->get(Assistance::io__sprite_string::ID, temp);
-							sprintf_s(tempstr_c, "%s", temp.c_str());
-						}
-						else sprintf_s(tempstr_c, "NOT_AVAILABLE");
-						break;
-					case +Assistance::tags_e::T_SPRITE_ENTITY_HEALTH: ///TODO
-						/*if (follow) {
-							Entities::entity* ent = nullptr;
-							void* trash = nullptr;
-							follow->get(Sprite::ENTITY, trash);
-							ent = (Entities::entity*)trash;
-
-							if (ent) {
-								sprintf_s(tempstr_c, "%.1lf", 10.0 * ent->getMyHealth());
-							}
-							else sprintf_s(tempstr_c, "UNDEF");
-						}
-						else sprintf_s(tempstr_c, "UNDEF");*/
-						sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
-						break;
-					case +Assistance::tags_e::T_SPRITE_ENTITY_NAME:
-						/*if (follow) {
-
-							Entities::entity* ent = nullptr;
-							void* trash = nullptr;
-							follow->get(Sprite::ENTITY, trash);
-							ent = (Entities::entity*)trash;
-
-							if (ent) {
-								sprintf_s(tempstr_c, "%s", ent->getMyName().c_str());
-							}
-							else sprintf_s(tempstr_c, "UNDEF");
-						}
-						else sprintf_s(tempstr_c, "UNDEF");*/
-						sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
-						break;
-					case +Assistance::tags_e::T_IMAGES_LOADED:
-					{
-						/*d_images_database img_data;
-						size_t t = img_data.work().work().size();
-						sprintf_s(tempstr_c, "%lu", t);*/
-						sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
-					}
-					break;
-					case +Assistance::tags_e::T_SPRITES_LOADED:
-					{
-						/*d_sprite_database spr_data;
-						size_t t = spr_data.work().work().size();
-						sprintf_s(tempstr_c, "%lu", t);*/
-						sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
-					}
-					break;
-					case +Assistance::tags_e::T_TEXTS_LOADED:
-					{
-						/*d_texts_database txt_data;
-						size_t t = txt_data.work().work().size();
-						sprintf_s(tempstr_c, "%lu", t);*/
-						sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
-					}
-					break;
-					case +Assistance::tags_e::T_TRACKS_LOADED:
-					{
-						/*d_musics_database msk_data;
-						size_t t = msk_data.work().work().size();
-						sprintf_s(tempstr_c, "%lu", t);*/
-						sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
-					}
-					break;
-					case +Assistance::tags_e::T_ENTITIES_LOADED:
-					{
-						/*d_entity_database ent_data;
-						size_t t = ent_data.work().work().size();
-						sprintf_s(tempstr_c, "%lu", t);*/
-						sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
-					}
-					break;
-					}
-
-					substitute = tempstr_c;
-
-					std::string change;
-
-
-					if (p > 0)
-					{
-						change = local_t.substr(0, p);
-					}
-					change += substitute + local_t.substr(p + Assistance::tags[found].s().length());
-					local_t = change;
-				}
-				else {
-					local_t[p] = 'a';
-					if (p > 0) {
-						p--;
-						local_t.erase(local_t.begin() + p);
-						posicoes.push_back(p);
-					}
-				}
 			}
-
-			for (auto& i : posicoes)
-			{
-				local_t[i] = '%';
-			}
-			posicoes.clear();
-
-			s = local_t;
+			s = fina;
 		}
 
 		void Text::setFollow(const std::string u)
@@ -1102,7 +1135,7 @@ namespace LSW {
 		Text::Text()
 		{
 			/*gfile logg;
-			logg << L::SLL << fsr(__FUNCSIG__) << "Registered spawn of Text #" + std::to_string((size_t)this) << L::BLL;
+			logg << L::SLF << fsr(__FUNCSIG__) << "Registered spawn of Text #" + std::to_string((size_t)this) << L::ELF;
 			logg.flush();*/
 
 			data.d[+Assistance::io__text_double::POSX] = 0.0;
@@ -1127,7 +1160,7 @@ namespace LSW {
 		/*Text::~Text()
 		{
 			gfile logg;
-			logg << L::SLL << fsr(__FUNCSIG__) << "Registered despawn of Text #" + std::to_string((size_t)this)/* << ";ID=" << id / << L::BLL;
+			logg << L::SLF << fsr(__FUNCSIG__) << "Registered despawn of Text #" + std::to_string((size_t)this)/* << ";ID=" << id / << L::ELF;
 		}*/
 
 
