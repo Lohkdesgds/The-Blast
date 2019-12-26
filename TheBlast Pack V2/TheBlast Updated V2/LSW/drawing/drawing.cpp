@@ -73,6 +73,7 @@ namespace LSW {
 		void matrix_draw_help()
 		{
 			float m[2] = { 0.0 };
+			float limits[4] = { 0.0 };
 			Database db;
 			Camera cam;
 			camera_preset psf = cam.get();
@@ -80,6 +81,11 @@ namespace LSW {
 
 			db.get(Assistance::io__db_mouse_float::RAW_MOUSE_X, m[0]);
 			db.get(Assistance::io__db_mouse_float::RAW_MOUSE_Y, m[1]);
+
+			limits[0] = psf.get(Assistance::io__camera_float::LIMIT_MIN_X);
+			limits[1] = psf.get(Assistance::io__camera_float::LIMIT_MIN_Y);
+			limits[2] = psf.get(Assistance::io__camera_float::LIMIT_MAX_X);
+			limits[3] = psf.get(Assistance::io__camera_float::LIMIT_MAX_Y);
 
 			psf.refresh();
 
@@ -90,6 +96,7 @@ namespace LSW {
 
 			ALLEGRO_COLOR co = al_map_rgba_f(0.5, 0.5, 0.5, 0.5);
 			ALLEGRO_COLOR cp = al_map_rgba_f(0.5, 0.25, 0.0, 0.5);
+			ALLEGRO_COLOR cp2 = al_map_rgba_f(0.3, 0.08, 0.0, 0.3);
 
 			cam.applyNoSave(org);
 
@@ -121,6 +128,9 @@ namespace LSW {
 			al_draw_line(1, 0.1, 1, -0.1, cp, 0.005);
 			al_draw_line(0.1, -1, -0.1, -1, cp, 0.005);
 			al_draw_line(0.1, 1, -0.1, 1, cp, 0.005);
+
+			// limits
+			if (psf.get(Assistance::io__camera_boolean::RESPECT_LIMITS)) al_draw_rectangle(limits[0], limits[1], limits[2], limits[3], cp2, 0.010);
 
 
 			cam.apply();
@@ -177,8 +187,15 @@ namespace LSW {
 
 		void camera_preset::set(const Assistance::io__camera_float u, const float v)
 		{
+			if (u == Assistance::io__camera_float::size) throw Abort::abort(__FUNCSIG__, "Shouldn't try to set ::size!");
 			p[+u] = v;
 			refresh();
+		}
+
+		void camera_preset::set(const Assistance::io__camera_boolean u, const bool v)
+		{
+			if (u == Assistance::io__camera_boolean::size) throw Abort::abort(__FUNCSIG__, "Shouldn't try to set ::size!");
+			b[+u] = v;
 		}
 
 		void camera_preset::merge(const Assistance::io__camera_float u, const float v)
@@ -200,7 +217,14 @@ namespace LSW {
 
 		float camera_preset::get(const Assistance::io__camera_float u) const
 		{
+			if (u == Assistance::io__camera_float::size) throw Abort::abort(__FUNCSIG__, "Shouldn't try to get ::size!");
 			return p[+u];
+		}
+
+		bool camera_preset::get(const Assistance::io__camera_boolean u) const
+		{
+			if (u == Assistance::io__camera_boolean::size) throw Abort::abort(__FUNCSIG__, "Shouldn't try to get ::size!");
+			return b[+u];
 		}
 
 		void camera_preset::setLayer(const int u, const bool enabl)
@@ -423,10 +447,15 @@ namespace LSW {
 			dval[+Assistance::io__sprite_double::SCALEX] = 1.0;
 			dval[+Assistance::io__sprite_double::SCALEY] = 1.0;
 			dval[+Assistance::io__sprite_double::SCALEG] = 1.0;
+			dval[+Assistance::io__sprite_double::SMOOTHNESS_X] = Constants::sprite_default_smoothness;
+			dval[+Assistance::io__sprite_double::SMOOTHNESS_Y] = Constants::sprite_default_smoothness;
+			dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] = 0.0;
+			dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] = 0.0;
 			bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM] = true;
 			bval[+Assistance::io__sprite_boolean::COLLIDE_MOUSE] = true;
 			bval[+Assistance::io__sprite_boolean::SHOWBOX] = debugging;
 			bval[+Assistance::io__sprite_boolean::SHOWDOT] = debugging;
+			bval[+Assistance::io__sprite_boolean::RESPECT_CAMERA_LIMITS] = true;
 		}
 
 
@@ -448,12 +477,12 @@ namespace LSW {
 					float m[2] = { 0.0 };
 					Database db;
 
-					db.get(Assistance::io__db_mouse_float::RAW_MOUSE_X, m[0]);
-					db.get(Assistance::io__db_mouse_float::RAW_MOUSE_Y, m[1]);
+					db.get(Assistance::io__db_mouse_float::MOUSE_X, m[0]);
+					db.get(Assistance::io__db_mouse_float::MOUSE_Y, m[1]);
 
-					ALLEGRO_TRANSFORM untransf = psf.quick();
-					al_invert_transform(&untransf);
-					al_transform_coordinates(&untransf, &m[0], &m[1]);
+					//ALLEGRO_TRANSFORM untransf = psf.quick();
+					//al_invert_transform(&untransf);
+					//al_transform_coordinates(&untransf, &m[0], &m[1]);
 
 
 					data.dval[+Assistance::io__sprite_double::RO_MOUSE_DISTANCE_X] = (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX]) - (double)m[0];
@@ -783,8 +812,8 @@ namespace LSW {
 		{
 			data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = false;
 			data.bval[+Assistance::io__sprite_boolean::RO_IS_MOUSE_COLLIDING] = false;
-			data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] = 2.0 * data.dval[+Assistance::io__sprite_double::SCALEX] * data.dval[+Assistance::io__sprite_double::SCALEG];
-			data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] = 2.0 * data.dval[+Assistance::io__sprite_double::SCALEY] * data.dval[+Assistance::io__sprite_double::SCALEG];
+			data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] = 0.0;// 2.0 * data.dval[+Assistance::io__sprite_double::SCALEX] * data.dval[+Assistance::io__sprite_double::SCALEG];
+			data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] = 0.0;// 2.0 * data.dval[+Assistance::io__sprite_double::SCALEY] * data.dval[+Assistance::io__sprite_double::SCALEG];
 
 		}
 
@@ -807,15 +836,22 @@ namespace LSW {
 
 		void Sprite::collideWith(const int is_layer, Sprite* const mf)
 		{
+			if (mf == this) return;
 			if (layer != is_layer) return;
+
+			if (!data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM]) return; // currently it would fail af
 			if (!data.bval[+Assistance::io__sprite_boolean::COLLIDE_OTHERS]) return;
+
 			if (!mf) throw Abort::abort(__FUNCSIG__, "SPRITE* was null! (shouldn't be)", 1);
+			if (!mf->isEq(Assistance::io__sprite_integer::LAYER, is_layer)) return;
 			//if (mf->isEq(Assistance::io__sprite_boolean::COLLIDE_OTHERS, false)) return; // static block?
 
 
 			double otherpos[2] = { 0.0 };
 			double otherscl[3] = { 1.0 };
 
+			std::string oid;
+			mf->get(Assistance::io__sprite_string::ID, oid);
 
 			mf->get(Assistance::ro__sprite_target_double::TARG_POSX, otherpos[0]);
 			mf->get(Assistance::ro__sprite_target_double::TARG_POSY, otherpos[1]);
@@ -832,19 +868,92 @@ namespace LSW {
 			double dxx = (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX]) - otherpos[0]; // data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]
 			double dyy = (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY]) - otherpos[1]; // data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]
 
-			if (sqrt(dxx * dyy) < sqrt(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] * data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y])) {
-				data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] = dxx;
-				data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] = dyy;
+			double distx = 0.5 * (data.dval[+Assistance::io__sprite_double::SCALEX] * data.dval[+Assistance::io__sprite_double::SCALEG] + otherscl[0]);
+			double disty = 0.5 * (data.dval[+Assistance::io__sprite_double::SCALEY] * data.dval[+Assistance::io__sprite_double::SCALEG] + otherscl[1]);
+
+			if (
+				(fabs(dxx) < distx) &&
+				(fabs(dyy) < disty)
+				)
+			{
+				data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = true;
+
+
+				if (data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ELASTIC]) {
+					double wx = fabs(dxx) <= 1e-10 ? 1e-10 : fabs(dxx);
+					double wy = fabs(dyy) <= 1e-10 ? 1e-10 : fabs(dyy);
+					// 
+					double calcx = (dxx < 0 ? -1.0 : 1.0) * (fabs(powl(Constants::sprite_default_multiplier_global_div / wx, Constants::sprite_default_power_global_div)));
+					double calcy = (dyy < 0 ? -1.0 : 1.0) * (fabs(powl(Constants::sprite_default_multiplier_global_div / wy, Constants::sprite_default_power_global_div)));
+
+					// should limit because things are crazy
+					bool _keep_bg = fabs(calcx) < fabs(calcy);
+					if (fabs(calcx) > Constants::sprite_default_limit_speed_any) calcx /= fabs(calcx) / Constants::sprite_default_limit_speed_any;
+					if (fabs(calcy) > Constants::sprite_default_limit_speed_any) calcy /= fabs(calcy) / Constants::sprite_default_limit_speed_any;
+
+					if (_keep_bg) {
+						data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] += calcx;
+						data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] += calcy * fabs(calcx);
+					}
+					else {
+						data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] += calcx * fabs(calcy);
+						data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] += calcy;
+					}
+
+					gfile logg;
+					logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Collided elasticly '" << sprite_id << "' with '" << oid << "' intensity: [" << calcx << ";" << calcy << "]" << L::EL;
+				}
+
+				if (data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ROUGH]) {
+					int wasp[2];
+					wasp[0] = dxx > 0.0 ? 1 : -1;
+					wasp[1] = dyy > 0.0 ? 1 : -1;
+
+					double realdist[2];
+					realdist[0] = -(double)wasp[0] * (fabs(dxx) - fabs(distx));
+					realdist[1] = -(double)wasp[1] * (fabs(dyy) - fabs(disty));
+
+					if (fabs(realdist[0]) < fabs(realdist[1])) data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] = realdist[0];
+					else									   data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] = realdist[1];
+
+					gfile logg;
+					logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Collided roughly '" << sprite_id << "' with '" << oid << "' intensity: [" << realdist[0] << ";" << realdist[1] << "]" << L::EL;
+				}
+			}
+		}
+
+		void Sprite::applyCollideData(camera_preset psf)
+		{
+			if (data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING]) {
+				// limit the maximum power of pos += distance value
+				double& calcx = data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X];
+				double& calcy = data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y];
+				if (fabs(calcx) > Constants::sprite_default_limit_speed_any) calcx /= fabs(calcx) / Constants::sprite_default_limit_speed_any;
+				if (fabs(calcy) > Constants::sprite_default_limit_speed_any) calcy /= fabs(calcy) / Constants::sprite_default_limit_speed_any;
+
+				if (data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ELASTIC]) {
+					data.dval[+Assistance::io__sprite_double::SPEEDX] += data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_X];
+					data.dval[+Assistance::io__sprite_double::SPEEDY] += data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_Y];
+				}
+				else if (data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ROUGH]) {
+					data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] += data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X];// *data.dval[+Assistance::io__sprite_double::SMOOTHNESS_X];
+					data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] += data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y];// *data.dval[+Assistance::io__sprite_double::SMOOTHNESS_Y];
+
+				}
 			}
 
+			if (psf.get(Assistance::io__camera_boolean::RESPECT_LIMITS) && !(data.bval[+Assistance::io__sprite_boolean::FOLLOWMOUSE] || !data.bval[+Assistance::io__sprite_boolean::RESPECT_CAMERA_LIMITS])) /* FOLLOWMOUSE may glitch if outside limits, so skip limits then */
+			{
+				double lxl = (double)psf.get(Assistance::io__camera_float::LIMIT_MIN_X); // limit x lower
+				double lyl = (double)psf.get(Assistance::io__camera_float::LIMIT_MIN_Y); // limit y lower
+				double lxh = (double)psf.get(Assistance::io__camera_float::LIMIT_MAX_X); // limit x higher
+				double lyh = (double)psf.get(Assistance::io__camera_float::LIMIT_MAX_Y); // limit y higher
 
-			data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] |= (
-				(fabs(dxx) < 0.5 * (data.dval[+Assistance::io__sprite_double::SCALEX] * data.dval[+Assistance::io__sprite_double::SCALEG] + otherscl[0])) &&
-				(fabs(dyy) < 0.5 * (data.dval[+Assistance::io__sprite_double::SCALEY] * data.dval[+Assistance::io__sprite_double::SCALEG] + otherscl[1]))
-				);
-
-
-
+				if (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] < lxl) data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] = lxl;
+				if (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] > lxh) data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] = lxh;
+				if (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] < lyl) data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] = lyl;
+				if (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] > lyh) data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] = lyh;
+			}
 		}
 
 

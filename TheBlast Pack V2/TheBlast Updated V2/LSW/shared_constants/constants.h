@@ -74,6 +74,11 @@ namespace LSW {
 			// drawing.h stuff
 			const double text_default_sharpness_font = 75.0; // 2500
 			const double text_timeout_interpret = 0.5;
+			const double camera_default_slipperiness = 0.95;
+			const double sprite_default_smoothness = 0.5; // alias: slipperines
+			const double sprite_default_multiplier_global_div = 1.0e-1;
+			const double sprite_default_power_global_div = 4.0;
+			const double sprite_default_limit_speed_any = 0.15;
 
 			// sound.h stuff
 			const float start_default_global_volume = 0.5;

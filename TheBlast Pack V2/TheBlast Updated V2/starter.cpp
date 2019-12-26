@@ -300,12 +300,24 @@ int main(int argc, const char* argv[])
 
 			// loading
 			cp.setLayer(-50, true);
+			cp.set(Assistance::io__camera_boolean::RESPECT_LIMITS, true);
+			cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -1.0);
+			cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -1.0);
+			cp.set(Assistance::io__camera_float::LIMIT_MAX_X, 1.0);
+			cp.set(Assistance::io__camera_float::LIMIT_MAX_Y, 1.0);
+			cp.set(Assistance::io__camera_float::SCALE_G, 0.99);
 			gcam.set(cp, +main_gamemodes::LOADING);
 
 			// menu
 			cp = camera_preset();
 			cp.setLayer(-10, true);
 			cp.setLayer(99, true); // mouse
+			cp.set(Assistance::io__camera_boolean::RESPECT_LIMITS, true);
+			cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -1.0);
+			cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -1.0);
+			cp.set(Assistance::io__camera_float::LIMIT_MAX_X, 1.0);
+			cp.set(Assistance::io__camera_float::LIMIT_MAX_Y, 1.0);
+			cp.set(Assistance::io__camera_float::SCALE_G, 0.99);
 			//cp.set(Assistance::io__camera_float::OFFSET_X, 0.4);
 			gcam.set(cp, +main_gamemodes::MENU);
 
@@ -313,12 +325,19 @@ int main(int argc, const char* argv[])
 			cp = camera_preset();
 			cp.setLayer(-9, true);
 			cp.setLayer(99, true); // mouse
+			cp.set(Assistance::io__camera_boolean::RESPECT_LIMITS, true);
+			cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -1.0);
+			cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -1.0);
+			cp.set(Assistance::io__camera_float::LIMIT_MAX_X, 1.0);
+			cp.set(Assistance::io__camera_float::LIMIT_MAX_Y, 1.0);
+			cp.set(Assistance::io__camera_float::SCALE_G, 0.99);
 			gcam.set(cp, +main_gamemodes::OPTIONS);
 
 			// pause
 			cp = camera_preset();
 			cp.setLayer(-1, true);
 			cp.setLayer(99, true); // mouse
+			cp.set(Assistance::io__camera_float::SCALE_G, 0.99);
 			gcam.set(cp, +main_gamemodes::PAUSE);
 
 			// game
@@ -331,12 +350,14 @@ int main(int argc, const char* argv[])
 
 		{
 			Sprite* s = sprites.create("MOUSE");
+			s->set(Assistance::io__sprite_string::ID, "MOUSE");
 			s->set(Assistance::io__sprite_boolean::FOLLOWMOUSE, true);
-			s->set(Assistance::io__sprite_boolean::AFFECTED_BY_CAM, false);
+			//s->set(Assistance::io__sprite_boolean::AFFECTED_BY_CAM, false);
 			s->set(Assistance::io__sprite_boolean::DRAW, true); // no draw for now
 			s->set(Assistance::io__sprite_double::SCALEG, 0.2);
 			s->set(Assistance::io__sprite_string::ADD, "MOUSE");
-			s->set(Assistance::io__sprite_integer::LAYER, 99);
+			//s->set(Assistance::io__sprite_integer::LAYER, 99);
+			s->set(Assistance::io__sprite_integer::LAYER, -10); // TEMP
 			s->set(Assistance::io__sprite_double::SPEEDROT, 15.0 / 10);
 		}
 
@@ -345,9 +366,24 @@ int main(int argc, const char* argv[])
 			s->set(Assistance::io__sprite_string_vector::ADDMULTIPLE, Tools::genStrFormat("PAUSE_##", 29));
 			s->set(Assistance::io__sprite_string::ID, "PAUSE_ANIM");
 			s->set(Assistance::io__sprite_boolean::DRAW, true);
+			s->set(Assistance::io__sprite_boolean::COLLIDE_OTHERS, true);
+			s->set(Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ELASTIC, true);
 			s->set(Assistance::io__sprite_double::SCALEG, 0.55);
 			s->set(Assistance::io__sprite_double::POSY, -0.35);
 			s->set(Assistance::io__sprite_double::ANIMATION_FPS, 1.0/24);
+			s->set(Assistance::io__sprite_integer::LAYER, -10);
+		}
+
+		{
+			Sprite* s = sprites.create("PAUSE_ANIM2");
+			s->set(Assistance::io__sprite_string_vector::ADDMULTIPLE, Tools::genStrFormat("PAUSE_##", 29));
+			s->set(Assistance::io__sprite_string::ID, "PAUSE_ANIM2");
+			s->set(Assistance::io__sprite_boolean::DRAW, true);
+			s->set(Assistance::io__sprite_boolean::COLLIDE_OTHERS, true);
+			s->set(Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ROUGH, true);
+			s->set(Assistance::io__sprite_double::SCALEG, 0.35);
+			s->set(Assistance::io__sprite_double::POSY, -0.05);
+			s->set(Assistance::io__sprite_double::ANIMATION_FPS, 1.0/15);
 			s->set(Assistance::io__sprite_integer::LAYER, -10);
 		}
 
@@ -430,10 +466,10 @@ int main(int argc, const char* argv[])
 			//cp.set(Assistance::io__camera_float::ROTATION_RAD, al_get_time() * 0.25);
 			//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "ANG=" << (float)((int)(0.3 * (1800.0 / ALLEGRO_PI) * al_get_time())%3600)/10.0 << L::EL;
 			//cp.set(Assistance::io__camera_float::ROTATION_RAD, 0.3 * al_get_time());
-			gcam.get().set(Assistance::io__camera_float::OFFSET_X, 0.45 * cos(0.3*al_get_time()));
+			//gcam.get().set(Assistance::io__camera_float::OFFSET_X, 0.45 * cos(0.3*al_get_time()));
 			//gcam.get().set(Assistance::io__camera_float::OFFSET_Y, 0.14 * sin(0.2*al_get_time()));
-			gcam.get().set(Assistance::io__camera_float::SCALE_G, 0.7 + 0.4 * sin(al_get_time() * 0.33));
-			gcam.get().set(Assistance::io__camera_float::ROTATION_RAD, (al_get_time() * 0.03));
+			gcam.get().set(Assistance::io__camera_float::SCALE_G, 0.8 + 0.35 * sin(al_get_time() * 0.17));
+			gcam.get().set(Assistance::io__camera_float::ROTATION_RAD, 0.2 * cos(al_get_time() * 0.23));
 			gcam.apply(+modern);
 
 			//gcam.set(cp, 0);

@@ -298,18 +298,21 @@ namespace LSW {
 							camera_preset ww = gcam.get();
 							//float rr = ww.get(Assistance::io__camera_float::ROTATION_RAD); // adjustment because canvas has been rotated so mouse will be at normal and stuff offset by this
 
-							for (auto& i : sprites) i->self->clearUp();
+							for (auto& i : sprites) i->self->clearUp(); // set as no collision
 
 							for (auto& k : ww) {
 								for (auto& i : sprites) {
-									i->self->process(k, ww);
+									i->self->process(k, ww); // process positioning
 
 									for (auto& j : sprites)
 									{
-										i->self->collideWith(k, j->self);
+										i->self->collideWith(k, j->self); // see collisions
 									}
 								}
 							}
+
+							for (auto& i : sprites) i->self->applyCollideData(ww); // apply collision consequences
+
 							last_loop_had_error = 0;
 						}
 						catch (Abort::abort err)
@@ -406,14 +409,26 @@ namespace LSW {
 					}
 					else if (thr_kb_arg->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::UPDATEMOUSE))
 					{
-						float _temp[2];
-						conf.get(Assistance::io__db_mouse_float::MOUSE_X, _temp[0]);
-						conf.get(Assistance::io__db_mouse_float::MOUSE_Y, _temp[1]);
+						float m[2];
+						conf.get(Assistance::io__db_mouse_float::RAW_MOUSE_X, m[0]);
+						conf.get(Assistance::io__db_mouse_float::RAW_MOUSE_Y, m[1]);
+
+						// transform based on cam
+						Camera gcam;
+						camera_preset psf = gcam.get(); // copy latest
+
+						ALLEGRO_TRANSFORM untransf = psf.quick();
+						al_invert_transform(&untransf);
+						al_transform_coordinates(&untransf, &m[0], &m[1]);
+
+						conf.set(Assistance::io__db_mouse_float::MOUSE_X, m[0]);
+						conf.set(Assistance::io__db_mouse_float::MOUSE_Y, m[1]);
+
 
 						for (auto& i : sprites) {
 							if (i->self->isEq(Assistance::io__sprite_boolean::FOLLOWMOUSE, true)) {
-								i->self->set(Assistance::io__sprite_double::POSX, _temp[0]);
-								i->self->set(Assistance::io__sprite_double::POSY, _temp[1]);
+								i->self->set(Assistance::io__sprite_double::POSX, m[0]);
+								i->self->set(Assistance::io__sprite_double::POSY, m[1]);
 							}
 						}
 					}
@@ -455,10 +470,12 @@ namespace LSW {
 							//else                          logg.debug("[THR_KBM] KEYCHAR= %d", ev.keyboard.keycode);
 						}
 						if (ev.type == ALLEGRO_EVENT_MOUSE_AXES) {
-							conf.set(Assistance::io__db_mouse_float::MOUSE_X, (ev.mouse.x * 2.0f / display_x) - 1.0);
-							conf.set(Assistance::io__db_mouse_float::MOUSE_Y, (ev.mouse.y * 2.0f / display_y) - 1.0);
+							//conf.set(Assistance::io__db_mouse_float::MOUSE_X, (ev.mouse.x * 2.0f / display_x) - 1.0);
+							//conf.set(Assistance::io__db_mouse_float::MOUSE_Y, (ev.mouse.y * 2.0f / display_y) - 1.0);
+
 							conf.set(Assistance::io__db_mouse_float::RAW_MOUSE_X, ev.mouse.x);
 							conf.set(Assistance::io__db_mouse_float::RAW_MOUSE_Y, ev.mouse.y);
+
 						}
 						if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
 							conf.set(+((Assistance::io__db_mouse_boolean)ev.mouse.button), true);
