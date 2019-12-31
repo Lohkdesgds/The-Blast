@@ -39,7 +39,7 @@ namespace LSW {
 			enum class io__conf_string { LAST_VERSION, LAST_PLAYERNAME, LAST_COLOR };
 
 			// on memory while running
-			enum class io__db_mouse_boolean { MOUSE_0, MOUSE_1, MOUSE_2, MOUSE_3, MOUSE_4, MOUSE_5, MOUSE_6, MOUSE_7 }; // Constants::max_mouse_set_buttons
+			enum class io__db_mouse_boolean { MOUSE_0, MOUSE_1, MOUSE_2, MOUSE_3, MOUSE_4, MOUSE_5, MOUSE_6, MOUSE_7, size, IS_ANY_PRESSED }; // Constants::max_mouse_set_buttons
 			enum class io__db_mouse_float { MOUSE_X, MOUSE_Y, RAW_MOUSE_X, RAW_MOUSE_Y };
 			enum class io__db_statistics_sizet { FRAMESPERSECOND, COLLISIONSPERSECOND, USEREVENTSPERSECOND, size};
 
@@ -129,7 +129,7 @@ namespace LSW {
 				ALLEGRO_CONFIG* c = nullptr;
 				std::mutex m;
 				bool keys[ALLEGRO_KEY_MAX] = { false };
-				bool mouse[+Constants::max_mouse_set_buttons] = { false };
+				bool mouse[+Assistance::io__db_mouse_boolean::size] = { false };
 
 				// memory only
 				float db_mouse_axes[4] = { 0.0 };

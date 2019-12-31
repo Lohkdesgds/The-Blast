@@ -632,7 +632,7 @@ namespace LSW {
 		}
 		void Database::set(const Assistance::io__db_mouse_boolean e, const bool v)
 		{
-			data.mouse[+e] = v;
+			if (+e < +Assistance::io__db_mouse_boolean::size) data.mouse[+e] = v;
 		}
 		void Database::set(const Assistance::io__db_mouse_float e, const float v)
 		{
@@ -694,7 +694,11 @@ namespace LSW {
 		}
 		void Database::get(const Assistance::io__db_mouse_boolean e, bool& v)
 		{
-			v = data.mouse[+e];
+			if (e != Assistance::io__db_mouse_boolean::size) v = data.mouse[+e];
+			if (e == Assistance::io__db_mouse_boolean::IS_ANY_PRESSED) {
+				v = false;
+				for (auto& i : data.mouse) v |= i;
+			}
 		}
 		void Database::get(const Assistance::io__db_mouse_float e, float& v)
 		{

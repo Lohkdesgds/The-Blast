@@ -346,22 +346,53 @@ int main(int argc, const char* argv[])
 			gcam.set(cp, +main_gamemodes::GAMING);
 		}
 
+		/*
+		LOADING:	-50
+		MENU:		-10
+		OPTIONS:	-09
+		PAUSE:		-01
+		GAME:		 00
+		all:		 99 (mouse)
+		*/
 
 
 		{
 			Sprite* s = sprites.create("MOUSE");
 			s->set(Assistance::io__sprite_string::ID, "MOUSE");
 			s->set(Assistance::io__sprite_boolean::FOLLOWMOUSE, true);
-			//s->set(Assistance::io__sprite_boolean::AFFECTED_BY_CAM, false);
+			s->set(Assistance::io__sprite_boolean::COLLIDE_IGNORE_LAYER, true);
 			s->set(Assistance::io__sprite_boolean::DRAW, true); // no draw for now
 			s->set(Assistance::io__sprite_double::SCALEG, 0.2);
 			s->set(Assistance::io__sprite_string::ADD, "MOUSE");
-			//s->set(Assistance::io__sprite_integer::LAYER, 99);
-			s->set(Assistance::io__sprite_integer::LAYER, -10); // TEMP
+			s->set(Assistance::io__sprite_integer::LAYER, 99);
+			//s->set(Assistance::io__sprite_integer::LAYER, -10); // TEMP
 			s->set(Assistance::io__sprite_double::SPEEDROT, 15.0 / 10);
 		}
 
 		{
+			Sprite* s = sprites.create("BUTTON0");
+
+			s->set(Assistance::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
+
+			s->set(Assistance::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
+			s->set(Assistance::io__sprite_string::ADD, "BAR_ON");  // clearly 1
+
+			s->set(Assistance::io__sprite_collision_state::COLLISION_NONE, 0);
+			s->set(Assistance::io__sprite_collision_state::COLLISION_MOUSE_ON, 1);
+			s->set(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, 1);
+
+			s->set(Assistance::io__sprite_string::ID, "BUTTON0");
+			s->set(Assistance::io__sprite_boolean::DRAW, true);
+			s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, true);
+			//s->set(Assistance::io__sprite_boolean::COLLIDE_OTHERS, true); // just a test
+			s->set(Assistance::io__sprite_double::SCALEG, 0.18);
+			s->set(Assistance::io__sprite_double::SCALEX, 4.5);
+			s->set(Assistance::io__sprite_double::POSY, -0.35);
+			s->set(Assistance::io__sprite_double::ANIMATION_FPS, 1.0 / 24);
+			s->set(Assistance::io__sprite_integer::LAYER, -10);
+		}
+
+		/*{
 			Sprite* s = sprites.create("PAUSE_ANIM");
 			s->set(Assistance::io__sprite_string_vector::ADDMULTIPLE, Tools::genStrFormat("PAUSE_##", 29));
 			s->set(Assistance::io__sprite_string::ID, "PAUSE_ANIM");
@@ -385,7 +416,7 @@ int main(int argc, const char* argv[])
 			s->set(Assistance::io__sprite_double::POSY, -0.05);
 			s->set(Assistance::io__sprite_double::ANIMATION_FPS, 1.0/15);
 			s->set(Assistance::io__sprite_integer::LAYER, -10);
-		}
+		}*/
 
 		{
 			Sprite* s = sprites.create("LOADING_ANIM");
@@ -399,9 +430,24 @@ int main(int argc, const char* argv[])
 			s->set(Assistance::io__sprite_boolean::LOOPFRAMES, false);
 		}
 
+		{
+			Text* t = texts.create("BUTTON0_T");
+			t->set(Assistance::io__text_string::FONT, "DEFAULT");
+			t->set(Assistance::io__text_string::STRING, "State: %sprite_state%");
+			t->set(Assistance::io__text_string::ID, "BUTTON0_T");
+			t->set(Assistance::io__text_boolean::SHOW, true);
+			t->set(Assistance::io__text_double::SCALEG, 0.10);
+			t->set(Assistance::io__text_double::POSY, -0.060);
+			t->set(Assistance::io__text_string::FOLLOW_SPRITE, "BUTTON0");
+			t->set(Assistance::io__text_integer::LAYER, -10);
+			t->set(Assistance::io__text_double::UPDATETIME, 1.0/20);
+			t->set(Assistance::io__text_color::COLOR, al_map_rgb(180, 255, 225));
+			
+		}
 
 
-		auto mytext = texts.create("randomtext");
+
+		Text* mytext = texts.create("randomtext");
 		mytext->set(Assistance::io__text_string::FONT, "DEFAULT");
 		mytext->set(Assistance::io__text_string::STRING, "TEST");
 		mytext->set(Assistance::io__text_string::ID, "randomtext");
@@ -409,7 +455,7 @@ int main(int argc, const char* argv[])
 		mytext->set(Assistance::io__text_double::SCALEG, 0.1);
 		mytext->set(Assistance::io__text_double::POSY, 0.65);
 		mytext->set(Assistance::io__text_integer::LAYER, -10);
-		mytext->set(Assistance::io__text_double::UPDATETIME, 1.0/20);
+		mytext->set(Assistance::io__text_double::UPDATETIME, 1.0/10);
 
 
 		auto mytrack = tracks.create("randomtrack");

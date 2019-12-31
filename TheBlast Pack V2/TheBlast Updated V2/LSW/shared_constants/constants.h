@@ -82,9 +82,7 @@ namespace LSW {
 
 			// sound.h stuff
 			const float start_default_global_volume = 0.5;
-
-			const size_t max_mouse_set_buttons = 8;
-
+			
 			const size_t internal_collision_positioning_time_update = 10; /*20*/
 
 

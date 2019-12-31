@@ -478,10 +478,10 @@ namespace LSW {
 
 						}
 						if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
-							conf.set(+((Assistance::io__db_mouse_boolean)ev.mouse.button), true);
+							conf.set(((Assistance::io__db_mouse_boolean)ev.mouse.button), true);
 						}
 						if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
-							conf.set(+((Assistance::io__db_mouse_boolean)ev.mouse.button), false);
+							conf.set(((Assistance::io__db_mouse_boolean)ev.mouse.button), false);
 						}
 					}
 				}

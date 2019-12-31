@@ -338,31 +338,45 @@ namespace LSW {
 
 		
 
-		auto Sprite::__sprite_smart_images::get()
+		ALLEGRO_BITMAP* Sprite::__sprite_smart_images::get(const Assistance::io__sprite_collision_state stt)
 		{
-			auto now = al_get_time();
-			auto siz = copies.size();
+			if (stt == Assistance::io__sprite_collision_state::size) {
+				auto now = al_get_time();
+				auto siz = copies.size();
 
-			if (lastcall == 0 || difftimeanim <= 0) lastcall = now;
+				if (lastcall == 0 || difftimeanim <= 0) lastcall = now;
 
-			if (difftimeanim > 0 && siz > 1) {
-				if ((now - lastcall) > difftimeanim * 10) { // skip if so far behind
-					lastcall = now - difftimeanim * 10;
-				}
-				while ((now - lastcall) > difftimeanim)
-				{
-					if (!loopin) {
-						if (actual < siz - 1) actual++;
-						else {
-							hasdoneloop = true;
+				if (difftimeanim > 0 && siz > 1) {
+					if ((now - lastcall) > difftimeanim * 10) { // skip if so far behind
+						lastcall = now - difftimeanim * 10;
+					}
+					while ((now - lastcall) > difftimeanim)
+					{
+						if (!loopin) {
+							if (actual < siz - 1) actual++;
+							else {
+								hasdoneloop = true;
+							}
 						}
-					}
-					else {
-						if (++actual >= siz) actual = 0;
-					}
+						else {
+							if (++actual >= siz) actual = 0;
+						}
 
-					lastcall += difftimeanim;
+						lastcall += difftimeanim;
+					}
 				}
+			}
+			else {
+				auto vv = pair[+stt];
+				if (vv >= copies.size() || vv == std::string::npos) {
+					if (pair[+Assistance::io__sprite_collision_state::COLLISION_NONE] != std::string::npos) return get(Assistance::io__sprite_collision_state::COLLISION_NONE); // like default one
+					return get(Assistance::io__sprite_collision_state::size);
+				}
+
+				lastcall = 0;
+				actual = 0;
+
+				return copies[pair[+stt]]->bmp;
 			}
 			return copies[actual]->bmp;
 		}
@@ -414,6 +428,15 @@ namespace LSW {
 				difftimeanim = v;
 			}
 		}
+		void Sprite::__sprite_smart_images::setState(const Assistance::io__sprite_collision_state s, const size_t v)
+		{
+			if (s != Assistance::io__sprite_collision_state::size) pair[+s] = v;
+		}
+		size_t Sprite::__sprite_smart_images::getState(const Assistance::io__sprite_collision_state s)
+		{
+			if (s != Assistance::io__sprite_collision_state::size) return pair[+s];
+			return std::string::npos;
+		}
 		void Sprite::__sprite_smart_images::loop(const bool b)
 		{
 			loopin = b;
@@ -453,6 +476,7 @@ namespace LSW {
 			dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] = 0.0;
 			bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM] = true;
 			bval[+Assistance::io__sprite_boolean::COLLIDE_MOUSE] = true;
+			bval[+Assistance::io__sprite_boolean::COLLIDE_IGNORE_LAYER] = false;
 			bval[+Assistance::io__sprite_boolean::SHOWBOX] = debugging;
 			bval[+Assistance::io__sprite_boolean::SHOWDOT] = debugging;
 			bval[+Assistance::io__sprite_boolean::RESPECT_CAMERA_LIMITS] = true;
@@ -475,10 +499,12 @@ namespace LSW {
 
 				else {
 					float m[2] = { 0.0 };
+					bool is_mouse_pressed = false;
 					Database db;
 
 					db.get(Assistance::io__db_mouse_float::MOUSE_X, m[0]);
 					db.get(Assistance::io__db_mouse_float::MOUSE_Y, m[1]);
+					db.get(Assistance::io__db_mouse_boolean::IS_ANY_PRESSED, is_mouse_pressed);
 
 					//ALLEGRO_TRANSFORM untransf = psf.quick();
 					//al_invert_transform(&untransf);
@@ -493,17 +519,16 @@ namespace LSW {
 						(fabs(data.dval[+Assistance::io__sprite_double::RO_MOUSE_DISTANCE_X]) < 0.5 * data.dval[+Assistance::io__sprite_double::SCALEX] * data.dval[+Assistance::io__sprite_double::SCALEG]) &&
 						(fabs(data.dval[+Assistance::io__sprite_double::RO_MOUSE_DISTANCE_Y]) < 0.5 * data.dval[+Assistance::io__sprite_double::SCALEY] * data.dval[+Assistance::io__sprite_double::SCALEG])
 						);
-				}
 
-
-
-				if (data.bval[+Assistance::io__sprite_boolean::RO_IS_MOUSE_COLLIDING]) {
-					data.dval[+Assistance::io__sprite_double::RO_LAST_MOUSE_COLLISION] = al_get_time();
-
-					// DEBUGGING
-					///gfile logg;
-
-					///logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << sprite_id << " COLLIDING!" << L::EL;
+					if (data.bval[+Assistance::io__sprite_boolean::RO_IS_MOUSE_COLLIDING]) {
+						data.dval[+Assistance::io__sprite_double::RO_LAST_MOUSE_COLLISION] = al_get_time();
+						if (is_mouse_pressed) {
+							data.new_state = Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK;
+						}
+						else {
+							data.new_state = Assistance::io__sprite_collision_state::COLLISION_MOUSE_ON;
+						}
+					}
 				}
 			}
 			else {
@@ -556,7 +581,7 @@ namespace LSW {
 		void Sprite::set(const Assistance::io__sprite_double u, const double v)
 		{
 			switch (u) {
-			case Assistance::io__sprite_double::ANIMATION_FPS:
+			case Assistance::io__sprite_double::ANIMATION_FPS:  // don't forget COLLISION_STATE can bug this one
 				bmps.setFPS(v);
 				break;
 			default:
@@ -596,6 +621,36 @@ namespace LSW {
 			case Assistance::io__sprite_integer::LAYER:
 				layer = v;
 				break;
+			case Assistance::io__sprite_integer::ADD_ANOTHER_LAYER_COLLISION:
+			{
+				bool has = false;
+				data.layers_colliding_m.lock();
+
+				for (auto& i : data.layers_colliding) {
+					if (i == v) {
+						has = true;
+						break;
+					}
+				}
+				if (!has && v != layer) data.layers_colliding.push_back(v);
+
+				data.layers_colliding_m.unlock();
+			}
+				break;
+			case Assistance::io__sprite_integer::REMOVE_LAYER_COLLISION:
+			{
+				data.layers_colliding_m.lock();
+
+				for (size_t p = 0; p < data.layers_colliding.size(); p++) {
+					if (data.layers_colliding[p] == v) {
+						data.layers_colliding.erase(data.layers_colliding.begin() + p);
+						break;
+					}
+				}
+
+				data.layers_colliding_m.unlock();
+			}
+				break;
 			}
 		}
 		void Sprite::set(const Assistance::io__sprite_sizet u, const size_t v)
@@ -613,6 +668,11 @@ namespace LSW {
 				data.tint = v;
 				break;
 			}
+		}
+
+		void Sprite::set(const Assistance::io__sprite_collision_state u, const size_t v)
+		{
+			bmps.setState(u, v);
 		}
 
 		bool Sprite::get(const Assistance::io__sprite_string u, std::string& v)
@@ -679,6 +739,15 @@ namespace LSW {
 			}
 			return false;
 		}
+		bool Sprite::get(const Assistance::ro__sprite_state u, Assistance::io__sprite_collision_state& v)
+		{
+			switch (u) {
+			case Assistance::ro__sprite_state::STATE:
+				v = data.last_state;
+				return true;
+			}
+			return false;
+		}
 		bool Sprite::get(const Assistance::io__sprite_color u, ALLEGRO_COLOR& v)
 		{
 			switch (u) {
@@ -687,6 +756,11 @@ namespace LSW {
 				return true;
 			}
 			return false;
+		}
+
+		void Sprite::get(const Assistance::io__sprite_collision_state u, size_t& v)
+		{
+			v = bmps.getState(u);
 		}
 
 		bool Sprite::isEq(const Assistance::io__sprite_string w, const std::string v)
@@ -710,12 +784,30 @@ namespace LSW {
 		bool Sprite::isEq(const Assistance::io__sprite_integer w, const int v)
 		{
 			int g;
-			get(w, g);
-			return g == v;
+			get(w, g); 
+			return g == v || [&]() {
+				if (w != Assistance::io__sprite_integer::LAYER) return false; // return false forcing anything but LAYER to be TRUE on g == v part
+
+				data.layers_colliding_m.lock();
+				for (auto& i : data.layers_colliding) {
+					if (i == v) {
+						data.layers_colliding_m.unlock();
+						return true;
+					}
+				}
+				data.layers_colliding_m.unlock();
+				return false;
+			}();
 		}
 		bool Sprite::isEq(const Assistance::io__sprite_sizet w, const size_t v)
 		{
 			size_t g;
+			get(w, g);
+			return g == v;
+		}
+		bool Sprite::isEq(const Assistance::ro__sprite_state w, const Assistance::io__sprite_collision_state v)
+		{
+			Assistance::io__sprite_collision_state g;
 			get(w, g);
 			return g == v;
 		}
@@ -726,12 +818,19 @@ namespace LSW {
 			return ((g.a == v.a) && (g.r == v.r) && (g.g == v.g) && (g.b == v.b));
 		}
 
+		bool Sprite::isEq(const Assistance::io__sprite_collision_state w, const size_t v)
+		{
+			size_t g;
+			get(w, g);
+			return g == v;
+		}
+
 		void Sprite::draw(const int is_layer)
 		{
 			if (layer != is_layer) return;
 			if (!data.bval[+Assistance::io__sprite_boolean::DRAW]) return;
 
-			ALLEGRO_BITMAP* rn = bmps.get();
+			ALLEGRO_BITMAP* rn = bmps.get((data.bval[+Assistance::io__sprite_boolean::USE_STATE_AS_BITMAP] ? data.last_state : Assistance::io__sprite_collision_state::size));
 			Camera camm;
 			camera_preset psf = camm.get();
 
@@ -757,7 +856,7 @@ namespace LSW {
 			bmpx = al_get_bitmap_width(rn);
 			bmpy = al_get_bitmap_height(rn);
 			if (bmpx <= 0 || bmpy <= 0) {
-				throw Abort::abort(__FUNCSIG__, "Somehow the texture have < 0 width / height id=[" + this->sprite_id + "] size={" + std::to_string(bmpx) + "," + std::to_string(bmpy) + "}", 1);
+				throw Abort::abort(__FUNCSIG__, "Somehow the texture have < 0 width / height id=[" + this->sprite_id + "] COLLISION_NONE={" + std::to_string(bmpx) + "," + std::to_string(bmpy) + "}", 1);
 			}
 
 			cx = 1.0f * bmpx * ((data.dval[+Assistance::io__sprite_double::CENTERX] + 1.0) * 0.5);
@@ -814,12 +913,15 @@ namespace LSW {
 			data.bval[+Assistance::io__sprite_boolean::RO_IS_MOUSE_COLLIDING] = false;
 			data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] = 0.0;// 2.0 * data.dval[+Assistance::io__sprite_double::SCALEX] * data.dval[+Assistance::io__sprite_double::SCALEG];
 			data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] = 0.0;// 2.0 * data.dval[+Assistance::io__sprite_double::SCALEY] * data.dval[+Assistance::io__sprite_double::SCALEG];
+			data.new_state = Assistance::io__sprite_collision_state::COLLISION_NONE;
 
 		}
 
 		void Sprite::process(const int is_layer, camera_preset psf) // later: be a target, so drawing it will get there (based on framerate)
 		{
-			if (layer != is_layer) return;
+			if ((layer != is_layer) && !data.bval[+Assistance::io__sprite_boolean::COLLIDE_IGNORE_LAYER] &&
+			 ([&]() { data.layers_colliding_m.lock(); for (auto& i : data.layers_colliding) { if (i == is_layer) {data.layers_colliding_m.unlock(); return false;} } data.layers_colliding_m.unlock(); return true; }())) return; // check layers if there's one to collide (ON)
+
 
 			if (!data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM]) psf = camera_preset();
 
@@ -836,15 +938,23 @@ namespace LSW {
 
 		void Sprite::collideWith(const int is_layer, Sprite* const mf)
 		{
-			if (mf == this) return;
 			if (layer != is_layer) return;
-
-			if (!data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM]) return; // currently it would fail af
+			if (mf == this) return;
+			//if (!data.bval[+Assistance::io__sprite_boolean::COLLIDE_IGNORE_LAYER]) return;
+			if (!data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM]) return;
 			if (!data.bval[+Assistance::io__sprite_boolean::COLLIDE_OTHERS]) return;
-
-			if (!mf) throw Abort::abort(__FUNCSIG__, "SPRITE* was null! (shouldn't be)", 1);
-			if (!mf->isEq(Assistance::io__sprite_integer::LAYER, is_layer)) return;
-			//if (mf->isEq(Assistance::io__sprite_boolean::COLLIDE_OTHERS, false)) return; // static block?
+			if (!mf) return;
+			if (!(mf->isEq(Assistance::io__sprite_boolean::COLLIDE_IGNORE_LAYER, true) || mf->isEq(Assistance::io__sprite_integer::LAYER, is_layer))) return; // has not the layer to collide so shouldn't collide with this one. (it does check all possible layers)
+			/*if (![&]() {
+				data.layers_colliding_m.lock();
+					for (auto& i : data.layers_colliding) {
+						if (i == is_layer) {
+							return true;
+						}
+					}
+				data.layers_colliding_m.unlock();
+					return false;
+			}()) return;*/
 
 
 			double otherpos[2] = { 0.0 };
@@ -877,6 +987,7 @@ namespace LSW {
 				)
 			{
 				data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = true;
+				if (data.new_state == Assistance::io__sprite_collision_state::COLLISION_NONE) data.new_state = Assistance::io__sprite_collision_state::COLLISION_COLLIDED_OTHER; // mouse is higher priority
 
 
 				if (data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ELASTIC]) {
@@ -924,6 +1035,8 @@ namespace LSW {
 
 		void Sprite::applyCollideData(camera_preset psf)
 		{
+			data.last_state = data.new_state;
+
 			if (data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING]) {
 				// limit the maximum power of pos += distance value
 				double& calcx = data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X];
@@ -1207,6 +1320,27 @@ namespace LSW {
 							__template_static_vector<Track> Tracks;
 							sprintf_s(tempstr_c, "%zu", Tracks.size());
 						}
+						break;
+						case +Assistance::tags_e::T_SPRITE_STATE:
+							if (follow) {
+								Assistance::io__sprite_collision_state stat;
+								follow->get(Assistance::ro__sprite_state::STATE, stat);
+								switch (stat) {
+								case Assistance::io__sprite_collision_state::COLLISION_MOUSE_ON:
+									sprintf_s(tempstr_c, "MOUSE ON");
+									break;
+								case Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK:
+									sprintf_s(tempstr_c, "MOUSE CLICK");
+									break;
+								case Assistance::io__sprite_collision_state::COLLISION_COLLIDED_OTHER:
+									sprintf_s(tempstr_c, "OTHER COLLIDING");
+									break;
+								case Assistance::io__sprite_collision_state::COLLISION_NONE:
+									sprintf_s(tempstr_c, "NONE");
+									break;
+								}
+							}
+							else sprintf_s(tempstr_c, "NULL");
 						break;
 						}
 
