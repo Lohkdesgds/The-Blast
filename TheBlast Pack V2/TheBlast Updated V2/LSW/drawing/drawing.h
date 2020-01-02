@@ -40,7 +40,7 @@ namespace LSW {
 			enum class io__sprite_double		 { POSX, POSY, SCALEX, SCALEY, CENTERX, CENTERY, SCALEG, ROTATION /*DEGREES*/, SPEEDX, SPEEDY, SPEEDROT, SMOOTHNESS_X, SMOOTHNESS_Y, RO_LAST_MOUSE_COLLISION, RO_LAST_OTHERS_COLLISION, RO_MOUSE_DISTANCE_X, RO_MOUSE_DISTANCE_Y, RO_OTHERS_DISTANCE_X, RO_OTHERS_DISTANCE_Y, size, /* since here they are not Sprite exactly stuff*/ ANIMATION_FPS };
 			enum class ro__sprite_target_double  { TARG_POSX, TARG_POSY, TARG_ROTATION, INTERN_LASTDRAW, size};
 			/* FOLLOWMOUSE disable RESPECT_CAMERA_LIMITS automatically */
-			enum class io__sprite_boolean		 { DRAW, COLLIDE_OTHERS, USE_STATE_AS_BITMAP, COLLIDE_MOUSE, COLLIDE_IGNORE_LAYER, AFFECTED_BY_COLLISION_ELASTIC, AFFECTED_BY_COLLISION_ROUGH, AFFECTED_BY_CAM, SHOWDOT, SHOWBOX, RESPECT_CAMERA_LIMITS, FOLLOWMOUSE, FOLLOWKEYBOARD, USE_TINTED_DRAWING, RO_IS_MOUSE_COLLIDING, RO_IS_OTHERS_COLLIDING, size, /* since here they are not Sprite exactly stuff*/ LOOPFRAMES, HAS_DONE_LOOPONCE };
+			enum class io__sprite_boolean		 { DRAW, COLLIDE_OTHERS, USE_STATE_AS_BITMAP, COLLIDE_MOUSE, COLLIDE_IGNORE_LAYER, AFFECTED_BY_COLLISION_ELASTIC, AFFECTED_BY_COLLISION_ROUGH, AFFECTED_BY_CAM, SHOWDOT, SHOWBOX, RESPECT_CAMERA_LIMITS, FOLLOWMOUSE, FOLLOWKEYBOARD, USE_TINTED_DRAWING, RO_IS_MOUSE_COLLIDING, RO_IS_OTHERS_COLLIDING, size, /* since here they are not Sprite exactly stuff*/ LOOPFRAMES, HAS_DONE_LOOP_ONCE, IS_IT_ON_LAST_FRAME, ZERO_RESETS_POSITION_INSTEAD_OF_FREEZING };
 			enum class io__sprite_integer		 { LAYER, size, ADD_ANOTHER_LAYER_COLLISION, REMOVE_LAYER_COLLISION };
 			enum class io__sprite_sizet			 { SIZE, FRAME, size };
 			enum class ro__sprite_state			 { STATE }; // no size
@@ -157,6 +157,7 @@ __slice("%num_tracks%", +tags_e::T_TRACKS_LOADED), __slice("%sprite_state%", +ta
 				std::mutex layers_colliding_m;
 				Assistance::io__sprite_collision_state last_state = Assistance::io__sprite_collision_state::size;
 				Assistance::io__sprite_collision_state new_state = Assistance::io__sprite_collision_state::size;
+				std::function<void(void)> function_pair[+Assistance::io__sprite_collision_state::size];
 
 				__sprite_smart_data();
 			};
@@ -167,7 +168,7 @@ __slice("%num_tracks%", +tags_e::T_TRACKS_LOADED), __slice("%sprite_state%", +ta
 				double lastcall = 0;
 				size_t actual = 0;
 				bool loopin = true;
-				bool hasdoneloop = false;
+				bool has_done_loop_once = false;
 
 				struct  __custom_data { // local yes
 					ALLEGRO_BITMAP* bmp = nullptr;
@@ -175,6 +176,7 @@ __slice("%num_tracks%", +tags_e::T_TRACKS_LOADED), __slice("%sprite_state%", +ta
 				};
 
 				std::vector<__custom_data*> copies;
+				bool reset_instead_of_pause = false;
 
 				size_t pair[+Assistance::io__sprite_collision_state::size] = { std::string::npos };
 			public:
@@ -186,9 +188,11 @@ __slice("%num_tracks%", +tags_e::T_TRACKS_LOADED), __slice("%sprite_state%", +ta
 				void setState(const Assistance::io__sprite_collision_state, const size_t = std::string::npos);
 				size_t getState(const Assistance::io__sprite_collision_state);
 				void loop(const bool = true);
-				bool hasloopended();
+				bool hasLoopEndedOnce();
+				bool isOnLastFrame();
 				void reset(); // default settings
 				void clear(); // copies.clear();
+				void resetInsteadOfPause(const bool);
 			};
 
 			__sprite_smart_images bmps;
@@ -200,6 +204,9 @@ __slice("%num_tracks%", +tags_e::T_TRACKS_LOADED), __slice("%sprite_state%", +ta
 			bool fastIsColliding(camera_preset);
 		public:
 			~Sprite();
+
+			void hook(const Assistance::io__sprite_collision_state, std::function<void(void)>);
+			void unhook(const Assistance::io__sprite_collision_state);
 
 			void set(const Assistance::io__sprite_string_vector, const std::vector<std::string>, float* = nullptr);
 			void set(const Assistance::io__sprite_string, const std::string);
@@ -235,7 +242,7 @@ __slice("%num_tracks%", +tags_e::T_TRACKS_LOADED), __slice("%sprite_state%", +ta
 			void process(const int, camera_preset); // movement
 
 			void collideWith(const int, Sprite* const); // test collision
-			void applyCollideData(camera_preset); // apply collision and check limits
+			void applyCollideData(camera_preset); // apply collision, check limits and run possible functions hooked to states
 		};
 
 

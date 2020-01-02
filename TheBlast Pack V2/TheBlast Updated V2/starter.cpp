@@ -11,7 +11,7 @@ extern "C" {
 }
 
 
-enum class main_gamemodes { LOADING = -1, MENU, OPTIONS, PAUSE, GAMING };
+enum class main_gamemodes { HASNT_STARTED_YET=-2, LOADING, MENU, OPTIONS, PAUSE, GAMING };
 
 int main(int argc, const char* argv[])
 {
@@ -74,8 +74,8 @@ int main(int argc, const char* argv[])
 
 		logg << L::SLF << fsr(__FUNCSIG__) << "Setting up load/unload function... (faster unload)" << L::ELF;
 
-		consol.setUnloadWay([&textures, &sprites, &texts, &fonts]() { sprites.clear(); texts.clear(); fonts.clear(); textures.clear(); });
-		consol.throwToLoad(Assistance::io__thread_ids::DRAWING, []() {
+		consol.setSimpleTask(Assistance::io__thread_ids::DRAWING, Assistance::io__threads_taskid::END, [&textures, &sprites, &texts, &fonts]() { sprites.clear(); texts.clear(); fonts.clear(); textures.clear(); });
+		consol.setSimpleTask(Assistance::io__thread_ids::DRAWING, Assistance::io__threads_taskid::START, []() {
 
 			const double animsize[2] = { 0.35, 0.07 };
 
@@ -274,7 +274,7 @@ int main(int argc, const char* argv[])
 
 
 		logg << L::SLF << fsr(__FUNCSIG__) << "Waiting lambda load to end..." << L::ELF;
-		while (consol.hasSmthToLoad()) Sleep(20);
+		while (consol.hasTasked(Assistance::io__thread_ids::DRAWING, Assistance::io__threads_taskid::START)) Sleep(20);
 		logg << L::SLF << fsr(__FUNCSIG__) << "Preparing sprites and starting game... (finally)" << L::ELF;
 
 
@@ -285,12 +285,52 @@ int main(int argc, const char* argv[])
 
 		**************************************************************************************/
 
+
+		/*
+		CUSTOM FUNCTIONS IDS:
+		0: Intro animation
+		
+		*/
+
+
 		/*cp.setLayer(2, true);
 		cp.setLayer(3, true);
 		cp.setLayer(0, true);
 		cp.setLayer(1, true);
 		cp.setLayer(99, true);*/
 		//cp.set(Assistance::io__camera_float::OFFSET_Y, 2.6);
+
+		main_gamemodes modern = main_gamemodes::HASNT_STARTED_YET;
+		bool assist[1] = { false }; // 1: LOADING_ANIMATION
+
+		std::function<void(void)> animation_load = [&consol, &modern, &sprites, &assist, &logg]()->void {
+			consol.addCustomTask([&]()->int {
+				Sprite* s = nullptr; if (!sprites.get("LOADING_ANIM", s)) return 0; // if running while program is being closed it can hurt
+				if (modern != main_gamemodes::LOADING) {
+					assist[0] = false;
+					modern = main_gamemodes::LOADING;
+					logg << L::SL << fsr(__FUNCSIG__) << "Resetting LOADING_ANIM animation to then run LOADING animation" << L::EL;
+				}
+				else if (s->isEq(Assistance::io__sprite_boolean::IS_IT_ON_LAST_FRAME, true) && !assist[0])
+				{
+					logg << L::SL << fsr(__FUNCSIG__) << "Done doing LOADING animation" << L::EL;
+					assist[0] = true;
+					return -40; // 40 cycles because it updates 40 per sec //Sleep(2000);
+				}
+				else if (assist[0]) {
+					modern = main_gamemodes::MENU;
+					s->set(Assistance::io__sprite_double::ANIMATION_FPS, 0);
+					consol.removeCustomTask(0);
+				}
+				return 0;
+				}, 0, 1.0/20);
+		};
+		std::function<void(void)> skip_animation_load = [&assist] {
+			assist[0] = true;
+		};
+		std::function<void(void)> exit_game = [&consol] {
+			consol.shouldStop();
+		};
 
 
 		consol.pauseThread();
@@ -301,11 +341,10 @@ int main(int argc, const char* argv[])
 			// loading
 			cp.setLayer(-50, true);
 			cp.set(Assistance::io__camera_boolean::RESPECT_LIMITS, true);
-			cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -1.0);
-			cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -1.0);
-			cp.set(Assistance::io__camera_float::LIMIT_MAX_X, 1.0);
-			cp.set(Assistance::io__camera_float::LIMIT_MAX_Y, 1.0);
-			cp.set(Assistance::io__camera_float::SCALE_G, 0.99);
+			cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -0.95);
+			cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -0.95);
+			cp.set(Assistance::io__camera_float::LIMIT_MAX_X, 0.95);
+			cp.set(Assistance::io__camera_float::LIMIT_MAX_Y, 0.95);
 			gcam.set(cp, +main_gamemodes::LOADING);
 
 			// menu
@@ -313,11 +352,10 @@ int main(int argc, const char* argv[])
 			cp.setLayer(-10, true);
 			cp.setLayer(99, true); // mouse
 			cp.set(Assistance::io__camera_boolean::RESPECT_LIMITS, true);
-			cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -1.0);
-			cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -1.0);
-			cp.set(Assistance::io__camera_float::LIMIT_MAX_X, 1.0);
-			cp.set(Assistance::io__camera_float::LIMIT_MAX_Y, 1.0);
-			cp.set(Assistance::io__camera_float::SCALE_G, 0.99);
+			cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -0.95);
+			cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -0.95);
+			cp.set(Assistance::io__camera_float::LIMIT_MAX_X, 0.95);
+			cp.set(Assistance::io__camera_float::LIMIT_MAX_Y, 0.95);
 			//cp.set(Assistance::io__camera_float::OFFSET_X, 0.4);
 			gcam.set(cp, +main_gamemodes::MENU);
 
@@ -326,35 +364,42 @@ int main(int argc, const char* argv[])
 			cp.setLayer(-9, true);
 			cp.setLayer(99, true); // mouse
 			cp.set(Assistance::io__camera_boolean::RESPECT_LIMITS, true);
-			cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -1.0);
-			cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -1.0);
-			cp.set(Assistance::io__camera_float::LIMIT_MAX_X, 1.0);
-			cp.set(Assistance::io__camera_float::LIMIT_MAX_Y, 1.0);
-			cp.set(Assistance::io__camera_float::SCALE_G, 0.99);
+			cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -0.95);
+			cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -0.95);
+			cp.set(Assistance::io__camera_float::LIMIT_MAX_X, 0.95);
+			cp.set(Assistance::io__camera_float::LIMIT_MAX_Y, 0.95);
 			gcam.set(cp, +main_gamemodes::OPTIONS);
 
 			// pause
 			cp = camera_preset();
 			cp.setLayer(-1, true);
 			cp.setLayer(99, true); // mouse
-			cp.set(Assistance::io__camera_float::SCALE_G, 0.99);
+			cp.set(Assistance::io__camera_boolean::RESPECT_LIMITS, true);
+			cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -0.95);
+			cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -0.95);
+			cp.set(Assistance::io__camera_float::LIMIT_MAX_X, 0.95);
+			cp.set(Assistance::io__camera_float::LIMIT_MAX_Y, 0.95);
 			gcam.set(cp, +main_gamemodes::PAUSE);
 
 			// game
 			cp = camera_preset();
 			cp.setLayer(0, true);
+			cp.set(Assistance::io__camera_boolean::RESPECT_LIMITS, true);
+			cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -0.85);
+			cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -0.85);
+			cp.set(Assistance::io__camera_float::LIMIT_MAX_X, 0.85);
+			cp.set(Assistance::io__camera_float::LIMIT_MAX_Y, 0.85);
 			gcam.set(cp, +main_gamemodes::GAMING);
 		}
 
-		/*
-		LOADING:	-50
-		MENU:		-10
-		OPTIONS:	-09
-		PAUSE:		-01
-		GAME:		 00
-		all:		 99 (mouse)
-		*/
+		// COLOCAR LAMBDA PARA FUNCIONAR DENTRO DOS EVENTOS DE STATE!								(DONE)
+		// REMOVER TIPO LOOP DAS THREADS NORMAIS (para abrir espaço pra thread de funções)			()
+		// TENTAR COLOCAR LAMBA EM QUALQUER TIPO DE EVENTO, COMO TECLADO OU SEI LÁ!					()
+		// PRINTSCREEN E FULLSCREEN DEVIAM SER LAMBDA VINCULADOS A UM CONFIG!						()
+		// CRIAR UMA NOVA THREAD SOMENTE DE FUNÇÕES, ILIMITADAS FUNÇÕES, 5 VEZES POR SEGUNDO!		()
 
+
+		// SPRITE
 
 		{
 			Sprite* s = sprites.create("MOUSE");
@@ -370,29 +415,6 @@ int main(int argc, const char* argv[])
 		}
 
 		{
-			Sprite* s = sprites.create("BUTTON0");
-
-			s->set(Assistance::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
-
-			s->set(Assistance::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
-			s->set(Assistance::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-
-			s->set(Assistance::io__sprite_collision_state::COLLISION_NONE, 0);
-			s->set(Assistance::io__sprite_collision_state::COLLISION_MOUSE_ON, 1);
-			s->set(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, 1);
-
-			s->set(Assistance::io__sprite_string::ID, "BUTTON0");
-			s->set(Assistance::io__sprite_boolean::DRAW, true);
-			s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, true);
-			//s->set(Assistance::io__sprite_boolean::COLLIDE_OTHERS, true); // just a test
-			s->set(Assistance::io__sprite_double::SCALEG, 0.18);
-			s->set(Assistance::io__sprite_double::SCALEX, 4.5);
-			s->set(Assistance::io__sprite_double::POSY, -0.35);
-			s->set(Assistance::io__sprite_double::ANIMATION_FPS, 1.0 / 24);
-			s->set(Assistance::io__sprite_integer::LAYER, -10);
-		}
-
-		/*{
 			Sprite* s = sprites.create("PAUSE_ANIM");
 			s->set(Assistance::io__sprite_string_vector::ADDMULTIPLE, Tools::genStrFormat("PAUSE_##", 29));
 			s->set(Assistance::io__sprite_string::ID, "PAUSE_ANIM");
@@ -400,9 +422,9 @@ int main(int argc, const char* argv[])
 			s->set(Assistance::io__sprite_boolean::COLLIDE_OTHERS, true);
 			s->set(Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ELASTIC, true);
 			s->set(Assistance::io__sprite_double::SCALEG, 0.55);
-			s->set(Assistance::io__sprite_double::POSY, -0.35);
+			s->set(Assistance::io__sprite_double::POSY, 0.35);
 			s->set(Assistance::io__sprite_double::ANIMATION_FPS, 1.0/24);
-			s->set(Assistance::io__sprite_integer::LAYER, -10);
+			s->set(Assistance::io__sprite_integer::LAYER, 0);
 		}
 
 		{
@@ -413,10 +435,10 @@ int main(int argc, const char* argv[])
 			s->set(Assistance::io__sprite_boolean::COLLIDE_OTHERS, true);
 			s->set(Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ROUGH, true);
 			s->set(Assistance::io__sprite_double::SCALEG, 0.35);
-			s->set(Assistance::io__sprite_double::POSY, -0.05);
+			s->set(Assistance::io__sprite_double::POSY, 0.05);
 			s->set(Assistance::io__sprite_double::ANIMATION_FPS, 1.0/15);
-			s->set(Assistance::io__sprite_integer::LAYER, -10);
-		}*/
+			s->set(Assistance::io__sprite_integer::LAYER, 0);
+		}
 
 		{
 			Sprite* s = sprites.create("LOADING_ANIM");
@@ -428,21 +450,152 @@ int main(int argc, const char* argv[])
 			s->set(Assistance::io__sprite_integer::LAYER, -50);
 			s->set(Assistance::io__sprite_double::ANIMATION_FPS, 1.0/20);
 			s->set(Assistance::io__sprite_boolean::LOOPFRAMES, false);
+			s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, true);
+			s->set(Assistance::io__sprite_boolean::ZERO_RESETS_POSITION_INSTEAD_OF_FREEZING, true);
+			//s->hook(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, [&modern]()->void {modern = main_gamemodes::MENU; });
+		}
+		{
+			Sprite* s = sprites.create("LOADING_SKIP_ALL_SCREEN");
+			s->set(Assistance::io__sprite_string::ID, "LOADING_SKIP_ALL_SCREEN");
+			s->set(Assistance::io__sprite_boolean::DRAW, false);
+			s->set(Assistance::io__sprite_double::SCALEG, 2.0); 
+			s->set(Assistance::io__sprite_integer::LAYER, -50);
+			s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, true);
+			s->hook(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, skip_animation_load);
 		}
 
+		// BUTTONS
+
+		/*
+		LOADING:	-50
+		MENU:		-10
+		OPTIONS:	-09
+		PAUSE:		-01
+		GAME:		 00
+		all:		 99 (mouse)
+		*/
+
 		{
-			Text* t = texts.create("BUTTON0_T");
+			Sprite* s = sprites.create("BUTTON_MENU_0");
+			s->set(Assistance::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
+			s->set(Assistance::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
+			s->set(Assistance::io__sprite_string::ADD, "BAR_ON");  // clearly 1
+			s->set(Assistance::io__sprite_collision_state::COLLISION_NONE, 0);
+			s->set(Assistance::io__sprite_collision_state::COLLISION_MOUSE_ON, 1);
+			s->set(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, 1);
+			s->hook(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, [&modern]()->void {modern = main_gamemodes::GAMING; });
+			s->set(Assistance::io__sprite_string::ID, "BUTTON_MENU_0");
+			s->set(Assistance::io__sprite_boolean::DRAW, true);
+			s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, true);
+			s->set(Assistance::io__sprite_double::SCALEG, 0.18);
+			s->set(Assistance::io__sprite_double::SCALEX, 5.5);
+			s->set(Assistance::io__sprite_double::POSY, -0.35);
+			s->set(Assistance::io__sprite_integer::LAYER, -10);
+
+			Text* t = texts.create("BUTTON_MENU_0_T");
 			t->set(Assistance::io__text_string::FONT, "DEFAULT");
-			t->set(Assistance::io__text_string::STRING, "State: %sprite_state%");
-			t->set(Assistance::io__text_string::ID, "BUTTON0_T");
+			t->set(Assistance::io__text_string::STRING, "GO GAMING | %sprite_state%");
+			t->set(Assistance::io__text_string::ID, "BUTTON_MENU_0_T");
 			t->set(Assistance::io__text_boolean::SHOW, true);
-			t->set(Assistance::io__text_double::SCALEG, 0.10);
+			t->set(Assistance::io__text_double::SCALEG, 0.08);
 			t->set(Assistance::io__text_double::POSY, -0.060);
-			t->set(Assistance::io__text_string::FOLLOW_SPRITE, "BUTTON0");
+			t->set(Assistance::io__text_string::FOLLOW_SPRITE, "BUTTON_MENU_0");
 			t->set(Assistance::io__text_integer::LAYER, -10);
 			t->set(Assistance::io__text_double::UPDATETIME, 1.0/20);
 			t->set(Assistance::io__text_color::COLOR, al_map_rgb(180, 255, 225));
-			
+		}
+		{
+			Sprite* s = sprites.create("BUTTON_MENU_1");
+			s->set(Assistance::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
+			s->set(Assistance::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
+			s->set(Assistance::io__sprite_string::ADD, "BAR_ON");  // clearly 1
+			s->set(Assistance::io__sprite_collision_state::COLLISION_NONE, 0);
+			s->set(Assistance::io__sprite_collision_state::COLLISION_MOUSE_ON, 1);
+			s->set(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, 1);
+			s->hook(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, animation_load);
+			s->set(Assistance::io__sprite_string::ID, "BUTTON_MENU_1");
+			s->set(Assistance::io__sprite_boolean::DRAW, true);
+			s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, true);
+			s->set(Assistance::io__sprite_double::SCALEG, 0.18);
+			s->set(Assistance::io__sprite_double::SCALEX, 5.5);
+			s->set(Assistance::io__sprite_double::POSY, -0.05);
+			s->set(Assistance::io__sprite_integer::LAYER, -10);
+
+			Text* t = texts.create("BUTTON_MENU_1_T");
+			t->set(Assistance::io__text_string::FONT, "DEFAULT");
+			t->set(Assistance::io__text_string::STRING, "GO LOADING | %sprite_state%");
+			t->set(Assistance::io__text_string::ID, "BUTTON_MENU_1_T");
+			t->set(Assistance::io__text_boolean::SHOW, true);
+			t->set(Assistance::io__text_double::SCALEG, 0.08);
+			t->set(Assistance::io__text_double::POSY, -0.060);
+			t->set(Assistance::io__text_string::FOLLOW_SPRITE, "BUTTON_MENU_1");
+			t->set(Assistance::io__text_integer::LAYER, -10);
+			t->set(Assistance::io__text_double::UPDATETIME, 1.0 / 20);
+			t->set(Assistance::io__text_color::COLOR, al_map_rgb(180, 255, 225));
+		}
+		{
+			Sprite* s = sprites.create("BUTTON_MENU_2");
+			s->set(Assistance::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
+			s->set(Assistance::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
+			s->set(Assistance::io__sprite_string::ADD, "BAR_ON");  // clearly 1
+			s->set(Assistance::io__sprite_collision_state::COLLISION_NONE, 0);
+			s->set(Assistance::io__sprite_collision_state::COLLISION_MOUSE_ON, 1);
+			s->set(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, 1);
+			s->hook(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, exit_game);
+			s->set(Assistance::io__sprite_string::ID, "BUTTON_MENU_2");
+			s->set(Assistance::io__sprite_boolean::DRAW, true);
+			s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, true);
+			s->set(Assistance::io__sprite_double::SCALEG, 0.18);
+			s->set(Assistance::io__sprite_double::SCALEX, 5.5);
+			s->set(Assistance::io__sprite_double::POSY, 0.25);
+			s->set(Assistance::io__sprite_integer::LAYER, -10);
+
+			Text* t = texts.create("BUTTON_MENU_2_T");
+			t->set(Assistance::io__text_string::FONT, "DEFAULT");
+			t->set(Assistance::io__text_string::STRING, "EXIT | %sprite_state%");
+			t->set(Assistance::io__text_string::ID, "BUTTON_MENU_2_T");
+			t->set(Assistance::io__text_boolean::SHOW, true);
+			t->set(Assistance::io__text_double::SCALEG, 0.08);
+			t->set(Assistance::io__text_double::POSY, -0.060);
+			t->set(Assistance::io__text_string::FOLLOW_SPRITE, "BUTTON_MENU_2");
+			t->set(Assistance::io__text_integer::LAYER, -10);
+			t->set(Assistance::io__text_double::UPDATETIME, 1.0 / 20);
+			t->set(Assistance::io__text_color::COLOR, al_map_rgb(180, 255, 225));
+		}
+		{
+			Sprite* s = sprites.create("BUTTON_GAMING_0");
+			s->set(Assistance::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
+			s->set(Assistance::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
+			s->set(Assistance::io__sprite_string::ADD, "BAR_ON");  // clearly 1
+			s->set(Assistance::io__sprite_collision_state::COLLISION_NONE, 0);
+			s->set(Assistance::io__sprite_collision_state::COLLISION_MOUSE_ON, 1);
+			s->set(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, 1);
+			s->hook(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, [&modern]()->void {modern = main_gamemodes::MENU; });
+			s->set(Assistance::io__sprite_string::ID, "BUTTON_GAMING_0");
+			s->set(Assistance::io__sprite_boolean::DRAW, true);
+			s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, true);
+			s->set(Assistance::io__sprite_double::SCALEG, 0.14);
+			s->set(Assistance::io__sprite_double::SCALEX, 5.5);
+			s->set(Assistance::io__sprite_double::POSY, -0.9);
+			s->set(Assistance::io__sprite_double::POSX, 0.45);
+			s->set(Assistance::io__sprite_integer::LAYER, 0);
+			// fun!
+			s->set(Assistance::io__sprite_double::SMOOTHNESS_X, 0.15);
+			s->set(Assistance::io__sprite_double::SMOOTHNESS_Y, 0.15);
+			s->set(Assistance::io__sprite_boolean::COLLIDE_OTHERS, true);
+			s->set(Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ELASTIC, true);
+
+			Text* t = texts.create("BUTTON_GAMING_0_T");
+			t->set(Assistance::io__text_string::FONT, "DEFAULT");
+			t->set(Assistance::io__text_string::STRING, "GO MENU | %sprite_state%");
+			t->set(Assistance::io__text_string::ID, "BUTTON_GAMING_0_T");
+			t->set(Assistance::io__text_boolean::SHOW, true);
+			t->set(Assistance::io__text_double::SCALEG, 0.07);
+			t->set(Assistance::io__text_double::POSY, -0.060);
+			t->set(Assistance::io__text_string::FOLLOW_SPRITE, "BUTTON_GAMING_0");
+			t->set(Assistance::io__text_integer::LAYER, 0);
+			t->set(Assistance::io__text_double::UPDATETIME, 1.0 / 20);
+			t->set(Assistance::io__text_color::COLOR, al_map_rgb(180, 255, 225));
 		}
 
 
@@ -471,13 +624,16 @@ int main(int argc, const char* argv[])
 
 		**************************************************************************************/
 
-		main_gamemodes modern = main_gamemodes::LOADING; // CHANGE TO LOADING ON FINAL VERSION
-
 
 		logg << L::SLF << fsr(__FUNCSIG__) << "Ready to go! Starting main!" << L::ELF;
 
+
+		animation_load();
+		
+		
+
 		// LOADING PART
-		if (modern == main_gamemodes::LOADING) // shh skip
+		/*if (modern == main_gamemodes::LOADING) // shh skip
 		{
 			Sprite* s = nullptr;
 			if (!sprites.get("LOADING_ANIM", s)) throw Abort::abort(__FUNCSIG__, "It wasn't supposed to not find a sprite here!");
@@ -485,22 +641,22 @@ int main(int argc, const char* argv[])
 			bool b = false;
 			do {
 				gcam.apply(+modern); // first
-				s->get(Assistance::io__sprite_boolean::HAS_DONE_LOOPONCE, b);
+				s->get(Assistance::io__sprite_boolean::HAS_DONE_LOOP_ONCE, b);
 			} while (!b && consol.isRunning() && modern == main_gamemodes::LOADING);
 
 			Sleep(2000);
 			gcam.apply(+main_gamemodes::MENU);
 			modern = main_gamemodes::MENU;
-		}
+		}*/
 
 
 		size_t counttt = 0;
-		auto copy = gcam.get(); // later idk just have a copy here k?
+		//auto copy = gcam.get(); // later idk just have a copy here k?
 
 		//__introtrack->set(io__track_boolean::PLAYING, false);
 
 		while (consol.isRunning()) {
-			Sleep(7);
+			Sleep(20);
 
 
 			mytext->set(Assistance::io__text_string::STRING, "Counting here lmao " + std::to_string(counttt++) + "!");
@@ -514,8 +670,8 @@ int main(int argc, const char* argv[])
 			//cp.set(Assistance::io__camera_float::ROTATION_RAD, 0.3 * al_get_time());
 			//gcam.get().set(Assistance::io__camera_float::OFFSET_X, 0.45 * cos(0.3*al_get_time()));
 			//gcam.get().set(Assistance::io__camera_float::OFFSET_Y, 0.14 * sin(0.2*al_get_time()));
-			gcam.get().set(Assistance::io__camera_float::SCALE_G, 0.8 + 0.35 * sin(al_get_time() * 0.17));
-			gcam.get().set(Assistance::io__camera_float::ROTATION_RAD, 0.2 * cos(al_get_time() * 0.23));
+			//gcam.get(+main_gamemodes::MENU).set(Assistance::io__camera_float::SCALE_G, 0.8 + 0.35 * sin(al_get_time() * 0.17));
+			//gcam.get(+main_gamemodes::MENU).set(Assistance::io__camera_float::ROTATION_RAD, 0.2 * cos(al_get_time() * 0.23));
 			gcam.apply(+modern);
 
 			//gcam.set(cp, 0);

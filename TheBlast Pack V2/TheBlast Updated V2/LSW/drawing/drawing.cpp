@@ -340,6 +340,11 @@ namespace LSW {
 
 		ALLEGRO_BITMAP* Sprite::__sprite_smart_images::get(const Assistance::io__sprite_collision_state stt)
 		{
+			if (copies.size() == 0) {
+				throw Abort::abort(__FUNCSIG__, "No bitmap found!", 1);
+				return nullptr;
+			}
+
 			if (stt == Assistance::io__sprite_collision_state::size) {
 				auto now = al_get_time();
 				auto siz = copies.size();
@@ -355,7 +360,7 @@ namespace LSW {
 						if (!loopin) {
 							if (actual < siz - 1) actual++;
 							else {
-								hasdoneloop = true;
+								has_done_loop_once = true;
 							}
 						}
 						else {
@@ -422,7 +427,8 @@ namespace LSW {
 				actual = -(int)v;
 			}
 			else if (v == 0) {
-				difftimeanim = 0;
+				if (reset_instead_of_pause) actual = 0;
+				else difftimeanim = 0;
 			}
 			else {
 				difftimeanim = v;
@@ -440,13 +446,17 @@ namespace LSW {
 		void Sprite::__sprite_smart_images::loop(const bool b)
 		{
 			loopin = b;
-			hasdoneloop = false;
+			has_done_loop_once = false;
 		}
-		bool Sprite::__sprite_smart_images::hasloopended()
+		bool Sprite::__sprite_smart_images::hasLoopEndedOnce()
 		{
-			bool r = hasdoneloop;
-			hasdoneloop = false;
+			bool r = has_done_loop_once;
+			has_done_loop_once = false;
 			return r;
+		}
+		bool Sprite::__sprite_smart_images::isOnLastFrame()
+		{
+			return (actual >= copies.size() - 1);
 		}
 		void Sprite::__sprite_smart_images::reset()
 		{
@@ -457,6 +467,11 @@ namespace LSW {
 		void Sprite::__sprite_smart_images::clear()
 		{
 			copies.clear();
+		}
+
+		void Sprite::__sprite_smart_images::resetInsteadOfPause(const bool b)
+		{
+			reset_instead_of_pause = b;
 		}
 
 
@@ -543,6 +558,16 @@ namespace LSW {
 			bmps.reset();
 		}
 
+		void Sprite::hook(const Assistance::io__sprite_collision_state w, std::function<void(void)> f)
+		{
+			if (w != Assistance::io__sprite_collision_state::size) data.function_pair[+w] = f;
+		}
+
+		void Sprite::unhook(const Assistance::io__sprite_collision_state w)
+		{
+			if (w != Assistance::io__sprite_collision_state::size) data.function_pair[+w] = std::function<void(void)>();
+		}
+
 		void Sprite::set(const Assistance::io__sprite_string_vector u, const std::vector<std::string> v, float* perc)
 		{
 			if (perc) *perc = 0.00f;
@@ -607,8 +632,11 @@ namespace LSW {
 			case Assistance::io__sprite_boolean::LOOPFRAMES:
 				bmps.loop(v);
 				break;
-			case Assistance::io__sprite_boolean::HAS_DONE_LOOPONCE:
+			case Assistance::io__sprite_boolean::HAS_DONE_LOOP_ONCE:
 				// nothing to do
+				break;
+			case Assistance::io__sprite_boolean::ZERO_RESETS_POSITION_INSTEAD_OF_FREEZING: // setFPS(0) stops animation or reset to 0?
+				bmps.resetInsteadOfPause(v);
 				break;
 			default:
 				data.bval[+u] = v;
@@ -712,8 +740,11 @@ namespace LSW {
 			case Assistance::io__sprite_boolean::LOOPFRAMES:
 				// no way
 				return false;
-			case Assistance::io__sprite_boolean::HAS_DONE_LOOPONCE:
-				v = bmps.hasloopended();
+			case Assistance::io__sprite_boolean::HAS_DONE_LOOP_ONCE:
+				v = bmps.hasLoopEndedOnce();
+				return true;
+			case Assistance::io__sprite_boolean::IS_IT_ON_LAST_FRAME:
+				v = bmps.isOnLastFrame();
 				return true;
 			default:
 				v = data.bval[+u];
@@ -831,6 +862,9 @@ namespace LSW {
 			if (!data.bval[+Assistance::io__sprite_boolean::DRAW]) return;
 
 			ALLEGRO_BITMAP* rn = bmps.get((data.bval[+Assistance::io__sprite_boolean::USE_STATE_AS_BITMAP] ? data.last_state : Assistance::io__sprite_collision_state::size));
+
+			if (!rn) return; // if doesn't have what to draw (possible), skip
+
 			Camera camm;
 			camera_preset psf = camm.get();
 
@@ -945,16 +979,7 @@ namespace LSW {
 			if (!data.bval[+Assistance::io__sprite_boolean::COLLIDE_OTHERS]) return;
 			if (!mf) return;
 			if (!(mf->isEq(Assistance::io__sprite_boolean::COLLIDE_IGNORE_LAYER, true) || mf->isEq(Assistance::io__sprite_integer::LAYER, is_layer))) return; // has not the layer to collide so shouldn't collide with this one. (it does check all possible layers)
-			/*if (![&]() {
-				data.layers_colliding_m.lock();
-					for (auto& i : data.layers_colliding) {
-						if (i == is_layer) {
-							return true;
-						}
-					}
-				data.layers_colliding_m.unlock();
-					return false;
-			}()) return;*/
+			
 
 
 			double otherpos[2] = { 0.0 };
@@ -998,7 +1023,7 @@ namespace LSW {
 					double calcy = (dyy < 0 ? -1.0 : 1.0) * (fabs(powl(Constants::sprite_default_multiplier_global_div / wy, Constants::sprite_default_power_global_div)));
 
 					// should limit because things are crazy
-					bool _keep_bg = fabs(calcx) < fabs(calcy);
+					bool _keep_bg = fabs(calcx * data.dval[+Assistance::io__sprite_double::SCALEX]) < fabs(calcy * data.dval[+Assistance::io__sprite_double::SCALEY]);
 					if (fabs(calcx) > Constants::sprite_default_limit_speed_any) calcx /= fabs(calcx) / Constants::sprite_default_limit_speed_any;
 					if (fabs(calcy) > Constants::sprite_default_limit_speed_any) calcy /= fabs(calcy) / Constants::sprite_default_limit_speed_any;
 
@@ -1035,6 +1060,9 @@ namespace LSW {
 
 		void Sprite::applyCollideData(camera_preset psf)
 		{
+			if (data.last_state != data.new_state && data.new_state != Assistance::io__sprite_collision_state::size) {
+				if (data.function_pair[+data.new_state]) data.function_pair[+data.new_state]();
+			}
 			data.last_state = data.new_state;
 
 			if (data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING]) {

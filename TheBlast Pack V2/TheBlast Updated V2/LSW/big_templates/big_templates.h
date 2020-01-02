@@ -107,36 +107,39 @@ namespace LSW {
 			}
 			void hasEventWait()
 			{
-				rawcount[calls_per_sec_pos]++;
+				for (bool can_leave = false; !can_leave;) {
+					rawcount[calls_per_sec_pos]++;
 
-				al_wait_for_event(queue, &lastev);
+					al_wait_for_event(queue, &lastev);
 
-				for (size_t u = 0; u < num_args; u++) {
-					if (isThisThis(u)) rawcount[u]++;
-				}
-
-				if (lastev.type == ALLEGRO_EVENT_TIMER && lastev.timer.source == eachsec) {
-
-					double timee = al_get_time();
-					if (eachsec_doubleverif == 0) eachsec_doubleverif = timee - 1.0;
-					double diff = timee - eachsec_doubleverif;
-
-					if (diff > 5.0) {
-						al_flush_event_queue(queue); // there's something lagging, so clear and refresh
-						// cast warn on log?
-						eachsec_doubleverif = timee - 1.0;
-
-						gfile logg;
-						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Can't keep up! Somewhere is having some trouble keeping the loops! Running " << (diff - 1.0) << " second(s) behind." << L::ELF;
-						//printf_s("[WARN] Can't keep up! Somewhere is having some trouble keeping the loops!\n");
+					for (size_t u = 0; u < num_args; u++) {
+						if (isThisThis(u)) rawcount[u]++;
 					}
 
-					eachsec_doubleverif += 1.0;
+					if (lastev.type == ALLEGRO_EVENT_TIMER && lastev.timer.source == eachsec) {
 
-					for (size_t u = 0; u < num_args + 1; u++) { // + 1 because calls_per_sec_pos is one ahead
-						benchmark[u] = rawcount[u];
-						rawcount[u] = 0;
+						double timee = al_get_time();
+						if (eachsec_doubleverif == 0) eachsec_doubleverif = timee - 1.0;
+						double diff = timee - eachsec_doubleverif;
+
+						if (diff > 5.0) {
+							al_flush_event_queue(queue); // there's something lagging, so clear and refresh
+							// cast warn on log?
+							eachsec_doubleverif = timee - 1.0;
+
+							gfile logg;
+							logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Can't keep up! Somewhere is having some trouble keeping the loops! Running " << (diff - 1.0) << " second(s) behind." << L::ELF;
+							//printf_s("[WARN] Can't keep up! Somewhere is having some trouble keeping the loops!\n");
+						}
+
+						eachsec_doubleverif += 1.0;
+
+						for (size_t u = 0; u < num_args + 1; u++) { // + 1 because calls_per_sec_pos is one ahead
+							benchmark[u] = rawcount[u];
+							rawcount[u] = 0;
+						}
 					}
+					else can_leave = true;
 				}
 			}
 			bool hasEvent()
@@ -171,6 +174,8 @@ namespace LSW {
 							benchmark[u] = rawcount[u];
 							rawcount[u] = 0;
 						}
+
+						return false;
 					}
 
 					return true;

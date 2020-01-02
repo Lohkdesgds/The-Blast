@@ -84,6 +84,7 @@ namespace LSW {
 			const float start_default_global_volume = 0.5;
 			
 			const size_t internal_collision_positioning_time_update = 10; /*20*/
+			const size_t internal_all_function_timing_run = 4; // can run on-the-fly functions 4 times per sec
 
 
 
