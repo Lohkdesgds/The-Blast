@@ -57,25 +57,13 @@ namespace LSW {
 				mtt->set(Assistance::io__text_string::ID, "lastlogtext");
 				mtt->set(Assistance::io__text_boolean::SHOW, true);
 				mtt->set(Assistance::io__text_double::SCALEG, 0.03);
-				mtt->set(Assistance::io__text_double::POSY, 0.965);
+				mtt->set(Assistance::io__text_double::SCALEX, 0.55);
+				mtt->set(Assistance::io__text_double::POSY, 0.965); // 0.935
 				mtt->set(Assistance::io__text_double::POSX, -1.0);
 				mtt->set(Assistance::io__text_integer::MODE, +Assistance::io__alignment_text::ALIGN_LEFT);
 				mtt->set(Assistance::io__text_double::UPDATETIME, 1.0 / 5);
 				mtt->set(Assistance::io__text_boolean::AFFECTED_BY_CAM, false);
-				mtt->set(Assistance::io__text_integer::LAYER, -10);
-
-				Text* const osd = texts.create("osd_stuff0");
-				osd->set(Assistance::io__text_string::FONT, "DEFAULT");
-				osd->set(Assistance::io__text_string::STRING, "FPS:%fps%,TPS:%tps%,UPS:%ups% | M:%mouse_x%,%mouse_y% | CAM: %cam_x%,%cam_y%@~%cam_zoom_combined% | DISPLAY: %curr_res_x%:%curr_res_y%@%curr_refresh_rate% | I:%num_images%,S:%num_sprites%,T:%num_texts%,A:%num_tracks% | STR: %curr_string%[%last_string%]");
-				osd->set(Assistance::io__text_string::ID, "osd_stuff0");
-				osd->set(Assistance::io__text_boolean::SHOW, true);
-				osd->set(Assistance::io__text_double::SCALEG, 0.025);
-				osd->set(Assistance::io__text_double::POSY, 0.935);
-				osd->set(Assistance::io__text_double::POSX, -1.0);
-				osd->set(Assistance::io__text_integer::MODE, +Assistance::io__alignment_text::ALIGN_LEFT);
-				osd->set(Assistance::io__text_double::UPDATETIME, 1.0 / 2);
-				osd->set(Assistance::io__text_boolean::AFFECTED_BY_CAM, false);
-				osd->set(Assistance::io__text_integer::LAYER, -10);
+				mtt->set(Assistance::io__text_integer::LAYER, 100);
 
 				std::string mtt_s = "No new information";
 
@@ -86,87 +74,91 @@ namespace LSW {
 
 				for (bool localb = true; localb;)
 				{
-					while (thread_maindisplay.pause_thread) Sleep(10);
-
-					if (thread_maindisplay.thread_arguments->hasEvent()) {
-
-						if (thread_maindisplay.thread_arguments->isThisThis(+Assistance::ro__thread_display_routines_timers::FUNCTIONALITY))
-						{
-							__l_thr_md_run(Assistance::io__threads_taskid::ONCE);
-						}
-						else if (thread_maindisplay.thread_arguments->isThisThis(+Assistance::ro__thread_display_routines_timers::LOOPTRACK))
-						{
-							conf.set(Assistance::io__db_statistics_sizet::FRAMESPERSECOND, thread_maindisplay.thread_arguments->getNumCalls());
-						}
-						else if (thread_maindisplay.thread_arguments->isThisThis(+Assistance::ro__thread_display_routines_timers::CHECKKEEP))
-						{
-							localb = !thr_shared_arg.should_exit;
-							//logg.debug("[THR_DRW] CHECKKEEP called\n");
-						}
-						else if (thread_maindisplay.thread_arguments->isThisThis(+Assistance::ro__thread_display_routines_timers::CHECKMEMORYBITMAP))
-						{
-							//logg.debug("[THR_DRW] CHECKMEMORYBITMAP called\n");
-							al_convert_bitmaps();
-						}
-						else if (thread_maindisplay.thread_arguments->isThisThis(+Assistance::ro__thread_display_routines_timers::UPDATELOGONSCREEN))
-						{
-							mtt->set(Assistance::io__text_string::STRING, mtt_s);
-						}
-
-
-						else { // not a timer
-							auto ev = thread_maindisplay.thread_arguments->getEventRaw();
-
-							switch (ev.type) {
-							case ALLEGRO_EVENT_DISPLAY_CLOSE:
-								thr_shared_arg.should_exit = true;
-								logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "DISPLAYCLOSE event got. Set to turn off soon." << L::EL;
-								break;
-
-							case +Assistance::ro__my_events::LOG_CLOUDLAUNCH_RAW:
-							{
-								mtt_s = (char*)ev.user.data1;
-								ALLEGRO_COLOR* colp = (ALLEGRO_COLOR*)ev.user.data2;
-								mtt->set(Assistance::io__text_color::COLOR, *colp);
-							}
-							break;
-
-							case +Assistance::ro__my_events::THRDRW_GOT_FORCED_RESIZE:
-								al_set_display_flag(md->getDisplay(), ALLEGRO_FULLSCREEN_WINDOW, (bool)ev.user.data1);
-								// yes, merge
-							case ALLEGRO_EVENT_DISPLAY_RESIZE:
-								al_acknowledge_resize(md->getDisplay());
-
-								gcam.apply();
-								logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "DISPLAYRESIZE got, acknowledged, done." << L::EL;
-
-								{
-									ALLEGRO_EVENT ev;
-									ev.type = +Assistance::ro__my_events::THRKBM_DISPLAY_SIZE;
-									ev.user.data1 = al_get_display_width(md->getDisplay());
-									ev.user.data2 = al_get_display_height(md->getDisplay());
-									al_emit_user_event(&evsrc, &ev, NULL);
-								}
-
-								conf.set(Assistance::io__conf_integer::SCREEN_X, al_get_display_width(md->getDisplay()));
-								conf.set(Assistance::io__conf_integer::SCREEN_Y, al_get_display_height(md->getDisplay()));
-								conf.set(Assistance::io__conf_integer::SCREEN_FLAGS, al_get_display_flags(md->getDisplay()));
-								conf.flush();
-
-								break;
-							}
-						}
-					}
-
-					// draw screen at least once
-
-					md->clearTo(BLACK);
-
-
-					while (!sprites.tryLock()) Sleep(10);
-
-					// locally check if dealable error
 					try {
+						conf.set(Assistance::io__db_statistics_double::INSTANT_FRAMESPERSECOND, thread_maindisplay.thread_arguments->getNumInstantSCallsDefault());
+
+						while (thread_maindisplay.pause_thread) Sleep(10);
+
+						if (thread_maindisplay.thread_arguments->hasEvent()) {
+
+							if (thread_maindisplay.thread_arguments->isThisThis(+Assistance::ro__thread_display_routines_timers::FUNCTIONALITY_ONCE))
+							{
+								__l_thr_md_run(Assistance::io__threads_taskid::ONCE);
+							}
+							else if (thread_maindisplay.thread_arguments->isThisThis(+Assistance::ro__thread_display_routines_timers::FUNCTIONALITY_LOOP))
+							{
+								__l_thr_md_run(Assistance::io__threads_taskid::LOOP);
+							}
+							else if (thread_maindisplay.thread_arguments->isThisThis(+Assistance::ro__thread_display_routines_timers::LOOPTRACK))
+							{
+								conf.set(Assistance::io__db_statistics_sizet::FRAMESPERSECOND, thread_maindisplay.thread_arguments->getNumCallsDefault());
+							}
+							else if (thread_maindisplay.thread_arguments->isThisThis(+Assistance::ro__thread_display_routines_timers::CHECKKEEP))
+							{
+								localb = !thr_shared_arg.should_exit;
+								//logg.debug("[THR_DRW] CHECKKEEP called\n");
+							}
+							else if (thread_maindisplay.thread_arguments->isThisThis(+Assistance::ro__thread_display_routines_timers::CHECKMEMORYBITMAP))
+							{
+								//logg.debug("[THR_DRW] CHECKMEMORYBITMAP called\n");
+								al_convert_bitmaps();
+							}
+							else if (thread_maindisplay.thread_arguments->isThisThis(+Assistance::ro__thread_display_routines_timers::UPDATELOGONSCREEN))
+							{
+								mtt->set(Assistance::io__text_string::STRING, mtt_s);
+							}
+
+
+							else { // not a timer
+								auto ev = thread_maindisplay.thread_arguments->getEventRaw();
+
+								switch (ev.type) {
+								case ALLEGRO_EVENT_DISPLAY_CLOSE:
+									thr_shared_arg.should_exit = true;
+									logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "DISPLAYCLOSE event got. Set to turn off soon." << L::EL;
+									break;
+
+								case +Assistance::ro__my_events::LOG_CLOUDLAUNCH_RAW:
+								{
+									mtt_s = (char*)ev.user.data1;
+									ALLEGRO_COLOR* colp = (ALLEGRO_COLOR*)ev.user.data2;
+									mtt->set(Assistance::io__text_color::COLOR, *colp);
+								}
+								break;
+
+								case +Assistance::ro__my_events::THRDRW_GOT_FORCED_RESIZE:
+									al_set_display_flag(md->getDisplay(), ALLEGRO_FULLSCREEN_WINDOW, (bool)ev.user.data1);
+									// yes, merge
+								case ALLEGRO_EVENT_DISPLAY_RESIZE:
+									al_acknowledge_resize(md->getDisplay());
+
+									gcam.apply();
+									logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "DISPLAYRESIZE got, acknowledged, done." << L::EL;
+
+									{
+										ALLEGRO_EVENT ev;
+										ev.type = +Assistance::ro__my_events::THRKBM_DISPLAY_SIZE;
+										ev.user.data1 = al_get_display_width(md->getDisplay());
+										ev.user.data2 = al_get_display_height(md->getDisplay());
+										al_emit_user_event(&evsrc, &ev, NULL);
+									}
+
+									conf.set(Assistance::io__conf_integer::SCREEN_X, al_get_display_width(md->getDisplay()));
+									conf.set(Assistance::io__conf_integer::SCREEN_Y, al_get_display_height(md->getDisplay()));
+									conf.set(Assistance::io__conf_integer::SCREEN_FLAGS, al_get_display_flags(md->getDisplay()));
+									conf.flush();
+
+									break;
+								}
+							}
+						}
+
+						// draw screen at least once
+
+						md->clearTo(BLACK);
+						
+						while (!sprites.tryLock()) Sleep(10);
+
 						gcam.apply();
 						camera_preset ww = gcam.get();
 
@@ -176,32 +168,33 @@ namespace LSW {
 						}
 
 						last_loop_had_error = 0;
+
+						sprites.unlock();
+
+
+						if (conf.isEq(Assistance::io__conf_boolean::WAS_OSD_ON, true)) matrix_draw_help();
+
+						md->flip();
+
+						//Sleep(50);
 					}
 					catch (Abort::abort err)
 					{
-
-						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got draw exception! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got exception! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
 						logg.flush();
-
-						alert("EXCEPTION!", "There was a exception!", ("This exception is skippable, but keep in mind that this is not good. Please report:\n\n" + ("Got draw exception! {" + err.from() + "," + err.details() + ",#" + std::to_string(err.getErrN()) + "}")).c_str());
-
-						if (err.getErrN() == 1 && (last_loop_had_error < 10)) {
-							//md->restart();
-							al_convert_bitmaps();
-							last_loop_had_error++;
-						}
-						//else throw err;
 					}
-
-
-					sprites.unlock();
-
-
-					if (conf.isEq(Assistance::io__conf_boolean::WAS_OSD_ON, true)) matrix_draw_help();
-
-					md->flip();
-
-					//Sleep(50);
+					catch (const std::out_of_range & oor)
+					{
+						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal exception! {" << oor.what() << "}" << L::ELF;
+						logg.flush();
+						askForceExit("ERROR!", ("There was a error at " + thread_functional.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
+					}
+					catch (...)
+					{
+						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal UNKNOWN exception!" << L::ELF;
+						logg.flush();
+						askForceExit("FATAL ERROR!", ("There was a fatal error (maybe fixable) at " + thread_functional.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
+					}
 				}
 
 				logg << L::SLF << fsr(__FUNCSIG__) << "Closing stuff!" << L::ELF;
@@ -265,26 +258,32 @@ namespace LSW {
 
 				for (bool localb = true; localb;)
 				{
-					while (thread_collision.pause_thread) Sleep(10);
+					try {
+						conf.set(Assistance::io__db_statistics_double::INSTANT_COLLISIONSPERSECOND, thread_collision.thread_arguments->getNumInstantSCallsDefault());
 
-					thread_collision.thread_arguments->hasEventWait();
+						while (thread_collision.pause_thread) Sleep(10);
 
-					if (thread_collision.thread_arguments->isThisThis(+Assistance::ro__thread_collision_routines_timers::FUNCTIONALITY))
-					{
-						__l_thr_cl_run(Assistance::io__threads_taskid::ONCE);
-					}
-					else if (thread_collision.thread_arguments->isThisThis(+Assistance::ro__thread_collision_routines_timers::LOOPTRACK))
-					{
-						conf.set(Assistance::io__db_statistics_sizet::COLLISIONSPERSECOND, thread_collision.thread_arguments->getNumCalls());
-					}
-					else if (thread_collision.thread_arguments->isThisThis(+Assistance::ro__thread_collision_routines_timers::CHECKKEEP))
-					{
-						localb = !thr_shared_arg.should_exit;
-						//printf_s("[THR_COL] CHECKKEEP called\n");
-					}
-					else if (thread_collision.thread_arguments->isThisThis(+Assistance::ro__thread_collision_routines_timers::COLLISIONWORK))
-					{
-						try {
+						thread_collision.thread_arguments->hasEventWait();
+
+						if (thread_collision.thread_arguments->isThisThis(+Assistance::ro__thread_collision_routines_timers::FUNCTIONALITY_ONCE))
+						{
+							__l_thr_cl_run(Assistance::io__threads_taskid::ONCE);
+						}
+						else if (thread_collision.thread_arguments->isThisThis(+Assistance::ro__thread_collision_routines_timers::FUNCTIONALITY_LOOP))
+						{
+							__l_thr_cl_run(Assistance::io__threads_taskid::LOOP);
+						}
+						else if (thread_collision.thread_arguments->isThisThis(+Assistance::ro__thread_collision_routines_timers::LOOPTRACK))
+						{
+							conf.set(Assistance::io__db_statistics_sizet::COLLISIONSPERSECOND, thread_collision.thread_arguments->getNumCallsDefault());
+						}
+						else if (thread_collision.thread_arguments->isThisThis(+Assistance::ro__thread_collision_routines_timers::CHECKKEEP))
+						{
+							localb = !thr_shared_arg.should_exit;
+							//printf_s("[THR_COL] CHECKKEEP called\n");
+						}
+						else if (thread_collision.thread_arguments->isThisThis(+Assistance::ro__thread_collision_routines_timers::COLLISIONWORK))
+						{
 							gcam.apply();
 							camera_preset ww = gcam.get();
 							//float rr = ww.get(Assistance::io__camera_float::ROTATION_RAD); // adjustment because canvas has been rotated so mouse will be at normal and stuff offset by this
@@ -306,14 +305,23 @@ namespace LSW {
 
 							last_loop_had_error = 0;
 						}
-						catch (Abort::abort err)
-						{
-							logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got updating pos exception! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
-
-							if (err.getErrN() == 1 && (last_loop_had_error < 10)) {
-								last_loop_had_error++;
-							}
-						}
+					}
+					catch (Abort::abort err)
+					{
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got exception! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
+						logg.flush();
+					}
+					catch (const std::out_of_range & oor)
+					{
+						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal exception! {" << oor.what() << "}" << L::ELF;
+						logg.flush();
+						askForceExit("ERROR!", ("There was a error at " + thread_functional.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
+					}
+					catch (...)
+					{
+						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal UNKNOWN exception!" << L::ELF;
+						logg.flush();
+						askForceExit("FATAL ERROR!", ("There was a fatal error (maybe fixable) at " + thread_functional.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 					}
 				}
 				logg << L::SLF << fsr(__FUNCSIG__) << "Closing stuff!" << L::ELF;
@@ -380,98 +388,123 @@ namespace LSW {
 
 				for (bool localb = true; localb;)
 				{
-					while (thread_kbmouse.pause_thread) Sleep(10);
+					try {
+						conf.set(Assistance::io__db_statistics_double::INSTANT_USEREVENTSPERSECOND, thread_kbmouse.thread_arguments->getNumInstantSCallsDefault());
 
-					thread_kbmouse.thread_arguments->hasEventWait();
+						while (thread_kbmouse.pause_thread) Sleep(10);
 
-					if (thread_kbmouse.thread_arguments->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::FUNCTIONALITY))
-					{
-						__l_thr_kb_run(Assistance::io__threads_taskid::ONCE);
-					}
-					else if (thread_kbmouse.thread_arguments->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::LOOPTRACK))
-					{
-						conf.set(Assistance::io__db_statistics_sizet::USEREVENTSPERSECOND, thread_kbmouse.thread_arguments->getNumCalls());
-					}
-					else if (thread_kbmouse.thread_arguments->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::CHECKKEEP))
-					{
-						localb = !thr_shared_arg.should_exit;
-					}
-					else if (thread_kbmouse.thread_arguments->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::UPDATEMOUSE))
-					{
-						float m[2];
-						conf.get(Assistance::io__db_mouse_float::RAW_MOUSE_X, m[0]);
-						conf.get(Assistance::io__db_mouse_float::RAW_MOUSE_Y, m[1]);
+						thread_kbmouse.thread_arguments->hasEventWait();
 
-						// transform based on cam
-						Camera gcam;
-						camera_preset psf = gcam.get(); // copy latest
-
-						ALLEGRO_TRANSFORM untransf = psf.quick();
-						al_invert_transform(&untransf);
-						al_transform_coordinates(&untransf, &m[0], &m[1]);
-
-						conf.set(Assistance::io__db_mouse_float::MOUSE_X, m[0]);
-						conf.set(Assistance::io__db_mouse_float::MOUSE_Y, m[1]);
-
-
-						for (auto& i : sprites) {
-							if (i->self->isEq(Assistance::io__sprite_boolean::FOLLOWMOUSE, true)) {
-								i->self->set(Assistance::io__sprite_double::POSX, m[0]);
-								i->self->set(Assistance::io__sprite_double::POSY, m[1]);
-							}
-						}
-					}
-
-					else { // not a timer ///DEBUG NOW
-						auto ev = thread_kbmouse.thread_arguments->getEventRaw();
-
-						if (ev.type == +Assistance::ro__my_events::THRKBM_DISPLAY_SIZE)
+						if (thread_kbmouse.thread_arguments->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::FUNCTIONALITY_ONCE))
 						{
-							display_x = ev.user.data1;
-							display_y = ev.user.data2;
+							__l_thr_kb_run(Assistance::io__threads_taskid::ONCE);
 						}
-						if (ev.type == ALLEGRO_EVENT_KEY_DOWN) { // USE IN GAME
-							conf.set(ev.keyboard.keycode, true);
+						else if (thread_kbmouse.thread_arguments->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::FUNCTIONALITY_LOOP))
+						{
+							__l_thr_kb_run(Assistance::io__threads_taskid::LOOP);
 						}
-						if (ev.type == ALLEGRO_EVENT_KEY_UP) { // USE IN GAME
-							conf.set(ev.keyboard.keycode, false);
+						else if (thread_kbmouse.thread_arguments->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::LOOPTRACK))
+						{
+							conf.set(Assistance::io__db_statistics_sizet::USEREVENTSPERSECOND, thread_kbmouse.thread_arguments->getNumCallsDefault());
+						}
+						else if (thread_kbmouse.thread_arguments->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::CHECKKEEP))
+						{
+							localb = !thr_shared_arg.should_exit;
+						}
+						else if (thread_kbmouse.thread_arguments->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::UPDATEMOUSE))
+						{
+							float m[2];
+							conf.get(Assistance::io__db_mouse_float::RAW_MOUSE_X, m[0]);
+							conf.get(Assistance::io__db_mouse_float::RAW_MOUSE_Y, m[1]);
 
-							switch (ev.keyboard.keycode) {
-							case ALLEGRO_KEY_F11:
+							// transform based on cam
+							Camera gcam;
+							camera_preset psf = gcam.get(); // copy latest
+
+							ALLEGRO_TRANSFORM untransf = psf.quick();
+							al_invert_transform(&untransf);
+							al_transform_coordinates(&untransf, &m[0], &m[1]);
+
+							conf.set(Assistance::io__db_mouse_float::MOUSE_X, m[0]);
+							conf.set(Assistance::io__db_mouse_float::MOUSE_Y, m[1]);
+
+
+							for (auto& i : sprites) {
+								if (i->self->isEq(Assistance::io__sprite_boolean::FOLLOWMOUSE, true)) {
+									i->self->set(Assistance::io__sprite_double::POSX, m[0]);
+									i->self->set(Assistance::io__sprite_double::POSY, m[1]);
+								}
+							}
+						}
+
+						else { // not a timer ///DEBUG NOW
+							auto ev = thread_kbmouse.thread_arguments->getEventRaw();
+
+							if (ev.type == +Assistance::ro__my_events::THRKBM_DISPLAY_SIZE)
 							{
-								ALLEGRO_EVENT ev;
-								ev.type = +Assistance::ro__my_events::THRDRW_GOT_FORCED_RESIZE;
-								ev.user.data1 = (isscreenfullscreen = !isscreenfullscreen);
-								al_emit_user_event(&evsrc, &ev, NULL);
+								display_x = ev.user.data1;
+								display_y = ev.user.data2;
 							}
-							break;
-							case ALLEGRO_KEY_F2:
-							{
-								md->print();
+							if (ev.type == ALLEGRO_EVENT_KEY_DOWN) { // USE IN GAME
+								conf.set(ev.keyboard.keycode, true);
 							}
-							break;
+							if (ev.type == ALLEGRO_EVENT_KEY_UP) { // USE IN GAME
+								conf.set(ev.keyboard.keycode, false);
+
+								switch (ev.keyboard.keycode) {
+								case ALLEGRO_KEY_F11:
+								{
+									ALLEGRO_EVENT ev;
+									ev.type = +Assistance::ro__my_events::THRDRW_GOT_FORCED_RESIZE;
+									ev.user.data1 = (isscreenfullscreen = !isscreenfullscreen);
+									al_emit_user_event(&evsrc, &ev, NULL);
+								}
+								break;
+								case ALLEGRO_KEY_F2:
+								{
+									md->print();
+								}
+								break;
+								}
+							}
+
+							if (ev.type == ALLEGRO_EVENT_KEY_CHAR) { // keyboard input
+								//const char* actch = al_keycode_to_name(ev.keyboard.keycode); // prints literally key name KEY26 A B C
+								//if (ev.keyboard.unichar > 32) logg.debug("[THR_KBM] KEYCHAR= %d ~= %c", ev.keyboard.keycode, ev.keyboard.unichar);
+								//else                          logg.debug("[THR_KBM] KEYCHAR= %d", ev.keyboard.keycode);
+							}
+							if (ev.type == ALLEGRO_EVENT_MOUSE_AXES) {
+								//conf.set(Assistance::io__db_mouse_float::MOUSE_X, (ev.mouse.x * 2.0f / display_x) - 1.0);
+								//conf.set(Assistance::io__db_mouse_float::MOUSE_Y, (ev.mouse.y * 2.0f / display_y) - 1.0);
+
+								conf.set(Assistance::io__db_mouse_float::RAW_MOUSE_X, ev.mouse.x);
+								conf.set(Assistance::io__db_mouse_float::RAW_MOUSE_Y, ev.mouse.y);
+
+							}
+							if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+								conf.set(((Assistance::io__db_mouse_boolean)ev.mouse.button), true);
+							}
+							if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
+								conf.set(((Assistance::io__db_mouse_boolean)ev.mouse.button), false);
 							}
 						}
-
-						if (ev.type == ALLEGRO_EVENT_KEY_CHAR) { // keyboard input
-							//const char* actch = al_keycode_to_name(ev.keyboard.keycode); // prints literally key name KEY26 A B C
-							//if (ev.keyboard.unichar > 32) logg.debug("[THR_KBM] KEYCHAR= %d ~= %c", ev.keyboard.keycode, ev.keyboard.unichar);
-							//else                          logg.debug("[THR_KBM] KEYCHAR= %d", ev.keyboard.keycode);
-						}
-						if (ev.type == ALLEGRO_EVENT_MOUSE_AXES) {
-							//conf.set(Assistance::io__db_mouse_float::MOUSE_X, (ev.mouse.x * 2.0f / display_x) - 1.0);
-							//conf.set(Assistance::io__db_mouse_float::MOUSE_Y, (ev.mouse.y * 2.0f / display_y) - 1.0);
-
-							conf.set(Assistance::io__db_mouse_float::RAW_MOUSE_X, ev.mouse.x);
-							conf.set(Assistance::io__db_mouse_float::RAW_MOUSE_Y, ev.mouse.y);
-
-						}
-						if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
-							conf.set(((Assistance::io__db_mouse_boolean)ev.mouse.button), true);
-						}
-						if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
-							conf.set(((Assistance::io__db_mouse_boolean)ev.mouse.button), false);
-						}
+					}
+					catch (Abort::abort err)
+					{
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got exception! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
+						logg.flush();
+					}
+					catch (const std::out_of_range & oor)
+					{
+						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal exception! {" << oor.what() << "}" << L::ELF;
+						logg.flush();
+						askForceExit("ERROR!", ("There was a error at " + thread_functional.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
+					}
+					catch (...)
+					{
+						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal UNKNOWN exception!" << L::ELF;
+						logg.flush();
+						askForceExit("FATAL ERROR!", ("There was a fatal error (maybe fixable) at " + thread_functional.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 					}
 				}
 				logg << L::SLF << fsr(__FUNCSIG__) << "Closing stuff!" << L::ELF;
@@ -499,6 +532,7 @@ namespace LSW {
 		{
 			try {
 				gfile logg;
+				Database conf;
 				//std::map<ALLEGRO_TIMER*, size_t> quickmap;
 
 				logg << L::SLF << fsr(__FUNCSIG__) << "Initializing..." << L::ELF;
@@ -524,39 +558,48 @@ namespace LSW {
 
 				while (!thr_shared_arg.should_exit)
 				{
-					while (thread_functional.pause_thread) Sleep(10);
+					try {
+						conf.set(Assistance::io__db_statistics_double::INSTANT_ADVANCEDFUNCSPERSECOND, thread_functional.thread_arguments->getNumInstantSCallsDefault());
 
-					thread_functional.thread_arguments->hasEventWait();
+						while (thread_functional.pause_thread) Sleep(10);
 
-					if (thread_functional.thread_arguments->isThisThis(+Assistance::ro__thread_functional_routines_timers::FUNCTIONALITY_AND_CHECKNEWFUNCS))
-					{
-						__l_thr_kb_run(Assistance::io__threads_taskid::ONCE);
+						thread_functional.thread_arguments->hasEventWait();
 
-
-						for (size_t k = 0; k < func_list_super.size(); k++)
+						if (thread_functional.thread_arguments->isThisThis(+Assistance::ro__thread_functional_routines_timers::LOOPTRACK))
 						{
-							auto& vv = func_list_super[k];
-
-							if (!vv.should_run) {
-								thread_functional.thread_arguments->remove(al_get_timer_event_source(vv.the_timer));
-								func_list_super.erase(k);
-								if (k > 0) k--;
-							}
-							if (!vv.has_timer_set_on_queue) {
-								thread_functional.thread_arguments->insert(al_get_timer_event_source(vv.the_timer));
-								al_start_timer(vv.the_timer);
-
-								logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Timed function P=" << cast_pointer(vv.the_timer) << ";ID=" << vv.id << " created" << L::EL;
-								vv.has_timer_set_on_queue = true;
-							}
+							conf.set(Assistance::io__db_statistics_sizet::ADVANCEDFUNCSPERSECOND, thread_functional.thread_arguments->getNumCallsDefault());
 						}
+						else if (thread_functional.thread_arguments->isThisThis(+Assistance::ro__thread_functional_routines_timers::FUNCTIONALITY_LOOP))
+						{
+							__l_thr_kb_run(Assistance::io__threads_taskid::LOOP);
+						}
+						else if (thread_functional.thread_arguments->isThisThis(+Assistance::ro__thread_functional_routines_timers::FUNCTIONALITY_ONCE_AND_CHECKNEWFUNCS))
+						{
+							__l_thr_kb_run(Assistance::io__threads_taskid::ONCE);
 
-					}
-					else { // TIMER EVENT (default)
+							for (size_t k = 0; k < func_list_super.size(); k++)
+							{
+								auto& vv = func_list_super[k];
 
-						ALLEGRO_EVENT cat = thread_functional.thread_arguments->getEventRaw();
+								if (!vv.should_run) {
+									thread_functional.thread_arguments->remove(al_get_timer_event_source(vv.the_timer));
+									func_list_super.erase(k);
+									if (k > 0) k--;
+								}
+								if (!vv.has_timer_set_on_queue) {
+									thread_functional.thread_arguments->insert(al_get_timer_event_source(vv.the_timer));
+									al_start_timer(vv.the_timer);
 
-						try {
+									logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Timed function P=" << cast_pointer(vv.the_timer) << ";ID=" << vv.id << " created" << L::EL;
+									vv.has_timer_set_on_queue = true;
+								}
+							}
+
+						}
+						else { // TIMER EVENT (default)
+
+							ALLEGRO_EVENT cat = thread_functional.thread_arguments->getEventRaw();
+
 							if (cat.type == ALLEGRO_EVENT_TIMER)
 							{
 								//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Got event to timer P=" << cast_pointer(cat.timer.source) << "." << L::EL;
@@ -570,20 +613,30 @@ namespace LSW {
 								if (a.should_run && a.func) {
 									if (++a.calls > 0) a.calls += a.func(); // run only if a.calls >= 0
 								}
-									/*}
-								}*/
+								/*}
+							}*/
 							}
 						}
-						catch (Abort::abort err)
-						{
-							logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got function exception! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
-						}
-						catch (const std::out_of_range & oor)
-						{
-							logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal function exception! {" << oor.what() << "}" << L::ELF;
-						}
 					}
-				}
+					catch (Abort::abort err)
+					{
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got exception! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
+						logg.flush();
+					}
+					catch (const std::out_of_range & oor)
+					{
+						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal exception! {" << oor.what() << "}" << L::ELF;
+						logg.flush();
+						askForceExit("ERROR!", ("There was a error at " + thread_functional.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
+					}
+					catch (...)
+					{
+						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal UNKNOWN exception!" << L::ELF;
+						logg.flush();
+						askForceExit("FATAL ERROR!", ("There was a fatal error (maybe fixable) at " + thread_functional.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
+					}
+
+				} // endof while
 
 				logg << L::SLF << fsr(__FUNCSIG__) << "Closing stuff!" << L::ELF;
 
@@ -613,7 +666,7 @@ namespace LSW {
 		void Console::__l_thr_md_run(const Assistance::io__threads_taskid tid)
 		{
 			if (thread_maindisplay.functions[+tid]) {
-				if (thread_maindisplay.has_called_once[+tid]) return;
+				if (tid != Assistance::io__threads_taskid::LOOP && thread_maindisplay.has_called_once[+tid]) return;
 				thread_maindisplay.functions[+tid]();
 				Sleep(10);
 			}
@@ -622,7 +675,7 @@ namespace LSW {
 		void Console::__l_thr_cl_run(const Assistance::io__threads_taskid tid)
 		{
 			if (thread_collision.functions[+tid]) {
-				if (thread_collision.has_called_once[+tid]) return;
+				if (tid != Assistance::io__threads_taskid::LOOP && thread_collision.has_called_once[+tid]) return;
 				thread_collision.functions[+tid]();
 				Sleep(10);
 			}
@@ -631,7 +684,7 @@ namespace LSW {
 		void Console::__l_thr_kb_run(const Assistance::io__threads_taskid tid)
 		{
 			if (thread_kbmouse.functions[+tid]) {
-				if (thread_kbmouse.has_called_once[+tid]) return;
+				if (tid != Assistance::io__threads_taskid::LOOP && thread_kbmouse.has_called_once[+tid]) return;
 				thread_kbmouse.functions[+tid]();
 				Sleep(10);
 			}
@@ -640,7 +693,7 @@ namespace LSW {
 		void Console::__l_thr_fc_run(const Assistance::io__threads_taskid tid)
 		{
 			if (thread_functional.functions[+tid]) {
-				if (thread_functional.has_called_once[+tid]) return;
+				if (tid != Assistance::io__threads_taskid::LOOP && thread_functional.has_called_once[+tid]) return;
 				thread_functional.functions[+tid]();
 				Sleep(10);
 			}
@@ -662,6 +715,11 @@ namespace LSW {
 			///launch([](void* v) {return; }, [](void* v) {return; }); // do nothing, just go
 
 			thr_shared_arg.should_exit = false;
+
+			thread_maindisplay.threadid_str =	"Display Manager Thread";
+			thread_collision.threadid_str =		"Positioning and Collision Thread";
+			thread_kbmouse.threadid_str =		"Events and User Input Thread";
+			thread_functional.threadid_str =	"Advanced Functions Thread";
 
 			// start threads
 			thread_maindisplay.thr_itself = new std::thread([=] {__l_thr_md(); });
@@ -791,13 +849,28 @@ namespace LSW {
 		{
 			switch (o) {
 			case Assistance::io__thread_ids::DRAWING:
-				return thread_maindisplay.thread_arguments->getNumCalls();
+				return thread_maindisplay.thread_arguments->getNumFullCalls();
 			case Assistance::io__thread_ids::COLLIDING:
-				return thread_collision.thread_arguments->getNumCalls();
+				return thread_collision.thread_arguments->getNumFullCalls();
 			case Assistance::io__thread_ids::USERINPUT:
-				return thread_kbmouse.thread_arguments->getNumCalls();
+				return thread_kbmouse.thread_arguments->getNumFullCalls();
 			case Assistance::io__thread_ids::FUNCTIONAL:
-				return thread_functional.thread_arguments->getNumCalls();
+				return thread_functional.thread_arguments->getNumFullCalls();
+			}
+			return 0;
+		}
+
+		double Console::getInstantSCallsOnThread(const Assistance::io__thread_ids o)
+		{
+			switch (o) {
+			case Assistance::io__thread_ids::DRAWING:
+				return thread_maindisplay.thread_arguments->getNumFullInstantSCalls();
+			case Assistance::io__thread_ids::COLLIDING:
+				return thread_collision.thread_arguments->getNumFullInstantSCalls();
+			case Assistance::io__thread_ids::USERINPUT:
+				return thread_kbmouse.thread_arguments->getNumFullInstantSCalls();
+			case Assistance::io__thread_ids::FUNCTIONAL:
+				return thread_functional.thread_arguments->getNumFullInstantSCalls();
 			}
 			return 0;
 		}

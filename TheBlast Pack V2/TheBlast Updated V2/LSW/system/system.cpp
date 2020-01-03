@@ -528,8 +528,6 @@ namespace LSW {
 
 		Database::Database()
 		{
-			if (data.dbcount++ == 0) logg << L::SL << fsr(__FUNCSIG__ )<< "Registered spawn of first Database ID#" + std::to_string((size_t)this) << L::EL;
-
 			data.m.lock();
 			if (!data.c) {
 				std::string temporary = Constants::config_default_file;
@@ -568,12 +566,6 @@ namespace LSW {
 				}
 			}
 			data.m.unlock();
-		}
-		Database::~Database()
-		{
-			if (--data.dbcount == 0) {
-				logg << L::SL << fsr(__FUNCSIG__) << "Registered despawn of last Database ID#" + std::to_string((size_t)this) << L::EL;
-			}
 		}
 
 		void Database::flush()
@@ -644,6 +636,11 @@ namespace LSW {
 			if (e != Assistance::io__db_statistics_sizet::size) data.db_statistics_sizet[+e] = v;
 		}
 
+		void Database::set(const Assistance::io__db_statistics_double e, const double v)
+		{
+			if (e != Assistance::io__db_statistics_double::size) data.db_statistics_double[+e] = v;
+		}
+
 		void Database::get(const std::string e, std::string& v, const std::string defaul)
 		{
 			if (!data.c) throw Abort::abort(__FUNCSIG__, "Cannot get \"" + e + "\" as \"" + v + "\".");
@@ -710,6 +707,11 @@ namespace LSW {
 			if (e != Assistance::io__db_statistics_sizet::size) v = data.db_statistics_sizet[+e];
 		}
 
+		void Database::get(const Assistance::io__db_statistics_double e, double& v)
+		{
+			if (e != Assistance::io__db_statistics_double::size) v = data.db_statistics_double[+e];
+		}
+
 
 		bool Database::isEq(const std::string e, const std::string v)
 		{
@@ -772,6 +774,13 @@ namespace LSW {
 		bool Database::isEq(const Assistance::io__db_statistics_sizet e, const size_t v)
 		{
 			size_t oth;
+			get(e, oth);
+			return oth == v;
+		}
+
+		bool Database::isEq(const Assistance::io__db_statistics_double e, const double v)
+		{
+			double oth;
 			get(e, oth);
 			return oth == v;
 		}
@@ -850,6 +859,24 @@ namespace LSW {
 				exit(EXIT_FAILURE);
 			}
 			exit(EXIT_SUCCESS);
+		}
+		void askForceExit(const char* windw, const char* title, const char* ext)
+		{
+			gfile logg;
+			logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "askEXIT: " << (windw ? windw : "NULL") << ": " << (title ? title : "NULL") << "; " << (ext ? ext : "NULL") << L::ELF;
+			logg.flush();
+			if (windw) {
+				int e = al_show_native_message_box(
+					nullptr,
+					windw,
+					title,
+					(ext + std::string("\n\nContinue anyway? (NO = force exit the game)")).c_str(),
+					NULL,
+					ALLEGRO_MESSAGEBOX_YES_NO);
+				if (e == 2) { // NO
+					exit(EXIT_FAILURE);
+				}
+			}
 		}
 		void alert(const char* windw, const char* title, const char* ext)
 		{

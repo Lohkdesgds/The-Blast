@@ -12,7 +12,7 @@ extern "C" {
 
 
 enum class main_gamemodes { HASNT_STARTED_YET=-2, LOADING, MENU, OPTIONS, PAUSE, GAMING };
-enum class my_custom_funcs { LOADING_ANIMATION=10 };
+enum class my_custom_funcs { LOADING_ANIMATION=0,BUBBLE_TASK=1 };
 
 int main(int argc, const char* argv[])
 {
@@ -46,6 +46,7 @@ int main(int argc, const char* argv[])
 
 		// others
 		Camera gcam;
+		Bubbles bubble;
 		//camera_preset cp;
 
 		Mixer mixer; // init audio mixer
@@ -76,7 +77,7 @@ int main(int argc, const char* argv[])
 		logg << L::SLF << fsr(__FUNCSIG__) << "Setting up load/unload function... (faster unload)" << L::ELF;
 
 		consol.setSimpleTask(Assistance::io__thread_ids::DRAWING, Assistance::io__threads_taskid::END, [&textures, &sprites, &texts, &fonts]() { sprites.clear(); texts.clear(); fonts.clear(); textures.clear(); });
-		consol.setSimpleTask(Assistance::io__thread_ids::DRAWING, Assistance::io__threads_taskid::START, []() {
+		consol.setSimpleTask(Assistance::io__thread_ids::DRAWING, Assistance::io__threads_taskid::START, [&bubble, &consol]() {
 
 			const double animsize[2] = { 0.35, 0.07 };
 
@@ -93,6 +94,10 @@ int main(int argc, const char* argv[])
 			logg << L::SLF << fsr(__FUNCSIG__) << "Loading resources (lambda after function)" << L::ELF;
 
 			__g_sys.setInterface();
+
+			bubble.init(300, -1, -99);
+			consol.setSimpleTask(Assistance::io__thread_ids::DRAWING, Assistance::io__threads_taskid::LOOP, [&bubble]() { bubble.draw(); });
+			consol.addCustomTask([&bubble]()->int { bubble.think(); return 0; }, +my_custom_funcs::BUBBLE_TASK, 1.0 / 24);
 
 
 			/*************************************************************************************
@@ -345,6 +350,7 @@ int main(int argc, const char* argv[])
 
 			// loading
 			cp.setLayer(-50, true);
+			cp.setLayer(100, true); // DEBUG LINE
 			cp.set(Assistance::io__camera_boolean::RESPECT_LIMITS, true);
 			cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -0.95);
 			cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -0.95);
@@ -357,6 +363,7 @@ int main(int argc, const char* argv[])
 			cp.setLayer(-10, true);
 			cp.setLayer(-99, true); // bubble animation
 			cp.setLayer(99, true); // mouse
+			cp.setLayer(100, true); // DEBUG LINE
 			cp.set(Assistance::io__camera_boolean::RESPECT_LIMITS, true);
 			cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -0.95);
 			cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -0.95);
@@ -370,6 +377,7 @@ int main(int argc, const char* argv[])
 			cp.setLayer(-9, true);
 			cp.setLayer(99, true); // mouse
 			cp.setLayer(-99, true); // bubble animation
+			cp.setLayer(100, true); // DEBUG LINE
 			cp.set(Assistance::io__camera_boolean::RESPECT_LIMITS, true);
 			cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -0.95);
 			cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -0.95);
@@ -382,6 +390,7 @@ int main(int argc, const char* argv[])
 			cp.setLayer(-1, true);
 			cp.setLayer(99, true); // mouse
 			cp.setLayer(-98, true); // lines animation
+			cp.setLayer(100, true); // DEBUG LINE
 			cp.set(Assistance::io__camera_boolean::RESPECT_LIMITS, true);
 			cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -0.95);
 			cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -0.95);
@@ -392,6 +401,7 @@ int main(int argc, const char* argv[])
 			// game
 			cp = camera_preset();
 			cp.setLayer(0, true);
+			cp.setLayer(100, true); // DEBUG LINE
 			cp.set(Assistance::io__camera_boolean::RESPECT_LIMITS, true);
 			cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -0.85);
 			cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -0.85);
@@ -506,6 +516,7 @@ int main(int argc, const char* argv[])
 			t->set(Assistance::io__text_string::ID, "BUTTON_MENU_0_T");
 			t->set(Assistance::io__text_boolean::SHOW, true);
 			t->set(Assistance::io__text_double::SCALEG, 0.08);
+			t->set(Assistance::io__text_double::SCALEX, 0.7);
 			t->set(Assistance::io__text_double::POSY, -0.060);
 			t->set(Assistance::io__text_string::FOLLOW_SPRITE, "BUTTON_MENU_0");
 			t->set(Assistance::io__text_integer::LAYER, -10);
@@ -535,6 +546,7 @@ int main(int argc, const char* argv[])
 			t->set(Assistance::io__text_string::ID, "BUTTON_MENU_1_T");
 			t->set(Assistance::io__text_boolean::SHOW, true);
 			t->set(Assistance::io__text_double::SCALEG, 0.08);
+			t->set(Assistance::io__text_double::SCALEX, 0.7);
 			t->set(Assistance::io__text_double::POSY, -0.060);
 			t->set(Assistance::io__text_string::FOLLOW_SPRITE, "BUTTON_MENU_1");
 			t->set(Assistance::io__text_integer::LAYER, -10);
@@ -564,6 +576,7 @@ int main(int argc, const char* argv[])
 			t->set(Assistance::io__text_string::ID, "BUTTON_MENU_2_T");
 			t->set(Assistance::io__text_boolean::SHOW, true);
 			t->set(Assistance::io__text_double::SCALEG, 0.08);
+			t->set(Assistance::io__text_double::SCALEX, 0.7);
 			t->set(Assistance::io__text_double::POSY, -0.060);
 			t->set(Assistance::io__text_string::FOLLOW_SPRITE, "BUTTON_MENU_2");
 			t->set(Assistance::io__text_integer::LAYER, -10);
@@ -599,11 +612,105 @@ int main(int argc, const char* argv[])
 			t->set(Assistance::io__text_string::ID, "BUTTON_GAMING_0_T");
 			t->set(Assistance::io__text_boolean::SHOW, true);
 			t->set(Assistance::io__text_double::SCALEG, 0.07);
+			t->set(Assistance::io__text_double::SCALEX, 0.7);
 			t->set(Assistance::io__text_double::POSY, -0.060);
 			t->set(Assistance::io__text_string::FOLLOW_SPRITE, "BUTTON_GAMING_0");
 			t->set(Assistance::io__text_integer::LAYER, 0);
 			t->set(Assistance::io__text_double::UPDATETIME, 1.0 / 20);
 			t->set(Assistance::io__text_color::COLOR, al_map_rgb(180, 255, 225));
+		}
+
+		// TEXTS
+
+		{
+			Text* const t = texts.create("osd_stuff0");
+			t->set(Assistance::io__text_string::FONT, "DEFAULT");
+			t->set(Assistance::io__text_string::STRING, "M:%mouse_x%,%mouse_y% | C:%cam_x%,%cam_y%@~%cam_zoom_combined% | S:%curr_string%[%last_string%]");
+			t->set(Assistance::io__text_string::ID, "osd_stuff0");
+			t->set(Assistance::io__text_boolean::SHOW, true);
+			t->set(Assistance::io__text_double::SCALEG, 0.025);
+			t->set(Assistance::io__text_double::SCALEX, 0.6);
+			t->set(Assistance::io__text_double::POSY, -1.00);
+			t->set(Assistance::io__text_double::POSX, -1.0);
+			t->set(Assistance::io__text_integer::MODE, +Assistance::io__alignment_text::ALIGN_LEFT);
+			t->set(Assistance::io__text_double::UPDATETIME, 1.0 / 4);
+			t->set(Assistance::io__text_boolean::AFFECTED_BY_CAM, false);
+			t->set(Assistance::io__text_integer::LAYER, 100);
+		}
+		{
+			Text* const t = texts.create("osd_stuff1");
+			t->set(Assistance::io__text_string::FONT, "DEFAULT");
+			t->set(Assistance::io__text_string::STRING, "FPS: %int_fps%|%instant_fps% [%ms_fps% ms]");
+			t->set(Assistance::io__text_string::ID, "osd_stuff1");
+			t->set(Assistance::io__text_boolean::SHOW, true);
+			t->set(Assistance::io__text_double::SCALEG, 0.025);
+			t->set(Assistance::io__text_double::SCALEX, 0.6);
+			t->set(Assistance::io__text_double::POSY, -0.97);
+			t->set(Assistance::io__text_double::POSX, -1.0);
+			t->set(Assistance::io__text_integer::MODE, +Assistance::io__alignment_text::ALIGN_LEFT);
+			t->set(Assistance::io__text_double::UPDATETIME, 1.0 / 12);
+			t->set(Assistance::io__text_boolean::AFFECTED_BY_CAM, false);
+			t->set(Assistance::io__text_integer::LAYER, 100);
+		}
+		{
+			Text* const t = texts.create("osd_stuff2");
+			t->set(Assistance::io__text_string::FONT, "DEFAULT");
+			t->set(Assistance::io__text_string::STRING, "TPS: %int_tps%|%instant_tps% [%ms_tps% ms]");
+			t->set(Assistance::io__text_string::ID, "osd_stuff2");
+			t->set(Assistance::io__text_boolean::SHOW, true);
+			t->set(Assistance::io__text_double::SCALEG, 0.025);
+			t->set(Assistance::io__text_double::SCALEX, 0.6);
+			t->set(Assistance::io__text_double::POSY, -0.94);
+			t->set(Assistance::io__text_double::POSX, -1.0);
+			t->set(Assistance::io__text_integer::MODE, +Assistance::io__alignment_text::ALIGN_LEFT);
+			t->set(Assistance::io__text_double::UPDATETIME, 1.0 / 3);
+			t->set(Assistance::io__text_boolean::AFFECTED_BY_CAM, false);
+			t->set(Assistance::io__text_integer::LAYER, 100);
+		}
+		{
+			Text* const t = texts.create("osd_stuff3");
+			t->set(Assistance::io__text_string::FONT, "DEFAULT");
+			t->set(Assistance::io__text_string::STRING, "UPS: %int_ups%|%instant_ups% [%ms_ups% ms]");
+			t->set(Assistance::io__text_string::ID, "osd_stuff3");
+			t->set(Assistance::io__text_boolean::SHOW, true);
+			t->set(Assistance::io__text_double::SCALEG, 0.025);
+			t->set(Assistance::io__text_double::SCALEX, 0.6);
+			t->set(Assistance::io__text_double::POSY, -0.91);
+			t->set(Assistance::io__text_double::POSX, -1.0);
+			t->set(Assistance::io__text_integer::MODE, +Assistance::io__alignment_text::ALIGN_LEFT);
+			t->set(Assistance::io__text_double::UPDATETIME, 1.0 / 4);
+			t->set(Assistance::io__text_boolean::AFFECTED_BY_CAM, false);
+			t->set(Assistance::io__text_integer::LAYER, 100);
+		}
+		{
+			Text* const t = texts.create("osd_stuff4");
+			t->set(Assistance::io__text_string::FONT, "DEFAULT");
+			t->set(Assistance::io__text_string::STRING, "APS: %int_aps%|%instant_aps% [%ms_aps% ms]");
+			t->set(Assistance::io__text_string::ID, "osd_stuff4");
+			t->set(Assistance::io__text_boolean::SHOW, true);
+			t->set(Assistance::io__text_double::SCALEG, 0.025);
+			t->set(Assistance::io__text_double::SCALEX, 0.6);
+			t->set(Assistance::io__text_double::POSY, -0.88);
+			t->set(Assistance::io__text_double::POSX, -1.0);
+			t->set(Assistance::io__text_integer::MODE, +Assistance::io__alignment_text::ALIGN_LEFT);
+			t->set(Assistance::io__text_double::UPDATETIME, 1.0 / 6);
+			t->set(Assistance::io__text_boolean::AFFECTED_BY_CAM, false);
+			t->set(Assistance::io__text_integer::LAYER, 100);
+		}
+		{
+			Text* const t = texts.create("osd_stuff5");
+			t->set(Assistance::io__text_string::FONT, "DEFAULT");
+			t->set(Assistance::io__text_string::STRING, "D:%curr_res_x%:%curr_res_y%@%curr_refresh_rate% | I:%num_images%,S:%num_sprites%,T:%num_texts%,A:%num_tracks%");
+			t->set(Assistance::io__text_string::ID, "osd_stuff5");
+			t->set(Assistance::io__text_boolean::SHOW, true);
+			t->set(Assistance::io__text_double::SCALEG, 0.025);
+			t->set(Assistance::io__text_double::SCALEX, 0.6);
+			t->set(Assistance::io__text_double::POSY, -0.85);
+			t->set(Assistance::io__text_double::POSX, -1.0);
+			t->set(Assistance::io__text_integer::MODE, +Assistance::io__alignment_text::ALIGN_LEFT);
+			t->set(Assistance::io__text_double::UPDATETIME, 1.0 / 3);
+			t->set(Assistance::io__text_boolean::AFFECTED_BY_CAM, false);
+			t->set(Assistance::io__text_integer::LAYER, 100);
 		}
 
 
@@ -615,6 +722,7 @@ int main(int argc, const char* argv[])
 		mytext->set(Assistance::io__text_string::ID, "randomtext");
 		mytext->set(Assistance::io__text_boolean::SHOW, true);
 		mytext->set(Assistance::io__text_double::SCALEG, 0.1);
+		mytext->set(Assistance::io__text_double::SCALEX, 0.8);
 		mytext->set(Assistance::io__text_double::POSY, 0.65);
 		mytext->set(Assistance::io__text_integer::LAYER, -10);
 		mytext->set(Assistance::io__text_double::UPDATETIME, 1.0/10);

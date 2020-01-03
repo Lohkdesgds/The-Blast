@@ -35,20 +35,20 @@ namespace LSW {
 	namespace v4 {
 		namespace Assistance {
 
-			enum class ro__thread_display_routines_timers { FUNCTIONALITY, LOOPTRACK, CHECKKEEP, CHECKMEMORYBITMAP, UPDATELOGONSCREEN };
-			enum class ro__thread_collision_routines_timers { FUNCTIONALITY, LOOPTRACK, CHECKKEEP, COLLISIONWORK };
-			enum class ro__thread_keyboardm_routines_timers { FUNCTIONALITY, LOOPTRACK, CHECKKEEP, UPDATEMOUSE };
-			enum class ro__thread_functional_routines_timers { FUNCTIONALITY_AND_CHECKNEWFUNCS };
+			enum class ro__thread_display_routines_timers { FUNCTIONALITY_ONCE, FUNCTIONALITY_LOOP, LOOPTRACK, CHECKKEEP, CHECKMEMORYBITMAP, UPDATELOGONSCREEN };
+			enum class ro__thread_collision_routines_timers { FUNCTIONALITY_ONCE, FUNCTIONALITY_LOOP, LOOPTRACK, CHECKKEEP, COLLISIONWORK };
+			enum class ro__thread_keyboardm_routines_timers { FUNCTIONALITY_ONCE, FUNCTIONALITY_LOOP, LOOPTRACK, CHECKKEEP, UPDATEMOUSE };
+			enum class ro__thread_functional_routines_timers { FUNCTIONALITY_ONCE_AND_CHECKNEWFUNCS, FUNCTIONALITY_LOOP, LOOPTRACK };
 
 			enum class io__thread_ids { ALL = -1, DRAWING, COLLIDING, USERINPUT, FUNCTIONAL };
-			enum class io__threads_taskid { START, ONCE, END, size };
+			enum class io__threads_taskid { START, ONCE, LOOP, END, size };
 
 		}
 
-		typedef __template_multiple_timers<Constants::internal_all_function_timing_run, 1, 2, 2, 5>													    __display_routines;
-		typedef __template_multiple_timers<Constants::internal_all_function_timing_run, 1, 5, Constants::internal_collision_positioning_time_update>	__collision_routines;
-		typedef __template_multiple_timers<Constants::internal_all_function_timing_run, 1, 5, 60>													    __keyboardmouse_routines;
-		typedef __template_multiple_timers<Constants::internal_all_function_timing_run>																	__functional_routines;
+		typedef __template_multiple_timers<Constants::__i_func_t_once, Constants::__i_thr_loop_timer_0, 1, 2, 2, 5>								    __display_routines;
+		typedef __template_multiple_timers<Constants::__i_func_t_once, Constants::__i_thr_loop_timer_1, 1, 5, Constants::__i_col_pos_t_update>		__collision_routines;
+		typedef __template_multiple_timers<Constants::__i_func_t_once, Constants::__i_thr_loop_timer_2, 1, 5, 60>								    __keyboardmouse_routines;
+		typedef __template_multiple_timers<Constants::__i_func_t_once, Constants::__i_thr_loop_timer_3, 1>											__functional_routines;
 
 		typedef __template_static_vector<ALLEGRO_BITMAP>  Textures;
 		typedef __template_static_vector<ALLEGRO_FONT>    Fonts;
@@ -82,6 +82,7 @@ namespace LSW {
 				bool has_called_once[+Assistance::io__threads_taskid::size] = { false };
 				//std::mutex functions_m; // have I?
 				bool tasking = false;
+				std::string threadid_str = "unknown";
 			};
 
 			class __functional_functions {
@@ -107,32 +108,12 @@ namespace LSW {
 			__each_routine<__display_routines>			thread_maindisplay;
 			__each_routine<__collision_routines>		thread_collision;
 			__each_routine<__keyboardmouse_routines>	thread_kbmouse;
-			__each_routine< __functional_routines>		thread_functional;
+			__each_routine<__functional_routines>		thread_functional;
 
 			//std::map<intptr_t, __functional_functions> func_list;
 
 			__map<__functional_functions, ALLEGRO_TIMER*, int> func_list_super;
 			//std::vector<__functional_functions> f_dis;
-
-
-			/// DISPLAY AND DRAW
-			//std::thread* thr_md = nullptr; // unleash framerate
-			//bool thr_md_upnrunnin = false;
-			//__display_routines* thr_md_arg = nullptr; // already in here oops, HANDLED INTERNALLY ON THREAD
-			//bool pause_thr_md = false;
-
-			/// COLLISION AND SPRITES
-			//std::thread* thr_cl = nullptr; // unleash collision work
-			//bool thr_cl_upnrunnin = false;
-			//__collision_routines* thr_cl_arg = nullptr; // already in here oops, HANDLED INTERNALLY ON THREAD
-			//bool pause_thr_cl = false;
-
-			/// KEYBOARD, MOUSE AND STUFF
-			//std::thread* thr_kb = nullptr; // unleash collision work
-			//bool thr_kb_upnrunnin = false;
-			//__keyboardmouse_routines* thr_kb_arg = nullptr; // already in here oops, HANDLED INTERNALLY ON THREAD
-			//bool pause_thr_kb = false;
-
 
 			ALLEGRO_EVENT_SOURCE evsrc = ALLEGRO_EVENT_SOURCE();
 
@@ -163,6 +144,7 @@ namespace LSW {
 			bool hasTasked(const Assistance::io__thread_ids, const Assistance::io__threads_taskid);
 
 			size_t getCallsPerSecondOnThread(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);
+			double getInstantSCallsOnThread(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);
 
 			void pauseThread(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);
 			void resumeThread(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);

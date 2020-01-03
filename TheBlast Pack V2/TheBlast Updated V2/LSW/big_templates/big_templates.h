@@ -176,11 +176,20 @@ namespace LSW {
 			ALLEGRO_TIMER* eachsec = nullptr;
 			double eachsec_doubleverif = 0;
 
-			size_t benchmark[sizeof...(Args) + 1] = { 0 };
-			size_t rawcount[sizeof...(Args) + 1] = { 0 };
+			size_t benchmark[sizeof...(Args) + 2] = { 0 };
+			size_t rawcount[sizeof...(Args) + 2] = { 0 };
+			double quickmark[sizeof...(Args) + 2][2] = { {0.0,0.0} }; // [0] -> diff since last call, [1] -> time itself
+
 
 			ALLEGRO_EVENT_QUEUE* queue = nullptr;
 			ALLEGRO_EVENT lastev = ALLEGRO_EVENT();
+
+
+			void calQ(const size_t p) {
+				auto tt = al_get_time();
+				quickmark[p][0] = tt - quickmark[p][1];
+				quickmark[p][1] = tt;
+			}
 		public:
 			__template_multiple_timers()
 			{
@@ -224,24 +233,45 @@ namespace LSW {
 				assert(t < num_args);
 				return benchmark[t];
 			}
+			double getInstantSReport(const size_t t)
+			{
+				assert(t < num_args);
+				return quickmark[t][0];
+			}
 			size_t getReportExpected(const size_t t)
 			{
 				assert(t < num_args);
 				return timers_t[t];
 			}
-			size_t getNumCalls()
+			size_t getNumFullCalls() // this is EVERY SINGLE event being watched
 			{
 				return benchmark[calls_per_sec_pos];
+			}
+			double getNumFullInstantSCalls()
+			{
+				return quickmark[calls_per_sec_pos][0];
+			}
+			size_t getNumCallsDefault() // if you wait, the amount of non-internal events (aka not internal timer). If you don't, every not-event return and local events
+			{
+				return benchmark[calls_per_sec_pos+1];
+			}
+			double getNumInstantSCallsDefault() // if you wait, the amount of non-internal events (aka not internal timer). If you don't, every not-event return and local events
+			{
+				return quickmark[calls_per_sec_pos][0];
 			}
 			void hasEventWait()
 			{
 				for (bool can_leave = false; !can_leave;) {
 					rawcount[calls_per_sec_pos]++;
+					calQ(calls_per_sec_pos);
 
 					al_wait_for_event(queue, &lastev);
 
 					for (size_t u = 0; u < num_args; u++) {
-						if (isThisThis(u)) rawcount[u]++;
+						if (isThisThis(u)) {
+							rawcount[u]++;
+							calQ(u);
+						}
 					}
 
 					if (lastev.type == ALLEGRO_EVENT_TIMER && lastev.timer.source == eachsec) {
@@ -262,22 +292,30 @@ namespace LSW {
 
 						eachsec_doubleverif += 1.0;
 
-						for (size_t u = 0; u < num_args + 1; u++) { // + 1 because calls_per_sec_pos is one ahead
+						for (size_t u = 0; u < num_args + 2; u++) { // + 1 because calls_per_sec_pos is one ahead
 							benchmark[u] = rawcount[u];
 							rawcount[u] = 0;
 						}
 					}
-					else can_leave = true;
+					else {
+						can_leave = true;
+						rawcount[calls_per_sec_pos + 1]++; // now has event outside, go
+						calQ(calls_per_sec_pos + 1);
+					}
 				}
 			}
 			bool hasEvent()
 			{
 				rawcount[calls_per_sec_pos]++;
+				calQ(calls_per_sec_pos);
 
 				if (al_get_next_event(queue, &lastev)) {
 
 					for (size_t u = 0; u < num_args; u++) {
-						if (isThisThis(u)) rawcount[u]++;
+						if (isThisThis(u)) {
+							rawcount[u]++;
+							calQ(u);
+						}
 					}
 
 					if (lastev.type == ALLEGRO_EVENT_TIMER && lastev.timer.source == eachsec) {
@@ -298,17 +336,20 @@ namespace LSW {
 
 						eachsec_doubleverif += 1.0;
 
-						for (size_t u = 0; u < num_args + 1; u++) { // + 1 because calls_per_sec_pos is one ahead
+						for (size_t u = 0; u < num_args + 2; u++) { // + 1 because calls_per_sec_pos is one ahead
 							benchmark[u] = rawcount[u];
 							rawcount[u] = 0;
 						}
 
 						return false;
 					}
-
+					rawcount[calls_per_sec_pos + 1]++; // not timer event, so count
+					calQ(calls_per_sec_pos + 1);
 					return true;
 				}
 
+				rawcount[calls_per_sec_pos + 1]++; // has no event, so count
+				calQ(calls_per_sec_pos + 1);
 				return false;
 			}
 			bool isThisThis(const size_t t)

@@ -41,7 +41,8 @@ namespace LSW {
 			// on memory while running
 			enum class io__db_mouse_boolean { MOUSE_0, MOUSE_1, MOUSE_2, MOUSE_3, MOUSE_4, MOUSE_5, MOUSE_6, MOUSE_7, size, IS_ANY_PRESSED }; // Constants::max_mouse_set_buttons
 			enum class io__db_mouse_float { MOUSE_X, MOUSE_Y, RAW_MOUSE_X, RAW_MOUSE_Y };
-			enum class io__db_statistics_sizet { FRAMESPERSECOND, COLLISIONSPERSECOND, USEREVENTSPERSECOND, size};
+			enum class io__db_statistics_sizet { FRAMESPERSECOND, COLLISIONSPERSECOND, USEREVENTSPERSECOND, ADVANCEDFUNCSPERSECOND, size};
+			enum class io__db_statistics_double { INSTANT_FRAMESPERSECOND, INSTANT_COLLISIONSPERSECOND, INSTANT_USEREVENTSPERSECOND, INSTANT_ADVANCEDFUNCSPERSECOND, size };
 
 			const std::string ro__conf_boolean_str[] = { "had_error", "was_osd_on" };
 			const std::string ro__conf_float_str[] = { "last_volume" };
@@ -134,9 +135,8 @@ namespace LSW {
 				// memory only
 				float db_mouse_axes[4] = { 0.0 };
 				size_t db_statistics_sizet[+Assistance::io__db_statistics_sizet::size] = { 0 };
-
-				size_t dbcount = 0;
-
+				double db_statistics_double[+Assistance::io__db_statistics_double::size] = { 0 };
+				
 				std::thread* savethr = nullptr;
 				bool savethrdone = true;
 			};
@@ -145,7 +145,6 @@ namespace LSW {
 			gfile logg;
 		public:
 			Database();
-			~Database();
 
 			void flush();
 
@@ -160,6 +159,7 @@ namespace LSW {
 			void set(const Assistance::io__db_mouse_boolean, const bool);
 			void set(const Assistance::io__db_mouse_float, const float);
 			void set(const Assistance::io__db_statistics_sizet, const size_t);
+			void set(const Assistance::io__db_statistics_double, const double);
 			
 
 			void get(const std::string, std::string&, const std::string);
@@ -173,6 +173,7 @@ namespace LSW {
 			void get(const Assistance::io__db_mouse_boolean, bool&);
 			void get(const Assistance::io__db_mouse_float, float&);
 			void get(const Assistance::io__db_statistics_sizet, size_t&);
+			void get(const Assistance::io__db_statistics_double, double&);
 
 
 			bool isEq(const std::string, const std::string);
@@ -186,6 +187,7 @@ namespace LSW {
 			bool isEq(const Assistance::io__db_mouse_boolean, const bool);
 			bool isEq(const Assistance::io__db_mouse_float, const float);
 			bool isEq(const Assistance::io__db_statistics_sizet, const size_t);
+			bool isEq(const Assistance::io__db_statistics_double, const double);
 		};
 		
 
@@ -194,6 +196,7 @@ namespace LSW {
 
 		void lswInit(); // init everything
 		void forceExit(const char* = nullptr, const char* = nullptr, const char* = nullptr);
+		void askForceExit(const char*, const char*, const char*);
 		void alert(const char*, const char*, const char*);
 	}
 }

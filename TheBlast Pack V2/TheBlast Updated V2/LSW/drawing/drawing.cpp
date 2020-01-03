@@ -474,6 +474,16 @@ namespace LSW {
 			reset_instead_of_pause = b;
 		}
 
+		void Sprite::__sprite_smart_images::checkAllReferences()
+		{
+			__template_static_vector<ALLEGRO_BITMAP> imgs; // Textures
+
+			for (auto& i : copies)
+			{
+				if (!imgs.get(i->idc, i->bmp)) throw Abort::abort(__FUNCSIG__, "Unexpected failure rebinding references at Sprite internal vector!");
+			}
+		}
+
 
 		Sprite::__sprite_smart_data::__sprite_smart_data()
 		{
@@ -556,6 +566,16 @@ namespace LSW {
 		Sprite::~Sprite()
 		{
 			bmps.reset();
+		}
+
+		void Sprite::setTask(const std::function<void(Sprite&)> f)
+		{
+			data.task = f;
+		}
+
+		void Sprite::unsetTask()
+		{
+			data.task = std::function<void(Sprite&)>();
 		}
 
 		void Sprite::hook(const Assistance::io__sprite_collision_state w, std::function<void(void)> f)
@@ -875,7 +895,7 @@ namespace LSW {
 			double dt = timee - data.dtarg[+Assistance::ro__sprite_target_double::INTERN_LASTDRAW];
 			data.dtarg[+Assistance::ro__sprite_target_double::INTERN_LASTDRAW] = timee;
 
-			double perc_run = Constants::internal_collision_positioning_time_update * dt; // ex: 5 per sec * 0.2 (1/5 sec) = 1, so posx = actual posx...
+			double perc_run = Constants::__i_col_pos_t_update * dt; // ex: 5 per sec * 0.2 (1/5 sec) = 1, so posx = actual posx...
 			if (perc_run > 1.0) perc_run = 1.0; // 1.0 is "set value"
 			if (perc_run < 1.0 / 10000) perc_run = 1.0 / 10000; // can't be infinitely smooth right? come on
 
@@ -941,6 +961,11 @@ namespace LSW {
 			camm.apply();
 		}
 
+		void Sprite::rebindReferences()
+		{
+			bmps.checkAllReferences();
+		}
+
 		void Sprite::clearUp()
 		{
 			data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = false;
@@ -953,6 +978,8 @@ namespace LSW {
 
 		void Sprite::process(const int is_layer, camera_preset psf) // later: be a target, so drawing it will get there (based on framerate)
 		{
+			if (data.task) data.task(*this);
+
 			if ((layer != is_layer) && !data.bval[+Assistance::io__sprite_boolean::COLLIDE_IGNORE_LAYER] &&
 			 ([&]() { data.layers_colliding_m.lock(); for (auto& i : data.layers_colliding) { if (i == is_layer) {data.layers_colliding_m.unlock(); return false;} } data.layers_colliding_m.unlock(); return true; }())) return; // check layers if there's one to collide (ON)
 
@@ -1036,8 +1063,8 @@ namespace LSW {
 						data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] += calcy;
 					}
 
-					gfile logg;
-					logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Collided elasticly '" << sprite_id << "' with '" << oid << "' intensity: [" << calcx << ";" << calcy << "]" << L::EL;
+					/*gfile logg;
+					logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Collided elasticly '" << sprite_id << "' with '" << oid << "' intensity: [" << calcx << ";" << calcy << "]" << L::EL;*/
 				}
 
 				if (data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ROUGH]) {
@@ -1052,8 +1079,8 @@ namespace LSW {
 					if (fabs(realdist[0]) < fabs(realdist[1])) data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] = realdist[0];
 					else									   data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] = realdist[1];
 
-					gfile logg;
-					logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Collided roughly '" << sprite_id << "' with '" << oid << "' intensity: [" << realdist[0] << ";" << realdist[1] << "]" << L::EL;
+					/*gfile logg;
+					logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Collided roughly '" << sprite_id << "' with '" << oid << "' intensity: [" << realdist[0] << ";" << realdist[1] << "]" << L::EL;*/
 				}
 			}
 		}
@@ -1193,6 +1220,8 @@ namespace LSW {
 						case +Assistance::tags_e::T_REFRESHRATE:
 							sprintf_s(tempstr_c, "%d", ((d) ? al_get_display_refresh_rate(d) : -1));
 							break;
+
+
 						case +Assistance::tags_e::T_FPS:
 						{
 							size_t t;
@@ -1214,6 +1243,73 @@ namespace LSW {
 							sprintf_s(tempstr_c, "%zu", t);
 						}
 						break;
+						case +Assistance::tags_e::T_APS:
+						{
+							size_t t;
+							conf.get(Assistance::io__db_statistics_sizet::ADVANCEDFUNCSPERSECOND, t);
+							sprintf_s(tempstr_c, "%zu", t);
+						}
+						break;
+
+						case +Assistance::tags_e::T_I_FPS:
+						{
+							double dt;
+							conf.get(Assistance::io__db_statistics_double::INSTANT_FRAMESPERSECOND, dt);
+							sprintf_s(tempstr_c, "%05.1lf", 1.0 / dt);
+						}
+						break;
+						case +Assistance::tags_e::T_I_TPS:
+						{
+							double dt;
+							conf.get(Assistance::io__db_statistics_double::INSTANT_COLLISIONSPERSECOND, dt);
+							sprintf_s(tempstr_c, "%05.1lf", 1.0 / dt);
+						}
+						break;
+						case +Assistance::tags_e::T_I_UPS:
+						{
+							double dt;
+							conf.get(Assistance::io__db_statistics_double::INSTANT_USEREVENTSPERSECOND, dt);
+							sprintf_s(tempstr_c, "%05.1lf", 1.0 / dt);
+						}
+						break;
+						case +Assistance::tags_e::T_I_APS:
+						{
+							double dt;
+							conf.get(Assistance::io__db_statistics_double::INSTANT_ADVANCEDFUNCSPERSECOND, dt);
+							sprintf_s(tempstr_c, "%05.1lf", 1.0 / dt);
+						}
+						break;
+
+						case +Assistance::tags_e::T_MS_FPS:
+						{
+							double dt;
+							conf.get(Assistance::io__db_statistics_double::INSTANT_FRAMESPERSECOND, dt);
+							sprintf_s(tempstr_c, "%04.3lf", 1000.0 * dt);
+						}
+						break;
+						case +Assistance::tags_e::T_MS_TPS:
+						{
+							double dt;
+							conf.get(Assistance::io__db_statistics_double::INSTANT_COLLISIONSPERSECOND, dt);
+							sprintf_s(tempstr_c, "%04.3lf", 1000.0 * dt);
+						}
+						break;
+						case +Assistance::tags_e::T_MS_UPS:
+						{
+							double dt;
+							conf.get(Assistance::io__db_statistics_double::INSTANT_USEREVENTSPERSECOND, dt);
+							sprintf_s(tempstr_c, "%04.3lf", 1000.0 * dt);
+						}
+						break;
+						case +Assistance::tags_e::T_MS_APS:
+						{
+							double dt;
+							conf.get(Assistance::io__db_statistics_double::INSTANT_ADVANCEDFUNCSPERSECOND, dt);
+							sprintf_s(tempstr_c, "%04.3lf", 1000.0 * dt);
+						}
+						break;
+
+
 						case +Assistance::tags_e::T_SPRITE_FRAME:
 							if (follow) {
 								size_t f;
@@ -1411,6 +1507,8 @@ namespace LSW {
 
 			data.d[+Assistance::io__text_double::POSX] = 0.0;
 			data.d[+Assistance::io__text_double::POSY] = 0.0;
+			data.d[+Assistance::io__text_double::SCALEX] = 1.0;
+			data.d[+Assistance::io__text_double::SCALEY] = 1.0;
 			data.d[+Assistance::io__text_double::ROTATION] = 0.0;
 			data.d[+Assistance::io__text_double::SCALEG] = 1.0;
 			data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX] = 0.0;
@@ -1572,18 +1670,30 @@ namespace LSW {
 			if (rotation_rad < 0) rotation_rad += ALLEGRO_PI * 2;
 
 			double pos_now[2];
-			pos_now[0] = 1.0 * Constants::text_default_sharpness_font * ((data.d[+Assistance::io__text_double::POSX] * cos(p_rotation_rad) - data.d[+Assistance::io__text_double::POSY] * sin(p_rotation_rad)) + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX]);
-			pos_now[1] = 1.0 * Constants::text_default_sharpness_font * ((data.d[+Assistance::io__text_double::POSY] * cos(p_rotation_rad)) - data.d[+Assistance::io__text_double::POSX] * sin(p_rotation_rad) + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY]);
+
+			pos_now[0] = 1.0 * Constants::text_default_sharpness_font * 
+				(((data.d[+Assistance::io__text_double::POSX]) * cos(p_rotation_rad))
+					- ((data.d[+Assistance::io__text_double::POSY]) * sin(p_rotation_rad)) 
+					+ data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX]);
+
+			pos_now[1] = 1.0 * Constants::text_default_sharpness_font * 
+				(((data.d[+Assistance::io__text_double::POSY]) * cos(p_rotation_rad)) 
+					- ((data.d[+Assistance::io__text_double::POSX]) * sin(p_rotation_rad)) 
+					+ data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY]);
 
 
 			double targ_draw_xy[2];
 			targ_draw_xy[0] = pos_now[0] * cos(rotation_rad) + pos_now[1] * sin(rotation_rad);
 			targ_draw_xy[1] = pos_now[1] * cos(rotation_rad) - pos_now[0] * sin(rotation_rad);
+			targ_draw_xy[0] /= data.d[+Assistance::io__text_double::SCALEX];
+			targ_draw_xy[1] /= data.d[+Assistance::io__text_double::SCALEY];
 
 
 			if (!data.b[+Assistance::io__text_boolean::AFFECTED_BY_CAM]) preset.reset();
 
 			preset.set(Assistance::io__camera_float::SCALE_G,  preset.get(Assistance::io__camera_float::SCALE_G) * data.d[+Assistance::io__text_double::SCALEG] * 1.0 / Constants::text_default_sharpness_font);
+			preset.set(Assistance::io__camera_float::SCALE_X, preset.get(Assistance::io__camera_float::SCALE_X) * data.d[+Assistance::io__text_double::SCALEX]);
+			preset.set(Assistance::io__camera_float::SCALE_Y, preset.get(Assistance::io__camera_float::SCALE_Y) * data.d[+Assistance::io__text_double::SCALEY]);
 			preset.set(Assistance::io__camera_float::OFFSET_X, preset.get(Assistance::io__camera_float::OFFSET_X) * Constants::text_default_sharpness_font / data.d[+Assistance::io__text_double::SCALEG]);
 			preset.set(Assistance::io__camera_float::OFFSET_Y, preset.get(Assistance::io__camera_float::OFFSET_Y) * Constants::text_default_sharpness_font / data.d[+Assistance::io__text_double::SCALEG]);
 
@@ -1614,19 +1724,6 @@ namespace LSW {
 			return gotten * prop;
 		}
 
-		Bubbles::Bubbles()
-		{
-			firstcall = false;
-		}
-		Bubbles::Bubbles(const unsigned amout, const float mfps, const int layer)
-		{
-			init(amout, mfps, layer);
-		}
-		Bubbles::~Bubbles()
-		{
-			positions.clear();
-			firstcall = true;
-		}
 
 		void Bubbles::init(const unsigned amout, const float mfps, const int layer)
 		{
@@ -1639,8 +1736,8 @@ namespace LSW {
 				db.get(Assistance::io__conf_integer::SCREEN_X, siz[0], 1920);
 				db.get(Assistance::io__conf_integer::SCREEN_Y, siz[1], 1080);
 
-				siz[0] /= 2.0;
-				siz[1] /= 2.0;
+				siz[0] *= 0.8;
+				siz[1] *= 0.8;
 
 				if (siz[0] < 1280) siz[0] = 1280;
 				if (siz[1] < 720 ) siz[1] = 720;
@@ -1650,12 +1747,15 @@ namespace LSW {
 
 				disguy->set(Assistance::io__sprite_string::REMOVE, "BKG_NULL"); // guarantee no duplicated stuff because it might have it already
 				disguy->set(Assistance::io__sprite_string::ADD, "BKG_NULL");
+				disguy->set(Assistance::io__sprite_double::ANIMATION_FPS, 0);
+				disguy->set(Assistance::io__sprite_boolean::DRAW, true);
 				disguy->set(Assistance::io__sprite_string::ID, "BKG_NULL");
 				disguy->set(Assistance::io__sprite_integer::LAYER, layer);
 				disguy->set(Assistance::io__sprite_double::SCALEG, 2.0);
-				disguy->set(Assistance::io__sprite_boolean::AFFECTED_BY_CAM, false);
+				disguy->set(Assistance::io__sprite_boolean::AFFECTED_BY_CAM, true);
 
-				if (1.0/mfps > 1.0) fps = 1.0/mfps;
+				if (mfps <= 0) fps = -1;
+				else if (1.0/mfps > 1.0) fps = 1.0/mfps;
 				lastdraw = al_get_time();
 
 				if (amout > 0) {
@@ -1689,7 +1789,7 @@ namespace LSW {
 				ALLEGRO_BITMAP* lastpoint = al_get_target_bitmap();
 
 				al_set_target_bitmap(imglw);
-
+				
 				for (auto& i : positions)
 				{
 					al_draw_filled_circle(i.lastpositionscalculated[0], i.lastpositionscalculated[1], i.lastsize, al_map_rgba_f(
@@ -1702,7 +1802,7 @@ namespace LSW {
 				al_set_target_bitmap(lastpoint);
 			}
 
-			//al_draw_bitmap(dis, -1.0, -1.0, 0);
+			//al_draw_bitmap(dis, -1.0, -1.0, 0); 
 
 		}
 		void Bubbles::think()
@@ -1711,7 +1811,14 @@ namespace LSW {
 				return;
 			}
 
-			if ((al_get_time() - lastdraw) >= (1.0 / fps))
+			bool continuee = false;
+			Camera cam;
+			auto cpy = cam.get();
+			for (auto& o : cpy) {
+				if (continuee |= disguy->isEq(Assistance::io__sprite_integer::LAYER, o)) break;
+			}
+
+			if (continuee && ((al_get_time() - lastdraw) >= (1.0 / fps) || fps == -1))
 			{
 				lastdraw = al_get_time();
 				alreadyreset = true;

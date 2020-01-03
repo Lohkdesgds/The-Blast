@@ -89,8 +89,17 @@ namespace LSW {
 			// sound.h stuff
 			const float start_default_global_volume = 0.5;
 			
-			const size_t internal_collision_positioning_time_update = 10; /*20*/
-			const size_t internal_all_function_timing_run = 4; // can run on-the-fly functions 4 times per sec
+
+
+
+			const size_t __i_col_pos_t_update = 10; /*20*/
+			const size_t __i_func_t_once = 5; // can run on-the-fly functions up to 5 times per sec
+			const size_t __i_thr_loop_timer_0 = 60,						// DISPLAY THREAD, may be smooth
+						 __i_thr_loop_timer_1 = __i_col_pos_t_update,	// COLLISION THREAD may be timed
+						 __i_thr_loop_timer_2 = 3,						// EVENTS THREAD don't need to be smooth at all
+						 __i_thr_loop_timer_3 = 5;						// FUNCTIONS THREAD just need to check new functions and old ones not fast, but not slow
+
+
 
 
 
