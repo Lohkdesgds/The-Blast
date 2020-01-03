@@ -180,7 +180,7 @@ namespace LSW {
 			size_t rawcount[sizeof...(Args) + 1] = { 0 };
 
 			ALLEGRO_EVENT_QUEUE* queue = nullptr;
-			ALLEGRO_EVENT lastev;
+			ALLEGRO_EVENT lastev = ALLEGRO_EVENT();
 		public:
 			__template_multiple_timers()
 			{
@@ -236,7 +236,6 @@ namespace LSW {
 			void hasEventWait()
 			{
 				for (bool can_leave = false; !can_leave;) {
-					lastev = ALLEGRO_EVENT();
 					rawcount[calls_per_sec_pos]++;
 
 					al_wait_for_event(queue, &lastev);
@@ -274,7 +273,6 @@ namespace LSW {
 			bool hasEvent()
 			{
 				rawcount[calls_per_sec_pos]++;
-				lastev = ALLEGRO_EVENT();
 
 				if (al_get_next_event(queue, &lastev)) {
 

@@ -527,7 +527,6 @@ namespace LSW {
 					while (thread_functional.pause_thread) Sleep(10);
 
 					thread_functional.thread_arguments->hasEventWait();
-					ALLEGRO_EVENT cat = thread_functional.thread_arguments->getEventRaw();
 
 					if (thread_functional.thread_arguments->isThisThis(+Assistance::ro__thread_functional_routines_timers::FUNCTIONALITY_AND_CHECKNEWFUNCS))
 					{
@@ -554,6 +553,8 @@ namespace LSW {
 
 					}
 					else { // TIMER EVENT (default)
+
+						ALLEGRO_EVENT cat = thread_functional.thread_arguments->getEventRaw();
 
 						try {
 							if (cat.type == ALLEGRO_EVENT_TIMER)
