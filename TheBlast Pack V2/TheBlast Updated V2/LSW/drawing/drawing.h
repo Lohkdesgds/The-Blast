@@ -123,10 +123,7 @@ __slice("%num_tracks%", +tags_e::T_TRACKS_LOADED), __slice("%sprite_state%", +ta
 			// quicker get
 			ALLEGRO_TRANSFORM& quick();
 		};
-
-		// transformator has scale, pos and rotation transformations
-		// cam should become a kind of transformator.
-
+		
 
 		class Camera {
 			ALLEGRO_TRANSFORM g_t;
@@ -144,7 +141,7 @@ __slice("%num_tracks%", +tags_e::T_TRACKS_LOADED), __slice("%sprite_state%", +ta
 			camera_preset& get();
 		};
 		
-
+			   
 		class Sprite {
 			
 			class __sprite_smart_data {
@@ -290,6 +287,41 @@ __slice("%num_tracks%", +tags_e::T_TRACKS_LOADED), __slice("%sprite_state%", +ta
 			const bool isEq(const Assistance::io__text_integer, const int);
 
 			void draw(const int);
+		};
+
+
+
+		class Bubbles {
+			struct particle {
+				double posx, posy;
+				double lastsize = 1.0;
+				double lastpositionscalculated[2];
+			};
+
+			std::vector<particle> positions;
+			unsigned amountofentities = 2;
+			float fps = 30;
+			double lastdraw = 0;
+			bool alreadyreset = false;
+
+			bool firstcall = true;
+
+
+			ALLEGRO_BITMAP* imglw;
+			Sprite* disguy;
+
+			int siz[2] = { 0, 0 };
+
+			const double maxone(double, const double = 1.0);
+		public:
+			// amount of entities running forever :3 and fps
+			Bubbles();
+			Bubbles(const unsigned, const float, const int = 0);
+			~Bubbles();
+
+			void init(const unsigned, const float, const int = 0);
+			void draw();
+			void think();
 		};
 	}
 }

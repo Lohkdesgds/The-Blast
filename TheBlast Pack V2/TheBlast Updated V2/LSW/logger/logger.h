@@ -24,6 +24,14 @@ namespace LSW {
 			std::string str;
 			ALLEGRO_COLOR c = al_map_rgb(255,255,255);
 		};
+		
+		template<typename T>
+		struct cast_pointer {
+			T* a = nullptr;
+		public:
+			cast_pointer(T* b) { a = b; }
+			void* get() { return (void*)a; }
+		};
 
 		class gfile {
 			struct _log {
@@ -65,6 +73,7 @@ namespace LSW {
 			gfile& operator<<(const unsigned&);
 			gfile& operator<<(const long&);
 			gfile& operator<<(const size_t&);
+			template<typename T> gfile& operator<<(cast_pointer<T>);
 		};
 
 
@@ -277,6 +286,15 @@ namespace LSW {
 		{
 			char temp[48];
 			sprintf_s(temp, "%zu", u);
+			push(temp);
+			return *this;
+		}
+
+		template <typename T> inline gfile& gfile::operator<<(cast_pointer<T> u)
+		{
+			char temp[48];
+			void* pp = u.get();
+			sprintf_s(temp, "%p", pp);
 			push(temp);
 			return *this;
 		}

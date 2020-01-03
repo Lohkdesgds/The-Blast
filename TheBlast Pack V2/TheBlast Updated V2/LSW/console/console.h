@@ -38,10 +38,10 @@ namespace LSW {
 			enum class ro__thread_display_routines_timers { FUNCTIONALITY, LOOPTRACK, CHECKKEEP, CHECKMEMORYBITMAP, UPDATELOGONSCREEN };
 			enum class ro__thread_collision_routines_timers { FUNCTIONALITY, LOOPTRACK, CHECKKEEP, COLLISIONWORK };
 			enum class ro__thread_keyboardm_routines_timers { FUNCTIONALITY, LOOPTRACK, CHECKKEEP, UPDATEMOUSE };
-			enum class ro__thread_functional_routines_timers{ FUNCTIONALITY_AND_CHECKNEWFUNCS };
+			enum class ro__thread_functional_routines_timers { FUNCTIONALITY_AND_CHECKNEWFUNCS };
 
-			enum class io__thread_ids		{ ALL=-1,DRAWING,COLLIDING,USERINPUT,FUNCTIONAL };
-			enum class io__threads_taskid	{ START,ONCE,END,size };
+			enum class io__thread_ids { ALL = -1, DRAWING, COLLIDING, USERINPUT, FUNCTIONAL };
+			enum class io__threads_taskid { START, ONCE, END, size };
 
 		}
 
@@ -84,15 +84,20 @@ namespace LSW {
 				bool tasking = false;
 			};
 
-			struct __functional_functions {
+			class __functional_functions {
+			public:
 				std::function<int(void)> func;
-				size_t id = 0;
+				int id = 0;
 				LONGLONG calls = 0; // if negative, add and wait until 0 then run
-				ALLEGRO_TIMER* timer = nullptr;
+				ALLEGRO_TIMER* the_timer = nullptr;
 				bool has_timer_set_on_queue = false;
 				bool should_run = true;
+
+				bool operator==(const ALLEGRO_TIMER* t) const { return the_timer == t; }
+				bool operator==(const int i) const { return i == id; }
+				bool operator==(const __functional_functions& f) const { return *this == f; }
 			};
-			
+
 			/// SHARED
 			//std::function<void(void)> smth_to_load; // load textures here
 			//int has_smth_to_load = -1; // has somethign to load
@@ -104,7 +109,10 @@ namespace LSW {
 			__each_routine<__keyboardmouse_routines>	thread_kbmouse;
 			__each_routine< __functional_routines>		thread_functional;
 
-			std::vector<__functional_functions> func_list;
+			//std::map<intptr_t, __functional_functions> func_list;
+
+			__map<__functional_functions, ALLEGRO_TIMER*, int> func_list_super;
+			//std::vector<__functional_functions> f_dis;
 
 
 			/// DISPLAY AND DRAW
@@ -118,7 +126,7 @@ namespace LSW {
 			//bool thr_cl_upnrunnin = false;
 			//__collision_routines* thr_cl_arg = nullptr; // already in here oops, HANDLED INTERNALLY ON THREAD
 			//bool pause_thr_cl = false;
-			
+
 			/// KEYBOARD, MOUSE AND STUFF
 			//std::thread* thr_kb = nullptr; // unleash collision work
 			//bool thr_kb_upnrunnin = false;
@@ -159,10 +167,11 @@ namespace LSW {
 			void pauseThread(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);
 			void resumeThread(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);
 
-			void addCustomTask(std::function<int(void)>, const size_t, const double); // t/sec
-			void delayCustomTaskTicksBy(const size_t, const LONGLONG);
-			void removeCustomTask(const size_t);
+			void addCustomTask(std::function<int(void)>, const int, const double); // t/sec
+			void delayCustomTaskTicksBy(const int, const LONGLONG);
+			void removeCustomTask(const int);
 		};
 
 	}
 }
+// .h

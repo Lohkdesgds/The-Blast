@@ -32,6 +32,134 @@ namespace LSW {
 
 		/*************************************************************************************
 
+			# Two key map:
+			> Two keys to a same position
+
+		**************************************************************************************/
+
+		template <typename A, typename B, typename C> // what is being allocated, key 1, key 2
+		class __map {
+			std::vector<A*> aaa;
+			std::vector<B> bbb;
+			std::vector<C> ccc;
+		public:
+			A& create(const B b, const C c) {
+				A* a = new A();
+				aaa.push_back(a);
+				bbb.push_back(b);
+				ccc.push_back(c);
+				return *a;
+			}
+			A& get(const B key) {
+				for (size_t p = 0; p < bbb.size(); p++) {
+					if (bbb[p] == key) return *aaa[p];
+				}
+				throw Abort::abort(__FUNCSIG__, "OUT OF RANGE");
+				return *aaa[0];
+			}
+			A& get(const C key) {
+				for (size_t p = 0; p < ccc.size(); p++) {
+					if (ccc[p] == key) return *aaa[p];
+				}
+				throw Abort::abort(__FUNCSIG__, "OUT OF RANGE");
+				return *aaa[0];
+			}
+			A& get(const size_t key) {
+				if (key < aaa.size()) return *aaa[key];
+				throw Abort::abort(__FUNCSIG__, "OUT OF RANGE");
+				return *aaa[0];
+			}
+
+			bool getFirstKey(A& val, B& sav) {
+				for (size_t p = 0; p < aaa.size(); p++) {
+					if (aaa[p] == &val) {
+						sav = bbb[p];
+						return true;
+					}
+				}
+				return false;
+			}
+			bool getFirstKey(size_t key, B& sav) {
+				if (key < bbb.size()) {
+					sav = bbb[key];
+					return true;
+				}
+				return false;
+			}
+			bool getSecondKey(A& val, C& sav) {
+				for (size_t p = 0; p < aaa.size(); p++) {
+					if (aaa[p] == &val) {
+						sav = ccc[p];
+						return true;
+					}
+				}
+				return false;
+			}
+			bool getSecondKey(size_t key, C& sav) {
+				if (key < ccc.size()) {
+					sav = ccc[key];
+					return true;
+				}
+				return false;
+			}
+
+			void erase(const B key)
+			{
+				for (size_t p = 0; p < bbb.size(); p++) {
+					if (bbb[p] == key) {
+						aaa.erase(aaa.begin() + p);
+						bbb.erase(bbb.begin() + p);
+						ccc.erase(ccc.begin() + p);
+						return;
+					}
+				}
+			}
+			void erase(const C key)
+			{
+				for (size_t p = 0; p < ccc.size(); p++) {
+					if (ccc[p] == key) {
+						aaa.erase(aaa.begin() + p);
+						bbb.erase(bbb.begin() + p);
+						ccc.erase(ccc.begin() + p);
+						return;
+					}
+				}
+			}
+			void erase(const size_t p)
+			{
+				if (p >= aaa.size()) {
+					throw Abort::abort(__FUNCSIG__, "OUT OF RANGE");
+					return;
+				}
+				aaa.erase(aaa.begin() + p);
+				bbb.erase(bbb.begin() + p);
+				ccc.erase(ccc.begin() + p);
+			}
+			void clear()
+			{
+				while (aaa.size() > 0) erase(0);
+			}
+
+			A& operator[](const B p)
+			{
+				return get(p);
+			}
+			A& operator[](const C p)
+			{
+				return get(p);
+			}
+			A& operator[](const size_t p)
+			{
+				return get(p);
+			}
+
+			size_t size() {
+				return aaa.size();
+			}
+		};
+
+		/*************************************************************************************
+
 			# Advanced timer template:
 			> Multiple times at once, automatic creation and fast use
 
@@ -108,6 +236,7 @@ namespace LSW {
 			void hasEventWait()
 			{
 				for (bool can_leave = false; !can_leave;) {
+					lastev = ALLEGRO_EVENT();
 					rawcount[calls_per_sec_pos]++;
 
 					al_wait_for_event(queue, &lastev);
@@ -145,6 +274,7 @@ namespace LSW {
 			bool hasEvent()
 			{
 				rawcount[calls_per_sec_pos]++;
+				lastev = ALLEGRO_EVENT();
 
 				if (al_get_next_event(queue, &lastev)) {
 

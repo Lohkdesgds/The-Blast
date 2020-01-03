@@ -12,6 +12,7 @@ extern "C" {
 
 
 enum class main_gamemodes { HASNT_STARTED_YET=-2, LOADING, MENU, OPTIONS, PAUSE, GAMING };
+enum class my_custom_funcs { LOADING_ANIMATION=10 };
 
 int main(int argc, const char* argv[])
 {
@@ -304,26 +305,30 @@ int main(int argc, const char* argv[])
 		bool assist[1] = { false }; // 1: LOADING_ANIMATION
 
 		std::function<void(void)> animation_load = [&consol, &modern, &sprites, &assist, &logg]()->void {
+			logg << L::SL << fsr(__FUNCSIG__) << "Setting up LOADING_ANIM animation" << L::EL;
 			consol.addCustomTask([&]()->int {
+				//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "(lambda animation task)" << L::EL;
 				Sprite* s = nullptr; if (!sprites.get("LOADING_ANIM", s)) return 0; // if running while program is being closed it can hurt
 				if (modern != main_gamemodes::LOADING) {
 					assist[0] = false;
 					modern = main_gamemodes::LOADING;
-					logg << L::SL << fsr(__FUNCSIG__) << "Resetting LOADING_ANIM animation to then run LOADING animation" << L::EL;
+					logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Resetting LOADING_ANIM animation to then run LOADING animation" << L::EL;
 				}
 				else if (s->isEq(Assistance::io__sprite_boolean::IS_IT_ON_LAST_FRAME, true) && !assist[0])
 				{
-					logg << L::SL << fsr(__FUNCSIG__) << "Done doing LOADING animation" << L::EL;
+					logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Done doing LOADING animation" << L::EL;
 					assist[0] = true;
 					return -40; // 40 cycles because it updates 40 per sec //Sleep(2000);
 				}
 				else if (assist[0]) {
 					modern = main_gamemodes::MENU;
 					s->set(Assistance::io__sprite_double::ANIMATION_FPS, 0);
-					consol.removeCustomTask(0);
+					logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Finally removed itself" << L::EL;
+					consol.removeCustomTask(+my_custom_funcs::LOADING_ANIMATION);
 				}
 				return 0;
-				}, 0, 1.0/20);
+				}, +my_custom_funcs::LOADING_ANIMATION, 1.0/20);
+			logg << L::SL << fsr(__FUNCSIG__) << "Has set LOADING_ANIM to run" << L::EL;
 		};
 		std::function<void(void)> skip_animation_load = [&assist] {
 			assist[0] = true;
@@ -350,6 +355,7 @@ int main(int argc, const char* argv[])
 			// menu
 			cp = camera_preset();
 			cp.setLayer(-10, true);
+			cp.setLayer(-99, true); // bubble animation
 			cp.setLayer(99, true); // mouse
 			cp.set(Assistance::io__camera_boolean::RESPECT_LIMITS, true);
 			cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -0.95);
@@ -363,6 +369,7 @@ int main(int argc, const char* argv[])
 			cp = camera_preset();
 			cp.setLayer(-9, true);
 			cp.setLayer(99, true); // mouse
+			cp.setLayer(-99, true); // bubble animation
 			cp.set(Assistance::io__camera_boolean::RESPECT_LIMITS, true);
 			cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -0.95);
 			cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -0.95);
@@ -374,6 +381,7 @@ int main(int argc, const char* argv[])
 			cp = camera_preset();
 			cp.setLayer(-1, true);
 			cp.setLayer(99, true); // mouse
+			cp.setLayer(-98, true); // lines animation
 			cp.set(Assistance::io__camera_boolean::RESPECT_LIMITS, true);
 			cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -0.95);
 			cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -0.95);
@@ -599,6 +607,7 @@ int main(int argc, const char* argv[])
 		}
 
 
+		// Local stuff
 
 		Text* mytext = texts.create("randomtext");
 		mytext->set(Assistance::io__text_string::FONT, "DEFAULT");

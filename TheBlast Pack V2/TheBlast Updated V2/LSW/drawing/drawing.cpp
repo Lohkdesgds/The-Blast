@@ -1596,5 +1596,144 @@ namespace LSW {
 			cam.apply();
 		}
 
+
+
+
+
+		const double Bubbles::maxone(double gotten, const double prop)
+		{
+			while (gotten > 1.0) {
+				if (gotten > 1000.0) gotten -= 1000.0;
+				else if (gotten > 100000.0) gotten -= 100000.0;
+				else if (gotten > 2.0) gotten -= 1.0;
+				else {
+					if (gotten > 1.0) gotten = 2.0 - gotten;
+					else gotten -= 1.0;
+				}
+			}
+			return gotten * prop;
+		}
+
+		Bubbles::Bubbles()
+		{
+			firstcall = false;
+		}
+		Bubbles::Bubbles(const unsigned amout, const float mfps, const int layer)
+		{
+			init(amout, mfps, layer);
+		}
+		Bubbles::~Bubbles()
+		{
+			positions.clear();
+			firstcall = true;
+		}
+
+		void Bubbles::init(const unsigned amout, const float mfps, const int layer)
+		{
+			if (firstcall) {
+
+				__template_static_vector<ALLEGRO_BITMAP> textures;
+				__template_static_vector<Sprite> sprites;
+
+				Database db;
+				db.get(Assistance::io__conf_integer::SCREEN_X, siz[0], 1920);
+				db.get(Assistance::io__conf_integer::SCREEN_Y, siz[1], 1080);
+
+				siz[0] /= 2.0;
+				siz[1] /= 2.0;
+
+				if (siz[0] < 1280) siz[0] = 1280;
+				if (siz[1] < 720 ) siz[1] = 720;
+
+				imglw = textures.customLoad("BKG_NULL",	[&](ALLEGRO_BITMAP*& b) -> bool { return (b = al_create_bitmap(siz[0], siz[1]));}); // don't worry, it won't create if it is already there
+				disguy = sprites.create("BKG_NULL"); // this one too
+
+				disguy->set(Assistance::io__sprite_string::REMOVE, "BKG_NULL"); // guarantee no duplicated stuff because it might have it already
+				disguy->set(Assistance::io__sprite_string::ADD, "BKG_NULL");
+				disguy->set(Assistance::io__sprite_string::ID, "BKG_NULL");
+				disguy->set(Assistance::io__sprite_integer::LAYER, layer);
+				disguy->set(Assistance::io__sprite_double::SCALEG, 2.0);
+				disguy->set(Assistance::io__sprite_boolean::AFFECTED_BY_CAM, false);
+
+				if (1.0/mfps > 1.0) fps = 1.0/mfps;
+				lastdraw = al_get_time();
+
+				if (amout > 0) {
+					amountofentities = amout;
+				}
+
+				particle poss;
+
+				if (positions.size() > 0) positions.clear();
+
+				for (unsigned c = 0; c < amountofentities; c++)
+				{
+					poss.posx = 1.0 - (rand() % 1000) / 500.0;
+					poss.posy = 1.0 - (rand() % 1000) / 500.0;
+
+					positions.push_back(poss);
+				}
+				firstcall = false;
+			}
+		}
+
+		void Bubbles::draw()
+		{
+			if (firstcall) {
+				return;
+			}
+
+			if (alreadyreset) {
+				alreadyreset = false;
+
+				ALLEGRO_BITMAP* lastpoint = al_get_target_bitmap();
+
+				al_set_target_bitmap(imglw);
+
+				for (auto& i : positions)
+				{
+					al_draw_filled_circle(i.lastpositionscalculated[0], i.lastpositionscalculated[1], i.lastsize, al_map_rgba_f(
+						(float)maxone(al_get_time() * 0.3f * ((rand() % 1000) / 1000.0f)) * (1.0f - (Constants::amountofblur_bubbles / 100.0f)),
+						(float)maxone(al_get_time() * 0.1f * ((rand() % 1000) / 1000.0f)) * (1.0f - (Constants::amountofblur_bubbles / 100.0f)),
+						(float)maxone(al_get_time() * 0.8f * ((rand() % 1000) / 1000.0f)) * (1.0f - (Constants::amountofblur_bubbles / 100.0f)),
+						(float)(1.0f - (Constants::amountofblur_bubbles / 100.0f))));
+				}
+
+				al_set_target_bitmap(lastpoint);
+			}
+
+			//al_draw_bitmap(dis, -1.0, -1.0, 0);
+
+		}
+		void Bubbles::think()
+		{
+			if (firstcall) {
+				return;
+			}
+
+			if ((al_get_time() - lastdraw) >= (1.0 / fps))
+			{
+				lastdraw = al_get_time();
+				alreadyreset = true;
+
+				//gotten = true;
+
+				for (auto& i : positions)
+				{
+					i.lastsize = (12.0 + (rand() % 500) / 100.0) * 3.0 * sqrt(siz[0] * siz[1]) / 1440.0;
+					i.posx = 1.0 - (rand() % 1000) / 500.0;
+					i.posy = 1.0 - (rand() % 1000) / 500.0;
+
+					if (i.posx > 1.0) i.posx = 1.0;
+					if (i.posy > 1.0) i.posy = 1.0;
+					if (i.posx < -1.0) i.posx = -1.0;
+					if (i.posy < -1.0) i.posy = -1.0;
+
+					i.lastpositionscalculated[0] = ((i.posx + 1.0) / 2.0) * siz[0];
+					i.lastpositionscalculated[1] = ((i.posy + 1.0) / 2.0) * siz[1];
+				}
+			}
+		}
+
 	}
 }

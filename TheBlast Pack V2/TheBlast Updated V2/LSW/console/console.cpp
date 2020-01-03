@@ -49,7 +49,7 @@ namespace LSW {
 				}
 
 				logg << L::SLF << fsr(__FUNCSIG__) << "Creating local stuff..." << L::ELF;
-				
+
 
 				Text* const mtt = texts.create("lastlogtext");
 				mtt->set(Assistance::io__text_string::FONT, "DEFAULT");
@@ -444,12 +444,12 @@ namespace LSW {
 								ev.user.data1 = (isscreenfullscreen = !isscreenfullscreen);
 								al_emit_user_event(&evsrc, &ev, NULL);
 							}
-								break;
+							break;
 							case ALLEGRO_KEY_F2:
 							{
 								md->print();
 							}
-								break;
+							break;
 							}
 						}
 
@@ -499,7 +499,7 @@ namespace LSW {
 		{
 			try {
 				gfile logg;
-				std::map<ALLEGRO_TIMER*, size_t> quickmap;
+				//std::map<ALLEGRO_TIMER*, size_t> quickmap;
 
 				logg << L::SLF << fsr(__FUNCSIG__) << "Initializing..." << L::ELF;
 
@@ -522,79 +522,72 @@ namespace LSW {
 
 				thread_functional.am_i_running = true;
 
-				while(!thr_shared_arg.should_exit)
+				while (!thr_shared_arg.should_exit)
 				{
 					while (thread_functional.pause_thread) Sleep(10);
 
 					thread_functional.thread_arguments->hasEventWait();
+					ALLEGRO_EVENT cat = thread_functional.thread_arguments->getEventRaw();
 
 					if (thread_functional.thread_arguments->isThisThis(+Assistance::ro__thread_functional_routines_timers::FUNCTIONALITY_AND_CHECKNEWFUNCS))
 					{
 						__l_thr_kb_run(Assistance::io__threads_taskid::ONCE);
 
-						for (size_t p = 0; p < func_list.size(); p++) { // can avoid func_list size change this way
-							auto& i = func_list[p];
-							
-							if (!i.should_run) { // has to delete
 
-								// QUICKMAP REMOVE
-								{
-									size_t ppp = quickmap[i.timer];
-									if (ppp >= func_list.size()) {
-										logg << L::SLF << fsr(__FUNCSIG__, E::DEBUG) << "Got out of bounds! Automatically removing from map..." << L::ELF;
-										quickmap.erase(i.timer);
-									}
-									else if (ppp == p) {
-										quickmap.erase(i.timer);
-									}
-								}
+						for (size_t k = 0; k < func_list_super.size(); k++)
+						{
+							auto& vv = func_list_super[k];
 
-								// WHOLE 
-								thread_functional.thread_arguments->remove(al_get_timer_event_source(i.timer));
-								func_list.erase(func_list.begin() + p);
-								if (p > 0) p--;
+							if (!vv.should_run) {
+								thread_functional.thread_arguments->remove(al_get_timer_event_source(vv.the_timer));
+								func_list_super.erase(k);
+								if (k > 0) k--;
 							}
-							else if (!i.has_timer_set_on_queue) // not set yet here
-							{
-								thread_functional.thread_arguments->insert(al_get_timer_event_source(i.timer));
-								al_start_timer(i.timer);
-								i.has_timer_set_on_queue = true;
+							if (!vv.has_timer_set_on_queue) {
+								thread_functional.thread_arguments->insert(al_get_timer_event_source(vv.the_timer));
+								al_start_timer(vv.the_timer);
 
-								// QUICKMAP SET
-
-								quickmap[i.timer] = p;
+								logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Timed function P=" << cast_pointer(vv.the_timer) << ";ID=" << vv.id << " created" << L::EL;
+								vv.has_timer_set_on_queue = true;
 							}
 						}
+
 					}
 					else { // TIMER EVENT (default)
-						auto ev = thread_kbmouse.thread_arguments->getEventRaw();
 
-						if (ev.type == ALLEGRO_EVENT_TIMER)
-						{
-							size_t pp = quickmap[ev.timer.source];
-							if (pp >= func_list.size()) {
-								logg << L::SLF << fsr(__FUNCSIG__, E::DEBUG) << "Got out of bounds! Skipping..." << L::ELF;
-							}
-							else {
-								auto ez = func_list[pp];
-								if (ez.func) {
-									if (ez.should_run) {
-										if (++ez.calls > 0) ez.calls += ez.func(); // run only if ez.calls >= 0
-									}
+						try {
+							if (cat.type == ALLEGRO_EVENT_TIMER)
+							{
+								//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Got event to timer P=" << cast_pointer(cat.timer.source) << "." << L::EL;
+
+								auto& a = func_list_super[cat.timer.source];
+
+								/*for (auto& a : f_dis)
+								{
+									if (has_run_once = (a.the_timer == cat.timer.source)) {*/
+
+								if (a.should_run && a.func) {
+									if (++a.calls > 0) a.calls += a.func(); // run only if a.calls >= 0
 								}
-								else {
-									logg << L::SLF << fsr(__FUNCSIG__, E::DEBUG) << "Failed to run a timed function id=" << ez.id << " because it was null!" << L::ELF;
-								}
+									/*}
+								}*/
 							}
 						}
-
+						catch (Abort::abort err)
+						{
+							logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got function exception! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
+						}
+						catch (const std::out_of_range & oor)
+						{
+							logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal function exception! {" << oor.what() << "}" << L::ELF;
+						}
 					}
 				}
 
 				logg << L::SLF << fsr(__FUNCSIG__) << "Closing stuff!" << L::ELF;
 
 				__l_thr_fc_run(Assistance::io__threads_taskid::END);
-				quickmap.clear();
+				//quickmap.clear();
 
 				delete thread_functional.thread_arguments;
 
@@ -850,44 +843,44 @@ namespace LSW {
 			}
 		}
 
-		void Console::addCustomTask(std::function<int(void)> f, const size_t id, const double t)
+		void Console::addCustomTask(std::function<int(void)> f, const int id, const double t)
 		{
 			if (!f) {
 				throw Abort::abort(__FUNCSIG__, "Can't add funtion to Console because it's not set properly!");
 				return;
 			}
-			__functional_functions ctsk;
-			ctsk.id = id;
-			ctsk.calls = 0;
-			ctsk.func = f;
-			ctsk.timer = al_create_timer(t);
-			ctsk.has_timer_set_on_queue = false;
-			ctsk.should_run = true;
 
-			func_list.push_back(ctsk);
-		}
-
-		void Console::delayCustomTaskTicksBy(const size_t p, const LONGLONG tt)
-		{
-			for (auto& i : func_list) {
-				if (i.id == p) {
-					i.calls = -tt;
-					return;
-				}
+			ALLEGRO_TIMER* tt = al_create_timer(t);
+			if (!tt) {
+				throw Abort::abort(__FUNCSIG__, "Can't create timer!");
+				return;
 			}
+
+			gfile logg;
+			logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Timed function P=" << cast_pointer(tt) << ";ID=" << id << " created" << L::EL;
+
+			__functional_functions& ff = func_list_super.create(tt, id);
+
+			ff.the_timer = tt;
+			ff.id = id;
+			ff.calls = 0;
+			ff.func = f;
+			ff.has_timer_set_on_queue = false;
+			ff.should_run = true;
+			//f_dis.push_back(ff);
 		}
 
-		void Console::removeCustomTask(const size_t p)
+		void Console::delayCustomTaskTicksBy(const int p, const LONGLONG tt)
 		{
-			for (auto& i : func_list) {
-				if (i.id == p) {
-					i.should_run = false; // delete later
-					return;
-				}
-			}
+			func_list_super[p].calls = -tt;
 		}
 
-		
+		void Console::removeCustomTask(const int p)
+		{
+			func_list_super[p].should_run = false;
+		}
+
+
 
 	}
 }

@@ -79,6 +79,12 @@ namespace LSW {
 			const double sprite_default_multiplier_global_div = 1.0e-1;
 			const double sprite_default_power_global_div = 4.0;
 			const double sprite_default_limit_speed_any = 0.15;
+			// some fx
+			const float amountofblur_bubbles = 85.0;
+			const unsigned amountof_linesperline_draw = 20;
+			const double precision_rotation_draw = 0.6 * ALLEGRO_PI / 360.0;
+
+
 
 			// sound.h stuff
 			const float start_default_global_volume = 0.5;
@@ -112,6 +118,9 @@ namespace LSW {
 			const auto lambda_sample_unload = [](ALLEGRO_SAMPLE*& b) -> void {
 				if (al_is_system_installed() && b) { al_destroy_sample(b); }
 			};
+
+
+
 
 
 			// not verified
