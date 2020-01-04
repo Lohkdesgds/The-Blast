@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <Windows.h>
-// testing if laptop works with github now (the right account)
+
 #include "LSW/organizer/organizer.h"
 
 using namespace LSW::v4;
