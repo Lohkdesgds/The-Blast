@@ -152,6 +152,10 @@ namespace LSW {
 			void addCustomTask(std::function<int(void)>, const int, const double); // t/sec
 			void delayCustomTaskTicksBy(const int, const LONGLONG);
 			void removeCustomTask(const int);
+
+			void sendEvent(const Assistance::ro__my_events, const intptr_t, const intptr_t = 0, const intptr_t = 0, const intptr_t = 0); // you MUST know what you're doing
+
+			Display* const _display_handle();
 		};
 
 	}

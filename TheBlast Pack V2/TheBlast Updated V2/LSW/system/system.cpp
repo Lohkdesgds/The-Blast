@@ -544,6 +544,7 @@ namespace LSW {
 					// set or load first values
 					set(Assistance::io__conf_boolean::HAD_ERROR, true); // then texture download starts			// USED
 					set(Assistance::io__conf_boolean::WAS_OSD_ON, false);										// USED
+					set(Assistance::io__conf_boolean::ULTRADEBUG, false);										// USED
 					set(Assistance::io__conf_float::LAST_VOLUME, 0.5);
 					set(Assistance::io__conf_string::LAST_VERSION, Constants::version_app);						// nah
 					set(Assistance::io__conf_string::LAST_PLAYERNAME, "Player");
@@ -592,6 +593,7 @@ namespace LSW {
 			});
 			
 		}
+		
 
 		void Database::set(const std::string e, const std::string v)
 		{
@@ -620,11 +622,21 @@ namespace LSW {
 		}
 		void Database::set(const int al_keycod, const bool v)
 		{
-			if (al_keycod >= 0 && al_keycod < ALLEGRO_KEY_MAX) data.keys[al_keycod] = v;
+			if (al_keycod >= 0 && al_keycod < ALLEGRO_KEY_MAX) {
+				data.keys[al_keycod] = v;
+				if (v && data.func_kb[al_keycod]) {
+					data.func_kb[al_keycod]();
+				}
+			}
 		}
 		void Database::set(const Assistance::io__db_mouse_boolean e, const bool v)
 		{
-			if (+e < +Assistance::io__db_mouse_boolean::size) data.mouse[+e] = v;
+			if (+e < +Assistance::io__db_mouse_boolean::size) {
+				data.mouse[+e] = v;
+				if (v && data.func_mb[+e]) {
+					data.func_mb[+e]();
+				}
+			}
 		}
 		void Database::set(const Assistance::io__db_mouse_float e, const float v)
 		{
@@ -639,6 +651,18 @@ namespace LSW {
 		void Database::set(const Assistance::io__db_statistics_double e, const double v)
 		{
 			if (e != Assistance::io__db_statistics_double::size) data.db_statistics_double[+e] = v;
+		}
+
+		void Database::set(const Assistance::io__db_functional_opt u, const int p, const std::function<void(void)> f)
+		{
+			switch (u) {
+			case Assistance::io__db_functional_opt::MOUSE_KEY:
+				if (p != +Assistance::io__db_mouse_boolean::size && p > 0) data.func_mb[p] = f;
+				break;
+			case Assistance::io__db_functional_opt::KEYBOARD_KEY:
+				if (p < ALLEGRO_KEY_MAX && p > 0) data.func_kb[p] = f;
+				break;
+			}
 		}
 
 		void Database::get(const std::string e, std::string& v, const std::string defaul)

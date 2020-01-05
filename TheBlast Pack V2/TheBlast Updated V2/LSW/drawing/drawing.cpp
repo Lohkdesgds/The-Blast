@@ -58,16 +58,6 @@ namespace LSW {
 				al_get_display_height(d) * 0.5 - y * (al_get_display_height(d) * 0.5 * sy));
 
 			return t;
-
-
-/*			al_build_transform(&t,
-				al_get_display_width(d) * 0.5 * (1.0 + x),
-				al_get_display_height(d) * 0.5 * (1.0 + y),
-				al_get_display_width(d) * 0.5 * sx,
-				al_get_display_height(d) * 0.5 * sy,
-				r);
-
-			return t;*/
 		}
 
 		void matrix_draw_help()
@@ -137,48 +127,26 @@ namespace LSW {
 		}
 
 
+		bool camera_preset::canWrite()
+		{
+			return !b[+Assistance::io__camera_boolean::READONLY_NOW];
+		}
+
 		void camera_preset::refresh()
 		{
 			ALLEGRO_DISPLAY* d = al_get_current_display();
 			if (!d) return;
 
-
-			/*al_rotate_transform(&g_t, lastTransf.rotation);
-
-			al_scale_transform(&g_t,
-				al_get_display_width(d) * 0.5 * lastTransf.scale_x * lastTransf.scale_g,
-				al_get_display_height(d) * 0.5 * lastTransf.scale_y * lastTransf.scale_g); // SCALING NOT AS EXPECTED (multiplier by zoom is not being made by transformation!)
-
-			al_translate_transform(&g_t,
-				al_get_display_width(d) * 0.5 - lastTransf.offset_x * (al_get_display_width(d) * 0.5 * lastTransf.scale_x * lastTransf.scale_g),
-				al_get_display_height(d) * 0.5 - lastTransf.offset_y * (al_get_display_height(d) * 0.5 * lastTransf.scale_y * lastTransf.scale_g));*/
-
 			latest = easyTransform(d,
 				p[+Assistance::io__camera_float::OFFSET_X], p[+Assistance::io__camera_float::OFFSET_Y], p[+Assistance::io__camera_float::SCALE_X] * p[+Assistance::io__camera_float::SCALE_G], p[+Assistance::io__camera_float::SCALE_Y] * p[+Assistance::io__camera_float::SCALE_G], p[+Assistance::io__camera_float::ROTATION_RAD]);
-
-			/*al_build_transform(&latest,
-			al_get_display_width(d) * 0.5 * p[+Assistance::io__camera_float::SCALE_X] * p[+Assistance::io__camera_float::SCALE_G] * (1.0 + p[+Assistance::io__camera_float::OFFSET_X]),
-			al_get_display_height(d) * 0.5 * p[+Assistance::io__camera_float::SCALE_Y] * p[+Assistance::io__camera_float::SCALE_G] * (1.0 + p[+Assistance::io__camera_float::OFFSET_Y]),
-			//al_get_display_width(d) * 0.5 - (0.5 + p[+Assistance::io__camera_float::OFFSET_X] * (0.5 * p[+Assistance::io__camera_float::SCALE_X] * p[+Assistance::io__camera_float::SCALE_G])),
-			//al_get_display_height(d) * 0.5 - (0.5 + p[+Assistance::io__camera_float::OFFSET_Y] * (0.5 * p[+Assistance::io__camera_float::SCALE_Y] * p[+Assistance::io__camera_float::SCALE_G])),
-			al_get_display_width(d) * 0.5 * p[+Assistance::io__camera_float::SCALE_X] * p[+Assistance::io__camera_float::SCALE_G],
-			al_get_display_height(d) * 0.5 * p[+Assistance::io__camera_float::SCALE_Y] * p[+Assistance::io__camera_float::SCALE_G],
-				p[+Assistance::io__camera_float::ROTATION_RAD]);*/
-
-
-			/*
-			al_identity_transform(&latest);
-
-			al_build_transform(&latest,
-			(1.0 + get(Assistance::io__camera_float::OFFSET_X) * (al_get_display_width(d) * 0.5 * get(Assistance::io__camera_float::SCALE_X) * get(Assistance::io__camera_float::SCALE_G))),
-			(1.0 + get(Assistance::io__camera_float::OFFSET_Y) * (al_get_display_height(d) * 0.5 * get(Assistance::io__camera_float::SCALE_Y) * get(Assistance::io__camera_float::SCALE_G))),
-			(al_get_display_width(d) / 2) * get(Assistance::io__camera_float::SCALE_X) * get(Assistance::io__camera_float::SCALE_G),
-			(al_get_display_height(d) / 2) * get(Assistance::io__camera_float::SCALE_Y) * get(Assistance::io__camera_float::SCALE_G),
-			get(Assistance::io__camera_float::ROTATION_RAD));*/
 		}
 
 		void camera_preset::reset()
 		{
+			if (!canWrite()) {
+				throw Abort::abort(__FUNCSIG__, "Attempted to reset a camera_preset that has the flag READONLY set!");
+				return;
+			}
 			p[0] = p[1] = p[2] = 1.0;
 			p[3] = p[4] = p[5] = 0.0;
 			al_identity_transform(&latest);
@@ -187,6 +155,11 @@ namespace LSW {
 
 		void camera_preset::set(const Assistance::io__camera_float u, const float v)
 		{
+			if (!canWrite()) {
+				throw Abort::abort(__FUNCSIG__, "Attempted to set a value to a camera_preset that has the flag READONLY set!");
+				return;
+			}
+
 			if (u == Assistance::io__camera_float::size) throw Abort::abort(__FUNCSIG__, "Shouldn't try to set ::size!");
 			p[+u] = v;
 			refresh();
@@ -194,12 +167,21 @@ namespace LSW {
 
 		void camera_preset::set(const Assistance::io__camera_boolean u, const bool v)
 		{
+			if (u != Assistance::io__camera_boolean::READONLY_NOW && !canWrite()) { // there has to be a way to unlock
+				throw Abort::abort(__FUNCSIG__, "Attempted to set a value to a camera_preset that has the flag READONLY set!");
+				return;
+			}
 			if (u == Assistance::io__camera_boolean::size) throw Abort::abort(__FUNCSIG__, "Shouldn't try to set ::size!");
 			b[+u] = v;
 		}
 
 		void camera_preset::merge(const Assistance::io__camera_float u, const float v)
 		{
+			if (!canWrite()) {
+				throw Abort::abort(__FUNCSIG__, "Attempted to merge a value to a camera_preset that has the flag READONLY set!");
+				return;
+			}
+
 			switch (u) {
 			case Assistance::io__camera_float::SCALE_X:
 			case Assistance::io__camera_float::SCALE_Y:
@@ -227,8 +209,27 @@ namespace LSW {
 			return b[+u];
 		}
 
+		void camera_preset::setInternalID(const std::string v)
+		{
+			if (!canWrite()) {
+				throw Abort::abort(__FUNCSIG__, "Attempted to set a value to a camera_preset that has the flag READONLY set!");
+				return;
+			}
+			if (v.length() > 0) internal_id = v;
+		}
+
+		std::string camera_preset::getInternalID()
+		{
+			return internal_id;
+		}
+
 		void camera_preset::setLayer(const int u, const bool enabl)
 		{
+			if (!canWrite()) {
+				throw Abort::abort(__FUNCSIG__, "Attempted to set a layer to a camera_preset that has the flag READONLY set!");
+				return;
+			}
+
 			if (enabl) {
 				for (auto& i : layers) {
 					if (i == u) return;
@@ -298,15 +299,6 @@ namespace LSW {
 			ALLEGRO_DISPLAY* d = al_get_current_display();
 
 			if (!d) return ALLEGRO_TRANSFORM();
-
-			/*al_identity_transform(&g_t);
-
-			al_build_transform(&g_t,
-				(al_get_display_width(d) / 2) * (1.0 + lastTransf.get(Assistance::io__camera_float::OFFSET_X) * (al_get_display_width(d) * 0.5 * lastTransf.get(Assistance::io__camera_float::SCALE_X) * lastTransf.get(Assistance::io__camera_float::SCALE_G))),
-				(al_get_display_height(d) / 2) * (1.0 + lastTransf.get(Assistance::io__camera_float::OFFSET_Y) * (al_get_display_height(d) * 0.5 * lastTransf.get(Assistance::io__camera_float::SCALE_Y) * lastTransf.get(Assistance::io__camera_float::SCALE_G))),
-				(al_get_display_width(d) / 2) * lastTransf.get(Assistance::io__camera_float::SCALE_X) * lastTransf.get(Assistance::io__camera_float::SCALE_G),
-				(al_get_display_height(d) / 2) * lastTransf.get(Assistance::io__camera_float::SCALE_Y) * lastTransf.get(Assistance::io__camera_float::SCALE_G),
-				lastTransf.get(Assistance::io__camera_float::ROTATION_RAD));*/
 
 			g_t = easyTransform(d,
 				lastTransf.get(Assistance::io__camera_float::OFFSET_X), lastTransf.get(Assistance::io__camera_float::OFFSET_Y),
@@ -489,7 +481,7 @@ namespace LSW {
 		{
 			Database conf;
 			bool debugging = false;
-			conf.get(Assistance::io__conf_boolean::WAS_OSD_ON, debugging, Constants::_is_on_debug_mode);
+			conf.get(Assistance::io__conf_boolean::ULTRADEBUG, debugging, Constants::_is_on_debug_mode);
 			debugging |= Constants::_is_on_debug_mode;
 						
 			dval[+Assistance::io__sprite_double::SCALEX] = 1.0;
@@ -513,7 +505,9 @@ namespace LSW {
 
 
 		bool Sprite::fastIsColliding(camera_preset psf) // rad
-		{			
+		{
+			psf.set(Assistance::io__camera_boolean::READONLY_NOW, false);
+
 			data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = false;
 
 			if (data.bval[+Assistance::io__sprite_boolean::COLLIDE_MOUSE]) {
@@ -530,10 +524,6 @@ namespace LSW {
 					db.get(Assistance::io__db_mouse_float::MOUSE_X, m[0]);
 					db.get(Assistance::io__db_mouse_float::MOUSE_Y, m[1]);
 					db.get(Assistance::io__db_mouse_boolean::IS_ANY_PRESSED, is_mouse_pressed);
-
-					//ALLEGRO_TRANSFORM untransf = psf.quick();
-					//al_invert_transform(&untransf);
-					//al_transform_coordinates(&untransf, &m[0], &m[1]);
 
 
 					data.dval[+Assistance::io__sprite_double::RO_MOUSE_DISTANCE_X] = (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX]) - (double)m[0];
@@ -566,16 +556,6 @@ namespace LSW {
 		Sprite::~Sprite()
 		{
 			bmps.reset();
-		}
-
-		void Sprite::setTask(const std::function<void(Sprite&)> f)
-		{
-			data.task = f;
-		}
-
-		void Sprite::unsetTask()
-		{
-			data.task = std::function<void(Sprite&)>();
 		}
 
 		void Sprite::hook(const Assistance::io__sprite_collision_state w, std::function<void(void)> f)
@@ -978,7 +958,7 @@ namespace LSW {
 
 		void Sprite::process(const int is_layer, camera_preset psf) // later: be a target, so drawing it will get there (based on framerate)
 		{
-			if (data.task) data.task(*this);
+			psf.set(Assistance::io__camera_boolean::READONLY_NOW, false);
 
 			if ((layer != is_layer) && !data.bval[+Assistance::io__sprite_boolean::COLLIDE_IGNORE_LAYER] &&
 			 ([&]() { data.layers_colliding_m.lock(); for (auto& i : data.layers_colliding) { if (i == is_layer) {data.layers_colliding_m.unlock(); return false;} } data.layers_colliding_m.unlock(); return true; }())) return; // check layers if there's one to collide (ON)
@@ -1087,6 +1067,8 @@ namespace LSW {
 
 		void Sprite::applyCollideData(camera_preset psf)
 		{
+			psf.set(Assistance::io__camera_boolean::READONLY_NOW, false);
+
 			if (data.last_state != data.new_state && data.new_state != Assistance::io__sprite_collision_state::size) {
 				if (data.function_pair[+data.new_state]) data.function_pair[+data.new_state]();
 			}
@@ -1550,44 +1532,44 @@ namespace LSW {
 
 		void Text::set(const Assistance::io__text_boolean o, const bool e)
 		{
-			data.b[+o] = e;
+			if (o != Assistance::io__text_boolean::size) data.b[+o] = e;
 		}
 
 		void Text::set(const Assistance::io__text_double o, const double e)
 		{
-			data.d[+o] = e;
+			if (o != Assistance::io__text_double::size) data.d[+o] = e;
 		}
 
 		void Text::set(const Assistance::io__text_color o, const ALLEGRO_COLOR e)
 		{
-			data.c = e;
+			data.c = e; // no ::size
 		}
 
 		void Text::set(const Assistance::io__text_integer o, const int e)
 		{
-			data.i[+o] = e;
+			if (o != Assistance::io__text_integer::size) data.i[+o] = e;
 		}
 
 
 		void Text::get(const Assistance::io__text_string o, std::string& e)
 		{
-			e = data.str[+o];
+			if (o != Assistance::io__text_string::size) e = data.str[+o];
 		}
 		void Text::get(const Assistance::io__text_boolean o, bool& e)
 		{
-			e = data.b[+o];
+			if (o != Assistance::io__text_boolean::size) e = data.b[+o];
 		}
 		void Text::get(const Assistance::io__text_double o, double& e)
 		{
-			e = data.d[+o];
+			if (o != Assistance::io__text_double::size) e = data.d[+o];
 		}
 		void Text::get(const Assistance::io__text_integer o, int& e)
 		{
-			e = data.i[+o];
+			if (o != Assistance::io__text_integer::size) e = data.i[+o];
 		}
 		void Text::get(const Assistance::io__text_color o, ALLEGRO_COLOR& e)
 		{
-			e = data.c;
+			e = data.c; // no ::size
 		}
 
 		const bool Text::isEq(const Assistance::io__text_color e, const ALLEGRO_COLOR v)
@@ -1649,7 +1631,10 @@ namespace LSW {
 			double rotation = 0.0;
 
 			Camera cam;
+			
 			camera_preset preset = cam.get();
+			preset.set(Assistance::io__camera_boolean::READONLY_NOW, false);
+
 			ALLEGRO_BITMAP* d = al_get_target_bitmap();
 			if (!d) return;// throw "TEXT::DRAW - NO DISPLAY!";
 

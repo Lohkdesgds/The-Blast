@@ -172,7 +172,7 @@ namespace LSW {
 						sprites.unlock();
 
 
-						if (conf.isEq(Assistance::io__conf_boolean::WAS_OSD_ON, true)) matrix_draw_help();
+						if (conf.isEq(Assistance::io__conf_boolean::ULTRADEBUG, true)) matrix_draw_help();
 
 						md->flip();
 
@@ -354,13 +354,13 @@ namespace LSW {
 
 				int display_x = 1280;
 				int display_y = 720;
-				bool isscreenfullscreen = false;
+				/*bool isscreenfullscreen = false;
 
 				{
 					int __s;
 					conf.get(Assistance::io__conf_integer::SCREEN_FLAGS, __s, 0);
 					isscreenfullscreen = (__s & ALLEGRO_FULLSCREEN_WINDOW) || (__s & ALLEGRO_FULLSCREEN);
-				}
+				}*/
 
 				logg << L::SLF << fsr(__FUNCSIG__) << "Initializing..." << L::ELF;
 
@@ -451,13 +451,10 @@ namespace LSW {
 							if (ev.type == ALLEGRO_EVENT_KEY_UP) { // USE IN GAME
 								conf.set(ev.keyboard.keycode, false);
 
-								switch (ev.keyboard.keycode) {
+								/*switch (ev.keyboard.keycode) {
 								case ALLEGRO_KEY_F11:
 								{
-									ALLEGRO_EVENT ev;
-									ev.type = +Assistance::ro__my_events::THRDRW_GOT_FORCED_RESIZE;
-									ev.user.data1 = (isscreenfullscreen = !isscreenfullscreen);
-									al_emit_user_event(&evsrc, &ev, NULL);
+									sendEvent(Assistance::ro__my_events::THRDRW_GOT_FORCED_RESIZE, (intptr_t)(isscreenfullscreen = !isscreenfullscreen));
 								}
 								break;
 								case ALLEGRO_KEY_F2:
@@ -465,7 +462,7 @@ namespace LSW {
 									md->print();
 								}
 								break;
-								}
+								}*/
 							}
 
 							if (ev.type == ALLEGRO_EVENT_KEY_CHAR) { // keyboard input
@@ -952,6 +949,22 @@ namespace LSW {
 		void Console::removeCustomTask(const int p)
 		{
 			func_list_super[p].should_run = false;
+		}
+
+		void Console::sendEvent(const Assistance::ro__my_events t, const intptr_t a, const intptr_t b, const intptr_t c, const intptr_t d)
+		{
+			ALLEGRO_EVENT ev;
+			ev.type = +t;
+			ev.user.data1 = a;
+			ev.user.data2 = b;
+			ev.user.data3 = c;
+			ev.user.data4 = d;
+			al_emit_user_event(&evsrc, &ev, NULL);
+		}
+
+		Display* const Console::_display_handle()
+		{
+			return md;
 		}
 
 

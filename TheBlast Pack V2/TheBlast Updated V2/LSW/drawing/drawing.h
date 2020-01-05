@@ -33,7 +33,7 @@ namespace LSW {
 		namespace Assistance {
 
 			enum class io__camera_float	 		 { SCALE_X, SCALE_Y, SCALE_G, OFFSET_X, OFFSET_Y, ROTATION_RAD, SLIPPERINESS, LIMIT_MIN_X, LIMIT_MIN_Y, LIMIT_MAX_X, LIMIT_MAX_Y, size };
-			enum class io__camera_boolean	 	 { RESPECT_LIMITS, size };
+			enum class io__camera_boolean	 	 { RESPECT_LIMITS, READONLY_NOW, size };
 			
 			enum class io__sprite_string_vector	 { ADDMULTIPLE, REMOVEMULTIPLE };
 			enum class io__sprite_string		 { ADD, REMOVE, ID };
@@ -103,7 +103,9 @@ __slice("%num_samples%", +tags_e::T_SAMPLES_LOADED), __slice("%num_sprites%", +t
 			bool b[+Assistance::io__camera_boolean::size] = { false };
 			ALLEGRO_TRANSFORM latest = ALLEGRO_TRANSFORM();
 			std::vector<int> layers; // layers enabled
+			std::string internal_id = "unknown";
 
+			bool canWrite();
 		public:
 			void refresh(); // guaranteed ALLEGRO_TRANSFORM ready to use (less thinking when already set up)
 			void reset();
@@ -115,6 +117,9 @@ __slice("%num_samples%", +tags_e::T_SAMPLES_LOADED), __slice("%num_sprites%", +t
 
 			float get(const Assistance::io__camera_float) const;
 			bool get(const Assistance::io__camera_boolean) const;
+
+			void setInternalID(const std::string);
+			std::string getInternalID(); // mostly debugging (to be implemented)
 
 			void setLayer(const int, const bool);
 			
@@ -146,8 +151,8 @@ __slice("%num_samples%", +tags_e::T_SAMPLES_LOADED), __slice("%num_sprites%", +t
 			   
 		class Sprite {
 			
-			class __sprite_smart_data {
-			public:
+			struct __sprite_smart_data {
+
 				double dval[+Assistance::io__sprite_double::size] = { 0.0 };
 				double dtarg[+Assistance::ro__sprite_target_double::size] = { 0.0 };
 				bool bval[+Assistance::io__sprite_boolean::size] = { false };
@@ -157,7 +162,6 @@ __slice("%num_samples%", +tags_e::T_SAMPLES_LOADED), __slice("%num_sprites%", +t
 				Assistance::io__sprite_collision_state last_state = Assistance::io__sprite_collision_state::size;
 				Assistance::io__sprite_collision_state new_state = Assistance::io__sprite_collision_state::size;
 				std::function<void(void)> function_pair[+Assistance::io__sprite_collision_state::size];
-				std::function<void(Sprite&)> task;
 
 				__sprite_smart_data();
 			};
@@ -205,9 +209,6 @@ __slice("%num_samples%", +tags_e::T_SAMPLES_LOADED), __slice("%num_sprites%", +t
 			bool fastIsColliding(camera_preset);
 		public:
 			~Sprite();
-
-			void setTask(const std::function<void(Sprite&)>); // runs when collision calls
-			void unsetTask();
 
 			void hook(const Assistance::io__sprite_collision_state, std::function<void(void)>);
 			void unhook(const Assistance::io__sprite_collision_state);

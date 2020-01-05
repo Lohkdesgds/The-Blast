@@ -31,8 +31,8 @@ namespace LSW {
 
 		namespace Assistance {
 
-			// actual config
-			enum class io__conf_boolean { HAD_ERROR, WAS_OSD_ON };
+			// actual config (no sense on using size)
+			enum class io__conf_boolean { HAD_ERROR, WAS_OSD_ON, ULTRADEBUG };
 			enum class io__conf_float { LAST_VOLUME };
 			enum class io__conf_integer { SCREEN_X, SCREEN_Y, SCREEN_FLAGS, SCREEN_PREF_HZ };
 			enum class io__conf_longlong { _TIMES_LIT };
@@ -40,11 +40,14 @@ namespace LSW {
 
 			// on memory while running
 			enum class io__db_mouse_boolean { MOUSE_0, MOUSE_1, MOUSE_2, MOUSE_3, MOUSE_4, MOUSE_5, MOUSE_6, MOUSE_7, size, IS_ANY_PRESSED }; // Constants::max_mouse_set_buttons
-			enum class io__db_mouse_float { MOUSE_X, MOUSE_Y, RAW_MOUSE_X, RAW_MOUSE_Y };
+			enum class io__db_mouse_float { MOUSE_X, MOUSE_Y, RAW_MOUSE_X, RAW_MOUSE_Y, size };
 			enum class io__db_statistics_sizet { FRAMESPERSECOND, COLLISIONSPERSECOND, USEREVENTSPERSECOND, ADVANCEDFUNCSPERSECOND, size};
 			enum class io__db_statistics_double { INSTANT_FRAMESPERSECOND, INSTANT_COLLISIONSPERSECOND, INSTANT_USEREVENTSPERSECOND, INSTANT_ADVANCEDFUNCSPERSECOND, size };
 
-			const std::string ro__conf_boolean_str[] = { "had_error", "was_osd_on" };
+			// functional
+			enum class io__db_functional_opt {MOUSE_KEY,KEYBOARD_KEY};
+
+			const std::string ro__conf_boolean_str[] = { "had_error", "was_osd_on", "ultradebug" };
 			const std::string ro__conf_float_str[] = { "last_volume" };
 			const std::string ro__conf_integer_str[] = { "screen_width","screen_height", "last_display_flags","pref_refresh_rate" };
 			const std::string ro__conf_longlong_str[] = { "times_open" };
@@ -136,6 +139,12 @@ namespace LSW {
 				float db_mouse_axes[4] = { 0.0 };
 				size_t db_statistics_sizet[+Assistance::io__db_statistics_sizet::size] = { 0 };
 				double db_statistics_double[+Assistance::io__db_statistics_double::size] = { 0 };
+
+
+				// purely automatic handleing
+				std::function<void(void)>			func_mb[+Assistance::io__db_mouse_boolean::size];	// each mouse key has a function
+				std::function<void(void)>			func_kb[ALLEGRO_KEY_MAX];							// each key can have its custom function
+
 				
 				std::thread* savethr = nullptr;
 				bool savethrdone = true;
@@ -160,6 +169,8 @@ namespace LSW {
 			void set(const Assistance::io__db_mouse_float, const float);
 			void set(const Assistance::io__db_statistics_sizet, const size_t);
 			void set(const Assistance::io__db_statistics_double, const double);
+
+			void set(const Assistance::io__db_functional_opt, const int, const std::function<void(void)> = std::function<void(void)>());
 			
 
 			void get(const std::string, std::string&, const std::string);
