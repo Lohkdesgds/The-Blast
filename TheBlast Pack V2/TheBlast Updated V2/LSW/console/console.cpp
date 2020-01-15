@@ -3,6 +3,33 @@
 namespace LSW {
 	namespace v4 {
 
+		
+		void Console::__linkdebug_timing::start()
+		{
+			last_start = GetTickCount64();
+		}
+
+		void Console::__linkdebug_timing::end()
+		{
+			auto a = GetTickCount64();
+			last_difference = (unsigned)(last_start - a);
+			if (average_difference == 0) average_difference = last_difference;
+			else {
+				average_difference = ((Constants::d_dbg_t_avg - 1.0) / Constants::d_dbg_t_avg) * average_difference + (1.0 / Constants::d_dbg_t_avg) * last_difference;
+			}
+		}
+
+		unsigned Console::__linkdebug_timing::getLastDifference()
+		{
+			return last_difference;
+		}
+
+		double Console::__linkdebug_timing::getAverageDifference()
+		{
+			return average_difference;
+		}
+
+
 		void Console::__l_thr_md()
 		{
 			try {
@@ -156,7 +183,7 @@ namespace LSW {
 						// draw screen at least once
 
 						md->clearTo(BLACK);
-						
+
 						while (!sprites.tryLock()) Sleep(10);
 
 						gcam.apply();
@@ -178,22 +205,27 @@ namespace LSW {
 
 						//Sleep(50);
 					}
+					catch (Abort::warn err)
+					{
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got warn at " << thread_maindisplay.threadid_str << "! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
+						logg.flush();
+					}
 					catch (Abort::abort err)
 					{
-						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got exception! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got exception at " << thread_maindisplay.threadid_str << "! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
 						logg.flush();
 					}
 					catch (const std::out_of_range & oor)
 					{
-						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal exception! {" << oor.what() << "}" << L::ELF;
+						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal exception at " << thread_maindisplay.threadid_str << "! {" << oor.what() << "}" << L::ELF;
 						logg.flush();
-						askForceExit("ERROR!", ("There was a error at " + thread_functional.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
+						askForceExit("ERROR!", ("There was a error at " + thread_maindisplay.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 					}
 					catch (...)
 					{
-						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal UNKNOWN exception!" << L::ELF;
+						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal UNKNOWN exception at " << thread_maindisplay.threadid_str << "!" << L::ELF;
 						logg.flush();
-						askForceExit("FATAL ERROR!", ("There was a fatal error (maybe fixable) at " + thread_functional.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
+						askForceExit("FATAL ERROR!", ("There was a fatal error (maybe fixable) at " + thread_maindisplay.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 					}
 				}
 
@@ -225,6 +257,10 @@ namespace LSW {
 			catch (Abort::abort a)
 			{
 				forceExit("Something went wrong at MDTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
+			}
+			catch (...)
+			{
+				forceExit("Something went wrong at MDTHR!", "There was a unknown error! What a sad thing to happen!");
 			}
 		}
 
@@ -306,22 +342,27 @@ namespace LSW {
 							last_loop_had_error = 0;
 						}
 					}
+					catch (Abort::warn err)
+					{
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got warn at " << thread_collision.threadid_str << "! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
+						logg.flush();
+					}
 					catch (Abort::abort err)
 					{
-						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got exception! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got exception at " << thread_collision.threadid_str << "! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
 						logg.flush();
 					}
 					catch (const std::out_of_range & oor)
 					{
-						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal exception! {" << oor.what() << "}" << L::ELF;
+						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal exception at " << thread_collision.threadid_str << "! {" << oor.what() << "}" << L::ELF;
 						logg.flush();
-						askForceExit("ERROR!", ("There was a error at " + thread_functional.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
+						askForceExit("ERROR!", ("There was a error at " + thread_collision.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 					}
 					catch (...)
 					{
-						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal UNKNOWN exception!" << L::ELF;
+						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal UNKNOWN exception at " << thread_collision.threadid_str << "!" << L::ELF;
 						logg.flush();
-						askForceExit("FATAL ERROR!", ("There was a fatal error (maybe fixable) at " + thread_functional.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
+						askForceExit("FATAL ERROR!", ("There was a fatal error (maybe fixable) at " + thread_collision.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 					}
 				}
 				logg << L::SLF << fsr(__FUNCSIG__) << "Closing stuff!" << L::ELF;
@@ -342,6 +383,10 @@ namespace LSW {
 			catch (Abort::abort a)
 			{
 				forceExit("Something went wrong at CLTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
+			}
+			catch (...)
+			{
+				forceExit("Something went wrong at CLTHR!", "There was a unknown error! What a sad thing to happen!");
 			}
 		}
 
@@ -467,14 +512,14 @@ namespace LSW {
 
 							if (ev.type == ALLEGRO_EVENT_KEY_CHAR) { // keyboard input
 								if (ev.keyboard.unichar >= 32)
-								{									
+								{
 									char multibyte[5] = { 0, 0, 0, 0, 0 };
 
 									al_utf8_encode(multibyte, ev.keyboard.unichar <= 32 ? ' ' : ev.keyboard.unichar);
 									char v = (char)strlen(multibyte);
 									if (v > 4) throw Abort::abort(__FUNCSIG__, "Got an exception on user input: invalid key code, couldn't translate to a valid string");
 									conf.set(Assistance::ro__db_thread_string::KEY_ADD_SET_LEN, v);
-									
+
 									for (auto& i : multibyte) {
 										if (i) conf.set(Assistance::ro__db_thread_string::KEY_ADD, i);
 									}
@@ -504,22 +549,27 @@ namespace LSW {
 							}
 						}
 					}
+					catch (Abort::warn err)
+					{
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got warn at " << thread_kbmouse.threadid_str << "! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
+						logg.flush();
+					}
 					catch (Abort::abort err)
 					{
-						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got exception! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got exception at " << thread_kbmouse.threadid_str << "! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
 						logg.flush();
 					}
 					catch (const std::out_of_range & oor)
 					{
-						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal exception! {" << oor.what() << "}" << L::ELF;
+						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal exception at " << thread_kbmouse.threadid_str << "! {" << oor.what() << "}" << L::ELF;
 						logg.flush();
-						askForceExit("ERROR!", ("There was a error at " + thread_functional.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
+						askForceExit("ERROR!", ("There was a error at " + thread_kbmouse.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 					}
 					catch (...)
 					{
-						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal UNKNOWN exception!" << L::ELF;
+						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal UNKNOWN exception at " << thread_kbmouse.threadid_str << "!" << L::ELF;
 						logg.flush();
-						askForceExit("FATAL ERROR!", ("There was a fatal error (maybe fixable) at " + thread_functional.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
+						askForceExit("FATAL ERROR!", ("There was a fatal error (maybe fixable) at " + thread_kbmouse.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 					}
 				}
 				logg << L::SLF << fsr(__FUNCSIG__) << "Closing stuff!" << L::ELF;
@@ -540,6 +590,10 @@ namespace LSW {
 			catch (Abort::abort a)
 			{
 				forceExit("Something went wrong at KBTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
+			}
+			catch (...)
+			{
+				forceExit("Something went wrong at KBTHR!", "There was a unknown error! What a sad thing to happen!");
 			}
 		}
 
@@ -597,6 +651,7 @@ namespace LSW {
 								auto& vv = func_list_super[k];
 
 								if (!vv.should_run) {
+									func_list_timing.erase(vv.id);
 									thread_functional.thread_arguments->remove(al_get_timer_event_source(vv.the_timer));
 									func_list_super.erase(k);
 									if (k > 0) k--;
@@ -620,37 +675,57 @@ namespace LSW {
 								//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Got event to timer P=" << cast_pointer(cat.timer.source) << "." << L::EL;
 
 								auto& a = func_list_super[cat.timer.source];
-
-								/*for (auto& a : f_dis)
-								{
-									if (has_run_once = (a.the_timer == cat.timer.source)) {*/
+								
 
 								if (a.should_run && a.func) {
 									if (++a.calls > 0) {
+										func_list_timing[a.id].start();
+
 										auto v = a.func(); // run only if a.calls >= 0
 										if (v < 0) a.calls = v;
 										else a.calls += v;
+
+										func_list_timing[a.id].end();
 									}
 								}
-								/*}
-							}*/
 							}
 						}
 					}
+					catch (Abort::warn err)
+					{
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got warn at " << thread_functional.threadid_str << "! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Detailed function timing debug:" << L::ELF;
+						for (auto& i : func_list_timing) {
+							logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "- ID: " << i.first << "; AVG_T: " << i.second.getAverageDifference() << "; INST_T: " << i.second.getLastDifference() << " (ms)" << L::ELF;
+						}
+						logg.flush();
+					}
 					catch (Abort::abort err)
 					{
-						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got exception! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got exception at " << thread_functional.threadid_str << "! {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Detailed function timing debug:" << L::ELF;
+						for (auto& i : func_list_timing) {
+							logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "- ID: " << i.first << "; AVG_T: " << i.second.getAverageDifference() << "; INST_T: " << i.second.getLastDifference() << " (ms)" << L::ELF;
+						}
 						logg.flush();
 					}
 					catch (const std::out_of_range & oor)
 					{
-						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal exception! {" << oor.what() << "}" << L::ELF;
+						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal exception at " << thread_functional.threadid_str << "! {" << oor.what() << "}" << L::ELF;
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Detailed function timing debug:" << L::ELF;
+						for (auto& i : func_list_timing) {
+							logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "- ID: " << i.first << "; AVG_T: " << i.second.getAverageDifference() << "; INST_T: " << i.second.getLastDifference() << " (ms)" << L::ELF;
+						}
 						logg.flush();
 						askForceExit("ERROR!", ("There was a error at " + thread_functional.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 					}
 					catch (...)
 					{
-						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal UNKNOWN exception!" << L::ELF;
+						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal UNKNOWN exception at " << thread_functional.threadid_str << "!" << L::ELF;
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Detailed function timing debug:" << L::ELF;
+						for (auto& i : func_list_timing) {
+							logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "- ID: " << i.first << "; AVG_T: " << i.second.getAverageDifference() << "; INST_T: " << i.second.getLastDifference() << " (ms)" << L::ELF;
+						}
 						logg.flush();
 						askForceExit("FATAL ERROR!", ("There was a fatal error (maybe fixable) at " + thread_functional.threadid_str + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 					}
@@ -676,6 +751,10 @@ namespace LSW {
 			catch (Abort::abort a)
 			{
 				forceExit("Something went wrong at FCTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
+			}
+			catch (...)
+			{
+				forceExit("Something went wrong at FCTHR!", "There was a unknown error! What a sad thing to happen!");
 			}
 		}
 
@@ -735,10 +814,10 @@ namespace LSW {
 
 			thr_shared_arg.should_exit = false;
 
-			thread_maindisplay.threadid_str =	"Display Manager Thread";
-			thread_collision.threadid_str =		"Positioning and Collision Thread";
-			thread_kbmouse.threadid_str =		"Events and User Input Thread";
-			thread_functional.threadid_str =	"Advanced Functions Thread";
+			thread_maindisplay.threadid_str = "Display Manager Thread";
+			thread_collision.threadid_str = "Positioning and Collision Thread";
+			thread_kbmouse.threadid_str = "Events and User Input Thread";
+			thread_functional.threadid_str = "Advanced Functions Thread";
 
 			// start threads
 			thread_maindisplay.thr_itself = new std::thread([=] {__l_thr_md(); });
@@ -960,6 +1039,9 @@ namespace LSW {
 			ff.func = f;
 			ff.has_timer_set_on_queue = false;
 			ff.should_run = true;
+
+			func_list_timing[ff.id];
+
 			//f_dis.push_back(ff);
 		}
 
@@ -988,8 +1070,5 @@ namespace LSW {
 		{
 			return md;
 		}
-
-
-
 	}
 }

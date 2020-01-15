@@ -24,7 +24,7 @@
 
 #include "..\custom_abort\abort.h"
 #include "small_templates.h"
-#include "..\logger\logger.h"
+//#include "..\logger\logger.h"
 
 
 namespace LSW {
@@ -167,6 +167,9 @@ namespace LSW {
 
 		template <size_t... Args>
 		class __template_multiple_timers {
+
+			const unsigned d_t_t_avg = 10; // to template timers (internal)
+
 			const size_t num_args = sizeof...(Args);
 			const size_t calls_per_sec_pos = sizeof...(Args);
 
@@ -177,6 +180,7 @@ namespace LSW {
 			double eachsec_doubleverif = 0;
 
 			size_t benchmark[sizeof...(Args) + 2] = { 0 };
+			double benchmark_m[sizeof...(Args) + 2] = { 0.0 };
 			size_t rawcount[sizeof...(Args) + 2] = { 0 };
 			double quickmark[sizeof...(Args) + 2][2] = { {0.0,0.0} }; // [0] -> diff since last call, [1] -> time itself
 
@@ -261,6 +265,7 @@ namespace LSW {
 			}
 			void hasEventWait()
 			{
+
 				for (bool can_leave = false; !can_leave;) {
 					rawcount[calls_per_sec_pos]++;
 					calQ(calls_per_sec_pos);
@@ -276,6 +281,8 @@ namespace LSW {
 
 					if (lastev.type == ALLEGRO_EVENT_TIMER && lastev.timer.source == eachsec) {
 
+						bool throw_warn = false;
+
 						double timee = al_get_time();
 						if (eachsec_doubleverif == 0) eachsec_doubleverif = timee - 1.0;
 						double diff = timee - eachsec_doubleverif;
@@ -285,8 +292,9 @@ namespace LSW {
 							// cast warn on log?
 							eachsec_doubleverif = timee - 1.0;
 
-							gfile logg;
-							logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Can't keep up! Somewhere is having some trouble keeping the loops! Running " << (diff - 1.0) << " second(s) behind." << L::ELF;
+							throw_warn = true;
+							/*gfile logg;
+							logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Can't keep up! Somewhere is having some trouble keeping the loops! Running " << (diff - 1.0) << " second(s) behind." << L::ELF;*/
 							//printf_s("[WARN] Can't keep up! Somewhere is having some trouble keeping the loops!\n");
 						}
 
@@ -294,7 +302,16 @@ namespace LSW {
 
 						for (size_t u = 0; u < num_args + 2; u++) { // + 1 because calls_per_sec_pos is one ahead
 							benchmark[u] = rawcount[u];
+							benchmark_m[u] = ((d_t_t_avg - 1.0) / d_t_t_avg) * benchmark_m[u] + (1.0 / d_t_t_avg) * benchmark[u];
 							rawcount[u] = 0;
+						}
+
+						if (throw_warn)
+						{
+							std::string details;
+							for (size_t p = 0; p < num_args; p++) details += std::to_string(timers_t[p]) + "@" + std::to_string(benchmark_m[p]) + "; ";
+
+							throw Abort::warn(__FUNCSIG__, "Can't keep up! Somewhere is having some trouble keeping the loops! Running " + std::to_string(diff - 1.0) + " second(s) behind. - Detailed debug: " + details);
 						}
 					}
 					else {
@@ -320,6 +337,8 @@ namespace LSW {
 
 					if (lastev.type == ALLEGRO_EVENT_TIMER && lastev.timer.source == eachsec) {
 
+						bool throw_warn = false;
+
 						double timee = al_get_time();
 						if (eachsec_doubleverif == 0) eachsec_doubleverif = timee - 1.0;
 						double diff = timee - eachsec_doubleverif;
@@ -328,17 +347,28 @@ namespace LSW {
 							al_flush_event_queue(queue); // there's something lagging, so clear and refresh
 							// cast warn on log?
 
-							gfile logg;
+							//gfile logg;
 
 							eachsec_doubleverif = timee - 1.0;
-							logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Can't keep up! Somewhere is having some trouble keeping the loops! Running " << (diff - 1.0) << " second(s) behind." << L::ELF;
+							throw_warn = true;
+							//logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Can't keep up! Somewhere is having some trouble keeping the loops! Running " << (diff - 1.0) << " second(s) behind." << L::ELF;
 						}
 
 						eachsec_doubleverif += 1.0;
 
 						for (size_t u = 0; u < num_args + 2; u++) { // + 1 because calls_per_sec_pos is one ahead
 							benchmark[u] = rawcount[u];
+							benchmark_m[u] = ((d_t_t_avg - 1.0) / d_t_t_avg) * benchmark_m[u] + (1.0 / d_t_t_avg) * benchmark[u];
 							rawcount[u] = 0;
+						}
+
+
+						if (throw_warn)
+						{
+							std::string details;
+							for (size_t p = 0; p < num_args; p++) details += std::to_string(timers_t[p]) + "@" + std::to_string(benchmark_m[p]) + "; ";
+
+							throw Abort::warn(__FUNCSIG__, "Can't keep up! Somewhere is having some trouble keeping the loops! Running " + std::to_string(diff - 1.0) + " second(s) behind. - Detailed debug: " + details);
 						}
 
 						return false;

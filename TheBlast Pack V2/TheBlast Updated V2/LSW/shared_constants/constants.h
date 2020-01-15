@@ -28,7 +28,7 @@ namespace LSW {
 	namespace v4 {
 		namespace Assistance {
 			// this have to be global, come on
-			enum class ro__my_events { LOG_CLOUDLAUNCH_RAW = 512, THRKBM_DISPLAY_SIZE, THRDRW_GOT_FORCED_RESIZE, THRKBM_GETSTRINGINPUT /* <-- TO BE DONE */ }; // THRDRW -> event for the THREAD_DRAW
+			enum class ro__my_events { LOG_CLOUDLAUNCH_RAW = 512, THRKBM_DISPLAY_SIZE, THRDRW_GOT_FORCED_RESIZE, THRKBM_GETSTRINGINPUT, THRANY_GOTTIMINGLONG /* <-- TO BE DONE */ }; // THRDRW -> event for the THREAD_DRAW
 		}
 
 		namespace Constants {
@@ -93,13 +93,13 @@ namespace LSW {
 
 
 			const size_t __i_col_pos_t_update = 10; /*20*/
-			const size_t __i_func_t_once = 5; // can run on-the-fly functions up to 5 times per sec
-			const size_t __i_thr_loop_timer_0 = 60,						// DISPLAY THREAD, may be smooth
+			const size_t __i_func_t_once = 5;  // can run on-the-fly functions up to 5 times per sec
+			const size_t __i_thr_loop_timer_0 = 40,						// DISPLAY THREAD, may be smooth
 						 __i_thr_loop_timer_1 = __i_col_pos_t_update,	// COLLISION THREAD may be timed
 						 __i_thr_loop_timer_2 = 3,						// EVENTS THREAD don't need to be smooth at all
 						 __i_thr_loop_timer_3 = 5;						// FUNCTIONS THREAD just need to check new functions and old ones not fast, but not slow
 
-
+			const unsigned d_dbg_t_avg = 20; // to functional thread
 
 
 

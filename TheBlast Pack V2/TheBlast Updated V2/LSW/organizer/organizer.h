@@ -12,7 +12,7 @@ Namespaces:
 #include "..\custom_abort\abort.h"					// SOLO
 #include "..\big_templates\small_templates.h"       // SOLO
 #include "..\logger\logger.h"						// DEP: CONST, TOOLS, SMALLTEMP
-#include "..\big_templates\big_templates.h"			// DEP: ABORT, SMALLTEMP, LOGG
+#include "..\big_templates\big_templates.h"			// DEP: ABORT, SMALLTEMP
 
 
 // default

@@ -98,6 +98,17 @@ namespace LSW {
 				bool operator==(const int i) const { return i == id; }
 				bool operator==(const __functional_functions& f) const { return *this == f; }
 			};
+			class __linkdebug_timing {
+				ULONGLONG last_start = 0;
+				unsigned last_difference = 0;
+				double average_difference = 0;
+			public:
+				void start();
+				void end();
+
+				unsigned getLastDifference();
+				double getAverageDifference();
+			};
 
 			/// SHARED
 			//std::function<void(void)> smth_to_load; // load textures here
@@ -113,6 +124,7 @@ namespace LSW {
 			//std::map<intptr_t, __functional_functions> func_list;
 
 			__map<__functional_functions, ALLEGRO_TIMER*, int> func_list_super;
+			std::map<int, __linkdebug_timing> func_list_timing;
 			//std::vector<__functional_functions> f_dis;
 
 			ALLEGRO_EVENT_SOURCE evsrc = ALLEGRO_EVENT_SOURCE();

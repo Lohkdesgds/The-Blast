@@ -18,6 +18,11 @@ namespace LSW {
 				std::string details();
 				int getErrN();
 			};
+
+			class warn : public abort { // handle differently, but works like an abort
+			public:
+				warn(std::string a, std::string b = "", const int c = 0) : abort(a, b, c) {}
+			};
 		}
 	}
 }
