@@ -13,8 +13,8 @@ extern "C" {
 
 // COLOCAR LAMBDA PARA FUNCIONAR DENTRO DOS EVENTOS DE STATE!								(DONE)
 // REMOVER TIPO LOOP DAS THREADS NORMAIS (para abrir espaço pra thread de funções)			(DONE, but some came back because of some things like bubble)
-// TENTAR COLOCAR LAMBA EM QUALQUER TIPO DE EVENTO, COMO TECLADO OU SEI LÁ!					()
-// PRINTSCREEN E FULLSCREEN DEVIAM SER LAMBDA VINCULADOS A UM CONFIG!						()
+// TENTAR COLOCAR LAMBA EM QUALQUER TIPO DE EVENTO, COMO TECLADO OU SEI LÁ!					(DONE, kinda)
+// PRINTSCREEN E FULLSCREEN DEVIAM SER LAMBDA VINCULADOS A UM CONFIG!						(DONE)
 // CRIAR UMA NOVA THREAD SOMENTE DE FUNÇÕES, ILIMITADAS FUNÇÕES, 5 VEZES POR SEGUNDO!		(DONE, better than this)
 
 
@@ -62,6 +62,9 @@ int main(int argc, const char* argv[])
 		Database conf;
 
 		logg << L::SLF << fsr(__FUNCSIG__) << "Setting up dynamic functions..." << L::ELF;
+
+		// temporary
+		conf.set(Assistance::io__db_boolean::SAVING_STRING_INPUT, true);
 
 
 		// quick var setup
@@ -282,7 +285,7 @@ int main(int argc, const char* argv[])
 		consol.setSimpleTask(Assistance::io__thread_ids::DRAWING, Assistance::io__threads_taskid::END, set_consol_mainthread_end);
 		consol.setSimpleTask(Assistance::io__thread_ids::DRAWING, Assistance::io__threads_taskid::START, set_consol_mainthread_start);
 
-		consol.addCustomTask(reapply_cam_settings, +my_custom_funcs::UPDATE_CAMERA, 1.0 / 50);
+		consol.addCustomTask(reapply_cam_settings, +my_custom_funcs::UPDATE_CAMERA, 1.0 / 20);
 
 
 

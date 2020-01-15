@@ -620,6 +620,22 @@ namespace LSW {
 		{
 			set(Assistance::ro__conf_string_str[+e], v);
 		}
+		void Database::set(const Assistance::io__db_boolean e, const bool v)
+		{
+			if (e != Assistance::io__db_boolean::size) {
+				data.b[+e] = v;
+
+				switch (e) {
+				case Assistance::io__db_boolean::SAVING_STRING_INPUT:
+					if (!data.b[+e]) {
+						data.curr_string.clear();
+						data.last_string.clear();
+						data.curr_string_keylen.clear();
+					}
+					break;
+				}
+			}
+		}
 		void Database::set(const int al_keycod, const bool v)
 		{
 			if (al_keycod >= 0 && al_keycod < ALLEGRO_KEY_MAX) {
@@ -629,38 +645,73 @@ namespace LSW {
 				}
 			}
 		}
-		void Database::set(const Assistance::io__db_mouse_boolean e, const bool v)
+		void Database::set(const Assistance::ro__db_mouse_boolean e, const bool v)
 		{
-			if (+e < +Assistance::io__db_mouse_boolean::size) {
+			if (+e < +Assistance::ro__db_mouse_boolean::size) {
 				data.mouse[+e] = v;
 				if (v && data.func_mb[+e]) {
 					data.func_mb[+e]();
 				}
 			}
 		}
-		void Database::set(const Assistance::io__db_mouse_float e, const float v)
+		void Database::set(const Assistance::ro__db_mouse_float e, const float v)
 		{
 			data.db_mouse_axes[+e] = v;
 		}
 
-		void Database::set(const Assistance::io__db_statistics_sizet e, const size_t v)
+		void Database::set(const Assistance::ro__db_statistics_sizet e, const size_t v)
 		{
-			if (e != Assistance::io__db_statistics_sizet::size) data.db_statistics_sizet[+e] = v;
+			if (e != Assistance::ro__db_statistics_sizet::size) data.db_statistics_sizet[+e] = v;
 		}
 
-		void Database::set(const Assistance::io__db_statistics_double e, const double v)
+		void Database::set(const Assistance::ro__db_statistics_double e, const double v)
 		{
-			if (e != Assistance::io__db_statistics_double::size) data.db_statistics_double[+e] = v;
+			if (e != Assistance::ro__db_statistics_double::size) data.db_statistics_double[+e] = v;
+		}
+
+		void Database::set(const Assistance::ro__db_thread_string e, const char v)
+		{
+			if (isEq(Assistance::io__db_boolean::SAVING_STRING_INPUT, false)) {
+				data.curr_string.clear();
+				return;
+			}
+
+			switch (e) {
+			case Assistance::ro__db_thread_string::KEY_ADD:
+				data.curr_string += v;
+				data.curr_string_keylen.push_back(data.curr_string_keylen_val);
+				break;
+			case Assistance::ro__db_thread_string::KEY_ERASE:
+				if (data.curr_string.length() > 0) {
+					char siz = data.curr_string_keylen.back();
+					for (char p = 0; p < siz; p++) {
+						data.curr_string.pop_back();
+						data.curr_string_keylen.pop_back();
+					}
+				}
+				break;
+			case Assistance::ro__db_thread_string::KEY_SET:
+				data.last_string = data.curr_string;
+				data.curr_string.clear();
+				data.curr_string_keylen.clear();
+				data.curr_string_keylen_val = 1;
+				break;
+			case Assistance::ro__db_thread_string::KEY_ADD_SET_LEN:
+				data.curr_string_keylen_val = v;
+				break;
+			}
 		}
 
 		void Database::set(const Assistance::io__db_functional_opt u, const int p, const std::function<void(void)> f)
 		{
 			switch (u) {
 			case Assistance::io__db_functional_opt::MOUSE_KEY:
-				if (p != +Assistance::io__db_mouse_boolean::size && p > 0) data.func_mb[p] = f;
+				if (p != +Assistance::ro__db_mouse_boolean::size && p > 0) data.func_mb[p] = f;
 				break;
 			case Assistance::io__db_functional_opt::KEYBOARD_KEY:
-				if (p < ALLEGRO_KEY_MAX && p > 0) data.func_kb[p] = f;
+				if (p < ALLEGRO_KEY_MAX && p > 0) {
+					data.func_kb[p] = f;					
+				}
 				break;
 			}
 		}
@@ -708,32 +759,50 @@ namespace LSW {
 			v = output;
 		}
 
+		void Database::get(const Assistance::io__db_boolean e, bool& v, const bool defaul)
+		{
+			if (e != Assistance::io__db_boolean::size) v = data.b[+e];
+			else v = defaul;
+		}
+
+		void Database::get(const Assistance::ro__db_string e, std::string& v)
+		{
+			switch (e) {
+			case Assistance::ro__db_string::CURRENT_STRING:
+				v = data.curr_string;
+				break;
+			case Assistance::ro__db_string::LAST_STRING:
+				v = data.last_string;
+				break;
+			}
+		}
+
 		void Database::get(const int al_keycod, bool& v, const bool defaul)
 		{
 			if (al_keycod >= 0 && al_keycod < ALLEGRO_KEY_MAX) v = data.keys[al_keycod];
 			else v = defaul;
 		}
-		void Database::get(const Assistance::io__db_mouse_boolean e, bool& v)
+		void Database::get(const Assistance::ro__db_mouse_boolean e, bool& v)
 		{
-			if (e != Assistance::io__db_mouse_boolean::size) v = data.mouse[+e];
-			if (e == Assistance::io__db_mouse_boolean::IS_ANY_PRESSED) {
+			if (e != Assistance::ro__db_mouse_boolean::size) v = data.mouse[+e];
+			if (e == Assistance::ro__db_mouse_boolean::IS_ANY_PRESSED) {
 				v = false;
 				for (auto& i : data.mouse) v |= i;
 			}
 		}
-		void Database::get(const Assistance::io__db_mouse_float e, float& v)
+		void Database::get(const Assistance::ro__db_mouse_float e, float& v)
 		{
 			v = data.db_mouse_axes[+e];
 		}
 
-		void Database::get(const Assistance::io__db_statistics_sizet e, size_t& v)
+		void Database::get(const Assistance::ro__db_statistics_sizet e, size_t& v)
 		{
-			if (e != Assistance::io__db_statistics_sizet::size) v = data.db_statistics_sizet[+e];
+			if (e != Assistance::ro__db_statistics_sizet::size) v = data.db_statistics_sizet[+e];
 		}
 
-		void Database::get(const Assistance::io__db_statistics_double e, double& v)
+		void Database::get(const Assistance::ro__db_statistics_double e, double& v)
 		{
-			if (e != Assistance::io__db_statistics_double::size) v = data.db_statistics_double[+e];
+			if (e != Assistance::ro__db_statistics_double::size) v = data.db_statistics_double[+e];
 		}
 
 
@@ -774,6 +843,20 @@ namespace LSW {
 			return oth == v;
 		}
 
+		bool Database::isEq(const Assistance::io__db_boolean e, const bool v)
+		{
+			bool oth;
+			get(e, oth, v); // meh
+			return oth == v;
+		}
+
+		bool Database::isEq(const Assistance::ro__db_string e, const std::string v)
+		{
+			std::string oth;
+			get(e, oth); // meh
+			return oth == v;
+		}
+
 		bool Database::isEq(const int e, const bool v)
 		{
 			bool oth;
@@ -781,28 +864,28 @@ namespace LSW {
 			return oth == v;
 		}
 
-		bool Database::isEq(const Assistance::io__db_mouse_boolean e, const bool v)
+		bool Database::isEq(const Assistance::ro__db_mouse_boolean e, const bool v)
 		{
 			bool oth;
 			get(e, oth); // meh
 			return oth == v;
 		}
 
-		bool Database::isEq(const Assistance::io__db_mouse_float e, const float v)
+		bool Database::isEq(const Assistance::ro__db_mouse_float e, const float v)
 		{
 			float oth;
 			get(e, oth); // meh
 			return oth == v;
 		}
 
-		bool Database::isEq(const Assistance::io__db_statistics_sizet e, const size_t v)
+		bool Database::isEq(const Assistance::ro__db_statistics_sizet e, const size_t v)
 		{
 			size_t oth;
 			get(e, oth);
 			return oth == v;
 		}
 
-		bool Database::isEq(const Assistance::io__db_statistics_double e, const double v)
+		bool Database::isEq(const Assistance::ro__db_statistics_double e, const double v)
 		{
 			double oth;
 			get(e, oth);

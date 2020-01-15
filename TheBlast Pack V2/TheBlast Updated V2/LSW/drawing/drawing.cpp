@@ -69,8 +69,8 @@ namespace LSW {
 			camera_preset psf = cam.get();
 			camera_preset org = camera_preset();
 
-			db.get(Assistance::io__db_mouse_float::RAW_MOUSE_X, m[0]);
-			db.get(Assistance::io__db_mouse_float::RAW_MOUSE_Y, m[1]);
+			db.get(Assistance::ro__db_mouse_float::RAW_MOUSE_X, m[0]);
+			db.get(Assistance::ro__db_mouse_float::RAW_MOUSE_Y, m[1]);
 
 			limits[0] = psf.get(Assistance::io__camera_float::LIMIT_MIN_X);
 			limits[1] = psf.get(Assistance::io__camera_float::LIMIT_MIN_Y);
@@ -521,9 +521,9 @@ namespace LSW {
 					bool is_mouse_pressed = false;
 					Database db;
 
-					db.get(Assistance::io__db_mouse_float::MOUSE_X, m[0]);
-					db.get(Assistance::io__db_mouse_float::MOUSE_Y, m[1]);
-					db.get(Assistance::io__db_mouse_boolean::IS_ANY_PRESSED, is_mouse_pressed);
+					db.get(Assistance::ro__db_mouse_float::MOUSE_X, m[0]);
+					db.get(Assistance::ro__db_mouse_float::MOUSE_Y, m[1]);
+					db.get(Assistance::ro__db_mouse_boolean::IS_ANY_PRESSED, is_mouse_pressed);
 
 
 					data.dval[+Assistance::io__sprite_double::RO_MOUSE_DISTANCE_X] = (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX]) - (double)m[0];
@@ -1207,28 +1207,28 @@ namespace LSW {
 						case +Assistance::tags_e::T_FPS:
 						{
 							size_t t;
-							conf.get(Assistance::io__db_statistics_sizet::FRAMESPERSECOND, t);
+							conf.get(Assistance::ro__db_statistics_sizet::FRAMESPERSECOND, t);
 							sprintf_s(tempstr_c, "%zu", t);
 						}
 						break;
 						case +Assistance::tags_e::T_TPS:
 						{
 							size_t t;
-							conf.get(Assistance::io__db_statistics_sizet::COLLISIONSPERSECOND, t);
+							conf.get(Assistance::ro__db_statistics_sizet::COLLISIONSPERSECOND, t);
 							sprintf_s(tempstr_c, "%zu", t);
 						}
 						break;
 						case +Assistance::tags_e::T_UPS:
 						{
 							size_t t;
-							conf.get(Assistance::io__db_statistics_sizet::USEREVENTSPERSECOND, t);
+							conf.get(Assistance::ro__db_statistics_sizet::USEREVENTSPERSECOND, t);
 							sprintf_s(tempstr_c, "%zu", t);
 						}
 						break;
 						case +Assistance::tags_e::T_APS:
 						{
 							size_t t;
-							conf.get(Assistance::io__db_statistics_sizet::ADVANCEDFUNCSPERSECOND, t);
+							conf.get(Assistance::ro__db_statistics_sizet::ADVANCEDFUNCSPERSECOND, t);
 							sprintf_s(tempstr_c, "%zu", t);
 						}
 						break;
@@ -1236,28 +1236,28 @@ namespace LSW {
 						case +Assistance::tags_e::T_I_FPS:
 						{
 							double dt;
-							conf.get(Assistance::io__db_statistics_double::INSTANT_FRAMESPERSECOND, dt);
+							conf.get(Assistance::ro__db_statistics_double::INSTANT_FRAMESPERSECOND, dt);
 							sprintf_s(tempstr_c, "%05.1lf", 1.0 / dt);
 						}
 						break;
 						case +Assistance::tags_e::T_I_TPS:
 						{
 							double dt;
-							conf.get(Assistance::io__db_statistics_double::INSTANT_COLLISIONSPERSECOND, dt);
+							conf.get(Assistance::ro__db_statistics_double::INSTANT_COLLISIONSPERSECOND, dt);
 							sprintf_s(tempstr_c, "%05.1lf", 1.0 / dt);
 						}
 						break;
 						case +Assistance::tags_e::T_I_UPS:
 						{
 							double dt;
-							conf.get(Assistance::io__db_statistics_double::INSTANT_USEREVENTSPERSECOND, dt);
+							conf.get(Assistance::ro__db_statistics_double::INSTANT_USEREVENTSPERSECOND, dt);
 							sprintf_s(tempstr_c, "%05.1lf", 1.0 / dt);
 						}
 						break;
 						case +Assistance::tags_e::T_I_APS:
 						{
 							double dt;
-							conf.get(Assistance::io__db_statistics_double::INSTANT_ADVANCEDFUNCSPERSECOND, dt);
+							conf.get(Assistance::ro__db_statistics_double::INSTANT_ADVANCEDFUNCSPERSECOND, dt);
 							sprintf_s(tempstr_c, "%05.1lf", 1.0 / dt);
 						}
 						break;
@@ -1265,28 +1265,28 @@ namespace LSW {
 						case +Assistance::tags_e::T_MS_FPS:
 						{
 							double dt;
-							conf.get(Assistance::io__db_statistics_double::INSTANT_FRAMESPERSECOND, dt);
+							conf.get(Assistance::ro__db_statistics_double::INSTANT_FRAMESPERSECOND, dt);
 							sprintf_s(tempstr_c, "%04.3lf", 1000.0 * dt);
 						}
 						break;
 						case +Assistance::tags_e::T_MS_TPS:
 						{
 							double dt;
-							conf.get(Assistance::io__db_statistics_double::INSTANT_COLLISIONSPERSECOND, dt);
+							conf.get(Assistance::ro__db_statistics_double::INSTANT_COLLISIONSPERSECOND, dt);
 							sprintf_s(tempstr_c, "%04.3lf", 1000.0 * dt);
 						}
 						break;
 						case +Assistance::tags_e::T_MS_UPS:
 						{
 							double dt;
-							conf.get(Assistance::io__db_statistics_double::INSTANT_USEREVENTSPERSECOND, dt);
+							conf.get(Assistance::ro__db_statistics_double::INSTANT_USEREVENTSPERSECOND, dt);
 							sprintf_s(tempstr_c, "%04.3lf", 1000.0 * dt);
 						}
 						break;
 						case +Assistance::tags_e::T_MS_APS:
 						{
 							double dt;
-							conf.get(Assistance::io__db_statistics_double::INSTANT_ADVANCEDFUNCSPERSECOND, dt);
+							conf.get(Assistance::ro__db_statistics_double::INSTANT_ADVANCEDFUNCSPERSECOND, dt);
 							sprintf_s(tempstr_c, "%04.3lf", 1000.0 * dt);
 						}
 						break;
@@ -1303,27 +1303,37 @@ namespace LSW {
 						case +Assistance::tags_e::T_MOUSE_X:
 						{
 							float x;
-							conf.get(Assistance::io__db_mouse_float::MOUSE_X, x);
+							conf.get(Assistance::ro__db_mouse_float::MOUSE_X, x);
 							sprintf_s(tempstr_c, "%.3f", x);
 						}
 						break;
 						case +Assistance::tags_e::T_MOUSE_Y:
 						{
 							float y;
-							conf.get(Assistance::io__db_mouse_float::MOUSE_Y, y);
+							conf.get(Assistance::ro__db_mouse_float::MOUSE_Y, y);
 							sprintf_s(tempstr_c, "%.3f", y);
 						}
 						break;
 						case +Assistance::tags_e::T_LASTSTRING:
 						{
+							std::string str;
+							size_t p = 0;
+							conf.get(Assistance::ro__db_string::LAST_STRING, str);
+							for (p = 0; p < 128 && p < str.length(); p++) tempstr_c[p] = str[p];
+							if (p < 128) tempstr_c[p] = '\0';
 							/*std::string str;
 							bev.getLastString(str);
 							sprintf_s(tempstr_c, "%s", str.c_str());*/
-							sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
+							//sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
 						}
 						break;
 						case +Assistance::tags_e::T_CURRSTRING:
 						{
+							std::string str;
+							size_t p = 0;
+							conf.get(Assistance::ro__db_string::CURRENT_STRING, str);
+							for (p = 0; p < 128 && p < str.length(); p++) tempstr_c[p] = str[p];
+							if (p < 128) tempstr_c[p] = '\0';
 							/*std::string str;
 							bev.getCurrentString(str);
 							int u = (str.length()) / 20;
@@ -1333,7 +1343,7 @@ namespace LSW {
 							for (int p = 0; p < u; p++) tempstr_c[p] = '.';
 
 							sprintf_s(tempstr_c + u, 128 - u, "%s", (str.substr((str.length() >= 20) ? str.length() - 19 - u : 0) + '\0').c_str());*/
-							sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
+							//sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
 						}
 						break;
 						case +Assistance::tags_e::T_SPRITE_SPEEDX:

@@ -75,7 +75,7 @@ namespace LSW {
 				for (bool localb = true; localb;)
 				{
 					try {
-						conf.set(Assistance::io__db_statistics_double::INSTANT_FRAMESPERSECOND, thread_maindisplay.thread_arguments->getNumInstantSCallsDefault());
+						conf.set(Assistance::ro__db_statistics_double::INSTANT_FRAMESPERSECOND, thread_maindisplay.thread_arguments->getNumInstantSCallsDefault());
 
 						while (thread_maindisplay.pause_thread) Sleep(10);
 
@@ -91,7 +91,7 @@ namespace LSW {
 							}
 							else if (thread_maindisplay.thread_arguments->isThisThis(+Assistance::ro__thread_display_routines_timers::LOOPTRACK))
 							{
-								conf.set(Assistance::io__db_statistics_sizet::FRAMESPERSECOND, thread_maindisplay.thread_arguments->getNumCallsDefault());
+								conf.set(Assistance::ro__db_statistics_sizet::FRAMESPERSECOND, thread_maindisplay.thread_arguments->getNumCallsDefault());
 							}
 							else if (thread_maindisplay.thread_arguments->isThisThis(+Assistance::ro__thread_display_routines_timers::CHECKKEEP))
 							{
@@ -259,7 +259,7 @@ namespace LSW {
 				for (bool localb = true; localb;)
 				{
 					try {
-						conf.set(Assistance::io__db_statistics_double::INSTANT_COLLISIONSPERSECOND, thread_collision.thread_arguments->getNumInstantSCallsDefault());
+						conf.set(Assistance::ro__db_statistics_double::INSTANT_COLLISIONSPERSECOND, thread_collision.thread_arguments->getNumInstantSCallsDefault());
 
 						while (thread_collision.pause_thread) Sleep(10);
 
@@ -275,7 +275,7 @@ namespace LSW {
 						}
 						else if (thread_collision.thread_arguments->isThisThis(+Assistance::ro__thread_collision_routines_timers::LOOPTRACK))
 						{
-							conf.set(Assistance::io__db_statistics_sizet::COLLISIONSPERSECOND, thread_collision.thread_arguments->getNumCallsDefault());
+							conf.set(Assistance::ro__db_statistics_sizet::COLLISIONSPERSECOND, thread_collision.thread_arguments->getNumCallsDefault());
 						}
 						else if (thread_collision.thread_arguments->isThisThis(+Assistance::ro__thread_collision_routines_timers::CHECKKEEP))
 						{
@@ -389,7 +389,7 @@ namespace LSW {
 				for (bool localb = true; localb;)
 				{
 					try {
-						conf.set(Assistance::io__db_statistics_double::INSTANT_USEREVENTSPERSECOND, thread_kbmouse.thread_arguments->getNumInstantSCallsDefault());
+						conf.set(Assistance::ro__db_statistics_double::INSTANT_USEREVENTSPERSECOND, thread_kbmouse.thread_arguments->getNumInstantSCallsDefault());
 
 						while (thread_kbmouse.pause_thread) Sleep(10);
 
@@ -405,7 +405,7 @@ namespace LSW {
 						}
 						else if (thread_kbmouse.thread_arguments->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::LOOPTRACK))
 						{
-							conf.set(Assistance::io__db_statistics_sizet::USEREVENTSPERSECOND, thread_kbmouse.thread_arguments->getNumCallsDefault());
+							conf.set(Assistance::ro__db_statistics_sizet::USEREVENTSPERSECOND, thread_kbmouse.thread_arguments->getNumCallsDefault());
 						}
 						else if (thread_kbmouse.thread_arguments->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::CHECKKEEP))
 						{
@@ -414,8 +414,8 @@ namespace LSW {
 						else if (thread_kbmouse.thread_arguments->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::UPDATEMOUSE))
 						{
 							float m[2];
-							conf.get(Assistance::io__db_mouse_float::RAW_MOUSE_X, m[0]);
-							conf.get(Assistance::io__db_mouse_float::RAW_MOUSE_Y, m[1]);
+							conf.get(Assistance::ro__db_mouse_float::RAW_MOUSE_X, m[0]);
+							conf.get(Assistance::ro__db_mouse_float::RAW_MOUSE_Y, m[1]);
 
 							// transform based on cam
 							Camera gcam;
@@ -425,8 +425,8 @@ namespace LSW {
 							al_invert_transform(&untransf);
 							al_transform_coordinates(&untransf, &m[0], &m[1]);
 
-							conf.set(Assistance::io__db_mouse_float::MOUSE_X, m[0]);
-							conf.set(Assistance::io__db_mouse_float::MOUSE_Y, m[1]);
+							conf.set(Assistance::ro__db_mouse_float::MOUSE_X, m[0]);
+							conf.set(Assistance::ro__db_mouse_float::MOUSE_Y, m[1]);
 
 
 							for (auto& i : sprites) {
@@ -466,23 +466,41 @@ namespace LSW {
 							}
 
 							if (ev.type == ALLEGRO_EVENT_KEY_CHAR) { // keyboard input
+								if (ev.keyboard.unichar >= 32)
+								{									
+									char multibyte[5] = { 0, 0, 0, 0, 0 };
+
+									al_utf8_encode(multibyte, ev.keyboard.unichar <= 32 ? ' ' : ev.keyboard.unichar);
+									char v = (char)strlen(multibyte);
+									if (v > 4) throw Abort::abort(__FUNCSIG__, "Got an exception on user input: invalid key code, couldn't translate to a valid string");
+									conf.set(Assistance::ro__db_thread_string::KEY_ADD_SET_LEN, v);
+									
+									for (auto& i : multibyte) {
+										if (i) conf.set(Assistance::ro__db_thread_string::KEY_ADD, i);
+									}
+								}
+								else if (ev.keyboard.keycode == ALLEGRO_KEY_BACKSPACE)
+								{
+									conf.set(Assistance::ro__db_thread_string::KEY_ERASE);
+								}
+								else if (ev.keyboard.keycode == ALLEGRO_KEY_ENTER || ev.keyboard.keycode == ALLEGRO_KEY_PAD_ENTER)
+								{
+									conf.set(Assistance::ro__db_thread_string::KEY_SET);
+								}
 								//const char* actch = al_keycode_to_name(ev.keyboard.keycode); // prints literally key name KEY26 A B C
 								//if (ev.keyboard.unichar > 32) logg.debug("[THR_KBM] KEYCHAR= %d ~= %c", ev.keyboard.keycode, ev.keyboard.unichar);
 								//else                          logg.debug("[THR_KBM] KEYCHAR= %d", ev.keyboard.keycode);
 							}
 							if (ev.type == ALLEGRO_EVENT_MOUSE_AXES) {
-								//conf.set(Assistance::io__db_mouse_float::MOUSE_X, (ev.mouse.x * 2.0f / display_x) - 1.0);
-								//conf.set(Assistance::io__db_mouse_float::MOUSE_Y, (ev.mouse.y * 2.0f / display_y) - 1.0);
-
-								conf.set(Assistance::io__db_mouse_float::RAW_MOUSE_X, ev.mouse.x);
-								conf.set(Assistance::io__db_mouse_float::RAW_MOUSE_Y, ev.mouse.y);
+								conf.set(Assistance::ro__db_mouse_float::RAW_MOUSE_X, ev.mouse.x);
+								conf.set(Assistance::ro__db_mouse_float::RAW_MOUSE_Y, ev.mouse.y);
 
 							}
 							if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
-								conf.set(((Assistance::io__db_mouse_boolean)ev.mouse.button), true);
+								conf.set(((Assistance::ro__db_mouse_boolean)ev.mouse.button), true);
 							}
 							if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
-								conf.set(((Assistance::io__db_mouse_boolean)ev.mouse.button), false);
+								conf.set(((Assistance::ro__db_mouse_boolean)ev.mouse.button), false);
 							}
 						}
 					}
@@ -556,7 +574,7 @@ namespace LSW {
 				while (!thr_shared_arg.should_exit)
 				{
 					try {
-						conf.set(Assistance::io__db_statistics_double::INSTANT_ADVANCEDFUNCSPERSECOND, thread_functional.thread_arguments->getNumInstantSCallsDefault());
+						conf.set(Assistance::ro__db_statistics_double::INSTANT_ADVANCEDFUNCSPERSECOND, thread_functional.thread_arguments->getNumInstantSCallsDefault());
 
 						while (thread_functional.pause_thread) Sleep(10);
 
@@ -564,7 +582,7 @@ namespace LSW {
 
 						if (thread_functional.thread_arguments->isThisThis(+Assistance::ro__thread_functional_routines_timers::LOOPTRACK))
 						{
-							conf.set(Assistance::io__db_statistics_sizet::ADVANCEDFUNCSPERSECOND, thread_functional.thread_arguments->getNumCallsDefault());
+							conf.set(Assistance::ro__db_statistics_sizet::ADVANCEDFUNCSPERSECOND, thread_functional.thread_arguments->getNumCallsDefault());
 						}
 						else if (thread_functional.thread_arguments->isThisThis(+Assistance::ro__thread_functional_routines_timers::FUNCTIONALITY_LOOP))
 						{
@@ -608,7 +626,11 @@ namespace LSW {
 									if (has_run_once = (a.the_timer == cat.timer.source)) {*/
 
 								if (a.should_run && a.func) {
-									if (++a.calls > 0) a.calls += a.func(); // run only if a.calls >= 0
+									if (++a.calls > 0) {
+										auto v = a.func(); // run only if a.calls >= 0
+										if (v < 0) a.calls = v;
+										else a.calls += v;
+									}
 								}
 								/*}
 							}*/

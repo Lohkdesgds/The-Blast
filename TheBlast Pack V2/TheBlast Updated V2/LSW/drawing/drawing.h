@@ -105,7 +105,7 @@ __slice("%num_samples%", +tags_e::T_SAMPLES_LOADED), __slice("%num_sprites%", +t
 			std::vector<int> layers; // layers enabled
 			std::string internal_id = "unknown";
 
-			bool canWrite();
+			bool canWrite();	
 		public:
 			void refresh(); // guaranteed ALLEGRO_TRANSFORM ready to use (less thinking when already set up)
 			void reset();
