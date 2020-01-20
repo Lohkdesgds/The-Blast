@@ -159,6 +159,7 @@ namespace LSW {
 			double getInstantSCallsOnThread(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);
 
 			void pauseThread(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);
+			bool hasThreadPaused(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);
 			void resumeThread(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);
 
 			void addCustomTask(std::function<int(void)>, const int, const double); // t/sec

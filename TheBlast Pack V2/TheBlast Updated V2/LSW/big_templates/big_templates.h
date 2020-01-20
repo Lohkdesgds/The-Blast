@@ -512,7 +512,19 @@ namespace LSW {
 					if (data.db[p]->id == id) {
 						data.dbm.lock();
 						data.unload(data.db[p]->self);
-						data.db.erase(data.db.begin() + p);
+						data.db.erase(data.db.begin() + p--);
+						data.dbm.unlock();
+					}
+				}
+			}
+			void remove(const std::function<bool(const std::string)> f)
+			{
+				for (size_t p = 0; p < data.db.size(); p++)
+				{
+					if (f(data.db[p]->id)) {
+						data.dbm.lock();
+						data.unload(data.db[p]->self);
+						data.db.erase(data.db.begin() + p--);
 						data.dbm.unlock();
 					}
 				}

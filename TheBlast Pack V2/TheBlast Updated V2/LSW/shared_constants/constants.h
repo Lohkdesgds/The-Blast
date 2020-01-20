@@ -28,7 +28,7 @@ namespace LSW {
 	namespace v4 {
 		namespace Assistance {
 			// this have to be global, come on
-			enum class ro__my_events { LOG_CLOUDLAUNCH_RAW = 512, THRKBM_DISPLAY_SIZE, THRDRW_GOT_FORCED_RESIZE, THRKBM_GETSTRINGINPUT, THRANY_GOTTIMINGLONG /* <-- TO BE DONE */ }; // THRDRW -> event for the THREAD_DRAW
+			enum class ro__my_events { LOG_CLOUDLAUNCH_RAW = 512, THRKBM_DISPLAY_SIZE, THRDRW_GOT_FORCED_RESIZE, THRKBM_GETSTRINGINPUT /* <-- TO BE DONE */ }; // THRDRW -> event for the THREAD_DRAW
 		}
 
 		namespace Constants {
@@ -102,6 +102,8 @@ namespace LSW {
 			const unsigned d_dbg_t_avg = 20; // to functional thread
 
 
+			const size_t map_size_default_x = 32;
+			const size_t map_size_default_y = 18;
 
 
 
@@ -222,8 +224,6 @@ namespace LSW {
 
 			const std::string map_default_start = "BLOCK_";
 			const unsigned map_default_len_name_int = 2;
-			const int map_size_default_x = 32;
-			const int map_size_default_y = 18;
 
 			const double diff_time_show_last_resetCollision = 0.5;
 

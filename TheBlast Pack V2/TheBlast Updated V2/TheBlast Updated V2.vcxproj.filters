@@ -1,39 +1,48 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="custom_abort">
-      <UniqueIdentifier>{cd6e2afa-e14a-427f-8e14-7257f884de13}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="tools">
-      <UniqueIdentifier>{5f1144ce-f0d1-432f-8883-8202e776813d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="organizer">
-      <UniqueIdentifier>{9adb8b70-e2b7-40f7-9971-25ebd55cbcf5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="system">
-      <UniqueIdentifier>{669ce889-547d-4fe4-b8b9-b3dcae8b284f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="drawing">
-      <UniqueIdentifier>{d61599ae-3ecc-448a-9871-b23b08ceb76c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="console">
-      <UniqueIdentifier>{b2b97a5f-37dd-4066-8c96-c09c6035eba0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="big_templates">
-      <UniqueIdentifier>{d74dd886-e576-4079-9e68-9e74dd47425d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="main">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="log">
-      <UniqueIdentifier>{8ea53e9f-1584-4bb3-8a24-6191433d5f9a}</UniqueIdentifier>
+    <Filter Include="base">
+      <UniqueIdentifier>{3607aa8a-373a-4f0b-87ab-b1c368b4433e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="sound">
+    <Filter Include="base\tools">
+      <UniqueIdentifier>{5f1144ce-f0d1-432f-8883-8202e776813d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\system">
+      <UniqueIdentifier>{669ce889-547d-4fe4-b8b9-b3dcae8b284f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\sound">
       <UniqueIdentifier>{fd2b2c31-040b-4e19-aa91-f16eabff867e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="shared_constants">
+    <Filter Include="base\shared_constants">
       <UniqueIdentifier>{55ba1b81-6ca2-4f2d-87d8-0bf608a2c5ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\organizer">
+      <UniqueIdentifier>{9adb8b70-e2b7-40f7-9971-25ebd55cbcf5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\log">
+      <UniqueIdentifier>{8ea53e9f-1584-4bb3-8a24-6191433d5f9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\drawing">
+      <UniqueIdentifier>{d61599ae-3ecc-448a-9871-b23b08ceb76c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\custom_abort">
+      <UniqueIdentifier>{cd6e2afa-e14a-427f-8e14-7257f884de13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\console">
+      <UniqueIdentifier>{b2b97a5f-37dd-4066-8c96-c09c6035eba0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\big_templates">
+      <UniqueIdentifier>{d74dd886-e576-4079-9e68-9e74dd47425d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gaming">
+      <UniqueIdentifier>{32d7dcfa-abc8-4724-9510-c8856c072cf0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gaming\map_gen">
+      <UniqueIdentifier>{88b38599-36f6-4dbf-b78d-21b5dfb8ee71}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -41,58 +50,64 @@
       <Filter>main</Filter>
     </ClCompile>
     <ClCompile Include="LSW\custom_abort\abort.cpp">
-      <Filter>custom_abort</Filter>
+      <Filter>base\custom_abort</Filter>
     </ClCompile>
     <ClCompile Include="LSW\tools\tools.cpp">
-      <Filter>tools</Filter>
+      <Filter>base\tools</Filter>
     </ClCompile>
     <ClCompile Include="LSW\system\system.cpp">
-      <Filter>system</Filter>
+      <Filter>base\system</Filter>
     </ClCompile>
     <ClCompile Include="LSW\drawing\drawing.cpp">
-      <Filter>drawing</Filter>
+      <Filter>base\drawing</Filter>
     </ClCompile>
     <ClCompile Include="LSW\console\console.cpp">
-      <Filter>console</Filter>
+      <Filter>base\console</Filter>
     </ClCompile>
     <ClCompile Include="LSW\sound\sound.cpp">
-      <Filter>sound</Filter>
+      <Filter>base\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="LSW\map_gen\map.cpp">
+      <Filter>gaming\map_gen</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LSW\custom_abort\abort.h">
-      <Filter>custom_abort</Filter>
+      <Filter>base\custom_abort</Filter>
     </ClInclude>
     <ClInclude Include="LSW\tools\tools.h">
-      <Filter>tools</Filter>
+      <Filter>base\tools</Filter>
     </ClInclude>
     <ClInclude Include="LSW\system\system.h">
-      <Filter>system</Filter>
+      <Filter>base\system</Filter>
     </ClInclude>
     <ClInclude Include="LSW\drawing\drawing.h">
-      <Filter>drawing</Filter>
+      <Filter>base\drawing</Filter>
     </ClInclude>
     <ClInclude Include="LSW\organizer\organizer.h">
-      <Filter>organizer</Filter>
+      <Filter>base\organizer</Filter>
     </ClInclude>
     <ClInclude Include="LSW\console\console.h">
-      <Filter>console</Filter>
+      <Filter>base\console</Filter>
     </ClInclude>
     <ClInclude Include="LSW\big_templates\big_templates.h">
-      <Filter>big_templates</Filter>
+      <Filter>base\big_templates</Filter>
     </ClInclude>
     <ClInclude Include="LSW\logger\logger.h">
-      <Filter>log</Filter>
+      <Filter>base\log</Filter>
     </ClInclude>
     <ClInclude Include="LSW\sound\sound.h">
-      <Filter>sound</Filter>
+      <Filter>base\sound</Filter>
     </ClInclude>
     <ClInclude Include="LSW\shared_constants\constants.h">
-      <Filter>shared_constants</Filter>
+      <Filter>base\shared_constants</Filter>
     </ClInclude>
     <ClInclude Include="resource.h" />
     <ClInclude Include="LSW\big_templates\small_templates.h">
-      <Filter>big_templates</Filter>
+      <Filter>base\big_templates</Filter>
+    </ClInclude>
+    <ClInclude Include="LSW\map_gen\map.h">
+      <Filter>gaming\map_gen</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

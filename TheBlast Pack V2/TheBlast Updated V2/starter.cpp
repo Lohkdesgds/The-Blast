@@ -178,9 +178,9 @@ int main(int argc, const char* argv[])
 
 			draw_simple_bar(0.85, al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Loading blocks...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
 
-			textures.customLoad("BLOCK_00", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 0, 1024, 512, 512)); }); /// DIRT
-			textures.customLoad("BLOCK_01", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 0, 1536, 512, 512)); }); /// BLOCK
-			textures.customLoad("BLOCK_02", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 2048, 1536, 512, 512)); }); ///	LIFE
+			textures.customLoad("BLOCK_00", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 0, 1536, 512, 512)); }); /// BLOCK
+			textures.customLoad("BLOCK_01", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 0, 1024, 512, 512)); }); /// DIRT
+			textures.customLoad("BLOCK_02", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1536, 1536, 512, 512)); }); ///	LIFE
 			textures.customLoad("BLOCK_03", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512, 2048, 512, 512)); }); /// ?
 			textures.customLoad("BLOCK_04", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512, 2048, 512, 512)); }); /// ?
 			textures.customLoad("BLOCK_05", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1024, 2048, 512, 512)); }); /// X
@@ -324,6 +324,7 @@ int main(int argc, const char* argv[])
 
 		// LOCK GAME TO SET UP EVERYTHING
 		consol.pauseThread();
+		while (!consol.hasThreadPaused()) Sleep(10);
 		
 		/// >>>>>>> GAME SPRITES, TEXTS AND STUFF BRACKET <<<<<<< ///
 		{
@@ -400,12 +401,15 @@ int main(int argc, const char* argv[])
 				camera_preset cp;
 				cp.setInternalID("Gaming preset (dynamic)");
 				cp.setLayer(0, true);
+				cp.setLayer(1, true);
 				cp.setLayer(100, true); // DEBUG LINE
 				cp.set(Assistance::io__camera_boolean::RESPECT_LIMITS, true);
-				cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -0.85);
-				cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -0.85);
-				cp.set(Assistance::io__camera_float::LIMIT_MAX_X, 0.85);
-				cp.set(Assistance::io__camera_float::LIMIT_MAX_Y, 0.85);
+				cp.set(Assistance::io__camera_float::LIMIT_MIN_X, -1.01);
+				cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -1.01);
+				cp.set(Assistance::io__camera_float::LIMIT_MAX_X, 1.01);
+				cp.set(Assistance::io__camera_float::LIMIT_MAX_Y, 1.01);
+				cp.set(Assistance::io__camera_float::SCALE_G, 0.95);
+				cp.set(Assistance::io__camera_float::SCALE_X, 1.0175);
 				cp.set(Assistance::io__camera_boolean::READONLY_NOW, true);
 				gcam.set(cp, +main_gamemodes::GAMING);
 			}
@@ -429,7 +433,7 @@ int main(int argc, const char* argv[])
 				s->set(Assistance::io__sprite_double::SPEEDROT, 15.0 / 10);
 			}
 
-			{
+			/*{
 				Sprite* s = sprites.create("PAUSE_ANIM");
 				s->set(Assistance::io__sprite_string_vector::ADDMULTIPLE, Tools::genStrFormat("PAUSE_##", 29));
 				s->set(Assistance::io__sprite_string::ID, "PAUSE_ANIM");
@@ -440,9 +444,9 @@ int main(int argc, const char* argv[])
 				s->set(Assistance::io__sprite_double::POSY, 0.35);
 				s->set(Assistance::io__sprite_double::ANIMATION_FPS, 1.0 / 24);
 				s->set(Assistance::io__sprite_integer::LAYER, 0);
-			}
+			}*/
 
-			{
+			/*{
 				Sprite* s = sprites.create("PAUSE_ANIM2");
 				s->set(Assistance::io__sprite_string_vector::ADDMULTIPLE, Tools::genStrFormat("PAUSE_##", 29));
 				s->set(Assistance::io__sprite_string::ID, "PAUSE_ANIM2");
@@ -453,7 +457,7 @@ int main(int argc, const char* argv[])
 				s->set(Assistance::io__sprite_double::POSY, 0.05);
 				s->set(Assistance::io__sprite_double::ANIMATION_FPS, 1.0 / 15);
 				s->set(Assistance::io__sprite_integer::LAYER, 0);
-			}
+			}*/
 
 			{
 				Sprite* s = sprites.create("LOADING_ANIM");
@@ -602,7 +606,7 @@ int main(int argc, const char* argv[])
 				s->set(Assistance::io__sprite_double::SCALEX, 5.5);
 				s->set(Assistance::io__sprite_double::POSY, -0.9);
 				s->set(Assistance::io__sprite_double::POSX, 0.45);
-				s->set(Assistance::io__sprite_integer::LAYER, 0);
+				s->set(Assistance::io__sprite_integer::LAYER, 1);
 				// fun!
 				s->set(Assistance::io__sprite_double::SMOOTHNESS_X, 0.15);
 				s->set(Assistance::io__sprite_double::SMOOTHNESS_Y, 0.15);
@@ -618,7 +622,7 @@ int main(int argc, const char* argv[])
 				t->set(Assistance::io__text_double::SCALEX, 0.7);
 				t->set(Assistance::io__text_double::POSY, -0.060);
 				t->set(Assistance::io__text_string::FOLLOW_SPRITE, "BUTTON_GAMING_0");
-				t->set(Assistance::io__text_integer::LAYER, 0);
+				t->set(Assistance::io__text_integer::LAYER, 1);
 				t->set(Assistance::io__text_double::UPDATETIME, 1.0 / 20);
 				t->set(Assistance::io__text_color::COLOR, al_map_rgb(180, 255, 225));
 			}
@@ -767,13 +771,59 @@ int main(int argc, const char* argv[])
 
 
 
-		
+		bool has_map_gen = false;
+		World wd;
+
 
 		for (size_t counttt = 0; consol.isRunning(); counttt++) {
 			Sleep(20);
 
 
-			temporary_fun_text->set(Assistance::io__text_string::STRING, "Counting here lmao " + std::to_string(counttt) + "!");
+			if (modern == main_gamemodes::MENU) temporary_fun_text->set(Assistance::io__text_string::STRING, "Counting here lmao " + std::to_string(counttt) + "!");
+			if (modern == main_gamemodes::GAMING) {
+				if (!has_map_gen)
+				{
+					consol.pauseThread();
+					while (!consol.hasThreadPaused()) Sleep(10);
+
+					wd.generate(al_get_time()*20.0);
+
+					for (size_t y = 0; y < wd.getLen(1); y++) {
+						for (size_t x = 0; x < wd.getLen(0); x++)
+						{
+							double pss[2];
+							pss[0] = 2.0 * (1.0 * x / (wd.getLen(0) - 1) - 0.5);
+							pss[1] = 2.0 * (1.0 * y / (wd.getLen(1) - 1) - 0.5);
+
+							Sprite* s = sprites.create("GAMEBOX_" + std::to_string(y) + "_" + std::to_string(x));
+							s->set(Assistance::io__sprite_string::ID, "GAMEBOX_" + std::to_string(y) + "_" + std::to_string(x));
+							s->set(Assistance::io__sprite_boolean::DRAW, true); // no draw for now
+							s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, false);
+							s->set(Assistance::io__sprite_boolean::COLLIDE_OTHERS, false);
+							s->set(Assistance::io__sprite_boolean::SHOWDOT, false);
+							s->set(Assistance::io__sprite_boolean::SHOWBOX, false);
+							s->set(Assistance::io__sprite_double::SCALEG, 0.066);
+							s->set(Assistance::io__sprite_double::SCALEY, 1.8);
+							s->set(Assistance::io__sprite_string::ADD, "BLOCK_0" + std::to_string(wd.readPos(x,y) ? 1 : 0));
+							s->set(Assistance::io__sprite_integer::LAYER, 0);
+							s->set(Assistance::io__sprite_double::POSX, pss[0]);
+							s->set(Assistance::io__sprite_double::POSY, pss[1]);
+						}
+					}
+
+					consol.resumeThread();
+					has_map_gen = true;
+				}
+			}
+			else {
+				if (has_map_gen) {
+					consol.pauseThread();
+					while (!consol.hasThreadPaused()) Sleep(10);
+					sprites.remove([](const std::string a)->bool {return a.find("GAMEBOX_") == 0; });
+					consol.resumeThread();
+					has_map_gen = false;
+				}
+			}
 			//temporary_fun_text->set(Assistance::io__text_string::STRING, "FPS: %fps% | TPS: %tps% | UPS: %ups%");
 
 			//mysprite->apply(Assistance::io__sprite_double::POSX, 0.3 * sin(0.7 + 0.91 * al_get_time()));

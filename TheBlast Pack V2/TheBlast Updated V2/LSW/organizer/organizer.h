@@ -20,6 +20,8 @@ Namespaces:
 #include "..\sound\sound.h"							// DEP: ABORT, SMALLTEMP, TEMPLATE, LOGG, SYSTEM
 #include "..\drawing\drawing.h"						// DEP: ABORT, SMALLTEMP, TEMPLATE, LOGG, SYSTEM, SOUND
 
+// gaming
+#include "..\map_gen\map.h"							// DEP: CONST, ABORT, SMALLTEMP
 
 // the big thing
 #include "..\console\console.h"						// DEP: @everyone (this)

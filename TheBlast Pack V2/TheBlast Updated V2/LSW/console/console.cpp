@@ -104,7 +104,11 @@ namespace LSW {
 					try {
 						conf.set(Assistance::ro__db_statistics_double::INSTANT_FRAMESPERSECOND, thread_maindisplay.thread_arguments->getNumInstantSCallsDefault());
 
-						while (thread_maindisplay.pause_thread) Sleep(10);
+						while (thread_maindisplay.pause_thread) {
+							Sleep(10);
+							thread_maindisplay.tasking = false;
+						}
+						thread_maindisplay.tasking = true;
 
 						if (thread_maindisplay.thread_arguments->hasEvent()) {
 
@@ -297,7 +301,11 @@ namespace LSW {
 					try {
 						conf.set(Assistance::ro__db_statistics_double::INSTANT_COLLISIONSPERSECOND, thread_collision.thread_arguments->getNumInstantSCallsDefault());
 
-						while (thread_collision.pause_thread) Sleep(10);
+						while (thread_collision.pause_thread) {
+							Sleep(10);
+							thread_collision.tasking = false;
+						}
+						thread_collision.tasking = true;
 
 						thread_collision.thread_arguments->hasEventWait();
 
@@ -436,7 +444,11 @@ namespace LSW {
 					try {
 						conf.set(Assistance::ro__db_statistics_double::INSTANT_USEREVENTSPERSECOND, thread_kbmouse.thread_arguments->getNumInstantSCallsDefault());
 
-						while (thread_kbmouse.pause_thread) Sleep(10);
+						while (thread_kbmouse.pause_thread) {
+							Sleep(10);
+							thread_kbmouse.tasking = false;
+						}
+						thread_kbmouse.tasking = true;
 
 						thread_kbmouse.thread_arguments->hasEventWait();
 
@@ -630,7 +642,11 @@ namespace LSW {
 					try {
 						conf.set(Assistance::ro__db_statistics_double::INSTANT_ADVANCEDFUNCSPERSECOND, thread_functional.thread_arguments->getNumInstantSCallsDefault());
 
-						while (thread_functional.pause_thread) Sleep(10);
+						while (thread_functional.pause_thread) {
+							Sleep(10);
+							thread_functional.tasking = false;
+						}
+						thread_functional.tasking = true;
 
 						thread_functional.thread_arguments->hasEventWait();
 
@@ -992,6 +1008,23 @@ namespace LSW {
 				thread_functional.pause_thread = true;
 				break;
 			}
+		}
+
+		bool Console::hasThreadPaused(const Assistance::io__thread_ids o)
+		{
+			switch (o) {
+			case Assistance::io__thread_ids::ALL:
+				return !thread_maindisplay.tasking && !thread_collision.tasking && !thread_kbmouse.tasking && !thread_functional.tasking;
+			case Assistance::io__thread_ids::DRAWING:
+				return !thread_maindisplay.tasking;
+			case Assistance::io__thread_ids::COLLIDING:
+				return !thread_collision.tasking;
+			case Assistance::io__thread_ids::USERINPUT:
+				return !thread_kbmouse.tasking;
+			case Assistance::io__thread_ids::FUNCTIONAL:
+				return !thread_functional.tasking;
+			}
+			return false;
 		}
 
 		void Console::resumeThread(const Assistance::io__thread_ids o)
