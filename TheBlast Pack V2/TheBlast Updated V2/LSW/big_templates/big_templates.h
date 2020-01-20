@@ -406,11 +406,11 @@ namespace LSW {
 
 		template<typename T>
 		class __template_static_vector {
-			template<typename S = T> struct _d {
+			template<typename S> struct _d {
 				S* self = nullptr;
 				std::string id;
 			};
-			template<typename Q = T> struct _i {
+			template<typename Q> struct _i {
 				std::vector< _d<Q>* >					db;
 				std::mutex                              dbm;
 				bool                                    dbmv = false; // verifier
@@ -528,6 +528,31 @@ namespace LSW {
 						data.dbm.unlock();
 					}
 				}
+			}
+			std::vector<T*> getList(const std::function<bool(const std::string)> f)
+			{
+				std::vector<T*> lst;
+				for (size_t p = 0; p < data.db.size(); p++)
+				{
+					if (f(data.db[p]->id)) {
+						lst.push_back(data.db[p]->self);
+					}
+				}
+				return lst;
+			}
+			bool swap(const std::string id, T*& p) {
+				data.dbm.lock();
+				for (auto& i : data.db) {
+					if (i->id == id) {
+						T*& c = p;
+						p = i->self;
+						i->self = c;
+						data.dbm.unlock();
+						return true;
+					}
+				}
+				data.dbm.unlock();
+				return false;
 			}
 			void clear() {
 				data.dbm.lock();

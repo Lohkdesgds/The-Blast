@@ -330,14 +330,14 @@ namespace LSW {
 
 		
 
-		ALLEGRO_BITMAP* Sprite::__sprite_smart_images::get(const Assistance::io__sprite_collision_state stt)
+		ALLEGRO_BITMAP* Sprite::__sprite_smart_images::get(const Assistance::io__sprite_tie_func_to_state stt)
 		{
 			if (copies.size() == 0) {
 				throw Abort::abort(__FUNCSIG__, "No bitmap found!", 1);
 				return nullptr;
 			}
 
-			if (stt == Assistance::io__sprite_collision_state::size) {
+			if (stt == Assistance::io__sprite_tie_func_to_state::size) {
 				auto now = al_get_time();
 				auto siz = copies.size();
 
@@ -366,8 +366,8 @@ namespace LSW {
 			else {
 				auto vv = pair[+stt];
 				if (vv >= copies.size() || vv == std::string::npos) {
-					if (pair[+Assistance::io__sprite_collision_state::COLLISION_NONE] != std::string::npos) return get(Assistance::io__sprite_collision_state::COLLISION_NONE); // like default one
-					return get(Assistance::io__sprite_collision_state::size);
+					if (pair[+Assistance::io__sprite_tie_func_to_state::COLLISION_NONE] != std::string::npos) return get(Assistance::io__sprite_tie_func_to_state::COLLISION_NONE); // like default one
+					return get(Assistance::io__sprite_tie_func_to_state::size);
 				}
 
 				lastcall = 0;
@@ -426,13 +426,13 @@ namespace LSW {
 				difftimeanim = v;
 			}
 		}
-		void Sprite::__sprite_smart_images::setState(const Assistance::io__sprite_collision_state s, const size_t v)
+		void Sprite::__sprite_smart_images::setState(const Assistance::io__sprite_tie_func_to_state s, const size_t v)
 		{
-			if (s != Assistance::io__sprite_collision_state::size) pair[+s] = v;
+			if (s != Assistance::io__sprite_tie_func_to_state::size) pair[+s] = v;
 		}
-		size_t Sprite::__sprite_smart_images::getState(const Assistance::io__sprite_collision_state s)
+		size_t Sprite::__sprite_smart_images::getState(const Assistance::io__sprite_tie_func_to_state s)
 		{
-			if (s != Assistance::io__sprite_collision_state::size) return pair[+s];
+			if (s != Assistance::io__sprite_tie_func_to_state::size) return pair[+s];
 			return std::string::npos;
 		}
 		void Sprite::__sprite_smart_images::loop(const bool b)
@@ -476,6 +476,76 @@ namespace LSW {
 			}
 		}
 
+		bool Sprite::__sprite_smart_images::resizeAllTo(const int x, const int y)
+		{
+			if (copies.size() > 0) {
+				{
+					ALLEGRO_BITMAP* tmp = copies[0]->bmp;
+					if (al_get_bitmap_width(tmp) == x && al_get_bitmap_height(tmp) == y) return true;
+				}
+
+				__template_static_vector<ALLEGRO_BITMAP> imgs; // Textures
+
+				ALLEGRO_BITMAP* trg = al_get_target_bitmap();
+				if (!trg) return true; // just keep going, no error, but no job
+
+				for (auto& i : copies)
+				{
+					try {
+						ALLEGRO_BITMAP* clon = al_clone_bitmap(i->bmp);
+						imgs.remove(i->idc);
+						ALLEGRO_BITMAP* ntarg = imgs.customLoad(i->idc, [&](ALLEGRO_BITMAP*& b)->bool {return (b = al_create_bitmap(x, y)); });
+						ALLEGRO_BITMAP* tg = al_get_target_bitmap();
+						al_set_target_bitmap(ntarg);
+
+						al_draw_scaled_bitmap(clon, 0, 0, al_get_bitmap_width(clon), al_get_bitmap_height(clon), 0, 0, x, y, 0);
+						al_destroy_bitmap(clon);
+
+						al_set_target_bitmap(tg);
+					}
+					catch (Abort::abort err)
+					{
+						gfile logg;
+						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Failed recreating bitmap '" << i->idc << "' {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
+						logg.flush();
+						forceExit("Something went wrong!", "Please report the following:", (err.from() + " -> " + err.details()).c_str());
+						return false;
+					}
+					catch (...) {
+						return false;
+					}
+					/*ALLEGRO_BITMAP* n = al_create_bitmap(x, y);
+					al_set_target_bitmap(n);
+					al_draw_scaled_bitmap(i->bmp, 0, 0, al_get_bitmap_width(i->bmp), al_get_bitmap_height(i->bmp), 0, 0, x, y, 0);
+					al_destroy_bitmap(i->bmp);
+					imgs.remove(i->idc);
+					i->bmp = n;*/
+					/*if (!imgs.swap(i->idc, n)) {
+						gfile logg;
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Failed to tie new bitmap on '" << i->idc << "'. Checking all references to avoid weird behaviour." << L::ELF;
+						logg.flush();
+						try {
+							checkAllReferences();
+						}
+						catch (Abort::abort err)
+						{
+							logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Failed checking all references on " << i->idc << " {" << err.from() << "," << err.details() << ",#" << err.getErrN() << "}" << L::ELF;
+							logg.flush();
+							forceExit("Something went wrong!", "Please report the following:", (err.from() + " -> " + err.details()).c_str());
+						}
+						al_set_target_bitmap(trg);
+						return false;
+					}
+					// swapped
+					al_destroy_bitmap(n);*/
+				}
+				checkAllReferences();
+
+				al_set_target_bitmap(trg);
+			}
+			return true;
+		}
+
 
 		Sprite::__sprite_smart_data::__sprite_smart_data()
 		{
@@ -489,6 +559,7 @@ namespace LSW {
 			dval[+Assistance::io__sprite_double::SCALEG] = 1.0;
 			dval[+Assistance::io__sprite_double::SMOOTHNESS_X] = Constants::sprite_default_smoothness;
 			dval[+Assistance::io__sprite_double::SMOOTHNESS_Y] = Constants::sprite_default_smoothness;
+			dval[+Assistance::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY] = 0.0;
 			dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] = 0.0;
 			dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] = 0.0;
 			bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM] = true;
@@ -538,10 +609,10 @@ namespace LSW {
 					if (data.bval[+Assistance::io__sprite_boolean::RO_IS_MOUSE_COLLIDING]) {
 						data.dval[+Assistance::io__sprite_double::RO_LAST_MOUSE_COLLISION] = al_get_time();
 						if (is_mouse_pressed) {
-							data.new_state = Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK;
+							data.new_state = Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK;
 						}
 						else {
-							data.new_state = Assistance::io__sprite_collision_state::COLLISION_MOUSE_ON;
+							data.new_state = Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON;
 						}
 					}
 				}
@@ -553,19 +624,36 @@ namespace LSW {
 			return false;
 		}
 
+		void Sprite::checkTied()
+		{
+			if (data.bval[+Assistance::io__sprite_boolean::TIE_SIZE_TO_DISPLAY] && data.dval[+Assistance::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY] != 0.0 && al_get_time() - data.dval[+Assistance::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY] > 0.0) {
+				Database db;
+				int nv[2];
+
+				db.get(Assistance::io__conf_integer::SCREEN_X, nv[0], 0);
+				db.get(Assistance::io__conf_integer::SCREEN_Y, nv[1], 0);
+
+				if (bmps.resizeAllTo(nv[0], nv[1])) {
+					data.dval[+Assistance::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY] = 0.0;
+					if (data.function_pair[+Assistance::io__sprite_tie_func_to_state::WHEN_BITMAPS_RESIZED_AUTO]) data.function_pair[+Assistance::io__sprite_tie_func_to_state::WHEN_BITMAPS_RESIZED_AUTO]();
+				}
+				else data.dval[+Assistance::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY] = al_get_time() + 0.5;
+			}
+		}
+
 		Sprite::~Sprite()
 		{
 			bmps.reset();
 		}
 
-		void Sprite::hook(const Assistance::io__sprite_collision_state w, std::function<void(void)> f)
+		void Sprite::hook(const Assistance::io__sprite_tie_func_to_state w, std::function<void(void)> f)
 		{
-			if (w != Assistance::io__sprite_collision_state::size) data.function_pair[+w] = f;
+			if (w != Assistance::io__sprite_tie_func_to_state::size) data.function_pair[+w] = f;
 		}
 
-		void Sprite::unhook(const Assistance::io__sprite_collision_state w)
+		void Sprite::unhook(const Assistance::io__sprite_tie_func_to_state w)
 		{
-			if (w != Assistance::io__sprite_collision_state::size) data.function_pair[+w] = std::function<void(void)>();
+			if (w != Assistance::io__sprite_tie_func_to_state::size) data.function_pair[+w] = std::function<void(void)>();
 		}
 
 		void Sprite::set(const Assistance::io__sprite_string_vector u, const std::vector<std::string> v, float* perc)
@@ -698,7 +786,7 @@ namespace LSW {
 			}
 		}
 
-		void Sprite::set(const Assistance::io__sprite_collision_state u, const size_t v)
+		void Sprite::set(const Assistance::io__sprite_tie_func_to_state u, const size_t v)
 		{
 			bmps.setState(u, v);
 		}
@@ -770,7 +858,7 @@ namespace LSW {
 			}
 			return false;
 		}
-		bool Sprite::get(const Assistance::ro__sprite_state u, Assistance::io__sprite_collision_state& v)
+		bool Sprite::get(const Assistance::ro__sprite_state u, Assistance::io__sprite_tie_func_to_state& v)
 		{
 			switch (u) {
 			case Assistance::ro__sprite_state::STATE:
@@ -789,9 +877,14 @@ namespace LSW {
 			return false;
 		}
 
-		void Sprite::get(const Assistance::io__sprite_collision_state u, size_t& v)
+		void Sprite::get(const Assistance::io__sprite_tie_func_to_state u, size_t& v)
 		{
 			v = bmps.getState(u);
+		}
+
+		void Sprite::get(ALLEGRO_BITMAP*& g)
+		{
+			g = bmps.get();
 		}
 
 		bool Sprite::isEq(const Assistance::io__sprite_string w, const std::string v)
@@ -836,9 +929,9 @@ namespace LSW {
 			get(w, g);
 			return g == v;
 		}
-		bool Sprite::isEq(const Assistance::ro__sprite_state w, const Assistance::io__sprite_collision_state v)
+		bool Sprite::isEq(const Assistance::ro__sprite_state w, const Assistance::io__sprite_tie_func_to_state v)
 		{
-			Assistance::io__sprite_collision_state g;
+			Assistance::io__sprite_tie_func_to_state g;
 			get(w, g);
 			return g == v;
 		}
@@ -849,7 +942,7 @@ namespace LSW {
 			return ((g.a == v.a) && (g.r == v.r) && (g.g == v.g) && (g.b == v.b));
 		}
 
-		bool Sprite::isEq(const Assistance::io__sprite_collision_state w, const size_t v)
+		bool Sprite::isEq(const Assistance::io__sprite_tie_func_to_state w, const size_t v)
 		{
 			size_t g;
 			get(w, g);
@@ -861,7 +954,11 @@ namespace LSW {
 			if (layer != is_layer) return;
 			if (!data.bval[+Assistance::io__sprite_boolean::DRAW]) return;
 
-			ALLEGRO_BITMAP* rn = bmps.get((data.bval[+Assistance::io__sprite_boolean::USE_STATE_AS_BITMAP] ? data.last_state : Assistance::io__sprite_collision_state::size));
+			checkTied();
+
+			if (data.function_pair[+Assistance::io__sprite_tie_func_to_state::WHEN_DRAWING]) data.function_pair[+Assistance::io__sprite_tie_func_to_state::WHEN_DRAWING]();
+
+			ALLEGRO_BITMAP* rn = bmps.get((data.bval[+Assistance::io__sprite_boolean::USE_STATE_AS_BITMAP] ? data.last_state : Assistance::io__sprite_tie_func_to_state::size));
 
 			if (!rn) return; // if doesn't have what to draw (possible), skip
 
@@ -952,7 +1049,7 @@ namespace LSW {
 			data.bval[+Assistance::io__sprite_boolean::RO_IS_MOUSE_COLLIDING] = false;
 			data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] = 0.0;// 2.0 * data.dval[+Assistance::io__sprite_double::SCALEX] * data.dval[+Assistance::io__sprite_double::SCALEG];
 			data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] = 0.0;// 2.0 * data.dval[+Assistance::io__sprite_double::SCALEY] * data.dval[+Assistance::io__sprite_double::SCALEG];
-			data.new_state = Assistance::io__sprite_collision_state::COLLISION_NONE;
+			data.new_state = Assistance::io__sprite_tie_func_to_state::COLLISION_NONE;
 
 		}
 
@@ -1019,7 +1116,7 @@ namespace LSW {
 				)
 			{
 				data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = true;
-				if (data.new_state == Assistance::io__sprite_collision_state::COLLISION_NONE) data.new_state = Assistance::io__sprite_collision_state::COLLISION_COLLIDED_OTHER; // mouse is higher priority
+				if (data.new_state == Assistance::io__sprite_tie_func_to_state::COLLISION_NONE) data.new_state = Assistance::io__sprite_tie_func_to_state::COLLISION_COLLIDED_OTHER; // mouse is higher priority
 
 
 				if (data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ELASTIC]) {
@@ -1069,7 +1166,7 @@ namespace LSW {
 		{
 			psf.set(Assistance::io__camera_boolean::READONLY_NOW, false);
 
-			if (data.last_state != data.new_state && data.new_state != Assistance::io__sprite_collision_state::size) {
+			if (data.last_state != data.new_state && data.new_state != Assistance::io__sprite_tie_func_to_state::size) {
 				if (data.function_pair[+data.new_state]) data.function_pair[+data.new_state]();
 			}
 			data.last_state = data.new_state;
@@ -1439,19 +1536,19 @@ namespace LSW {
 						break;
 						case +Assistance::tags_e::T_SPRITE_STATE:
 							if (follow) {
-								Assistance::io__sprite_collision_state stat;
+								Assistance::io__sprite_tie_func_to_state stat;
 								follow->get(Assistance::ro__sprite_state::STATE, stat);
 								switch (stat) {
-								case Assistance::io__sprite_collision_state::COLLISION_MOUSE_ON:
+								case Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON:
 									sprintf_s(tempstr_c, "MOUSE ON");
 									break;
-								case Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK:
+								case Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK:
 									sprintf_s(tempstr_c, "MOUSE CLICK");
 									break;
-								case Assistance::io__sprite_collision_state::COLLISION_COLLIDED_OTHER:
+								case Assistance::io__sprite_tie_func_to_state::COLLISION_COLLIDED_OTHER:
 									sprintf_s(tempstr_c, "OTHER COLLIDING");
 									break;
-								case Assistance::io__sprite_collision_state::COLLISION_NONE:
+								case Assistance::io__sprite_tie_func_to_state::COLLISION_NONE:
 									sprintf_s(tempstr_c, "NONE");
 									break;
 								}
@@ -1744,6 +1841,7 @@ namespace LSW {
 				disguy->set(Assistance::io__sprite_string::ADD, "BKG_NULL");
 				disguy->set(Assistance::io__sprite_double::ANIMATION_FPS, 0);
 				disguy->set(Assistance::io__sprite_boolean::DRAW, true);
+				disguy->set(Assistance::io__sprite_boolean::TIE_SIZE_TO_DISPLAY, true);
 				disguy->set(Assistance::io__sprite_string::ID, "BKG_NULL");
 				disguy->set(Assistance::io__sprite_integer::LAYER, layer);
 				disguy->set(Assistance::io__sprite_double::SCALEG, 2.0);
@@ -1783,7 +1881,11 @@ namespace LSW {
 
 				ALLEGRO_BITMAP* lastpoint = al_get_target_bitmap();
 
+				disguy->get(imglw);
 				al_set_target_bitmap(imglw);
+
+				siz[0] = al_get_bitmap_width(imglw);
+				siz[1] = al_get_bitmap_height(imglw);
 				
 				for (auto& i : positions)
 				{

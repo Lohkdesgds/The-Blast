@@ -35,7 +35,7 @@ int main(int argc, const char* argv[])
 
 		// used by lambdas
 		main_gamemodes modern = main_gamemodes::HASNT_STARTED_YET;
-		bool assist[2] = { false, false }; // 1: LOADING_ANIMATION, 2: FULLSCREEN/WINDOW TOGGLE
+		bool assist[3] = { false, false, false }; // 1: LOADING_ANIMATION, 2: FULLSCREEN/WINDOW TOGGLE, 3: GAMEBOXMAIN Sprite down below on loop
 
 		// this has to be like the first one
 		gfile logg;
@@ -408,8 +408,8 @@ int main(int argc, const char* argv[])
 				cp.set(Assistance::io__camera_float::LIMIT_MIN_Y, -1.01);
 				cp.set(Assistance::io__camera_float::LIMIT_MAX_X, 1.01);
 				cp.set(Assistance::io__camera_float::LIMIT_MAX_Y, 1.01);
-				cp.set(Assistance::io__camera_float::SCALE_G, 0.95);
-				cp.set(Assistance::io__camera_float::SCALE_X, 1.0175);
+				//cp.set(Assistance::io__camera_float::SCALE_G, 0.95);
+				//cp.set(Assistance::io__camera_float::SCALE_X, 1.0175);
 				cp.set(Assistance::io__camera_boolean::READONLY_NOW, true);
 				gcam.set(cp, +main_gamemodes::GAMING);
 			}
@@ -471,7 +471,7 @@ int main(int argc, const char* argv[])
 				s->set(Assistance::io__sprite_boolean::LOOPFRAMES, false);
 				s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, true);
 				s->set(Assistance::io__sprite_boolean::ZERO_RESETS_POSITION_INSTEAD_OF_FREEZING, true);
-				//s->hook(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, [&modern]()->void {modern = main_gamemodes::MENU; });
+				//s->hook(Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&modern]()->void {modern = main_gamemodes::MENU; });
 			}
 			{
 				Sprite* s = sprites.create("LOADING_SKIP_ALL_SCREEN");
@@ -480,7 +480,7 @@ int main(int argc, const char* argv[])
 				s->set(Assistance::io__sprite_double::SCALEG, 2.0);
 				s->set(Assistance::io__sprite_integer::LAYER, -50);
 				s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, true);
-				s->hook(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, skip_animation_functional);
+				s->hook(Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, skip_animation_functional);
 			}
 
 			/*
@@ -505,10 +505,10 @@ int main(int argc, const char* argv[])
 				s->set(Assistance::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
 				s->set(Assistance::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
 				s->set(Assistance::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-				s->set(Assistance::io__sprite_collision_state::COLLISION_NONE, 0);
-				s->set(Assistance::io__sprite_collision_state::COLLISION_MOUSE_ON, 1);
-				s->set(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, 1);
-				s->hook(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, [&modern]()->void {modern = main_gamemodes::GAMING; });
+				s->set(Assistance::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
+				s->set(Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
+				s->set(Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
+				s->hook(Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&modern]()->void {modern = main_gamemodes::GAMING; });
 				s->set(Assistance::io__sprite_string::ID, "BUTTON_MENU_0");
 				s->set(Assistance::io__sprite_boolean::DRAW, true);
 				s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, true);
@@ -535,10 +535,10 @@ int main(int argc, const char* argv[])
 				s->set(Assistance::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
 				s->set(Assistance::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
 				s->set(Assistance::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-				s->set(Assistance::io__sprite_collision_state::COLLISION_NONE, 0);
-				s->set(Assistance::io__sprite_collision_state::COLLISION_MOUSE_ON, 1);
-				s->set(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, 1);
-				s->hook(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, setup_animation_functional);
+				s->set(Assistance::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
+				s->set(Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
+				s->set(Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
+				s->hook(Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, setup_animation_functional);
 				s->set(Assistance::io__sprite_string::ID, "BUTTON_MENU_1");
 				s->set(Assistance::io__sprite_boolean::DRAW, true);
 				s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, true);
@@ -565,10 +565,10 @@ int main(int argc, const char* argv[])
 				s->set(Assistance::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
 				s->set(Assistance::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
 				s->set(Assistance::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-				s->set(Assistance::io__sprite_collision_state::COLLISION_NONE, 0);
-				s->set(Assistance::io__sprite_collision_state::COLLISION_MOUSE_ON, 1);
-				s->set(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, 1);
-				s->hook(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, exit_game);
+				s->set(Assistance::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
+				s->set(Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
+				s->set(Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
+				s->hook(Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, exit_game);
 				s->set(Assistance::io__sprite_string::ID, "BUTTON_MENU_2");
 				s->set(Assistance::io__sprite_boolean::DRAW, true);
 				s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, true);
@@ -595,10 +595,10 @@ int main(int argc, const char* argv[])
 				s->set(Assistance::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
 				s->set(Assistance::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
 				s->set(Assistance::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-				s->set(Assistance::io__sprite_collision_state::COLLISION_NONE, 0);
-				s->set(Assistance::io__sprite_collision_state::COLLISION_MOUSE_ON, 1);
-				s->set(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, 1);
-				s->hook(Assistance::io__sprite_collision_state::COLLISION_MOUSE_CLICK, [&modern]()->void {modern = main_gamemodes::MENU; });
+				s->set(Assistance::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
+				s->set(Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
+				s->set(Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
+				s->hook(Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&modern]()->void {modern = main_gamemodes::MENU; });
 				s->set(Assistance::io__sprite_string::ID, "BUTTON_GAMING_0");
 				s->set(Assistance::io__sprite_boolean::DRAW, true);
 				s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, true);
@@ -776,7 +776,7 @@ int main(int argc, const char* argv[])
 
 
 		for (size_t counttt = 0; consol.isRunning(); counttt++) {
-			Sleep(20);
+			Sleep(15);
 
 
 			if (modern == main_gamemodes::MENU) temporary_fun_text->set(Assistance::io__text_string::STRING, "Counting here lmao " + std::to_string(counttt) + "!");
@@ -797,7 +797,7 @@ int main(int argc, const char* argv[])
 
 							Sprite* s = sprites.create("GAMEBOX_" + std::to_string(y) + "_" + std::to_string(x));
 							s->set(Assistance::io__sprite_string::ID, "GAMEBOX_" + std::to_string(y) + "_" + std::to_string(x));
-							s->set(Assistance::io__sprite_boolean::DRAW, true); // no draw for now
+							s->set(Assistance::io__sprite_boolean::DRAW, false); // no draw for now
 							s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, false);
 							s->set(Assistance::io__sprite_boolean::COLLIDE_OTHERS, false);
 							s->set(Assistance::io__sprite_boolean::SHOWDOT, false);
@@ -810,6 +810,44 @@ int main(int argc, const char* argv[])
 							s->set(Assistance::io__sprite_double::POSY, pss[1]);
 						}
 					}
+					{
+						textures.customLoad("GAMEBOXMAIN_I", [](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_bitmap(1600, 900)); });
+
+						Sprite* s = sprites.create("GAMEBOXMAIN");
+						s->set(Assistance::io__sprite_string::ID, "GAMEBOX_MAIN");
+						s->set(Assistance::io__sprite_boolean::DRAW, true); // no draw for now
+						s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, false);
+						s->set(Assistance::io__sprite_boolean::COLLIDE_OTHERS, false);
+						s->set(Assistance::io__sprite_boolean::SHOWDOT, false);
+						s->set(Assistance::io__sprite_boolean::SHOWBOX, false);
+						s->set(Assistance::io__sprite_double::SCALEG, 2.0);
+						s->set(Assistance::io__sprite_boolean::TIE_SIZE_TO_DISPLAY, true);
+						s->set(Assistance::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY, al_get_time());
+						s->set(Assistance::io__sprite_string::ADD, "GAMEBOXMAIN_I");
+						s->set(Assistance::io__sprite_integer::LAYER, 0);
+						s->hook(Assistance::io__sprite_tie_func_to_state::WHEN_BITMAPS_RESIZED_AUTO, [&assist]() {
+							assist[2] = false;
+							});
+						s->hook(Assistance::io__sprite_tie_func_to_state::WHEN_DRAWING, [&sprites, &gcam, s, &assist]() {
+							if (!assist[2]) {
+								auto vct = sprites.getList([](const std::string a)->bool {return a.find("GAMEBOX_") == 0; });
+								ALLEGRO_BITMAP* trg = nullptr;
+								s->get(trg);
+								ALLEGRO_BITMAP* old_trg = al_get_target_bitmap();
+								al_set_target_bitmap(trg);
+								al_clear_to_color(al_map_rgb(0, 0, 0));
+
+								for (auto& i : vct) {
+									i->set(Assistance::io__sprite_boolean::DRAW, true);
+									i->draw(0);
+									i->set(Assistance::io__sprite_boolean::DRAW, false);
+								}
+
+								al_set_target_bitmap(old_trg);
+								assist[2] = true;
+							}
+							});
+					}
 
 					consol.resumeThread();
 					has_map_gen = true;
@@ -820,25 +858,11 @@ int main(int argc, const char* argv[])
 					consol.pauseThread();
 					while (!consol.hasThreadPaused()) Sleep(10);
 					sprites.remove([](const std::string a)->bool {return a.find("GAMEBOX_") == 0; });
+					sprites.remove("GAMEBOXMAIN");
 					consol.resumeThread();
 					has_map_gen = false;
 				}
 			}
-			//temporary_fun_text->set(Assistance::io__text_string::STRING, "FPS: %fps% | TPS: %tps% | UPS: %ups%");
-
-			//mysprite->apply(Assistance::io__sprite_double::POSX, 0.3 * sin(0.7 + 0.91 * al_get_time()));
-			//mysprite->apply(Assistance::io__sprite_double::POSY, - 1.5 + 0.2 * cos(0.4 + 0.65 * al_get_time()));
-
-			//cp.set(Assistance::io__camera_float::ROTATION_RAD, al_get_time() * 0.25);
-			//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "ANG=" << (float)((int)(0.3 * (1800.0 / ALLEGRO_PI) * al_get_time())%3600)/10.0 << L::EL;
-			//cp.set(Assistance::io__camera_float::ROTATION_RAD, 0.3 * al_get_time());
-			//gcam.get().set(Assistance::io__camera_float::OFFSET_X, 0.45 * cos(0.3*al_get_time()));
-			//gcam.get().set(Assistance::io__camera_float::OFFSET_Y, 0.14 * sin(0.2*al_get_time()));
-			//gcam.get(+main_gamemodes::MENU).set(Assistance::io__camera_float::SCALE_G, 0.8 + 0.35 * sin(al_get_time() * 0.17));
-			//gcam.get(+main_gamemodes::MENU).set(Assistance::io__camera_float::ROTATION_RAD, 0.2 * cos(al_get_time() * 0.23));
-
-			//gcam.set(cp, 0);
-			//gcam.apply(0);
 		}
 		
 
