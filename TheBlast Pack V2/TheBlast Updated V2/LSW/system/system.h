@@ -50,7 +50,7 @@ namespace LSW {
 			enum class ro__db_thread_string { KEY_ADD, KEY_ADD_SET_LEN, KEY_ERASE, KEY_SET };
 
 			// functional
-			enum class io__db_functional_opt {MOUSE_KEY,KEYBOARD_KEY};
+			enum class io__db_functional_opt {MOUSE_KEY,KEYBOARD_KEY,MOUSE_LEFT,KEYBOARD_LEFT};
 
 			const std::string ro__conf_boolean_str[] = { "had_error", "was_osd_on", "ultradebug" };
 			const std::string ro__conf_float_str[] = { "last_volume" };
@@ -155,6 +155,8 @@ namespace LSW {
 				// purely automatic handleing
 				std::function<void(void)>			func_mb[+Assistance::ro__db_mouse_boolean::size];	// each mouse key has a function
 				std::function<void(void)>			func_kb[ALLEGRO_KEY_MAX];							// each key can have its custom function
+				std::function<void(void)>			func_mb_u[+Assistance::ro__db_mouse_boolean::size];	// unhold
+				std::function<void(void)>			func_kb_u[ALLEGRO_KEY_MAX];							// unhold
 
 				
 				std::thread* savethr = nullptr;

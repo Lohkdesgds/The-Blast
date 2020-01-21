@@ -643,6 +643,9 @@ namespace LSW {
 				if (v && data.func_kb[al_keycod]) {
 					data.func_kb[al_keycod]();
 				}
+				if (!v && data.func_kb_u[al_keycod]) {
+					data.func_kb_u[al_keycod]();
+				}
 			}
 		}
 		void Database::set(const Assistance::ro__db_mouse_boolean e, const bool v)
@@ -651,6 +654,9 @@ namespace LSW {
 				data.mouse[+e] = v;
 				if (v && data.func_mb[+e]) {
 					data.func_mb[+e]();
+				}
+				if (!v && data.func_mb_u[+e]) {
+					data.func_mb_u[+e]();
 				}
 			}
 		}
@@ -711,6 +717,14 @@ namespace LSW {
 			case Assistance::io__db_functional_opt::KEYBOARD_KEY:
 				if (p < ALLEGRO_KEY_MAX && p > 0) {
 					data.func_kb[p] = f;					
+				}
+				break;
+			case Assistance::io__db_functional_opt::MOUSE_LEFT:
+				if (p != +Assistance::ro__db_mouse_boolean::size && p > 0) data.func_mb_u[p] = f;
+				break;
+			case Assistance::io__db_functional_opt::KEYBOARD_LEFT:
+				if (p < ALLEGRO_KEY_MAX && p > 0) {
+					data.func_kb_u[p] = f;
 				}
 				break;
 			}
