@@ -21,6 +21,7 @@
 #include <math.h>
 
 #include "..\custom_abort\abort.h"
+#include "..\tools\tools.h"
 #include "..\big_templates\small_templates.h"
 #include "..\big_templates\big_templates.h"
 #include "..\logger\logger.h"
@@ -37,17 +38,29 @@ namespace LSW {
 			
 			enum class io__sprite_string_vector	 { ADDMULTIPLE, REMOVEMULTIPLE };
 			enum class io__sprite_string		 { ADD, REMOVE, ID };
-			enum class io__sprite_double		 { POSX, POSY, SCALEX, SCALEY, CENTERX, CENTERY, SCALEG, ROTATION /*DEGREES*/, SPEEDX, SPEEDY, SPEEDROT, SPEEDXY_LIMIT, SMOOTHNESS_X, SMOOTHNESS_Y, RO_LAST_MOUSE_COLLISION, RO_LAST_OTHERS_COLLISION, RO_MOUSE_DISTANCE_X, RO_MOUSE_DISTANCE_Y, RO_OTHERS_DISTANCE_X, RO_OTHERS_DISTANCE_Y, RO_HAPPENED_RESIZE_DISPLAY, size, /* since here they are not Sprite exactly stuff*/ ANIMATION_FPS };
+			enum class io__sprite_double		 { POSX, POSY, SCALEX, SCALEY, CENTERX, CENTERY, SCALEG, ROTATION /*DEGREES*/, ACCELERATION_X, ACCELERATION_Y, SPEEDROT, SPEEDXY_LIMIT, SMOOTHNESS_X, SMOOTHNESS_Y, RO_SPEEDX, RO_SPEEDY, RO_LAST_MOUSE_COLLISION, RO_LAST_OTHERS_COLLISION, RO_MOUSE_DISTANCE_X, RO_MOUSE_DISTANCE_Y, RO_OTHERS_DISTANCE_X, RO_OTHERS_DISTANCE_Y, RO_HAPPENED_RESIZE_DISPLAY, size, /* since here they are not Sprite exactly stuff*/ ANIMATION_FPS };
 			enum class ro__sprite_target_double  { TARG_POSX, TARG_POSY, TARG_ROTATION, INTERN_LASTDRAW, size};
 			/* FOLLOWMOUSE disable RESPECT_CAMERA_LIMITS automatically */
-			enum class io__sprite_boolean		 { DRAW, TIE_SIZE_TO_DISPLAY, COLLIDE_OTHERS, USE_STATE_AS_BITMAP, COLLIDE_MOUSE, COLLIDE_BE_IN_ALL_LAYERS, AFFECTED_BY_COLLISION_ELASTIC, AFFECTED_BY_COLLISION_ROUGH, AFFECTED_BY_CAM, SHOWDOT, SHOWBOX, RESPECT_CAMERA_LIMITS, FOLLOWMOUSE, FOLLOWKEYBOARD, USE_TINTED_DRAWING, RO_IS_MOUSE_COLLIDING, RO_IS_OTHERS_COLLIDING, size, /* since here they are not Sprite exactly stuff*/ LOOPFRAMES, HAS_DONE_LOOP_ONCE, IS_IT_ON_LAST_FRAME, ZERO_RESETS_POSITION_INSTEAD_OF_FREEZING };
+			// removed from io__sprite_boolean: COLLIDE_OTHERS, COLLIDE_BE_IN_ALL_LAYERS, AFFECTED_BY_COLLISION_ELASTIC, AFFECTED_BY_COLLISION_ROUGH, COLLIDE_MOUSE
+			enum class io__sprite_collision_mode {
+				COLLISION_TRANSPARENT, COLLISION_MOUSEONLY, 
+				COLLISION_SAMELAYER_HOLD_STATIC, COLLISION_ANY_HOLD_STATIC,
+				COLLISION_SAMELAYER_ROUGH, COLLISION_SAMELAYER_ELASTIC, COLLISION_ANY_ELASTIC, COLLISION_ANY_ROUGH,
+
+				__COLLISION_TRANSPARENT_MAXVAL = COLLISION_MOUSEONLY,
+				__COLLISION_HOLD_OR_TRANSPARENT_MAXVAL = COLLISION_ANY_HOLD_STATIC,
+				__COLLISION_ANYLAYER_MINVAL = COLLISION_SAMELAYER_ROUGH };
+
+			enum class io__sprite_boolean		 { DRAW, TIE_SIZE_TO_DISPLAY, USE_STATE_AS_BITMAP, AFFECTED_BY_CAM, SHOWDOT, SHOWBOX, RESPECT_CAMERA_LIMITS, FOLLOWMOUSE, FOLLOWKEYBOARD, USE_TINTED_DRAWING, RO_IS_MOUSE_COLLIDING, RO_IS_OTHERS_COLLIDING, RO_IS_OTHERS_ABOUT_TO_COLLIDE, size, /* since here they are not Sprite exactly stuff*/ LOOPFRAMES, HAS_DONE_LOOP_ONCE, IS_IT_ON_LAST_FRAME, ZERO_RESETS_POSITION_INSTEAD_OF_FREEZING };
 			enum class io__sprite_integer		 { LAYER, size, ADD_ANOTHER_LAYER_COLLISION, REMOVE_LAYER_COLLISION };
 			enum class io__sprite_sizet			 { SIZE, FRAME, size };
 			enum class ro__sprite_state			 { STATE }; // no size
 			enum class io__sprite_color			 { TINT, size };
 			enum class io__sprite_tie_func_to_state{ COLLISION_MOUSE_ON,COLLISION_MOUSE_CLICK,COLLISION_COLLIDED_OTHER,COLLISION_NONE,WHEN_DRAWING,WHEN_BITMAPS_RESIZED_AUTO,size };
 
-			enum class cl__sprite_direction		 { NORTH, SOUTH, WEST, EAST };
+			enum class cl__sprite_direction_mult {
+				GO_NORTH, GO_SOUTH, GO_EAST, GO_WEST, STOP_NORTH, STOP_SOUTH, STOP_EAST, STOP_WEST
+			};
 
 			enum class io__text_string  { STRING, PROCESSED_STRING, ID, FOLLOW_SPRITE, FONT, size };
 			enum class io__text_boolean { SHOW, AFFECTED_BY_CAM, DEBUG_ITSELF, size };
@@ -68,7 +81,7 @@ namespace LSW {
 			};
 
 			enum class tags_e {T_POSX,T_POSY,T_SCREEN_POSX,T_SCREEN_POSY,T_ISFOLLOWING,T_COLOR_R,T_COLOR_G,T_COLOR_B,T_COLOR_A,T_MODE,T_TIME,T_ISUSINGBUF,T_GB_RESX,T_GB_RESY,T_REFRESHRATE,T_FPS,T_TPS,T_UPS,T_APS,T_I_FPS,T_I_TPS,T_I_UPS,T_I_APS,T_MS_FPS,T_MS_TPS,T_MS_UPS,T_MS_APS,
-				T_SPRITE_FRAME,T_CAM_X,T_CAM_Y,T_CAM_ZOOM, T_CAM_ZOOMG,T_CAM_ZOOMX,T_CAM_ZOOMY, T_CURRSTRING,T_LASTSTRING,T_MOUSE_X,T_MOUSE_Y,T_SPRITE_SPEEDX,T_SPRITE_SPEEDY,T_SPRITE_NAME,T_SPRITE_ENTITY_NAME,T_SPRITE_ENTITY_HEALTH,T_TEXTURES_LOADED,T_FONTS_LOADED,
+				T_SPRITE_FRAME,T_CAM_X,T_CAM_Y,T_CAM_ZOOM, T_CAM_ZOOMG,T_CAM_ZOOMX,T_CAM_ZOOMY, T_CURRSTRING,T_LASTSTRING,T_MOUSE_X,T_MOUSE_Y,T_SPRITE_SPEEDX,T_SPRITE_SPEEDY,T_SPRITE_NAME,T_SPRITE_ENTITY_NAME,T_SPRITE_ENTITY_HEALTH,_T_SPRITE_DEBUG,T_TEXTURES_LOADED,T_FONTS_LOADED,
 				T_SAMPLES_LOADED,T_SPRITES_LOADED,T_TEXTS_LOADED, T_TRACKS_LOADED,T_SPRITE_STATE, size };
 
 			const __slice tags[] = { __slice("%pos_x%", +tags_e::T_POSX),  __slice("%pos_y%", +tags_e::T_POSY), __slice("%screen_pos_x%", +tags_e::T_SCREEN_POSX), __slice("%screen_pos_y%", +tags_e::T_SCREEN_POSY), __slice("%is_following%", +tags_e::T_ISFOLLOWING),
@@ -78,8 +91,9 @@ __slice("%int_aps%", +tags_e::T_APS), __slice("%instant_fps%", +tags_e::T_I_FPS)
 __slice("%ms_tps%", +tags_e::T_MS_TPS), __slice("%ms_ups%", +tags_e::T_MS_UPS), __slice("%ms_aps%", +tags_e::T_MS_APS), __slice("%sprite_frame%", +tags_e::T_SPRITE_FRAME), __slice("%cam_x%", +tags_e::T_CAM_X), __slice("%cam_y%", +tags_e::T_CAM_Y),
 __slice("%cam_zoom_combined%", +tags_e::T_CAM_ZOOM), __slice("%cam_zoom_g%", +tags_e::T_CAM_ZOOMG), __slice("%cam_zoom_x%", +tags_e::T_CAM_ZOOMX), __slice("%cam_zoom_y%", +tags_e::T_CAM_ZOOMY),__slice("%curr_string%", +tags_e::T_CURRSTRING),
 __slice("%last_string%", +tags_e::T_LASTSTRING), __slice("%mouse_x%", +tags_e::T_MOUSE_X), __slice("%mouse_y%", +tags_e::T_MOUSE_Y), __slice("%sprite_speed_x%", +tags_e::T_SPRITE_SPEEDX),__slice("%sprite_speed_y%", +tags_e::T_SPRITE_SPEEDY),
-__slice("%sprite_name%", +tags_e::T_SPRITE_NAME), __slice("%entity_name%", +tags_e::T_SPRITE_ENTITY_NAME), __slice("%entity_health%", +tags_e::T_SPRITE_ENTITY_HEALTH), __slice("%num_images%", +tags_e::T_TEXTURES_LOADED),__slice("%num_fonts%", +tags_e::T_FONTS_LOADED),
-__slice("%num_samples%", +tags_e::T_SAMPLES_LOADED), __slice("%num_sprites%", +tags_e::T_SPRITES_LOADED), __slice("%num_texts%", +tags_e::T_TEXTS_LOADED), __slice("%num_tracks%", +tags_e::T_TRACKS_LOADED), __slice("%sprite_state%", +tags_e::T_SPRITE_STATE) };
+__slice("%sprite_name%", +tags_e::T_SPRITE_NAME), __slice("%entity_name%", +tags_e::T_SPRITE_ENTITY_NAME), __slice("%entity_health%", +tags_e::T_SPRITE_ENTITY_HEALTH), __slice("%sprite_debug%", +tags_e::_T_SPRITE_DEBUG), __slice("%num_images%", +tags_e::T_TEXTURES_LOADED),
+__slice("%num_fonts%", +tags_e::T_FONTS_LOADED),__slice("%num_samples%", +tags_e::T_SAMPLES_LOADED), __slice("%num_sprites%", +tags_e::T_SPRITES_LOADED), __slice("%num_texts%", +tags_e::T_TEXTS_LOADED), __slice("%num_tracks%", +tags_e::T_TRACKS_LOADED),
+__slice("%sprite_state%", +tags_e::T_SPRITE_STATE) };
 			/*
 			
 		typedef __template_static_vector<ALLEGRO_BITMAP>  Textures;
@@ -91,6 +105,8 @@ __slice("%num_samples%", +tags_e::T_SAMPLES_LOADED), __slice("%num_sprites%", +t
 		typedef __template_static_vector<Track>			  Tracks;
 			*/
 		}
+
+		//const Assistance::cl__sprite_direction_mult resolveDir(const int);
 
 		void draw_simple_bar(const float, const ALLEGRO_COLOR = al_map_rgb(0, 0, 0), const float = 0.98, const float = 0.95); // w, h
 		void draw_confuse_rectangle(const float, const float, const float, const float, const ALLEGRO_COLOR, const ALLEGRO_COLOR, const ALLEGRO_COLOR, const ALLEGRO_COLOR);
@@ -150,6 +166,11 @@ __slice("%num_samples%", +tags_e::T_SAMPLES_LOADED), __slice("%num_sprites%", +t
 		
 			   
 		class Sprite {
+
+			struct ___collision_data {
+				int diretion_by_centers_interpreted = 0; // Assistance::directions
+				double expected_walk_distances[2] = { 0.0,0.0 };
+			};
 			
 			struct __sprite_smart_data {
 
@@ -162,6 +183,18 @@ __slice("%num_samples%", +tags_e::T_SAMPLES_LOADED), __slice("%num_sprites%", +t
 				Assistance::io__sprite_tie_func_to_state last_state = Assistance::io__sprite_tie_func_to_state::size;
 				Assistance::io__sprite_tie_func_to_state new_state = Assistance::io__sprite_tie_func_to_state::size;
 				std::function<void(void)> function_pair[+Assistance::io__sprite_tie_func_to_state::size];
+
+				Assistance::io__sprite_collision_mode collision_mode = Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_HOLD_STATIC;
+				/*int direction_col = 0; // where is the block I stepped on?
+				int direction_predict = 0;
+				size_t countdown_col = 0;*/
+
+				//Assistance::cl__sprite_direction_mult where_i_wanna_go = Assistance::cl__sprite_direction_mult::STAY;
+				int combined_direction_i_wanna_go = 0;
+
+				std::vector<___collision_data> col_data;
+
+				//bool tempblock_dirs[+Assistance::cl__sprite_direction_mult::size] = { false };
 
 				__sprite_smart_data();
 			};
@@ -206,9 +239,12 @@ __slice("%num_samples%", +tags_e::T_SAMPLES_LOADED), __slice("%num_sprites%", +t
 
 			std::string sprite_id;
 			int layer = 0;
+			std::string __debug_s;
 
 			bool fastIsColliding(camera_preset);
 			void checkTied();
+
+			bool shouldThisCalcCollisionIn(const int); // related to: isThisCollidableIn
 		public:
 			~Sprite();
 
@@ -223,6 +259,8 @@ __slice("%num_samples%", +tags_e::T_SAMPLES_LOADED), __slice("%num_sprites%", +t
 			void set(const Assistance::io__sprite_sizet, const size_t);
 			void set(const Assistance::io__sprite_color, const ALLEGRO_COLOR);
 			void set(const Assistance::io__sprite_tie_func_to_state, const size_t = std::string::npos);
+			void set(const Assistance::io__sprite_collision_mode);
+			void set(const Assistance::cl__sprite_direction_mult); // set dir to go (GO_NORTH...)
 
 			bool get(const Assistance::io__sprite_string, std::string&);
 			bool get(const Assistance::io__sprite_double, double&);
@@ -234,16 +272,17 @@ __slice("%num_samples%", +tags_e::T_SAMPLES_LOADED), __slice("%num_sprites%", +t
 			bool get(const Assistance::io__sprite_color, ALLEGRO_COLOR&);
 			void get(const Assistance::io__sprite_tie_func_to_state, size_t&);
 			void get(ALLEGRO_BITMAP*&);
-
+			void get(Assistance::io__sprite_collision_mode&);
 
 			bool isEq(const Assistance::io__sprite_string, const std::string);
 			bool isEq(const Assistance::io__sprite_double, const double);
-			bool isEq(const Assistance::io__sprite_boolean, const bool);
+			bool isEq(const Assistance::io__sprite_boolean, const bool = true);
 			bool isEq(const Assistance::io__sprite_integer, const int);
 			bool isEq(const Assistance::io__sprite_sizet, const size_t);
 			bool isEq(const Assistance::ro__sprite_state, const Assistance::io__sprite_tie_func_to_state);
 			bool isEq(const Assistance::io__sprite_color, const ALLEGRO_COLOR);
 			bool isEq(const Assistance::io__sprite_tie_func_to_state, const size_t);
+			bool isEq(const Assistance::io__sprite_collision_mode);
 
 			void draw(const int);
 			void rebindReferences();
@@ -253,6 +292,11 @@ __slice("%num_samples%", +tags_e::T_SAMPLES_LOADED), __slice("%num_sprites%", +t
 
 			void collideWith(const int, Sprite* const); // test collision
 			void applyCollideData(camera_preset); // apply collision, check limits and run possible functions hooked to states
+
+			bool isThisCollidableIn(const int); // related to: shouldThisCalcCollisionIn
+			bool doesThisReflect(); // calls shouldThisCalcCollisionIn
+
+			std::string __debug_str();
 		};
 
 

@@ -8,6 +8,32 @@ namespace LSW {
 		int Camera::lastapply = 0;
 
 
+		/*const Assistance::cl__sprite_direction_mult resolveDir(const int d)
+		{
+			if ((d & +Assistance::directions::NORTH) && (d & +Assistance::directions::SOUTH) && (d & +Assistance::directions::WEST) && (d & +Assistance::directions::EAST))
+				return Assistance::cl__sprite_direction_mult::STAY;
+
+			if ((d & +Assistance::directions::NORTH) && (d & +Assistance::directions::SOUTH))
+				return Assistance::cl__sprite_direction_mult::GO_EAST;
+
+			if ((d & +Assistance::directions::WEST) && (d & +Assistance::directions::EAST))
+				return Assistance::cl__sprite_direction_mult::GO_NORTH;
+
+
+			switch (d)
+			{
+			case +Assistance::directions::NORTH: // block is north
+				return Assistance::cl__sprite_direction_mult::GO_SOUTH;
+			case +Assistance::directions::SOUTH: // block is south
+				return Assistance::cl__sprite_direction_mult::GO_NORTH;
+			case +Assistance::directions::EAST: // block is east
+				return Assistance::cl__sprite_direction_mult::GO_WEST;
+			case +Assistance::directions::WEST: // block is west
+				return Assistance::cl__sprite_direction_mult::GO_EAST;
+			}
+
+			return Assistance::cl__sprite_direction_mult::GO_NORTH;
+		}*/
 
 		void draw_simple_bar(const float perc, const ALLEGRO_COLOR bg, const float w, const float h)
 		{
@@ -563,12 +589,12 @@ namespace LSW {
 			dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] = 0.0;
 			dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] = 0.0;
 			bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM] = true;
-			bval[+Assistance::io__sprite_boolean::COLLIDE_MOUSE] = true;
-			bval[+Assistance::io__sprite_boolean::COLLIDE_BE_IN_ALL_LAYERS] = false;
 			bval[+Assistance::io__sprite_boolean::SHOWBOX] = debugging;
 			bval[+Assistance::io__sprite_boolean::SHOWDOT] = debugging;
 			bval[+Assistance::io__sprite_boolean::RESPECT_CAMERA_LIMITS] = true;
 			dval[+Assistance::io__sprite_double::SPEEDXY_LIMIT] = Constants::intensity_player_run_max;
+			dval[+Assistance::io__sprite_double::ACCELERATION_X] = Constants::intensity_player_run_max * 0.333;
+			dval[+Assistance::io__sprite_double::ACCELERATION_Y] = Constants::intensity_player_run_max * 0.333;
 		}
 
 
@@ -580,14 +606,13 @@ namespace LSW {
 		{
 			psf.set(Assistance::io__camera_boolean::READONLY_NOW, false);
 
-			data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = false;
-
-			if (data.bval[+Assistance::io__sprite_boolean::COLLIDE_MOUSE]) {
+			if (data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_MOUSEONLY) { // HERE
+				
+				data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = false;
 
 				if (data.bval[+Assistance::io__sprite_boolean::FOLLOWMOUSE]) {
 					data.bval[+Assistance::io__sprite_boolean::RO_IS_MOUSE_COLLIDING] = true;
 				}
-
 				else {
 					float m[2] = { 0.0 };
 					bool is_mouse_pressed = false;
@@ -640,6 +665,17 @@ namespace LSW {
 				}
 				else data.dval[+Assistance::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY] = al_get_time() + 0.5;
 			}
+		}
+
+		bool Sprite::shouldThisCalcCollisionIn(const int l)
+		{
+			if (!data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM]) return false;
+			if (+data.collision_mode <= +Assistance::io__sprite_collision_mode::__COLLISION_HOLD_OR_TRANSPARENT_MAXVAL) return false;
+			if (l != layer) {
+				if (+data.collision_mode >= +Assistance::io__sprite_collision_mode::__COLLISION_ANYLAYER_MINVAL) return true;
+				return false;
+			}
+			return true; // same layer and not transparent
 		}
 
 		Sprite::~Sprite()
@@ -698,6 +734,26 @@ namespace LSW {
 			case Assistance::io__sprite_double::ANIMATION_FPS:  // don't forget COLLISION_STATE can bug this one
 				bmps.setFPS(v);
 				break;
+			/*case Assistance::io__sprite_double::RO_SPEEDX:
+				if (v > 0.0 && data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_EAST]) {
+					data.dval[+u] = v;
+					data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_NORTH] = data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_SOUTH] = data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_WEST] = true;
+				}
+				if (v < 0.0 && data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_WEST]) {
+					data.dval[+u] = v;
+					data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_NORTH] = data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_SOUTH] = data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_EAST] = true;
+				}
+				break;
+			case Assistance::io__sprite_double::RO_SPEEDY:
+				if (v > 0.0 && data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_SOUTH]) {
+					data.dval[+u] = v;
+					data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_EAST] = data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_WEST] = data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_NORTH] = true;
+				}
+				if (v < 0.0 && data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_NORTH]) {
+					data.dval[+u] = v;
+					data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_EAST] = data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_WEST] = data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_SOUTH] = true;
+				}
+				break;*/
 			default:
 				data.dval[+u] = v;
 				// target set to value
@@ -729,12 +785,6 @@ namespace LSW {
 				break;
 			default:
 				data.bval[+u] = v;
-				if (u == Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ELASTIC && v) {
-					data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ROUGH] = false;
-				}
-				else if (u == Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ROUGH && v) {
-					data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ELASTIC] = false;
-				}
 				break;
 			}
 		}
@@ -796,6 +846,42 @@ namespace LSW {
 		void Sprite::set(const Assistance::io__sprite_tie_func_to_state u, const size_t v)
 		{
 			bmps.setState(u, v);
+		}
+
+		void Sprite::set(const Assistance::io__sprite_collision_mode m)
+		{
+			data.collision_mode = m;
+			//for (auto& i : data.tempblock_dirs) i = true;
+		}
+
+		void Sprite::set(const Assistance::cl__sprite_direction_mult d)
+		{
+			switch (d) {
+			case Assistance::cl__sprite_direction_mult::GO_NORTH:
+				data.combined_direction_i_wanna_go |= +Assistance::directions::NORTH;
+				break;
+			case Assistance::cl__sprite_direction_mult::GO_SOUTH:
+				data.combined_direction_i_wanna_go |= +Assistance::directions::SOUTH;
+				break;
+			case Assistance::cl__sprite_direction_mult::GO_EAST:
+				data.combined_direction_i_wanna_go |= +Assistance::directions::EAST;
+				break;
+			case Assistance::cl__sprite_direction_mult::GO_WEST:
+				data.combined_direction_i_wanna_go |= +Assistance::directions::WEST;
+				break;
+			case Assistance::cl__sprite_direction_mult::STOP_NORTH:
+				data.combined_direction_i_wanna_go &= ~ +Assistance::directions::NORTH;
+				break;
+			case Assistance::cl__sprite_direction_mult::STOP_SOUTH:
+				data.combined_direction_i_wanna_go &= ~+ Assistance::directions::SOUTH;
+				break;
+			case Assistance::cl__sprite_direction_mult::STOP_EAST:
+				data.combined_direction_i_wanna_go &= ~+ Assistance::directions::EAST;
+				break;
+			case Assistance::cl__sprite_direction_mult::STOP_WEST:
+				data.combined_direction_i_wanna_go &= ~+ Assistance::directions::WEST;
+				break;
+			}
 		}
 
 		bool Sprite::get(const Assistance::io__sprite_string u, std::string& v)
@@ -894,6 +980,12 @@ namespace LSW {
 			g = bmps.get();
 		}
 
+		void Sprite::get(Assistance::io__sprite_collision_mode& m)
+		{
+			m = data.collision_mode;
+		}
+
+
 		bool Sprite::isEq(const Assistance::io__sprite_string w, const std::string v)
 		{
 			std::string g;
@@ -956,6 +1048,13 @@ namespace LSW {
 			return g == v;
 		}
 
+		bool Sprite::isEq(const Assistance::io__sprite_collision_mode v)
+		{
+			Assistance::io__sprite_collision_mode g;
+			get(g);
+			return g == v;
+		}
+
 		void Sprite::draw(const int is_layer)
 		{
 			if (layer != is_layer) return;
@@ -979,14 +1078,15 @@ namespace LSW {
 			double dt = timee - data.dtarg[+Assistance::ro__sprite_target_double::INTERN_LASTDRAW];
 			data.dtarg[+Assistance::ro__sprite_target_double::INTERN_LASTDRAW] = timee;
 
-			double perc_run = Constants::__i_col_pos_t_update * dt; // ex: 5 per sec * 0.2 (1/5 sec) = 1, so posx = actual posx...
-			if (perc_run > 1.0) perc_run = 1.0; // 1.0 is "set value"
-			if (perc_run < 1.0 / 10000) perc_run = 1.0 / 10000; // can't be infinitely smooth right? come on
+			//if (!data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] && data.countdown_col == 0) {
+				double perc_run = Constants::__i_col_pos_t_update * dt; // ex: 5 per sec * 0.2 (1/5 sec) = 1, so posx = actual posx...
+				if (perc_run > 1.0) perc_run = 1.0; // 1.0 is "set value"
+				if (perc_run < 1.0 / 10000) perc_run = 1.0 / 10000; // can't be infinitely smooth right? come on
 
-			data.dval[+Assistance::io__sprite_double::POSX] = (1.0 - perc_run) * data.dval[+Assistance::io__sprite_double::POSX] + perc_run * data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX];
-			data.dval[+Assistance::io__sprite_double::POSY] = (1.0 - perc_run) * data.dval[+Assistance::io__sprite_double::POSY] + perc_run * data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY];
-			data.dval[+Assistance::io__sprite_double::ROTATION] = (1.0 - perc_run) * data.dval[+Assistance::io__sprite_double::ROTATION] + perc_run * data.dtarg[+Assistance::ro__sprite_target_double::TARG_ROTATION];
-
+				data.dval[+Assistance::io__sprite_double::POSX] = (1.0 - perc_run) * data.dval[+Assistance::io__sprite_double::POSX] + perc_run * data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX];
+				data.dval[+Assistance::io__sprite_double::POSY] = (1.0 - perc_run) * data.dval[+Assistance::io__sprite_double::POSY] + perc_run * data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY];
+				data.dval[+Assistance::io__sprite_double::ROTATION] = (1.0 - perc_run) * data.dval[+Assistance::io__sprite_double::ROTATION] + perc_run * data.dtarg[+Assistance::ro__sprite_target_double::TARG_ROTATION];
+			//}
 
 
 			float cx, cy, px, py, dsx, dsy, rot_rad;
@@ -1054,57 +1154,96 @@ namespace LSW {
 		{
 			data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = false;
 			data.bval[+Assistance::io__sprite_boolean::RO_IS_MOUSE_COLLIDING] = false;
+			data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_ABOUT_TO_COLLIDE] = false;
 			data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] = 0.0;// 2.0 * data.dval[+Assistance::io__sprite_double::SCALEX] * data.dval[+Assistance::io__sprite_double::SCALEG];
 			data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] = 0.0;// 2.0 * data.dval[+Assistance::io__sprite_double::SCALEY] * data.dval[+Assistance::io__sprite_double::SCALEG];
 			data.new_state = Assistance::io__sprite_tie_func_to_state::COLLISION_NONE;
-
+			data.col_data.clear();
+			//data.direction_col = 0;
+			__debug_s.clear();
 		}
 
-		void Sprite::process(const int is_layer, camera_preset psf) // later: be a target, so drawing it will get there (based on framerate)
+		void Sprite::process(const int is_layer, camera_preset psf)
 		{
+			//data.where_i_wanna_go
 			psf.set(Assistance::io__camera_boolean::READONLY_NOW, false);
 
-			if ((layer != is_layer) && !data.bval[+Assistance::io__sprite_boolean::COLLIDE_BE_IN_ALL_LAYERS] &&
-			 ([&]() { data.layers_colliding_m.lock(); for (auto& i : data.layers_colliding) { if (i == is_layer) {data.layers_colliding_m.unlock(); return false;} } data.layers_colliding_m.unlock(); return true; }())) return; // check layers if there's one to collide (ON)
+			if ((layer != is_layer) &&
+				(data.collision_mode != Assistance::io__sprite_collision_mode::COLLISION_ANY_ELASTIC && data.collision_mode != Assistance::io__sprite_collision_mode::COLLISION_ANY_ROUGH) // HERE
+				&& ([&]() {
+					data.layers_colliding_m.lock();
+					for (auto& i : data.layers_colliding) {
+						if (i == is_layer) {
+							data.layers_colliding_m.unlock();
+							return false;
+						}
+					}
+					data.layers_colliding_m.unlock();
+					return true;
+					}())
+
+				)
+			{
+				__debug_s += "SKIP_PROC;";
+				return; // check layers if there's one to collide (ON)
+			}
 
 
 			if (!data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM]) psf = camera_preset();
 
 			// LIMIT
 
-			if (fabs(data.dval[+Assistance::io__sprite_double::SPEEDX]) > data.dval[+Assistance::io__sprite_double::SPEEDXY_LIMIT])
+			if (fabs(data.dval[+Assistance::io__sprite_double::RO_SPEEDX]) > data.dval[+Assistance::io__sprite_double::SPEEDXY_LIMIT])
 			{
-				data.dval[+Assistance::io__sprite_double::SPEEDX] = 
-					(data.dval[+Assistance::io__sprite_double::SPEEDX] > 0.0) ? data.dval[+Assistance::io__sprite_double::SPEEDXY_LIMIT] : -data.dval[+Assistance::io__sprite_double::SPEEDXY_LIMIT];
+				data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = 
+					(data.dval[+Assistance::io__sprite_double::RO_SPEEDX] > 0.0) ? data.dval[+Assistance::io__sprite_double::SPEEDXY_LIMIT] : -data.dval[+Assistance::io__sprite_double::SPEEDXY_LIMIT];
 			}
-			if (fabs(data.dval[+Assistance::io__sprite_double::SPEEDY]) > data.dval[+Assistance::io__sprite_double::SPEEDXY_LIMIT])
+			if (fabs(data.dval[+Assistance::io__sprite_double::RO_SPEEDY]) > data.dval[+Assistance::io__sprite_double::SPEEDXY_LIMIT])
 			{
-				data.dval[+Assistance::io__sprite_double::SPEEDY] = 
-					(data.dval[+Assistance::io__sprite_double::SPEEDY] > 0.0) ? data.dval[+Assistance::io__sprite_double::SPEEDXY_LIMIT] : -data.dval[+Assistance::io__sprite_double::SPEEDXY_LIMIT];
+				data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = 
+					(data.dval[+Assistance::io__sprite_double::RO_SPEEDY] > 0.0) ? data.dval[+Assistance::io__sprite_double::SPEEDXY_LIMIT] : -data.dval[+Assistance::io__sprite_double::SPEEDXY_LIMIT];
 			}
 
 
-			data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] += data.dval[+Assistance::io__sprite_double::SPEEDX];
-			data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] += data.dval[+Assistance::io__sprite_double::SPEEDY];
+			data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] += data.dval[+Assistance::io__sprite_double::RO_SPEEDX];
+			data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] += data.dval[+Assistance::io__sprite_double::RO_SPEEDY];
 
 			data.dtarg[+Assistance::ro__sprite_target_double::TARG_ROTATION] += data.dval[+Assistance::io__sprite_double::SPEEDROT];
 
-			data.dval[+Assistance::io__sprite_double::SPEEDX] *= data.dval[+Assistance::io__sprite_double::SMOOTHNESS_X] * psf.get(Assistance::io__camera_float::SLIPPERINESS);
-			data.dval[+Assistance::io__sprite_double::SPEEDY] *= data.dval[+Assistance::io__sprite_double::SMOOTHNESS_Y] * psf.get(Assistance::io__camera_float::SLIPPERINESS);
+			data.dval[+Assistance::io__sprite_double::RO_SPEEDX] *= data.dval[+Assistance::io__sprite_double::SMOOTHNESS_X] * psf.get(Assistance::io__camera_float::SLIPPERINESS);
+			data.dval[+Assistance::io__sprite_double::RO_SPEEDY] *= data.dval[+Assistance::io__sprite_double::SMOOTHNESS_Y] * psf.get(Assistance::io__camera_float::SLIPPERINESS);
 
 			fastIsColliding(psf);
 		}
 
 		void Sprite::collideWith(const int is_layer, Sprite* const mf)
 		{
-			if (layer != is_layer) return;
+			//gfile logg;
+			std::string friendsname;
+
 			if (mf == this) return;
-			//if (!data.bval[+Assistance::io__sprite_boolean::COLLIDE_BE_IN_ALL_LAYERS]) return;
-			if (!data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM]) return;
-			if (!data.bval[+Assistance::io__sprite_boolean::COLLIDE_OTHERS]) return;
-			if (!mf) return;
-			if (!(mf->isEq(Assistance::io__sprite_boolean::COLLIDE_BE_IN_ALL_LAYERS, true) || mf->isEq(Assistance::io__sprite_integer::LAYER, is_layer))) return; // has not the layer to collide so shouldn't collide with this one. (it does check all possible layers)
-			//if (mf->isEq(Assistance::io__sprite_boolean::COLLIDE_OTHERS, false)) return;
+			if (!shouldThisCalcCollisionIn(is_layer)) {	// test if not transparent and not a block so it has movement after a collision
+				return;
+			}
+			if (!mf->isThisCollidableIn(is_layer)) {	// test if not transparent so it causes collision with moveable objects
+				return;
+			}
+			mf->get(Assistance::io__sprite_string::ID, friendsname);
+			double multiplier = mf->doesThisReflect() ? 1.0 : 1.0;
+
+			
+
+			//if (+data.collision_mode <= +Assistance::io__sprite_collision_mode::__COLLISION_HOLD_OR_TRANSPARENT_MAXVAL) return; // all of them before because they are 0, 1, 2 and 3, and this is the 3, so <= 3 = nope
+			//if (is_layer != layer && data.collision_mode != Assistance::io__sprite_collision_mode::COLLISION_ANY_ELASTIC && data.collision_mode != Assistance::io__sprite_collision_mode::COLLISION_ANY_ROUGH) return;
+			//if (mf == this) return;
+			//if (!mf) return;
+			//if (mf->isEq(Assistance::io__sprite_collision_mode::COLLISION_TRANSPARENT)) return;
+			//if (mf->isEq(Assistance::io__sprite_collision_mode::COLLISION_MOUSEONLY)) return;
+			//if (!(mf->isEq(Assistance::io__sprite_collision_mode::COLLISION_ANY_ELASTIC) || mf->isEq(Assistance::io__sprite_collision_mode::COLLISION_ANY_ROUGH) || mf->isEq(Assistance::io__sprite_integer::LAYER, is_layer))) return;
+
+			// OBRIGATORIAMENTE:
+			// this -> ou é SAMELAYER ou ANYLAYER
+			// othr -> ou é SAMELAYER ou ANYLAYER
 
 
 			double otherpos[2] = { 0.0 };
@@ -1125,64 +1264,72 @@ namespace LSW {
 			otherscl[2] = 1.0; // just to be sure nothing wrong happens
 
 
-			double dxx = (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX]) - otherpos[0]; // data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]
-			double dyy = (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY]) - otherpos[1]; // data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]
+			double dxx = (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX]) - otherpos[0];
+			double dyy = (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY]) - otherpos[1];
 
 			double distx = 0.5 * (data.dval[+Assistance::io__sprite_double::SCALEX] * data.dval[+Assistance::io__sprite_double::SCALEG] + otherscl[0]);
 			double disty = 0.5 * (data.dval[+Assistance::io__sprite_double::SCALEY] * data.dval[+Assistance::io__sprite_double::SCALEG] + otherscl[1]);
 
-			if (
-				(fabs(dxx) < distx) &&
-				(fabs(dyy) < disty)
-				)
+			double distx2 = distx + fabs(1.0 * data.dval[+Assistance::io__sprite_double::RO_SPEEDX]);
+			double disty2 = disty + fabs(1.0 * data.dval[+Assistance::io__sprite_double::RO_SPEEDY]);
+
+
+
+			double adapt_dxx = fabs(1.0 * dxx / distx);
+			double adapt_dyy = fabs(1.0 * dyy / disty);
+			double adapt_dxx2 = fabs(1.0 * dxx / distx2);
+			double adapt_dyy2 = fabs(1.0 * dyy / disty2);
+
+			if (adapt_dxx < 1.0 && adapt_dyy < 1.0) // collided
 			{
-				data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = true;
-				if (data.new_state == Assistance::io__sprite_tie_func_to_state::COLLISION_NONE) data.new_state = Assistance::io__sprite_tie_func_to_state::COLLISION_COLLIDED_OTHER; // mouse is higher priority
-				
+				//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << sprite_id << " COL W/ " << friendsname << L::EL;
+				___collision_data this_collision;
 
-				if (data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ELASTIC]) {
-					double wx = fabs(dxx) <= 1e-10 ? 1e-10 : fabs(dxx);
-					double wy = fabs(dyy) <= 1e-10 ? 1e-10 : fabs(dyy);
-					// 
-					double calcx = (dxx < 0 ? -1.0 : 1.0) * (fabs(powl(Constants::sprite_default_multiplier_global_div / wx, Constants::sprite_default_power_global_div)));
-					double calcy = (dyy < 0 ? -1.0 : 1.0) * (fabs(powl(Constants::sprite_default_multiplier_global_div / wy, Constants::sprite_default_power_global_div)));
-
-					// should limit because things are crazy
-					bool _keep_bg = fabs(calcx * data.dval[+Assistance::io__sprite_double::SCALEX]) < fabs(calcy * data.dval[+Assistance::io__sprite_double::SCALEY]);
-					if (fabs(calcx) > Constants::sprite_default_limit_speed_any) calcx /= fabs(calcx) / Constants::sprite_default_limit_speed_any;
-					if (fabs(calcy) > Constants::sprite_default_limit_speed_any) calcy /= fabs(calcy) / Constants::sprite_default_limit_speed_any;
-
-					if (_keep_bg) {
-						data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] += calcx;
-						data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] += calcy * sqrt(fabs(calcx));
+				if (adapt_dxx > adapt_dyy) { // from horiz
+					if (dxx > 0.0) { // block on the left of me
+						this_collision.diretion_by_centers_interpreted = +Assistance::directions::WEST;
+						__debug_s += "W@" + std::to_string(adapt_dxx) + ":" + std::to_string(adapt_dyy) + ";";
 					}
 					else {
-						data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] += calcx * sqrt(fabs(calcy));
-						data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] += calcy;
+						this_collision.diretion_by_centers_interpreted = +Assistance::directions::EAST;
+						__debug_s += "E@" + std::to_string(adapt_dxx) + ":" + std::to_string(adapt_dyy) + ";";
 					}
-
-					/*gfile logg;
-					logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Collided elasticly '" << sprite_id << "' with '" << oid << "' intensity: [" << calcx << ";" << calcy << "]" << L::EL;*/
+				}
+				else { // from vertc
+					if (dyy > 0.0) { // block on top
+						this_collision.diretion_by_centers_interpreted = +Assistance::directions::NORTH;
+						__debug_s += "N@" + std::to_string(adapt_dxx) + ":" + std::to_string(adapt_dyy) + ";";
+					}
+					else {
+						this_collision.diretion_by_centers_interpreted = +Assistance::directions::SOUTH;
+						__debug_s += "S@" + std::to_string(adapt_dxx) + ":" + std::to_string(adapt_dyy) + ";";
+					}
 				}
 
-				else if (data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ROUGH]) {
-					int wasp[2];
-					wasp[0] = dxx > 0.0 ? 1 : -1;
-					wasp[1] = dyy > 0.0 ? 1 : -1;
+				this_collision.expected_walk_distances[0] = fabs(fabs(dxx) - fabs(distx));
+				this_collision.expected_walk_distances[1] = fabs(fabs(dyy) - fabs(disty));
 
-					double realdist[2];
-					realdist[0] = -(double)wasp[0] * (fabs(dxx) - fabs(distx));
-					realdist[1] = -(double)wasp[1] * (fabs(dyy) - fabs(disty));
+				data.col_data.push_back(this_collision);
 
-					if (fabs(realdist[0]) < fabs(realdist[1])) data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] = realdist[0];
-					else									   data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] = realdist[1];
+				data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = true;
+			}
 
-					/*gfile logg;
-					logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Collided roughly '" << sprite_id << "' with '" << oid << "' intensity: [" << realdist[0] << ";" << realdist[1] << "]" << L::EL;*/
+			else if (adapt_dxx2 < 1.0 && adapt_dyy2 < 1.0) // is about to collide soon
+			{
+
+				//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << sprite_id << " WILL COL W/ " << friendsname << L::EL;
+				data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_ABOUT_TO_COLLIDE] = true;
+			
+				data.dval[+Assistance::io__sprite_double::RO_SPEEDX] *= 0.49; // < 0.50 so it won't bypass collision
+				data.dval[+Assistance::io__sprite_double::RO_SPEEDY] *= 0.49; // < 0.50 "
+
+				if (adapt_dxx > adapt_dyy) { // from horiz
+					if (dxx > 0.0)	__debug_s += "w@" + std::to_string(adapt_dxx) + ":" + std::to_string(adapt_dyy) + ";";
+					else			__debug_s += "e@" + std::to_string(adapt_dxx) + ":" + std::to_string(adapt_dyy) + ";";
 				}
-
-				else {
-					data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = false;
+				else { // from vertc
+					if (dyy > 0.0)	__debug_s += "n@" + std::to_string(adapt_dxx) + ":" + std::to_string(adapt_dyy) + ";";
+					else			__debug_s += "s@" + std::to_string(adapt_dxx) + ":" + std::to_string(adapt_dyy) + ";";
 				}
 			}
 		}
@@ -1192,28 +1339,372 @@ namespace LSW {
 			psf.set(Assistance::io__camera_boolean::READONLY_NOW, false);
 
 			if (data.last_state != data.new_state && data.new_state != Assistance::io__sprite_tie_func_to_state::size) {
+				__debug_s += "CF_STATE;";
 				if (data.function_pair[+data.new_state]) data.function_pair[+data.new_state]();
 			}
 			data.last_state = data.new_state;
 
-			if (data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING]) {
-				
-				// limit the maximum power of pos += distance value
-				double& calcx = data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X];
-				double& calcy = data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y];
-				if (fabs(calcx) > Constants::sprite_default_limit_speed_any) calcx /= fabs(calcx) / Constants::sprite_default_limit_speed_any;
-				if (fabs(calcy) > Constants::sprite_default_limit_speed_any) calcy /= fabs(calcy) / Constants::sprite_default_limit_speed_any;
+			int directions_can_go = +Assistance::directions::EAST | +Assistance::directions::WEST | +Assistance::directions::NORTH | +Assistance::directions::SOUTH;
 
-				if (data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ELASTIC]) {
-					data.dval[+Assistance::io__sprite_double::SPEEDX] += data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_X];
-					data.dval[+Assistance::io__sprite_double::SPEEDY] += data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_Y];
-				}
-				else if (data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ROUGH]) {
-					data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] += data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] * Constants::sprite_default_offset_mult;// *data.dval[+Assistance::io__sprite_double::SMOOTHNESS_X];
-					data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] += data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] * Constants::sprite_default_offset_mult;// *data.dval[+Assistance::io__sprite_double::SMOOTHNESS_Y];
+			for (auto& i : data.col_data) directions_can_go &= ~i.diretion_by_centers_interpreted;
 
-				}
+			// KEYBOARD INPUT
+			if (data.combined_direction_i_wanna_go & +Assistance::directions::NORTH) {
+				if (directions_can_go & +Assistance::directions::NORTH) data.dval[+Assistance::io__sprite_double::RO_SPEEDY] -= data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+				else __debug_s += "NO_GO_NORTH;";
 			}
+			if (data.combined_direction_i_wanna_go & +Assistance::directions::SOUTH) {
+				if (directions_can_go & +Assistance::directions::SOUTH) data.dval[+Assistance::io__sprite_double::RO_SPEEDY] += data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+				else __debug_s += "NO_GO_SOUTH;";
+			}
+			if (data.combined_direction_i_wanna_go & +Assistance::directions::EAST) {
+				if (directions_can_go & +Assistance::directions::EAST) data.dval[+Assistance::io__sprite_double::RO_SPEEDX] += data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+				else __debug_s += "NO_GO_EAST;";
+			}
+			if (data.combined_direction_i_wanna_go & +Assistance::directions::WEST) {
+				if (directions_can_go & +Assistance::directions::WEST) data.dval[+Assistance::io__sprite_double::RO_SPEEDX] -= data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+				else __debug_s += "NO_GO_WEST;";
+			}
+
+
+			// COLLISION
+
+			if (data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING]) {
+
+				data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = 0.0;
+
+				int where_are_them_at = 0;
+				double sum_pos[2] = { 0.0,0.0 };
+
+				for (auto& i : data.col_data) {
+					where_are_them_at |= i.diretion_by_centers_interpreted;
+					sum_pos[0] += i.expected_walk_distances[0];
+					sum_pos[1] += i.expected_walk_distances[1];
+				}
+
+				if (data.col_data.size() > 0) for (auto& i : sum_pos) i /= 1.0 * data.col_data.size();
+
+				const auto b = Tools::translBinary(where_are_them_at, 4); // NORTH SOUTH EAST WEST
+
+				if (b[0] && b[1] && b[2] && b[3]) { // fully smashed
+					__debug_s += "SMASHED;";
+				}
+
+				else if (b[1] && b[2] && b[3]) { // north is free (smashed horizontally)
+					data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = -0.25 * data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+				}
+				else if (b[0] && b[1] && b[2]) { // west is free (smashed vertically)
+					data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = -0.25 * data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+				}
+
+				else if (b[0] && b[1]) { // so go east (smashed vertically)
+					data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = 0.25 * data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+				}
+				else if (b[2] && b[3]) { // so go south (smashed horizontally)
+					data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = 0.25 * data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+				}
+				
+				else if (b[0]) { // so go south
+					if ((data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_ANY_ELASTIC) || (data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC))
+						data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = 1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+					else if ((data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_ANY_ROUGH) || (data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH))
+						data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] += sum_pos[1];
+				}
+				else if (b[1]) { // so go north
+					if ((data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_ANY_ELASTIC) || (data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC))
+						data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = -1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+					else if ((data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_ANY_ROUGH) || (data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH))
+						data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] -= sum_pos[1];
+				}
+				else if (b[2]) { // so go west
+					if ((data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_ANY_ELASTIC) || (data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC))
+						data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = -1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+					else if ((data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_ANY_ROUGH) || (data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH))
+						data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] -= sum_pos[0];
+				}
+				else if (b[3]) { // so go east
+					if ((data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_ANY_ELASTIC) || (data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC))
+						data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = 1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+					else if ((data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_ANY_ROUGH) || (data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH))
+						data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] += sum_pos[0];
+				}
+				else {
+					throw Abort::warn(__FUNCSIG__, "Unexpected collision behaviour!");
+				}
+
+
+
+
+
+				/*if (b[0]) // block on north
+				{
+					if (b[1]) { // there's someone south
+						if (b[2]) { // also east
+							if (b[3]) { // everywhere
+								__debug_s += "SMASHED;";
+							}
+							else { // can go west
+								data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = -1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+							}
+						}
+						else { // can go east
+							data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = 1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+						}
+					}
+					else { // can go south
+						data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = 1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+					}
+				}
+				else if (b[1]) // block on south
+				{
+					if (b[0]) { // there's someone north
+						if (b[2]) { // also east
+							if (b[3]) { // everywhere
+								__debug_s += "SMASHED;";
+							}
+							else { // can go west
+								data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = -1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+							}
+						}
+						else { // can go east
+							data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = 1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+						}
+					}
+					else { // can go north
+						data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = -1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+					}
+				}
+				else if (b[2]) // block on east
+				{
+					if (b[3]) { // there's someone west
+						if (b[0]) { // also north
+							if (b[1]) { // everywhere
+								__debug_s += "SMASHED;";
+							}
+							else { // can go south
+								data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = 1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+							}
+						}
+						else { // can go north
+							data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = -1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+						}
+					}
+					else { // can go west
+						data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = -1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+					}
+				}
+				else if (b[3]) // block on west
+				{
+					if (b[2]) { // there's someone east
+						if (b[0]) { // also north
+							if (b[1]) { // everywhere
+								__debug_s += "SMASHED;";
+							}
+							else { // can go south
+								data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = 1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+							}
+						}
+						else { // can go north
+							data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = -1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+						}
+					}
+					else { // can go east
+						data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = 1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+					}
+				}*/
+
+
+
+				//switch (data.collision_mode) {
+				//case Assistance::io__sprite_collision_mode::COLLISION_ANY_ELASTIC:
+				//case Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC:
+
+					//__debug_s += "COL_ELASTIC;";
+
+					//if (data.direction_col & +Assistance::directions::NORTH) { // the block at north, so go down
+					//	data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_Y];
+					//}
+					//if (data.direction_col & +Assistance::directions::SOUTH) {
+					//	data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = -fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_Y];
+					//}
+					//if (data.direction_col & +Assistance::directions::WEST) {
+					//	data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_X];
+					//}
+					//if (data.direction_col & +Assistance::directions::EAST) {
+					//	data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = -fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_X];
+					//}
+
+					/////break;
+				//case Assistance::io__sprite_collision_mode::COLLISION_ANY_ROUGH:
+				//case Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH:
+
+					//__debug_s += "COL_ROUGH;";
+					/*data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = 0.0;
+					data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = 0.0;*/
+
+
+
+					//bool dealt = false;
+
+					//if ((data.direction_col & +Assistance::directions::NORTH) && (data.direction_col & +Assistance::directions::SOUTH) && (data.direction_col & +Assistance::directions::WEST) && (data.direction_col & +Assistance::directions::EAST)) // colliding everywhere, so random lmao
+					//{
+					//	int which = rand() % 4;
+					//	switch (which) {
+					//	case 0:
+					//		data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
+					//		break;
+					//	case 1:
+					//		data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
+					//		break;
+					//	case 2:
+					//		data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
+					//		break;
+					//	case 3:
+					//		data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
+					//		break;
+					//	}
+					//	dealt = true;
+					//}
+
+					//if (!dealt) { // colliding on two sides at the same time
+					//	if ((data.direction_col & +Assistance::directions::NORTH) && (data.direction_col & +Assistance::directions::SOUTH))
+					//	{
+					//		if (data.direction_col & +Assistance::directions::WEST) {
+					//			data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
+					//		}
+					//		else if (data.direction_col & +Assistance::directions::EAST) {
+					//			data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
+					//		}
+					//		else {
+					//			int which = rand() % 2;
+					//			switch(which){
+					//			case 0:
+					//				data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
+					//				break;
+					//			case 1:
+					//				data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
+					//				break;
+					//			}
+					//		}
+					//		dealt = true;
+					//	}
+
+					//	if ((data.direction_col & +Assistance::directions::WEST) && (data.direction_col & +Assistance::directions::EAST))
+					//	{
+					//		if (data.direction_col & +Assistance::directions::NORTH) { // the block at north, so go down
+					//			data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
+					//		}
+					//		else if (data.direction_col & +Assistance::directions::SOUTH) {
+					//			data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
+					//		}
+					//		else {
+					//			int which = rand() % 2;
+					//			switch (which) {
+					//			case 0:
+					//				data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
+					//				break;
+					//			case 1:
+					//				data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
+					//				break;
+					//			}
+					//		}
+					//		dealt = true;
+					//	}
+					//}
+
+					//if (!dealt) { // one side only (easier)
+					//	if (data.direction_col & +Assistance::directions::NORTH) { // the block at north, so go down
+					//		data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
+					//	}
+					//	if (data.direction_col & +Assistance::directions::SOUTH) {
+					//		data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
+					//	}
+					//	if (data.direction_col & +Assistance::directions::WEST) {
+					//		data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
+					//	}
+					//	if (data.direction_col & +Assistance::directions::EAST) {
+					//		data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
+					//	}
+					//}
+
+					//break;
+				//}
+			}
+
+
+			/*if (data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING]) {
+
+				// speed must not be higher than the distance to collision
+				if (fabs(data.dval[+Assistance::io__sprite_double::RO_SPEEDX]) > data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) {
+					int mult = (data.dval[+Assistance::io__sprite_double::RO_SPEEDX] < 0 ? -1 : 1);
+					data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = mult * data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X];
+				}
+				if (fabs(data.dval[+Assistance::io__sprite_double::RO_SPEEDY]) > data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) {
+					int mult = (data.dval[+Assistance::io__sprite_double::RO_SPEEDY] < 0 ? -1 : 1);
+					data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = mult * data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y];
+				}
+
+
+				// limit the maximum power of pos += distance value				
+				if (data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] > Constants::sprite_default_limit_colision_speed_any)
+					data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] = Constants::sprite_default_limit_colision_speed_any;
+
+				if (data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] > Constants::sprite_default_limit_colision_speed_any)
+					data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] = Constants::sprite_default_limit_colision_speed_any;
+
+
+				auto d_g = resolveDir(data.direction_col);
+
+
+				switch (data.collision_mode) {
+				case Assistance::io__sprite_collision_mode::COLLISION_ANY_ELASTIC:
+				case Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC:
+					{
+						__debug_s += "COL_ELASTIC;";
+						switch (d_g) {
+						case Assistance::cl__sprite_direction_mult::GO_NORTH:
+							data.dval[+Assistance::io__sprite_double::RO_SPEEDY] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_Y];
+							break;
+						case Assistance::cl__sprite_direction_mult::GO_SOUTH:
+							data.dval[+Assistance::io__sprite_double::RO_SPEEDY] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_Y];
+							break;
+						case Assistance::cl__sprite_direction_mult::GO_WEST:
+							data.dval[+Assistance::io__sprite_double::RO_SPEEDX] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_X];
+							break;
+						case Assistance::cl__sprite_direction_mult::GO_EAST:
+							data.dval[+Assistance::io__sprite_double::RO_SPEEDX] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_X];
+							break;
+						}
+
+						
+						//data.dval[+Assistance::io__sprite_double::RO_SPEEDX] += data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_X];
+						//data.dval[+Assistance::io__sprite_double::RO_SPEEDY] += data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_Y];
+					}
+				break;
+				case Assistance::io__sprite_collision_mode::COLLISION_ANY_ROUGH:
+				case Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH:
+					{
+						__debug_s += "COL_ROUGH;";
+						data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = 0.0;
+						data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = 0.0;
+						switch (d_g) {
+						case Assistance::cl__sprite_direction_mult::GO_NORTH:
+							data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]);
+							break;
+						case Assistance::cl__sprite_direction_mult::GO_SOUTH:
+							data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]);
+							break;
+						case Assistance::cl__sprite_direction_mult::GO_WEST:
+							data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]);
+							break;
+						case Assistance::cl__sprite_direction_mult::GO_EAST:
+							data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]);
+							break;
+						}
+					}
+				break;
+				}
+			}*/
 
 			if (psf.get(Assistance::io__camera_boolean::RESPECT_LIMITS) && !(data.bval[+Assistance::io__sprite_boolean::FOLLOWMOUSE] || !data.bval[+Assistance::io__sprite_boolean::RESPECT_CAMERA_LIMITS])) /* FOLLOWMOUSE may glitch if outside limits, so skip limits then */
 			{
@@ -1227,6 +1718,27 @@ namespace LSW {
 				if (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] < lyl) data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] = lyl;
 				if (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] > lyh) data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] = lyh;
 			}
+		}
+
+		bool Sprite::isThisCollidableIn(const int l) // BLOCKS COLLIDE JUST WITH OTHERS, SO THIS ONLY WORKS TO TEST IF *SOMEONE* SHOULD COLLIDE WITH THIS (not the "should I collide?" inside itself because BLOCK doesn't collide with anyone, but anyone collides with block (HOLD))
+		{
+			if (!data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM]) return false;
+			if (+data.collision_mode <= +Assistance::io__sprite_collision_mode::__COLLISION_TRANSPARENT_MAXVAL) return false;
+			if (l != layer) {
+				if (+data.collision_mode >= +Assistance::io__sprite_collision_mode::__COLLISION_ANYLAYER_MINVAL) return true;
+				return false;
+			}
+			return true; // same layer and not transparent
+		}
+
+		bool Sprite::doesThisReflect()
+		{
+			return (+data.collision_mode > +Assistance::io__sprite_collision_mode::__COLLISION_HOLD_OR_TRANSPARENT_MAXVAL);
+		}
+
+		std::string Sprite::__debug_str()
+		{
+			return __debug_s;
 		}
 
 
@@ -1472,7 +1984,7 @@ namespace LSW {
 						case +Assistance::tags_e::T_SPRITE_SPEEDX:
 							if (follow) {
 								double val;
-								follow->get(Assistance::io__sprite_double::SPEEDX, val);
+								follow->get(Assistance::io__sprite_double::RO_SPEEDX, val);
 								sprintf_s(tempstr_c, "%.3lf", val);
 							}
 							else sprintf_s(tempstr_c, "NULL");
@@ -1480,7 +1992,7 @@ namespace LSW {
 						case +Assistance::tags_e::T_SPRITE_SPEEDY:
 							if (follow) {
 								double val;
-								follow->get(Assistance::io__sprite_double::SPEEDY, val);
+								follow->get(Assistance::io__sprite_double::RO_SPEEDY, val);
 								sprintf_s(tempstr_c, "%.3lf", val);
 							}
 							else sprintf_s(tempstr_c, "NULL");
@@ -1523,6 +2035,17 @@ namespace LSW {
 							}
 							else sprintf_s(tempstr_c, "UNDEF");*/
 							sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
+							break;
+						case +Assistance::tags_e::_T_SPRITE_DEBUG:
+							if (follow) {
+								std::string str = follow->__debug_str();
+
+								if (str.length() >= 128) str = str.substr(0, 124) + "...";
+
+								if (str.length() > 0) sprintf_s(tempstr_c, "%s", str.c_str());
+								else sprintf_s(tempstr_c, "NO INFORMATION");
+							}
+							else sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
 							break;
 						case +Assistance::tags_e::T_TEXTURES_LOADED:
 						{

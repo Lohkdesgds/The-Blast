@@ -36,7 +36,6 @@ int main(int argc, const char* argv[])
 		// used by lambdas
 		main_gamemodes modern = main_gamemodes::HASNT_STARTED_YET;
 		bool assist[3] = { false, false, false }; // 1: LOADING_ANIMATION, 2: FULLSCREEN/WINDOW TOGGLE, 3: GAMEBOXMAIN Sprite down below on loop
-		int i_assist[2] = { 0,0 }; // KB_LEFTRIGHT, KB_UPDOWN
 
 		// this has to be like the first one
 		gfile logg;
@@ -85,27 +84,6 @@ int main(int argc, const char* argv[])
 		};
 		const std::function< int(void)> bubble_draw_task				= [&bubble]()->int {
 			bubble.draw(); 
-			return 0;
-		};
-		const std::function< int(void)> keyboard_sprite_task			= [&i_assist, &sprites](){
-			if (i_assist[0] == 0 && i_assist[1] == 0) return 0;
-
-			for (auto& i : sprites) {
-				if (i->self->isEq(Assistance::io__sprite_boolean::FOLLOWKEYBOARD, true)) {
-					double tx, ty;
-					i->self->get(Assistance::io__sprite_double::SPEEDX, tx);
-					i->self->get(Assistance::io__sprite_double::SPEEDY, ty);
-
-					if (i_assist[0] != 0) {
-						//i->self->set(Assistance::io__sprite_double::SPEEDY, ty);
-						i->self->set(Assistance::io__sprite_double::SPEEDX, tx + i_assist[0] * Constants::intensity_default_player_walk);
-					}
-					if (i_assist[1] != 0) {
-						//i->self->set(Assistance::io__sprite_double::SPEEDX, tx);
-						i->self->set(Assistance::io__sprite_double::SPEEDY, ty + i_assist[1] * Constants::intensity_default_player_walk);
-					}
-				}
-			}
 			return 0;
 		};
 
@@ -280,30 +258,62 @@ int main(int argc, const char* argv[])
 		};
 		const int						keyb_printscreen_key			= ALLEGRO_KEY_F2;
 
-		const std::function<void(void)> keyb_kbf_go_north				= [&i_assist]() {
-			i_assist[1] = -1;
+		const std::function<void(void)> keyb_kbf_go_north				= [&sprites]() {
+			for (auto& i : sprites) {
+				if (i->self->isEq(Assistance::io__sprite_boolean::FOLLOWKEYBOARD, true)) {
+					i->self->set(Assistance::cl__sprite_direction_mult::GO_NORTH);
+				}
+			}
 		};
-		const std::function<void(void)> keyb_kbf_go_south				= [&i_assist]() {
-			i_assist[1] = 1;
+		const std::function<void(void)> keyb_kbf_go_south				= [&sprites]() {
+			for (auto& i : sprites) {
+				if (i->self->isEq(Assistance::io__sprite_boolean::FOLLOWKEYBOARD, true)) {
+					i->self->set(Assistance::cl__sprite_direction_mult::GO_SOUTH);
+				}
+			}
 		};
-		const std::function<void(void)> keyb_kbf_go_west				= [&i_assist]() {
-			i_assist[0] = -1;
+		const std::function<void(void)> keyb_kbf_go_west				= [&sprites]() {
+			for (auto& i : sprites) {
+				if (i->self->isEq(Assistance::io__sprite_boolean::FOLLOWKEYBOARD, true)) {
+					i->self->set(Assistance::cl__sprite_direction_mult::GO_WEST);
+				}
+			}
 		};
-		const std::function<void(void)> keyb_kbf_go_east				= [&i_assist]() {
-			i_assist[0] = 1;
+		const std::function<void(void)> keyb_kbf_go_east				= [&sprites]() {
+			for (auto& i : sprites) {
+				if (i->self->isEq(Assistance::io__sprite_boolean::FOLLOWKEYBOARD, true)) {
+					i->self->set(Assistance::cl__sprite_direction_mult::GO_EAST);
+				}
+			}
 		};
 
-		const std::function<void(void)> keyb_kbf_go_reset_north			= [&i_assist]() {
-			if (i_assist[1] == -1) i_assist[1] = 0;
+		const std::function<void(void)> keyb_kbf_go_reset_north			= [&sprites]() {
+			for (auto& i : sprites) {
+				if (i->self->isEq(Assistance::io__sprite_boolean::FOLLOWKEYBOARD, true)) {
+					i->self->set(Assistance::cl__sprite_direction_mult::STOP_NORTH);
+				}
+			}
 		};
-		const std::function<void(void)> keyb_kbf_go_reset_south			= [&i_assist]() {
-			if (i_assist[1] == 1) i_assist[1] = 0;
+		const std::function<void(void)> keyb_kbf_go_reset_south			= [&sprites]() {
+			for (auto& i : sprites) {
+				if (i->self->isEq(Assistance::io__sprite_boolean::FOLLOWKEYBOARD, true)) {
+					i->self->set(Assistance::cl__sprite_direction_mult::STOP_SOUTH);
+				}
+			}
 		};
-		const std::function<void(void)> keyb_kbf_go_reset_west			= [&i_assist]() {
-			if (i_assist[0] == -1) i_assist[0] = 0;
+		const std::function<void(void)> keyb_kbf_go_reset_west			= [&sprites]() {
+			for (auto& i : sprites) {
+				if (i->self->isEq(Assistance::io__sprite_boolean::FOLLOWKEYBOARD, true)) {
+					i->self->set(Assistance::cl__sprite_direction_mult::STOP_WEST);
+				}
+			}
 		};
-		const std::function<void(void)> keyb_kbf_go_reset_east			= [&i_assist]() {
-			if (i_assist[0] == 1) i_assist[0] = 0;
+		const std::function<void(void)> keyb_kbf_go_reset_east			= [&sprites]() {
+			for (auto& i : sprites) {
+				if (i->self->isEq(Assistance::io__sprite_boolean::FOLLOWKEYBOARD, true)) {
+					i->self->set(Assistance::cl__sprite_direction_mult::STOP_EAST);
+				}
+			}
 		};
 
 		const int						keyb_kbf_go_north_key			= ALLEGRO_KEY_W;
@@ -368,7 +378,7 @@ int main(int argc, const char* argv[])
 		consol.setSimpleTask(Assistance::io__thread_ids::DRAWING, Assistance::io__threads_taskid::START, set_consol_mainthread_start);
 
 		consol.addCustomTask(reapply_cam_settings, +my_custom_funcs::UPDATE_CAMERA, 1.0 / 20);
-		consol.addCustomTask(keyboard_sprite_task, +my_custom_funcs::UPDATE_KEYBOARD_GUYS, 1.0 / Constants::__i_col_pos_t_update);
+		//consol.addCustomTask(keyboard_sprite_task, +my_custom_funcs::UPDATE_KEYBOARD_GUYS, 1.0 / Constants::__i_col_pos_t_update);
 
 
 
@@ -508,7 +518,7 @@ int main(int argc, const char* argv[])
 				Sprite* s = sprites.create("MOUSE");
 				s->set(Assistance::io__sprite_string::ID, "MOUSE");
 				s->set(Assistance::io__sprite_boolean::FOLLOWMOUSE, true);
-				s->set(Assistance::io__sprite_boolean::COLLIDE_BE_IN_ALL_LAYERS, true);
+				s->set(Assistance::io__sprite_collision_mode::COLLISION_ANY_HOLD_STATIC);
 				s->set(Assistance::io__sprite_boolean::DRAW, true); // no draw for now
 				s->set(Assistance::io__sprite_double::SCALEG, 0.2);
 				s->set(Assistance::io__sprite_string::ADD, "MOUSE");
@@ -522,23 +532,21 @@ int main(int argc, const char* argv[])
 				s->set(Assistance::io__sprite_string_vector::ADDMULTIPLE, Tools::genStrFormat("PAUSE_##", 29));
 				s->set(Assistance::io__sprite_string::ID, "PAUSE_ANIM");
 				s->set(Assistance::io__sprite_boolean::DRAW, true);
-				s->set(Assistance::io__sprite_boolean::COLLIDE_OTHERS, true);
-				s->set(Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ELASTIC, true);
+				s->set(Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC);
 				s->set(Assistance::io__sprite_double::SCALEG, 0.55);
-				s->set(Assistance::io__sprite_double::POSY, 0.35);
+				s->set(Assistance::io__sprite_double::POSY, 0.45);
 				s->set(Assistance::io__sprite_double::ANIMATION_FPS, 1.0 / 24);
 				s->set(Assistance::io__sprite_integer::LAYER, 0);
-			}*/
+			}
 
-			/*{
+			{
 				Sprite* s = sprites.create("PAUSE_ANIM2");
 				s->set(Assistance::io__sprite_string_vector::ADDMULTIPLE, Tools::genStrFormat("PAUSE_##", 29));
 				s->set(Assistance::io__sprite_string::ID, "PAUSE_ANIM2");
 				s->set(Assistance::io__sprite_boolean::DRAW, true);
-				s->set(Assistance::io__sprite_boolean::COLLIDE_OTHERS, true);
-				s->set(Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ROUGH, true);
+				s->set(Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH);
 				s->set(Assistance::io__sprite_double::SCALEG, 0.35);
-				s->set(Assistance::io__sprite_double::POSY, 0.05);
+				s->set(Assistance::io__sprite_double::POSY, -0.45);
 				s->set(Assistance::io__sprite_double::ANIMATION_FPS, 1.0 / 15);
 				s->set(Assistance::io__sprite_integer::LAYER, 0);
 			}*/
@@ -553,7 +561,7 @@ int main(int argc, const char* argv[])
 				s->set(Assistance::io__sprite_integer::LAYER, -50);
 				s->set(Assistance::io__sprite_double::ANIMATION_FPS, 1.0 / 20);
 				s->set(Assistance::io__sprite_boolean::LOOPFRAMES, false);
-				s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, true);
+				s->set(Assistance::io__sprite_collision_mode::COLLISION_MOUSEONLY);
 				s->set(Assistance::io__sprite_boolean::ZERO_RESETS_POSITION_INSTEAD_OF_FREEZING, true);
 				//s->hook(Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&modern]()->void {modern = main_gamemodes::MENU; });
 			}
@@ -563,7 +571,7 @@ int main(int argc, const char* argv[])
 				s->set(Assistance::io__sprite_boolean::DRAW, false);
 				s->set(Assistance::io__sprite_double::SCALEG, 2.0);
 				s->set(Assistance::io__sprite_integer::LAYER, -50);
-				s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, true);
+				s->set(Assistance::io__sprite_collision_mode::COLLISION_MOUSEONLY);
 				s->hook(Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, skip_animation_functional);
 			}
 
@@ -595,7 +603,7 @@ int main(int argc, const char* argv[])
 				s->hook(Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&modern]()->void {modern = main_gamemodes::GAMING; });
 				s->set(Assistance::io__sprite_string::ID, "BUTTON_MENU_0");
 				s->set(Assistance::io__sprite_boolean::DRAW, true);
-				s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, true);
+				s->set(Assistance::io__sprite_collision_mode::COLLISION_MOUSEONLY);
 				s->set(Assistance::io__sprite_double::SCALEG, 0.18);
 				s->set(Assistance::io__sprite_double::SCALEX, 5.5);
 				s->set(Assistance::io__sprite_double::POSY, -0.35);
@@ -625,7 +633,7 @@ int main(int argc, const char* argv[])
 				s->hook(Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, setup_animation_functional);
 				s->set(Assistance::io__sprite_string::ID, "BUTTON_MENU_1");
 				s->set(Assistance::io__sprite_boolean::DRAW, true);
-				s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, true);
+				s->set(Assistance::io__sprite_collision_mode::COLLISION_MOUSEONLY);
 				s->set(Assistance::io__sprite_double::SCALEG, 0.18);
 				s->set(Assistance::io__sprite_double::SCALEX, 5.5);
 				s->set(Assistance::io__sprite_double::POSY, -0.05);
@@ -655,7 +663,7 @@ int main(int argc, const char* argv[])
 				s->hook(Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, exit_game);
 				s->set(Assistance::io__sprite_string::ID, "BUTTON_MENU_2");
 				s->set(Assistance::io__sprite_boolean::DRAW, true);
-				s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, true);
+				s->set(Assistance::io__sprite_collision_mode::COLLISION_MOUSEONLY);
 				s->set(Assistance::io__sprite_double::SCALEG, 0.18);
 				s->set(Assistance::io__sprite_double::SCALEX, 5.5);
 				s->set(Assistance::io__sprite_double::POSY, 0.25);
@@ -685,17 +693,12 @@ int main(int argc, const char* argv[])
 				s->hook(Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&modern]()->void {modern = main_gamemodes::MENU; });
 				s->set(Assistance::io__sprite_string::ID, "BUTTON_GAMING_0");
 				s->set(Assistance::io__sprite_boolean::DRAW, true);
-				s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, true);
+				s->set(Assistance::io__sprite_collision_mode::COLLISION_MOUSEONLY);
 				s->set(Assistance::io__sprite_double::SCALEG, 0.14);
 				s->set(Assistance::io__sprite_double::SCALEX, 5.5);
 				s->set(Assistance::io__sprite_double::POSY, -0.9);
 				s->set(Assistance::io__sprite_double::POSX, 0.45);
 				s->set(Assistance::io__sprite_integer::LAYER, 1);
-				// fun!
-				s->set(Assistance::io__sprite_double::SMOOTHNESS_X, 0.15);
-				s->set(Assistance::io__sprite_double::SMOOTHNESS_Y, 0.15);
-				s->set(Assistance::io__sprite_boolean::COLLIDE_OTHERS, true);
-				s->set(Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ELASTIC, true);
 
 				Text* t = texts.create("BUTTON_GAMING_0_T");
 				t->set(Assistance::io__text_string::FONT, "DEFAULT");
@@ -854,9 +857,38 @@ int main(int argc, const char* argv[])
 		**************************************************************************************/
 
 
+		/*{
+			Sprite* s = sprites.create("PLAYER");
+			s->set(Assistance::io__sprite_string::ID, "PLAYER");
+			s->set(Assistance::io__sprite_boolean::DRAW, true);
+			s->set(Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH);
+			s->set(Assistance::io__sprite_boolean::FOLLOWKEYBOARD, true);
+			//s->set(Assistance::io__sprite_boolean::SHOWDOT, true);
+			s->set(Assistance::io__sprite_boolean::SHOWBOX, false);
+			s->set(Assistance::io__sprite_double::SCALEG, 0.065);
+			s->set(Assistance::io__sprite_double::SCALEY, 1.81);
+			s->set(Assistance::io__sprite_string::ADD, "BLOCK_05");
+			s->set(Assistance::io__sprite_integer::LAYER, 1);
+
+
+			Text* t = texts.create("PLAYER_T");
+			t->set(Assistance::io__text_string::FONT, "DEFAULT");
+			t->set(Assistance::io__text_string::STRING, "%sprite_debug%");
+			t->set(Assistance::io__text_string::ID, "PLAYER_T");
+			t->set(Assistance::io__text_boolean::SHOW, true);
+			t->set(Assistance::io__text_double::SCALEG, 0.06);
+			t->set(Assistance::io__text_double::SCALEX, 0.7);
+			t->set(Assistance::io__text_double::POSY, 0.060);
+			t->set(Assistance::io__text_string::FOLLOW_SPRITE, "PLAYER");
+			t->set(Assistance::io__text_integer::LAYER, 1);
+			t->set(Assistance::io__text_double::UPDATETIME, 1.0 / 4);
+			t->set(Assistance::io__text_color::COLOR, al_map_rgb(180, 255, 225));
+		}*/
+
+
 
 		bool has_map_gen = false;
-		World wd;
+		World* wd = nullptr;
 
 
 		for (size_t counttt = 0; consol.isRunning(); counttt++) {
@@ -867,6 +899,10 @@ int main(int argc, const char* argv[])
 			if (modern == main_gamemodes::GAMING) {
 				if (!has_map_gen)
 				{
+					int mult = rand() % 2 + 1;
+
+					wd = new World(16*mult, 9*mult);
+
 					consol.pauseThread();
 					while (!consol.hasThreadPaused()) Sleep(10);
 
@@ -874,43 +910,51 @@ int main(int argc, const char* argv[])
 						Sprite* s = sprites.create("PLAYER");
 						s->set(Assistance::io__sprite_string::ID, "PLAYER");
 						s->set(Assistance::io__sprite_boolean::DRAW, true);
-						s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, false);
-						s->set(Assistance::io__sprite_boolean::COLLIDE_OTHERS, true);
+						s->set(Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH);
 						s->set(Assistance::io__sprite_boolean::FOLLOWKEYBOARD, true);
 						//s->set(Assistance::io__sprite_boolean::SHOWDOT, true);
 						s->set(Assistance::io__sprite_boolean::SHOWBOX, false);
-						s->set(Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ROUGH, true);
-						s->set(Assistance::io__sprite_double::SCALEG, 0.05);
-						s->set(Assistance::io__sprite_double::SCALEY, 1.8);
+						s->set(Assistance::io__sprite_double::SCALEG, 0.065 / mult);
+						s->set(Assistance::io__sprite_double::SCALEY, 1.81);
 						s->set(Assistance::io__sprite_string::ADD, "BLOCK_05");
 						s->set(Assistance::io__sprite_integer::LAYER, 1);
-						s->set(Assistance::io__sprite_double::POSX, 0.1);
-						s->set(Assistance::io__sprite_double::POSY, 0.1);
+						s->set(Assistance::io__sprite_double::POSX, 1.999 * (1.0 * 3 / (wd->getLen(0) - 1) - 0.5));
+						s->set(Assistance::io__sprite_double::POSY, 1.999 * (1.0 * 3 / (wd->getLen(1) - 1) - 0.5));
+
+
+						Text* t = texts.create("PLAYER_T");
+						t->set(Assistance::io__text_string::FONT, "DEFAULT");
+						t->set(Assistance::io__text_string::STRING, "%sprite_debug%");
+						t->set(Assistance::io__text_string::ID, "PLAYER_T");
+						t->set(Assistance::io__text_boolean::SHOW, true);
+						t->set(Assistance::io__text_double::SCALEG, 0.06);
+						t->set(Assistance::io__text_double::SCALEX, 0.7);
+						t->set(Assistance::io__text_double::POSY, 0.060);
+						t->set(Assistance::io__text_string::FOLLOW_SPRITE, "PLAYER");
+						t->set(Assistance::io__text_integer::LAYER, 1);
+						t->set(Assistance::io__text_double::UPDATETIME, 1.0 / 4);
+						t->set(Assistance::io__text_color::COLOR, al_map_rgb(180, 255, 225));
 					}
 
-					wd.generate(al_get_time()*20.0);
+					wd->generate(al_get_time()*20.0);
 
-					for (size_t y = 0; y < wd.getLen(1); y++) {
-						for (size_t x = 0; x < wd.getLen(0); x++)
+					for (size_t y = 0; y < wd->getLen(1); y++) {
+						for (size_t x = 0; x < wd->getLen(0); x++)
 						{
-							if (wd.readPos(x, y) == +blocks::BLOCK) {
+							if (wd->readPos((int)x, (int)y) == +blocks::BLOCK) {
 								double pss[2];
-								pss[0] = 2.0 * (1.0 * x / (wd.getLen(0) - 1) - 0.5);
-								pss[1] = 2.0 * (1.0 * y / (wd.getLen(1) - 1) - 0.5);
+								pss[0] = 2.0 * (1.0 * x / (wd->getLen(0) - 1) - 0.5);
+								pss[1] = 2.0 * (1.0 * y / (wd->getLen(1) - 1) - 0.5);
 
 								Sprite* s = sprites.create("GAMEBOX_" + std::to_string(y) + "_" + std::to_string(x));
 								s->set(Assistance::io__sprite_string::ID, "GAMEBOX_" + std::to_string(y) + "_" + std::to_string(x));
 								s->set(Assistance::io__sprite_boolean::DRAW, false); // no draw for now
-								s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, false);
-								s->set(Assistance::io__sprite_boolean::COLLIDE_OTHERS, true);
-								s->set(Assistance::io__sprite_boolean::COLLIDE_BE_IN_ALL_LAYERS, true);
-								s->set(Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ELASTIC, false);
-								s->set(Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ROUGH, false);
+								s->set(Assistance::io__sprite_collision_mode::COLLISION_ANY_HOLD_STATIC);
 								//s->set(Assistance::io__sprite_boolean::SHOWDOT, true);
 								s->set(Assistance::io__sprite_boolean::SHOWBOX, false);
-								s->set(Assistance::io__sprite_double::SCALEG, 0.066);
-								s->set(Assistance::io__sprite_double::SCALEY, 1.8);
-								s->set(Assistance::io__sprite_string::ADD, "BLOCK_0" + std::to_string(wd.readPos(x, y) ? 1 : 0));
+								s->set(Assistance::io__sprite_double::SCALEG, 0.132 / mult);
+								s->set(Assistance::io__sprite_double::SCALEY, 1.81);
+								s->set(Assistance::io__sprite_string::ADD, "BLOCK_0" + std::to_string(wd->readPos(x, y) ? 1 : 0));
 								s->set(Assistance::io__sprite_integer::LAYER, 0);
 								s->set(Assistance::io__sprite_double::POSX, pss[0]);
 								s->set(Assistance::io__sprite_double::POSY, pss[1]);
@@ -923,10 +967,7 @@ int main(int argc, const char* argv[])
 						Sprite* s = sprites.create("GAMEBOXMAIN");
 						s->set(Assistance::io__sprite_string::ID, "GAMEBOX_MAIN");
 						s->set(Assistance::io__sprite_boolean::DRAW, true); // no draw for now
-						s->set(Assistance::io__sprite_boolean::COLLIDE_MOUSE, false);
-						s->set(Assistance::io__sprite_boolean::COLLIDE_OTHERS, false);
-						s->set(Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ELASTIC, false);
-						s->set(Assistance::io__sprite_boolean::AFFECTED_BY_COLLISION_ROUGH, false);
+						s->set(Assistance::io__sprite_collision_mode::COLLISION_TRANSPARENT);
 						s->set(Assistance::io__sprite_boolean::SHOWDOT, false);
 						s->set(Assistance::io__sprite_boolean::SHOWBOX, false);
 						s->set(Assistance::io__sprite_double::SCALEG, 2.0);
@@ -957,7 +998,7 @@ int main(int argc, const char* argv[])
 							}
 							});
 					}
-
+					
 					consol.resumeThread();
 					has_map_gen = true;
 				}
@@ -966,9 +1007,12 @@ int main(int argc, const char* argv[])
 				if (has_map_gen) {
 					consol.pauseThread();
 					while (!consol.hasThreadPaused()) Sleep(10);
+					delete wd;
+					wd = nullptr;
 					sprites.remove([](const std::string a)->bool {return a.find("GAMEBOX_") == 0; });
 					sprites.remove("GAMEBOXMAIN");
 					sprites.remove("PLAYER");
+					texts.remove("PLAYER_T");
 					consol.resumeThread();
 					has_map_gen = false;
 				}

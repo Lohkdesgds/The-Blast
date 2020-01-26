@@ -245,7 +245,8 @@ namespace LSW {
 		inline gfile& gfile::operator<<(const int& u)
 		{
 			char temp[32];
-			sprintf_s(temp, "%d", u);
+			if (fabs(u) < 1e15) sprintf_s(temp, "%d", u);
+			else sprintf_s(temp, u > 0 ? "+++" : "---");
 			push(temp);
 			return *this;
 		}
@@ -253,7 +254,8 @@ namespace LSW {
 		inline gfile& gfile::operator<<(const float& u)
 		{
 			char temp[32];
-			sprintf_s(temp, "%.3f", u);
+			if (fabs(u) < 1e15) sprintf_s(temp, "%.3f", u);
+			else sprintf_s(temp, u > 0 ? "+++" : "---");
 			push(temp);
 			return *this;
 		}
@@ -261,7 +263,8 @@ namespace LSW {
 		inline gfile& gfile::operator<<(const double& u)
 		{
 			char temp[32];
-			sprintf_s(temp, "%.5lf", u);
+			if (fabs(u) < 1e15) sprintf_s(temp, "%.5lf", u);
+			else sprintf_s(temp, u > 0 ? "+++" : "---");
 			push(temp);
 			return *this;
 		}
@@ -269,7 +272,8 @@ namespace LSW {
 		inline gfile& gfile::operator<<(const unsigned& u)
 		{
 			char temp[32];
-			sprintf_s(temp, "%u", u);
+			if (u < 1e15) sprintf_s(temp, "%u", u);
+			else sprintf_s(temp, u > 0 ? "+++" : "---");
 			push(temp);
 			return *this;
 		}
@@ -277,7 +281,8 @@ namespace LSW {
 		inline gfile& gfile::operator<<(const long& u)
 		{
 			char temp[32];
-			sprintf_s(temp, "%ld", u);
+			if (fabs(u) < 1e15) sprintf_s(temp, "%ld", u);
+			else sprintf_s(temp, u > 0 ? "+++" : "---");
 			push(temp);
 			return *this;
 		}
@@ -285,7 +290,8 @@ namespace LSW {
 		inline gfile& gfile::operator<<(const size_t& u)
 		{
 			char temp[48];
-			sprintf_s(temp, "%zu", u);
+			if (u < 1e15) sprintf_s(temp, "%zu", u);
+			else sprintf_s(temp, u > 0 ? "+++" : "---");
 			push(temp);
 			return *this;
 		}

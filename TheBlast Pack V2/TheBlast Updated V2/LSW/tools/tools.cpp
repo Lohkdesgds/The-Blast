@@ -178,6 +178,17 @@ namespace LSW {
 
 				return rett;
 			}
+			std::vector<bool> translBinary(const int v, const size_t lim)
+			{
+				std::vector<bool> b;
+
+				for (size_t actual_bin = 0; actual_bin < lim; actual_bin++)
+				{
+					b.push_back(v & (1 << actual_bin));
+				}
+
+				return b;
+			}
 		}
 	}
 }

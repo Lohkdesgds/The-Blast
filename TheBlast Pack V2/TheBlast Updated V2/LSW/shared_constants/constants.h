@@ -81,12 +81,16 @@ namespace LSW {
 			// drawing.h stuff
 			const double text_default_sharpness_font = 75.0; // 2500
 			const double text_timeout_interpret = 0.5;
-			const double camera_default_slipperiness = 0.975;
-			const double sprite_default_smoothness = 0.92; // alias: slipperines
+			const double camera_default_slipperiness = 0.95;
+			const double sprite_default_smoothness = 0.85; // alias: slipperines
 			const double sprite_default_multiplier_global_div = 1.0e-1;
 			const double sprite_default_power_global_div = 4.0;
-			const double sprite_default_limit_speed_any = 0.15;
-			const double sprite_default_offset_mult = 1.04;
+
+			//const double sprite_default_limit_colision_speed_any = 0.15;
+			const double intensity_player_run_max = 0.020; // limit: 0.025
+			const double intensity_default_player_walk = 0.002;
+
+			const double sprite_default_offset_mult = 1.0005; // adjustment because collision might be colliding forever
 			// some fx
 			const float amountofblur_bubbles = 85.0;
 			const unsigned amountof_linesperline_draw = 20;
@@ -100,7 +104,7 @@ namespace LSW {
 
 
 
-			const size_t __i_col_pos_t_update = 45; /*20*/
+			const size_t __i_col_pos_t_update = 20; /*20*/
 			const size_t __i_func_t_once = 5;  // can run on-the-fly functions up to 5 times per sec
 			const size_t __i_thr_loop_timer_0 = 40,						// DISPLAY THREAD, may be smooth
 						 __i_thr_loop_timer_1 = __i_col_pos_t_update,	// COLLISION THREAD may be timed
@@ -114,8 +118,6 @@ namespace LSW {
 			const size_t map_size_default_y = 18;
 
 
-			const double intensity_player_run_max = 0.022; // limit: 0.025
-			const double intensity_default_player_walk = 0.005;
 
 
 			/* PRETTY USEFUL LAMBDA STUFF */

@@ -21,6 +21,8 @@ namespace LSW {
 			void interpretPath(std::string&);
 
 			std::vector<std::string> genStrFormat(const std::string, const size_t, const size_t = 0); // FORMAT = "STARTSTUFF######ENDSTUFF" (# = number space)
+
+			std::vector<bool> translBinary(const int, const size_t); // value, how many bytes to test?
 		}
 	}
 }
