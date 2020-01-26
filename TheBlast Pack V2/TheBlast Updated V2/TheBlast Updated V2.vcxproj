@@ -206,6 +206,7 @@
     <ClInclude Include="LSW\custom_abort\abort.h" />
     <ClInclude Include="LSW\drawing\drawing.h" />
     <ClInclude Include="LSW\logger\logger.h" />
+    <ClInclude Include="LSW\lsw.h" />
     <ClInclude Include="LSW\map_gen\map.h" />
     <ClInclude Include="LSW\organizer\organizer.h" />
     <ClInclude Include="LSW\shared_constants\constants.h" />

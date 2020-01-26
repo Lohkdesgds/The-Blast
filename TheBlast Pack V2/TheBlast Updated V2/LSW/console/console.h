@@ -33,7 +33,7 @@
 
 namespace LSW {
 	namespace v4 {
-		namespace Assistance {
+		namespace Constants {
 
 			enum class ro__thread_display_routines_timers { FUNCTIONALITY_ONCE, FUNCTIONALITY_LOOP, LOOPTRACK, CHECKKEEP, CHECKMEMORYBITMAP, UPDATELOGONSCREEN };
 			enum class ro__thread_collision_routines_timers { FUNCTIONALITY_ONCE, FUNCTIONALITY_LOOP, LOOPTRACK, CHECKKEEP, COLLISIONWORK };
@@ -50,17 +50,9 @@ namespace LSW {
 		typedef __template_multiple_timers<Constants::__i_func_t_once, Constants::__i_thr_loop_timer_2, 1, 5, 60>								    __keyboardmouse_routines;
 		typedef __template_multiple_timers<Constants::__i_func_t_once, Constants::__i_thr_loop_timer_3, 1>											__functional_routines;
 
-		typedef __template_static_vector<ALLEGRO_BITMAP>  Textures;
-		typedef __template_static_vector<ALLEGRO_FONT>    Fonts;
-		typedef __template_static_vector<ALLEGRO_SAMPLE>  Samples;
-
-		typedef __template_static_vector<Sprite>		  Sprites;
-		typedef __template_static_vector<Text>			  Texts;
-		typedef __template_static_vector<Track>			  Tracks;
 
 
-
-		class Console {
+		class Manager {
 			Display* md = nullptr; // HANDLED INTERNALLY ON THREAD
 
 			Textures gimg;
@@ -78,8 +70,8 @@ namespace LSW {
 				bool am_i_running = false;
 				T* thread_arguments = nullptr;
 				bool pause_thread = false;
-				std::function<void(void)> functions[+Assistance::io__threads_taskid::size]; // init does on init, once runs once, running does all the time, deinit deinit the thread
-				bool has_called_once[+Assistance::io__threads_taskid::size] = { false };
+				std::function<void(void)> functions[+Constants::io__threads_taskid::size]; // init does on init, once runs once, running does all the time, deinit deinit the thread
+				bool has_called_once[+Constants::io__threads_taskid::size] = { false };
 				//std::mutex functions_m; // have I?
 				bool tasking = false;
 				std::string threadid_str = "unknown";
@@ -134,13 +126,13 @@ namespace LSW {
 			void __l_thr_kb();
 			void __l_thr_fc();
 
-			void __l_thr_md_run(const Assistance::io__threads_taskid);
-			void __l_thr_cl_run(const Assistance::io__threads_taskid);
-			void __l_thr_kb_run(const Assistance::io__threads_taskid);
-			void __l_thr_fc_run(const Assistance::io__threads_taskid);
+			void __l_thr_md_run(const Constants::io__threads_taskid);
+			void __l_thr_cl_run(const Constants::io__threads_taskid);
+			void __l_thr_kb_run(const Constants::io__threads_taskid);
+			void __l_thr_fc_run(const Constants::io__threads_taskid);
 		public:
-			Console();
-			~Console();
+			Manager();
+			~Manager();
 
 			void start();
 			//void launch(const std::function <void(void*)>, const std::function <void(void*)>, const std::function <void(void*)>); // display, events, kb?
@@ -150,23 +142,23 @@ namespace LSW {
 			bool isOpen();
 			bool isRunning();
 
-			void resetSimpleOnceTask(const Assistance::io__thread_ids);
-			void setSimpleTask(const Assistance::io__thread_ids, const Assistance::io__threads_taskid, std::function<void(void)>);
-			void unsetSimpleTask(const Assistance::io__thread_ids, const Assistance::io__threads_taskid);
-			bool hasTasked(const Assistance::io__thread_ids, const Assistance::io__threads_taskid);
+			void resetSimpleOnceTask(const Constants::io__thread_ids);
+			void setSimpleTask(const Constants::io__thread_ids, const Constants::io__threads_taskid, std::function<void(void)>);
+			void unsetSimpleTask(const Constants::io__thread_ids, const Constants::io__threads_taskid);
+			bool hasTasked(const Constants::io__thread_ids, const Constants::io__threads_taskid);
 
-			size_t getCallsPerSecondOnThread(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);
-			double getInstantSCallsOnThread(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);
+			size_t getCallsPerSecondOnThread(const Constants::io__thread_ids = Constants::io__thread_ids::ALL);
+			double getInstantSCallsOnThread(const Constants::io__thread_ids = Constants::io__thread_ids::ALL);
 
-			void pauseThread(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);
-			bool hasThreadPaused(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);
-			void resumeThread(const Assistance::io__thread_ids = Assistance::io__thread_ids::ALL);
+			void pauseThread(const Constants::io__thread_ids = Constants::io__thread_ids::ALL);
+			bool hasThreadPaused(const Constants::io__thread_ids = Constants::io__thread_ids::ALL);
+			void resumeThread(const Constants::io__thread_ids = Constants::io__thread_ids::ALL);
 
 			void addCustomTask(std::function<int(void)>, const int, const double); // t/sec
 			void delayCustomTaskTicksBy(const int, const LONGLONG);
 			void removeCustomTask(const int);
 
-			void sendEvent(const Assistance::ro__my_events, const intptr_t, const intptr_t = 0, const intptr_t = 0, const intptr_t = 0); // you MUST know what you're doing
+			void sendEvent(const Constants::ro__my_events, const intptr_t, const intptr_t = 0, const intptr_t = 0, const intptr_t = 0); // you MUST know what you're doing
 
 			Display* const _display_handle();
 		};

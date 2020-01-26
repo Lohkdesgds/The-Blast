@@ -252,7 +252,7 @@ namespace LSW {
 			for (int j = 0; j < num_modes; ++j) {
 				ALLEGRO_DISPLAY_MODE admode;
 				if (al_get_display_mode(j, &admode) == &admode) {
-					Assistance::display_mode mod;
+					Constants::display_mode mod;
 					mod.x = admode.width;
 					mod.y = admode.height;
 					mod.hz = admode.refresh_rate;
@@ -270,14 +270,14 @@ namespace LSW {
 			}
 		}
 
-		bool __systematic::checkResolutionExistance(const int x, const int y, const int hz)
+		bool __systematic::checkResolutionExistance(const int x, const int y, const int hz) const
 		{
 			if (!initialized) throw Abort::abort(__FUNCSIG__, "Wasn't initialized properly!");
 
 
 			if (!l) throw Abort::abort(__FUNCSIG__, "Display modes shouldn't be NULL");
 
-			Assistance::display_mode sm;
+			Constants::display_mode sm;
 			sm.x = x;
 			sm.y = y;
 			sm.hz = hz;
@@ -307,7 +307,7 @@ namespace LSW {
 			return alright;
 		}
 
-		const auto __systematic::getAvailableResolutions()
+		const auto __systematic::getAvailableResolutions() const
 		{
 			if (!initialized) throw Abort::abort(__FUNCSIG__, "Wasn't initialized properly!");
 
@@ -420,13 +420,13 @@ namespace LSW {
 
 			int flag = 0;
 
-			Assistance::display_mode md;
+			Constants::display_mode md;
 
 			Database config;
-			config.get(Assistance::io__conf_integer::SCREEN_X, md.x, 0);
-			config.get(Assistance::io__conf_integer::SCREEN_Y, md.y, 0);
-			config.get(Assistance::io__conf_integer::SCREEN_PREF_HZ, md.hz, 0);
-			config.get(Assistance::io__conf_integer::SCREEN_FLAGS, flag, Constants::start_display_default_mode);
+			config.get(Constants::io__conf_integer::SCREEN_X, md.x, 0);
+			config.get(Constants::io__conf_integer::SCREEN_Y, md.y, 0);
+			config.get(Constants::io__conf_integer::SCREEN_PREF_HZ, md.hz, 0);
+			config.get(Constants::io__conf_integer::SCREEN_FLAGS, flag, Constants::start_display_default_mode);
 			flag |= Constants::start_display_obligatory_flag_mode; // obligatory flags like OpenGL and Resizable
 
 			__g_sys.setNewDisplayMode(flag);
@@ -441,7 +441,7 @@ namespace LSW {
 						if ((i.x == md.x && i.y == md.y)) {
 							if (i.hz > md.hz) {
 								md.hz = i.hz;
-								config.set(Assistance::io__conf_integer::SCREEN_PREF_HZ, md.hz);
+								config.set(Constants::io__conf_integer::SCREEN_PREF_HZ, md.hz);
 							}
 						}
 					}
@@ -453,13 +453,13 @@ namespace LSW {
 				md.x = 1280;
 				md.y = 720;
 				md.hz = 0;
-				config.set(Assistance::io__conf_integer::SCREEN_X, md.x);
-				config.set(Assistance::io__conf_integer::SCREEN_Y, md.y);
+				config.set(Constants::io__conf_integer::SCREEN_X, md.x);
+				config.set(Constants::io__conf_integer::SCREEN_Y, md.y);
 				for (auto& i : u) {
 					if ((i.x == md.x && i.y == md.y)) {
 						if (i.hz > md.hz) {
 							md.hz = i.hz;
-							config.set(Assistance::io__conf_integer::SCREEN_PREF_HZ, md.hz);
+							config.set(Constants::io__conf_integer::SCREEN_PREF_HZ, md.hz);
 						}
 					}
 				}
@@ -542,18 +542,18 @@ namespace LSW {
 					logg << L::SLF << fsr(__FUNCSIG__) << "Is this the first time you're opening this game? Registered first Database load." << L::ELF;
 
 					// set or load first values
-					set(Assistance::io__conf_boolean::HAD_ERROR, true); // then texture download starts			// USED
-					set(Assistance::io__conf_boolean::WAS_OSD_ON, false);										// USED
-					set(Assistance::io__conf_boolean::ULTRADEBUG, false);										// USED
-					set(Assistance::io__conf_float::LAST_VOLUME, 0.5);
-					set(Assistance::io__conf_string::LAST_VERSION, Constants::version_app);						// nah
-					set(Assistance::io__conf_string::LAST_PLAYERNAME, "Player");
-					set(Assistance::io__conf_string::LAST_COLOR, "GREEN");
-					set(Assistance::io__conf_integer::SCREEN_X, 0);
-					set(Assistance::io__conf_integer::SCREEN_Y, 0);
-					set(Assistance::io__conf_longlong::_TIMES_LIT, 0LL);
-					set(Assistance::io__conf_integer::SCREEN_FLAGS, Constants::start_display_default_mode);
-					set(Assistance::io__conf_integer::SCREEN_PREF_HZ, 0);
+					set(Constants::io__conf_boolean::HAD_ERROR, true); // then texture download starts			// USED
+					set(Constants::io__conf_boolean::WAS_OSD_ON, false);										// USED
+					set(Constants::io__conf_boolean::ULTRADEBUG, false);										// USED
+					set(Constants::io__conf_double::LAST_VOLUME, 0.5);
+					set(Constants::io__conf_string::LAST_VERSION, Constants::version_app);						// nah
+					set(Constants::io__conf_string::LAST_PLAYERNAME, "Player");
+					set(Constants::io__conf_string::LAST_COLOR, "GREEN");
+					set(Constants::io__conf_integer::SCREEN_X, 0);
+					set(Constants::io__conf_integer::SCREEN_Y, 0);
+					set(Constants::io__conf_longlong::_TIMES_LIT, 0LL);
+					set(Constants::io__conf_integer::SCREEN_FLAGS, Constants::start_display_default_mode);
+					set(Constants::io__conf_integer::SCREEN_PREF_HZ, 0);
 
 					if (!al_save_config_file(temporary.c_str(), data.c)) {
 						throw Abort::abort(__FUNCSIG__, "Cannot save Database file!");
@@ -561,9 +561,9 @@ namespace LSW {
 				}
 				else {
 					long long ll;
-					get(Assistance::io__conf_longlong::_TIMES_LIT, ll, 0LL);
+					get(Constants::io__conf_longlong::_TIMES_LIT, ll, 0LL);
 					ll++;
-					set(Assistance::io__conf_longlong::_TIMES_LIT, ll);
+					set(Constants::io__conf_longlong::_TIMES_LIT, ll);
 				}
 			}
 			data.m.unlock();
@@ -600,33 +600,33 @@ namespace LSW {
 			if (!data.c) throw Abort::abort(__FUNCSIG__, "Cannot set \"" + e + "\" as \"" + v + "\".");
 			al_set_config_value(data.c, Constants::conf_string_default_txt.c_str(), e.c_str(), v.c_str());
 		}
-		void Database::set(const Assistance::io__conf_boolean e, const bool v)
+		void Database::set(const Constants::io__conf_boolean e, const bool v)
 		{
-			set(Assistance::ro__conf_boolean_str[+e], Assistance::ro__conf_truefalse_str[(int)v]);
+			set(Constants::ro__conf_boolean_str[+e], Constants::ro__conf_truefalse_str[(int)v]);
 		}
-		void Database::set(const Assistance::io__conf_float e, const float v)
+		void Database::set(const Constants::io__conf_double e, const double v)
 		{
-			set(Assistance::ro__conf_float_str[+e], std::to_string(v));
+			set(Constants::ro__conf_float_str[+e], std::to_string(v));
 		}
-		void Database::set(const Assistance::io__conf_integer e, const int v)
+		void Database::set(const Constants::io__conf_integer e, const int v)
 		{
-			set(Assistance::ro__conf_integer_str[+e], std::to_string(v));
+			set(Constants::ro__conf_integer_str[+e], std::to_string(v));
 		}
-		void Database::set(const Assistance::io__conf_longlong e, const long long v)
+		void Database::set(const Constants::io__conf_longlong e, const long long v)
 		{
-			set(Assistance::ro__conf_longlong_str[+e], std::to_string(v));
+			set(Constants::ro__conf_longlong_str[+e], std::to_string(v));
 		}
-		void Database::set(const Assistance::io__conf_string e, const std::string v)
+		void Database::set(const Constants::io__conf_string e, const std::string v)
 		{
-			set(Assistance::ro__conf_string_str[+e], v);
+			set(Constants::ro__conf_string_str[+e], v);
 		}
-		void Database::set(const Assistance::io__db_boolean e, const bool v)
+		void Database::set(const Constants::io__db_boolean e, const bool v)
 		{
-			if (e != Assistance::io__db_boolean::size) {
+			if (e != Constants::io__db_boolean::size) {
 				data.b[+e] = v;
 
 				switch (e) {
-				case Assistance::io__db_boolean::SAVING_STRING_INPUT:
+				case Constants::io__db_boolean::SAVING_STRING_INPUT:
 					if (!data.b[+e]) {
 						data.curr_string.clear();
 						data.last_string.clear();
@@ -648,9 +648,9 @@ namespace LSW {
 				}
 			}
 		}
-		void Database::set(const Assistance::ro__db_mouse_boolean e, const bool v)
+		void Database::set(const Constants::ro__db_mouse_boolean e, const bool v)
 		{
-			if (+e < +Assistance::ro__db_mouse_boolean::size) {
+			if (+e < +Constants::ro__db_mouse_boolean::size) {
 				data.mouse[+e] = v;
 				if (v && data.func_mb[+e]) {
 					data.func_mb[+e]();
@@ -660,34 +660,34 @@ namespace LSW {
 				}
 			}
 		}
-		void Database::set(const Assistance::ro__db_mouse_float e, const float v)
+		void Database::set(const Constants::ro__db_mouse_double e, const double v)
 		{
-			data.db_mouse_axes[+e] = v;
+			data.db_mouse_axes[+e] = +v;
 		}
 
-		void Database::set(const Assistance::ro__db_statistics_sizet e, const size_t v)
+		void Database::set(const Constants::ro__db_statistics_sizet e, const size_t v)
 		{
-			if (e != Assistance::ro__db_statistics_sizet::size) data.db_statistics_sizet[+e] = v;
+			if (e != Constants::ro__db_statistics_sizet::size) data.db_statistics_sizet[+e] = v;
 		}
 
-		void Database::set(const Assistance::ro__db_statistics_double e, const double v)
+		void Database::set(const Constants::ro__db_statistics_double e, const double v)
 		{
-			if (e != Assistance::ro__db_statistics_double::size) data.db_statistics_double[+e] = v;
+			if (e != Constants::ro__db_statistics_double::size) data.db_statistics_double[+e] = v;
 		}
 
-		void Database::set(const Assistance::ro__db_thread_string e, const char v)
+		void Database::set(const Constants::ro__db_thread_string e, const char v)
 		{
-			if (isEq(Assistance::io__db_boolean::SAVING_STRING_INPUT, false)) {
+			if (isEq(Constants::io__db_boolean::SAVING_STRING_INPUT, false)) {
 				data.curr_string.clear();
 				return;
 			}
 
 			switch (e) {
-			case Assistance::ro__db_thread_string::KEY_ADD:
+			case Constants::ro__db_thread_string::KEY_ADD:
 				data.curr_string += v;
 				data.curr_string_keylen.push_back(data.curr_string_keylen_val);
 				break;
-			case Assistance::ro__db_thread_string::KEY_ERASE:
+			case Constants::ro__db_thread_string::KEY_ERASE:
 				if (data.curr_string.length() > 0) {
 					char siz = data.curr_string_keylen.back();
 					for (char p = 0; p < siz; p++) {
@@ -696,33 +696,33 @@ namespace LSW {
 					}
 				}
 				break;
-			case Assistance::ro__db_thread_string::KEY_SET:
+			case Constants::ro__db_thread_string::KEY_SET:
 				data.last_string = data.curr_string;
 				data.curr_string.clear();
 				data.curr_string_keylen.clear();
 				data.curr_string_keylen_val = 1;
 				break;
-			case Assistance::ro__db_thread_string::KEY_ADD_SET_LEN:
+			case Constants::ro__db_thread_string::KEY_ADD_SET_LEN:
 				data.curr_string_keylen_val = v;
 				break;
 			}
 		}
 
-		void Database::set(const Assistance::io__db_functional_opt u, const int p, const std::function<void(void)> f)
+		void Database::set(const Constants::io__db_functional_opt u, const int p, const std::function<void(void)> f)
 		{
 			switch (u) {
-			case Assistance::io__db_functional_opt::MOUSE_KEY:
-				if (p != +Assistance::ro__db_mouse_boolean::size && p > 0) data.func_mb[p] = f;
+			case Constants::io__db_functional_opt::MOUSE_KEY:
+				if (p != +Constants::ro__db_mouse_boolean::size && p > 0) data.func_mb[p] = f;
 				break;
-			case Assistance::io__db_functional_opt::KEYBOARD_KEY:
+			case Constants::io__db_functional_opt::KEYBOARD_KEY:
 				if (p < ALLEGRO_KEY_MAX && p > 0) {
 					data.func_kb[p] = f;					
 				}
 				break;
-			case Assistance::io__db_functional_opt::MOUSE_LEFT:
-				if (p != +Assistance::ro__db_mouse_boolean::size && p > 0) data.func_mb_u[p] = f;
+			case Constants::io__db_functional_opt::MOUSE_LEFT:
+				if (p != +Constants::ro__db_mouse_boolean::size && p > 0) data.func_mb_u[p] = f;
 				break;
-			case Assistance::io__db_functional_opt::KEYBOARD_LEFT:
+			case Constants::io__db_functional_opt::KEYBOARD_LEFT:
 				if (p < ALLEGRO_KEY_MAX && p > 0) {
 					data.func_kb_u[p] = f;
 				}
@@ -742,50 +742,50 @@ namespace LSW {
 			}
 			v = chh;
 		}
-		void Database::get(const Assistance::io__conf_boolean e, bool& v, const bool defaul)
+		void Database::get(const Constants::io__conf_boolean e, bool& v, const bool defaul)
 		{
 			std::string output;
-			get(Assistance::ro__conf_boolean_str[+e], output, Assistance::ro__conf_truefalse_str[(int)defaul]);
-			v = (output == Assistance::ro__conf_truefalse_str[1 /*true*/]);
+			get(Constants::ro__conf_boolean_str[+e], output, Constants::ro__conf_truefalse_str[(int)defaul]);
+			v = (output == Constants::ro__conf_truefalse_str[1 /*true*/]);
 		}
-		void Database::get(const Assistance::io__conf_float e, float& v, const float defaul)
+		void Database::get(const Constants::io__conf_double e, double& v, const double defaul)
 		{
 			std::string output;
-			get(Assistance::ro__conf_float_str[+e], output, std::to_string(defaul));
+			get(Constants::ro__conf_float_str[+e], output, std::to_string(defaul));
 			v = atof(output.c_str());
 		}
-		void Database::get(const Assistance::io__conf_integer e, int& v, const int defaul)
+		void Database::get(const Constants::io__conf_integer e, int& v, const int defaul)
 		{
 			std::string output;
-			get(Assistance::ro__conf_integer_str[+e], output, std::to_string(defaul));
+			get(Constants::ro__conf_integer_str[+e], output, std::to_string(defaul));
 			v = atoi(output.c_str());
 		}
-		void Database::get(const Assistance::io__conf_longlong e, long long& v, const long long defaul)
+		void Database::get(const Constants::io__conf_longlong e, long long& v, const long long defaul)
 		{
 			std::string output;
-			get(Assistance::ro__conf_longlong_str[+e], output, std::to_string(defaul));
+			get(Constants::ro__conf_longlong_str[+e], output, std::to_string(defaul));
 			v = atoll(output.c_str());
 		}
-		void Database::get(const Assistance::io__conf_string e, std::string& v, const std::string defaul)
+		void Database::get(const Constants::io__conf_string e, std::string& v, const std::string defaul)
 		{
 			std::string output;
-			get(Assistance::ro__conf_string_str[+e], output, defaul);
+			get(Constants::ro__conf_string_str[+e], output, defaul);
 			v = output;
 		}
 
-		void Database::get(const Assistance::io__db_boolean e, bool& v, const bool defaul)
+		void Database::get(const Constants::io__db_boolean e, bool& v, const bool defaul)
 		{
-			if (e != Assistance::io__db_boolean::size) v = data.b[+e];
+			if (e != Constants::io__db_boolean::size) v = data.b[+e];
 			else v = defaul;
 		}
 
-		void Database::get(const Assistance::ro__db_string e, std::string& v)
+		void Database::get(const Constants::ro__db_string e, std::string& v)
 		{
 			switch (e) {
-			case Assistance::ro__db_string::CURRENT_STRING:
+			case Constants::ro__db_string::CURRENT_STRING:
 				v = data.curr_string;
 				break;
-			case Assistance::ro__db_string::LAST_STRING:
+			case Constants::ro__db_string::LAST_STRING:
 				v = data.last_string;
 				break;
 			}
@@ -796,27 +796,27 @@ namespace LSW {
 			if (al_keycod >= 0 && al_keycod < ALLEGRO_KEY_MAX) v = data.keys[al_keycod];
 			else v = defaul;
 		}
-		void Database::get(const Assistance::ro__db_mouse_boolean e, bool& v)
+		void Database::get(const Constants::ro__db_mouse_boolean e, bool& v)
 		{
-			if (e != Assistance::ro__db_mouse_boolean::size) v = data.mouse[+e];
-			if (e == Assistance::ro__db_mouse_boolean::IS_ANY_PRESSED) {
+			if (e != Constants::ro__db_mouse_boolean::size) v = data.mouse[+e];
+			if (e == Constants::ro__db_mouse_boolean::IS_ANY_PRESSED) {
 				v = false;
 				for (auto& i : data.mouse) v |= i;
 			}
 		}
-		void Database::get(const Assistance::ro__db_mouse_float e, float& v)
+		void Database::get(const Constants::ro__db_mouse_double e, double& v)
 		{
-			v = data.db_mouse_axes[+e];
+			v = +data.db_mouse_axes[+e];
 		}
 
-		void Database::get(const Assistance::ro__db_statistics_sizet e, size_t& v)
+		void Database::get(const Constants::ro__db_statistics_sizet e, size_t& v)
 		{
-			if (e != Assistance::ro__db_statistics_sizet::size) v = data.db_statistics_sizet[+e];
+			if (e != Constants::ro__db_statistics_sizet::size) v = data.db_statistics_sizet[+e];
 		}
 
-		void Database::get(const Assistance::ro__db_statistics_double e, double& v)
+		void Database::get(const Constants::ro__db_statistics_double e, double& v)
 		{
-			if (e != Assistance::ro__db_statistics_double::size) v = data.db_statistics_double[+e];
+			if (e != Constants::ro__db_statistics_double::size) v = data.db_statistics_double[+e];
 		}
 
 
@@ -826,45 +826,45 @@ namespace LSW {
 			get(e, oth, v); // meh
 			return oth == v;
 		}
-		bool Database::isEq(const Assistance::io__conf_boolean e, const bool v)
+		bool Database::isEq(const Constants::io__conf_boolean e, const bool v)
 		{
 			bool oth;
 			get(e, oth, v); // meh
 			return oth == v;
 		}
-		bool Database::isEq(const Assistance::io__conf_float e, const float v)
+		bool Database::isEq(const Constants::io__conf_double e, const double v)
 		{
-			float oth;
+			double oth;
 			get(e, oth, v); // meh
 			return oth == v;
 		}
-		bool Database::isEq(const Assistance::io__conf_integer e, const int v)
+		bool Database::isEq(const Constants::io__conf_integer e, const int v)
 		{
 			int oth;
 			get(e, oth, v); // meh
 			return oth == v;
 		}
-		bool Database::isEq(const Assistance::io__conf_longlong e, const long long v)
+		bool Database::isEq(const Constants::io__conf_longlong e, const long long v)
 		{
 			long long oth;
 			get(e, oth, v); // meh
 			return oth == v;
 		}
-		bool Database::isEq(const Assistance::io__conf_string e, const std::string v)
+		bool Database::isEq(const Constants::io__conf_string e, const std::string v)
 		{
 			std::string oth;
 			get(e, oth, v); // meh
 			return oth == v;
 		}
 
-		bool Database::isEq(const Assistance::io__db_boolean e, const bool v)
+		bool Database::isEq(const Constants::io__db_boolean e, const bool v)
 		{
 			bool oth;
 			get(e, oth, v); // meh
 			return oth == v;
 		}
 
-		bool Database::isEq(const Assistance::ro__db_string e, const std::string v)
+		bool Database::isEq(const Constants::ro__db_string e, const std::string v)
 		{
 			std::string oth;
 			get(e, oth); // meh
@@ -878,28 +878,28 @@ namespace LSW {
 			return oth == v;
 		}
 
-		bool Database::isEq(const Assistance::ro__db_mouse_boolean e, const bool v)
+		bool Database::isEq(const Constants::ro__db_mouse_boolean e, const bool v)
 		{
 			bool oth;
 			get(e, oth); // meh
 			return oth == v;
 		}
 
-		bool Database::isEq(const Assistance::ro__db_mouse_float e, const float v)
+		bool Database::isEq(const Constants::ro__db_mouse_double e, const double v)
 		{
-			float oth;
+			double oth;
 			get(e, oth); // meh
 			return oth == v;
 		}
 
-		bool Database::isEq(const Assistance::ro__db_statistics_sizet e, const size_t v)
+		bool Database::isEq(const Constants::ro__db_statistics_sizet e, const size_t v)
 		{
 			size_t oth;
 			get(e, oth);
 			return oth == v;
 		}
 
-		bool Database::isEq(const Assistance::ro__db_statistics_double e, const double v)
+		bool Database::isEq(const Constants::ro__db_statistics_double e, const double v)
 		{
 			double oth;
 			get(e, oth);
@@ -991,7 +991,7 @@ namespace LSW {
 					nullptr,
 					windw,
 					title,
-					(ext + std::string("\n\nContinue anyway? (NO = force exit the game)")).c_str(),
+					((ext ? ext : "") + std::string("\n\nContinue anyway? (NO = force exit the game)")).c_str(),
 					NULL,
 					ALLEGRO_MESSAGEBOX_YES_NO);
 				if (e == 2) { // NO

@@ -23,17 +23,17 @@ namespace LSW {
 					throw Abort::abort(__FUNCSIG__, "Failed to set mixer in voice.");
 				}
 
-				float temp_vol_get;
+				double temp_vol_get;
 				Database conf;
-				conf.get(Assistance::io__conf_float::LAST_VOLUME, temp_vol_get, Constants::start_default_global_volume);
-				conf.set(Assistance::io__conf_float::LAST_VOLUME, temp_vol_get);
+				conf.get(Constants::io__conf_double::LAST_VOLUME, temp_vol_get, Constants::start_default_global_volume);
+				conf.set(Constants::io__conf_double::LAST_VOLUME, temp_vol_get);
 
 				volume(temp_vol_get);
 			}
 
 		}
 
-		void Mixer::volume(const float v)
+		void Mixer::volume(const double v)
 		{
 			al_set_mixer_gain(control.mixing, v);
 		}
@@ -67,11 +67,11 @@ namespace LSW {
 			instance = nullptr;
 		}
 
-		void Track::set(const Assistance::io__track_boolean e, const bool v)
+		void Track::set(const Constants::io__track_boolean e, const bool v)
 		{
 			switch (e)
 			{
-			case Assistance::io__track_boolean::PLAYING:
+			case Constants::io__track_boolean::PLAYING:
 				if (!instance) {
 					throw Abort::abort(__FUNCSIG__, "Failed to set PLAYING because there was no instance loaded.", 1);
 					return;
@@ -80,31 +80,31 @@ namespace LSW {
 				break;
 			}
 		}
-		void Track::set(const Assistance::io__track_float e, const float v)
+		void Track::set(const Constants::io__track_float e, const double v)
 		{
 			switch (e)
 			{
-			case Assistance::io__track_float::VOLUME:
+			case Constants::io__track_float::VOLUME:
 				if (!instance) {
 					throw Abort::abort(__FUNCSIG__, "Failed to set VOLUME because there was no instance loaded.", 1);
 					return;
 				}
-				al_set_sample_instance_gain(instance, v);
+				al_set_sample_instance_gain(instance, +v);
 				break;
-			case Assistance::io__track_float::SPEED:
+			case Constants::io__track_float::SPEED:
 				if (!instance) {
 					throw Abort::abort(__FUNCSIG__, "Failed to set SPEED because there was no instance loaded.", 1);
 					return;
 				}
-				al_set_sample_instance_speed(instance, v);
+				al_set_sample_instance_speed(instance, +v);
 				break;
 			}
 		}
-		void Track::set(const Assistance::io__track_integer e, const Assistance::io__track_integer_modes v)
+		void Track::set(const Constants::io__track_integer e, const Constants::io__track_integer_modes v)
 		{
 			switch (e)
 			{
-			case Assistance::io__track_integer::PLAYMODE:
+			case Constants::io__track_integer::PLAYMODE:
 				if (!instance) {
 					throw Abort::abort(__FUNCSIG__, "Failed to set PLAYMODE because there was no instance loaded.", 1);
 					return;
@@ -113,14 +113,14 @@ namespace LSW {
 				break;
 			}
 		}
-		void Track::set(const Assistance::io__track_string e, const std::string v)
+		void Track::set(const Constants::io__track_string e, const std::string v)
 		{
 			switch (e)
 			{
-			case Assistance::io__track_string::ID:
+			case Constants::io__track_string::ID:
 				id = v;
 				break;
-			case Assistance::io__track_string::LOADID:
+			case Constants::io__track_string::LOADID:
 				__template_static_vector<ALLEGRO_SAMPLE> tracks;
 				tracks.get(v, mse);
 				al_set_sample(instance, mse);
@@ -128,11 +128,11 @@ namespace LSW {
 			}
 		}
 
-		void Track::get(const Assistance::io__track_boolean e, bool& v)
+		void Track::get(const Constants::io__track_boolean e, bool& v)
 		{
 			switch (e)
 			{
-			case Assistance::io__track_boolean::PLAYING:
+			case Constants::io__track_boolean::PLAYING:
 				if (!instance) {
 					throw Abort::abort(__FUNCSIG__, "Failed to get PLAYING because there was no instance loaded.", 1);
 					return;
@@ -141,31 +141,31 @@ namespace LSW {
 				break;
 			}
 		}
-		void Track::get(const Assistance::io__track_float e, float& v)
+		void Track::get(const Constants::io__track_float e, double& v)
 		{
 			switch (e)
 			{
-			case Assistance::io__track_float::VOLUME:
+			case Constants::io__track_float::VOLUME:
 				if (!instance) {
 					throw Abort::abort(__FUNCSIG__, "Failed to get VOLUME because there was no instance loaded.", 1);
 					return;
 				}
-				v = al_get_sample_instance_gain(instance);
+				v = +al_get_sample_instance_gain(instance);
 				break;
-			case Assistance::io__track_float::SPEED:
+			case Constants::io__track_float::SPEED:
 				if (!instance) {
 					throw Abort::abort(__FUNCSIG__, "Failed to get SPEED because there was no instance loaded.", 1);
 					return;
 				}
-				v = al_get_sample_instance_speed(instance);
+				v = +al_get_sample_instance_speed(instance);
 				break;
 			}
 		}
-		void Track::get(const Assistance::io__track_integer e, int& v)
+		void Track::get(const Constants::io__track_integer e, int& v)
 		{
 			switch (e)
 			{
-			case Assistance::io__track_integer::PLAYMODE:
+			case Constants::io__track_integer::PLAYMODE:
 				if (!instance) {
 					throw Abort::abort(__FUNCSIG__, "Failed to get PLAYMODE because there was no instance loaded.", 1);
 					return;
@@ -174,11 +174,11 @@ namespace LSW {
 				break;
 			}
 		}
-		void Track::get(const Assistance::io__track_string e, std::string& v)
+		void Track::get(const Constants::io__track_string e, std::string& v)
 		{
 			switch (e)
 			{
-			case Assistance::io__track_string::ID:
+			case Constants::io__track_string::ID:
 				v = id;
 				break;
 			}

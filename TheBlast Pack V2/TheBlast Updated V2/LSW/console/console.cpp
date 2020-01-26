@@ -4,12 +4,12 @@ namespace LSW {
 	namespace v4 {
 
 		
-		void Console::__linkdebug_timing::start()
+		void Manager::__linkdebug_timing::start()
 		{
 			last_start = GetTickCount64();
 		}
 
-		void Console::__linkdebug_timing::end()
+		void Manager::__linkdebug_timing::end()
 		{
 			auto a = GetTickCount64();
 			last_difference = (unsigned)(last_start - a);
@@ -19,18 +19,18 @@ namespace LSW {
 			}
 		}
 
-		unsigned Console::__linkdebug_timing::getLastDifference()
+		unsigned Manager::__linkdebug_timing::getLastDifference()
 		{
 			return last_difference;
 		}
 
-		double Console::__linkdebug_timing::getAverageDifference()
+		double Manager::__linkdebug_timing::getAverageDifference()
 		{
 			return average_difference;
 		}
 
 
-		void Console::__l_thr_md()
+		void Manager::__l_thr_md()
 		{
 			try {
 				Database conf;
@@ -64,14 +64,14 @@ namespace LSW {
 
 
 				// verify if there's something to load before anything
-				__l_thr_md_run(Assistance::io__threads_taskid::START);
+				__l_thr_md_run(Constants::io__threads_taskid::START);
 
 
 				thread_maindisplay.thread_arguments->start();
 
 				{
 					ALLEGRO_EVENT ev;
-					ev.type = +Assistance::ro__my_events::THRKBM_DISPLAY_SIZE;
+					ev.type = +Constants::ro__my_events::THRKBM_DISPLAY_SIZE;
 					ev.user.data1 = al_get_display_width(md->getDisplay());
 					ev.user.data2 = al_get_display_height(md->getDisplay());
 					al_emit_user_event(&evsrc, &ev, NULL);
@@ -81,18 +81,18 @@ namespace LSW {
 
 
 				Text* const mtt = texts.create("lastlogtext");
-				mtt->set(Assistance::io__text_string::FONT, "DEFAULT");
-				mtt->set(Assistance::io__text_string::STRING, "Syncronization in progress... (LOG)");
-				mtt->set(Assistance::io__text_string::ID, "lastlogtext");
-				mtt->set(Assistance::io__text_boolean::SHOW, true);
-				mtt->set(Assistance::io__text_double::SCALEG, 0.03);
-				mtt->set(Assistance::io__text_double::SCALEX, 0.55);
-				mtt->set(Assistance::io__text_double::POSY, 0.965); // 0.935
-				mtt->set(Assistance::io__text_double::POSX, -1.0);
-				mtt->set(Assistance::io__text_integer::MODE, +Assistance::io__alignment_text::ALIGN_LEFT);
-				mtt->set(Assistance::io__text_double::UPDATETIME, 1.0 / 5);
-				mtt->set(Assistance::io__text_boolean::AFFECTED_BY_CAM, false);
-				mtt->set(Assistance::io__text_integer::LAYER, 100);
+				mtt->set(Constants::io__text_string::FONT, "DEFAULT");
+				mtt->set(Constants::io__text_string::STRING, "Syncronization in progress... (LOG)");
+				mtt->set(Constants::io__text_string::ID, "lastlogtext");
+				mtt->set(Constants::io__text_boolean::SHOW, true);
+				mtt->set(Constants::io__text_double::SCALEG, 0.03);
+				mtt->set(Constants::io__text_double::SCALEX, 0.55);
+				mtt->set(Constants::io__text_double::POSY, 0.965); // 0.935
+				mtt->set(Constants::io__text_double::POSX, -1.0);
+				mtt->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
+				mtt->set(Constants::io__text_double::UPDATETIME, 1.0 / 5);
+				mtt->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
+				mtt->set(Constants::io__text_integer::LAYER, 100);
 
 				std::string mtt_s = "No new information";
 
@@ -104,7 +104,7 @@ namespace LSW {
 				for (bool localb = true; localb;)
 				{
 					try {
-						conf.set(Assistance::ro__db_statistics_double::INSTANT_FRAMESPERSECOND, thread_maindisplay.thread_arguments->getNumInstantSCallsDefault());
+						conf.set(Constants::ro__db_statistics_double::INSTANT_FRAMESPERSECOND, thread_maindisplay.thread_arguments->getNumInstantSCallsDefault());
 
 						while (thread_maindisplay.pause_thread) {
 							Sleep(10);
@@ -114,31 +114,31 @@ namespace LSW {
 
 						if (thread_maindisplay.thread_arguments->hasEvent()) {
 
-							if (thread_maindisplay.thread_arguments->isThisThis(+Assistance::ro__thread_display_routines_timers::FUNCTIONALITY_ONCE))
+							if (thread_maindisplay.thread_arguments->isThisThis(+Constants::ro__thread_display_routines_timers::FUNCTIONALITY_ONCE))
 							{
-								__l_thr_md_run(Assistance::io__threads_taskid::ONCE);
+								__l_thr_md_run(Constants::io__threads_taskid::ONCE);
 							}
-							else if (thread_maindisplay.thread_arguments->isThisThis(+Assistance::ro__thread_display_routines_timers::FUNCTIONALITY_LOOP))
+							else if (thread_maindisplay.thread_arguments->isThisThis(+Constants::ro__thread_display_routines_timers::FUNCTIONALITY_LOOP))
 							{
-								__l_thr_md_run(Assistance::io__threads_taskid::LOOP);
+								__l_thr_md_run(Constants::io__threads_taskid::LOOP);
 							}
-							else if (thread_maindisplay.thread_arguments->isThisThis(+Assistance::ro__thread_display_routines_timers::LOOPTRACK))
+							else if (thread_maindisplay.thread_arguments->isThisThis(+Constants::ro__thread_display_routines_timers::LOOPTRACK))
 							{
-								conf.set(Assistance::ro__db_statistics_sizet::FRAMESPERSECOND, thread_maindisplay.thread_arguments->getNumCallsDefault());
+								conf.set(Constants::ro__db_statistics_sizet::FRAMESPERSECOND, thread_maindisplay.thread_arguments->getNumCallsDefault());
 							}
-							else if (thread_maindisplay.thread_arguments->isThisThis(+Assistance::ro__thread_display_routines_timers::CHECKKEEP))
+							else if (thread_maindisplay.thread_arguments->isThisThis(+Constants::ro__thread_display_routines_timers::CHECKKEEP))
 							{
 								localb = !thr_shared_arg.should_exit;
 								//logg.debug("[THR_DRW] CHECKKEEP called\n");
 							}
-							else if (thread_maindisplay.thread_arguments->isThisThis(+Assistance::ro__thread_display_routines_timers::CHECKMEMORYBITMAP))
+							else if (thread_maindisplay.thread_arguments->isThisThis(+Constants::ro__thread_display_routines_timers::CHECKMEMORYBITMAP))
 							{
 								//logg.debug("[THR_DRW] CHECKMEMORYBITMAP called\n");
 								al_convert_bitmaps();
 							}
-							else if (thread_maindisplay.thread_arguments->isThisThis(+Assistance::ro__thread_display_routines_timers::UPDATELOGONSCREEN))
+							else if (thread_maindisplay.thread_arguments->isThisThis(+Constants::ro__thread_display_routines_timers::UPDATELOGONSCREEN))
 							{
-								mtt->set(Assistance::io__text_string::STRING, mtt_s);
+								mtt->set(Constants::io__text_string::STRING, mtt_s);
 							}
 
 
@@ -151,15 +151,15 @@ namespace LSW {
 									logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "DISPLAYCLOSE event got. Set to turn off soon." << L::EL;
 									break;
 
-								case +Assistance::ro__my_events::LOG_CLOUDLAUNCH_RAW:
+								case +Constants::ro__my_events::LOG_CLOUDLAUNCH_RAW:
 								{
 									mtt_s = (char*)ev.user.data1;
 									ALLEGRO_COLOR* colp = (ALLEGRO_COLOR*)ev.user.data2;
-									mtt->set(Assistance::io__text_color::COLOR, *colp);
+									mtt->set(Constants::io__text_color::COLOR, *colp);
 								}
 								break;
 
-								case +Assistance::ro__my_events::THRDRW_GOT_FORCED_RESIZE:
+								case +Constants::ro__my_events::THRDRW_GOT_FORCED_RESIZE:
 									al_set_display_flag(md->getDisplay(), ALLEGRO_FULLSCREEN_WINDOW, (bool)ev.user.data1);
 									// yes, merge
 								case ALLEGRO_EVENT_DISPLAY_RESIZE:
@@ -170,19 +170,19 @@ namespace LSW {
 
 									{
 										ALLEGRO_EVENT ev;
-										ev.type = +Assistance::ro__my_events::THRKBM_DISPLAY_SIZE;
+										ev.type = +Constants::ro__my_events::THRKBM_DISPLAY_SIZE;
 										ev.user.data1 = al_get_display_width(md->getDisplay());
 										ev.user.data2 = al_get_display_height(md->getDisplay());
 										al_emit_user_event(&evsrc, &ev, NULL);
 									}
 
-									conf.set(Assistance::io__conf_integer::SCREEN_X, al_get_display_width(md->getDisplay()));
-									conf.set(Assistance::io__conf_integer::SCREEN_Y, al_get_display_height(md->getDisplay()));
-									conf.set(Assistance::io__conf_integer::SCREEN_FLAGS, al_get_display_flags(md->getDisplay()));
+									conf.set(Constants::io__conf_integer::SCREEN_X, al_get_display_width(md->getDisplay()));
+									conf.set(Constants::io__conf_integer::SCREEN_Y, al_get_display_height(md->getDisplay()));
+									conf.set(Constants::io__conf_integer::SCREEN_FLAGS, al_get_display_flags(md->getDisplay()));
 									conf.flush();
 
 									for (auto& i : sprites) {
-										i->self->set(Assistance::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY, al_get_time() + 1.5);
+										i->self->set(Constants::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY, al_get_time() + 1.5);
 									}
 
 									break;
@@ -211,7 +211,7 @@ namespace LSW {
 						was_sprites_locked = false;
 
 
-						if (conf.isEq(Assistance::io__conf_boolean::ULTRADEBUG, true)) matrix_draw_help();
+						if (conf.isEq(Constants::io__conf_boolean::ULTRADEBUG, true)) matrix_draw_help();
 
 						md->flip();
 
@@ -251,7 +251,7 @@ namespace LSW {
 
 				logg << L::SLF << fsr(__FUNCSIG__) << "Closing stuff!" << L::ELF;
 
-				__l_thr_md_run(Assistance::io__threads_taskid::END);
+				__l_thr_md_run(Constants::io__threads_taskid::END);
 
 				delete md;
 				md = nullptr;
@@ -286,7 +286,7 @@ namespace LSW {
 			}
 		}
 
-		void Console::__l_thr_cl()
+		void Manager::__l_thr_cl()
 		{
 			try {
 				gfile logg;
@@ -306,7 +306,7 @@ namespace LSW {
 				thread_collision.thread_arguments->insert(&evsrc);
 
 				// verify if there's something to load before anything
-				__l_thr_cl_run(Assistance::io__threads_taskid::START);
+				__l_thr_cl_run(Constants::io__threads_taskid::START);
 
 				thread_collision.thread_arguments->start();
 
@@ -318,7 +318,7 @@ namespace LSW {
 				for (bool localb = true; localb;)
 				{
 					try {
-						conf.set(Assistance::ro__db_statistics_double::INSTANT_COLLISIONSPERSECOND, thread_collision.thread_arguments->getNumInstantSCallsDefault());
+						conf.set(Constants::ro__db_statistics_double::INSTANT_COLLISIONSPERSECOND, thread_collision.thread_arguments->getNumInstantSCallsDefault());
 
 						while (thread_collision.pause_thread) {
 							Sleep(10);
@@ -328,28 +328,28 @@ namespace LSW {
 
 						thread_collision.thread_arguments->hasEventWait();
 
-						if (thread_collision.thread_arguments->isThisThis(+Assistance::ro__thread_collision_routines_timers::FUNCTIONALITY_ONCE))
+						if (thread_collision.thread_arguments->isThisThis(+Constants::ro__thread_collision_routines_timers::FUNCTIONALITY_ONCE))
 						{
-							__l_thr_cl_run(Assistance::io__threads_taskid::ONCE);
+							__l_thr_cl_run(Constants::io__threads_taskid::ONCE);
 						}
-						else if (thread_collision.thread_arguments->isThisThis(+Assistance::ro__thread_collision_routines_timers::FUNCTIONALITY_LOOP))
+						else if (thread_collision.thread_arguments->isThisThis(+Constants::ro__thread_collision_routines_timers::FUNCTIONALITY_LOOP))
 						{
-							__l_thr_cl_run(Assistance::io__threads_taskid::LOOP);
+							__l_thr_cl_run(Constants::io__threads_taskid::LOOP);
 						}
-						else if (thread_collision.thread_arguments->isThisThis(+Assistance::ro__thread_collision_routines_timers::LOOPTRACK))
+						else if (thread_collision.thread_arguments->isThisThis(+Constants::ro__thread_collision_routines_timers::LOOPTRACK))
 						{
-							conf.set(Assistance::ro__db_statistics_sizet::COLLISIONSPERSECOND, thread_collision.thread_arguments->getNumCallsDefault());
+							conf.set(Constants::ro__db_statistics_sizet::COLLISIONSPERSECOND, thread_collision.thread_arguments->getNumCallsDefault());
 						}
-						else if (thread_collision.thread_arguments->isThisThis(+Assistance::ro__thread_collision_routines_timers::CHECKKEEP))
+						else if (thread_collision.thread_arguments->isThisThis(+Constants::ro__thread_collision_routines_timers::CHECKKEEP))
 						{
 							localb = !thr_shared_arg.should_exit;
 							//printf_s("[THR_COL] CHECKKEEP called\n");
 						}
-						else if (thread_collision.thread_arguments->isThisThis(+Assistance::ro__thread_collision_routines_timers::COLLISIONWORK))
+						else if (thread_collision.thread_arguments->isThisThis(+Constants::ro__thread_collision_routines_timers::COLLISIONWORK))
 						{
 							gcam.apply();
 							camera_preset ww = gcam.get();
-							//float rr = ww.get(Assistance::io__camera_float::ROTATION_RAD); // adjustment because canvas has been rotated so mouse will be at normal and stuff offset by this
+							//float rr = ww.get(Constants::io__camera_double::ROTATION_RAD); // adjustment because canvas has been rotated so mouse will be at normal and stuff offset by this
 
 							for (auto& i : sprites) i->self->clearUp(); // set as no collision
 
@@ -398,7 +398,7 @@ namespace LSW {
 				}
 				logg << L::SLF << fsr(__FUNCSIG__) << "Closing stuff!" << L::ELF;
 
-				__l_thr_cl_run(Assistance::io__threads_taskid::END);
+				__l_thr_cl_run(Constants::io__threads_taskid::END);
 
 				delete thread_collision.thread_arguments;
 
@@ -423,7 +423,7 @@ namespace LSW {
 			}
 		}
 
-		void Console::__l_thr_kb()
+		void Manager::__l_thr_kb()
 		{
 			try {
 				gfile logg;
@@ -437,7 +437,7 @@ namespace LSW {
 
 				{
 					int __s;
-					conf.get(Assistance::io__conf_integer::SCREEN_FLAGS, __s, 0);
+					conf.get(Constants::io__conf_integer::SCREEN_FLAGS, __s, 0);
 					isscreenfullscreen = (__s & ALLEGRO_FULLSCREEN_WINDOW) || (__s & ALLEGRO_FULLSCREEN);
 				}*/
 
@@ -456,7 +456,7 @@ namespace LSW {
 				thread_kbmouse.thread_arguments->insert(&evsrc);
 
 				// verify if there's something to load before anything
-				__l_thr_kb_run(Assistance::io__threads_taskid::START);
+				__l_thr_kb_run(Constants::io__threads_taskid::START);
 
 				thread_kbmouse.thread_arguments->start();
 
@@ -468,7 +468,7 @@ namespace LSW {
 				for (bool localb = true; localb;)
 				{
 					try {
-						conf.set(Assistance::ro__db_statistics_double::INSTANT_USEREVENTSPERSECOND, thread_kbmouse.thread_arguments->getNumInstantSCallsDefault());
+						conf.set(Constants::ro__db_statistics_double::INSTANT_USEREVENTSPERSECOND, thread_kbmouse.thread_arguments->getNumInstantSCallsDefault());
 
 						while (thread_kbmouse.pause_thread) {
 							Sleep(10);
@@ -478,27 +478,30 @@ namespace LSW {
 
 						thread_kbmouse.thread_arguments->hasEventWait();
 
-						if (thread_kbmouse.thread_arguments->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::FUNCTIONALITY_ONCE))
+						if (thread_kbmouse.thread_arguments->isThisThis(+Constants::ro__thread_keyboardm_routines_timers::FUNCTIONALITY_ONCE))
 						{
-							__l_thr_kb_run(Assistance::io__threads_taskid::ONCE);
+							__l_thr_kb_run(Constants::io__threads_taskid::ONCE);
 						}
-						else if (thread_kbmouse.thread_arguments->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::FUNCTIONALITY_LOOP))
+						else if (thread_kbmouse.thread_arguments->isThisThis(+Constants::ro__thread_keyboardm_routines_timers::FUNCTIONALITY_LOOP))
 						{
-							__l_thr_kb_run(Assistance::io__threads_taskid::LOOP);
+							__l_thr_kb_run(Constants::io__threads_taskid::LOOP);
 						}
-						else if (thread_kbmouse.thread_arguments->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::LOOPTRACK))
+						else if (thread_kbmouse.thread_arguments->isThisThis(+Constants::ro__thread_keyboardm_routines_timers::LOOPTRACK))
 						{
-							conf.set(Assistance::ro__db_statistics_sizet::USEREVENTSPERSECOND, thread_kbmouse.thread_arguments->getNumCallsDefault());
+							conf.set(Constants::ro__db_statistics_sizet::USEREVENTSPERSECOND, thread_kbmouse.thread_arguments->getNumCallsDefault());
 						}
-						else if (thread_kbmouse.thread_arguments->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::CHECKKEEP))
+						else if (thread_kbmouse.thread_arguments->isThisThis(+Constants::ro__thread_keyboardm_routines_timers::CHECKKEEP))
 						{
 							localb = !thr_shared_arg.should_exit;
 						}
-						else if (thread_kbmouse.thread_arguments->isThisThis(+Assistance::ro__thread_keyboardm_routines_timers::UPDATEMOUSE))
+						else if (thread_kbmouse.thread_arguments->isThisThis(+Constants::ro__thread_keyboardm_routines_timers::UPDATEMOUSE))
 						{
+							double md[2];
+							conf.get(Constants::ro__db_mouse_double::RAW_MOUSE_X, md[0]);
+							conf.get(Constants::ro__db_mouse_double::RAW_MOUSE_Y, md[1]);
+
 							float m[2];
-							conf.get(Assistance::ro__db_mouse_float::RAW_MOUSE_X, m[0]);
-							conf.get(Assistance::ro__db_mouse_float::RAW_MOUSE_Y, m[1]);
+							for (short p = 0; p < 2; p++) m[p] = +md[p];
 
 							// transform based on cam
 							Camera gcam;
@@ -508,14 +511,16 @@ namespace LSW {
 							al_invert_transform(&untransf);
 							al_transform_coordinates(&untransf, &m[0], &m[1]);
 
-							conf.set(Assistance::ro__db_mouse_float::MOUSE_X, m[0]);
-							conf.set(Assistance::ro__db_mouse_float::MOUSE_Y, m[1]);
+							for (short p = 0; p < 2; p++) md[p] = +m[p];
+
+							conf.set(Constants::ro__db_mouse_double::MOUSE_X, md[0]);
+							conf.set(Constants::ro__db_mouse_double::MOUSE_Y, md[1]);
 
 
 							for (auto& i : sprites) {
-								if (i->self->isEq(Assistance::io__sprite_boolean::FOLLOWMOUSE, true)) {
-									i->self->set(Assistance::io__sprite_double::POSX, m[0]);
-									i->self->set(Assistance::io__sprite_double::POSY, m[1]);
+								if (i->self->isEq(Constants::io__sprite_boolean::FOLLOWMOUSE, true)) {
+									i->self->set(Constants::io__sprite_double::POSX, md[0]);
+									i->self->set(Constants::io__sprite_double::POSY, md[1]);
 								}
 							}
 						}
@@ -523,7 +528,7 @@ namespace LSW {
 						else { // not a timer ///DEBUG NOW
 							auto ev = thread_kbmouse.thread_arguments->getEventRaw();
 
-							if (ev.type == +Assistance::ro__my_events::THRKBM_DISPLAY_SIZE)
+							if (ev.type == +Constants::ro__my_events::THRKBM_DISPLAY_SIZE)
 							{
 								display_x = ev.user.data1;
 								display_y = ev.user.data2;
@@ -537,7 +542,7 @@ namespace LSW {
 								/*switch (ev.keyboard.keycode) {
 								case ALLEGRO_KEY_F11:
 								{
-									sendEvent(Assistance::ro__my_events::THRDRW_GOT_FORCED_RESIZE, (intptr_t)(isscreenfullscreen = !isscreenfullscreen));
+									sendEvent(Constants::ro__my_events::THRDRW_GOT_FORCED_RESIZE, (intptr_t)(isscreenfullscreen = !isscreenfullscreen));
 								}
 								break;
 								case ALLEGRO_KEY_F2:
@@ -556,34 +561,34 @@ namespace LSW {
 									al_utf8_encode(multibyte, ev.keyboard.unichar <= 32 ? ' ' : ev.keyboard.unichar);
 									char v = (char)strlen(multibyte);
 									if (v > 4) throw Abort::abort(__FUNCSIG__, "Got an exception on user input: invalid key code, couldn't translate to a valid string");
-									conf.set(Assistance::ro__db_thread_string::KEY_ADD_SET_LEN, v);
+									conf.set(Constants::ro__db_thread_string::KEY_ADD_SET_LEN, v);
 
 									for (auto& i : multibyte) {
-										if (i) conf.set(Assistance::ro__db_thread_string::KEY_ADD, i);
+										if (i) conf.set(Constants::ro__db_thread_string::KEY_ADD, i);
 									}
 								}
 								else if (ev.keyboard.keycode == ALLEGRO_KEY_BACKSPACE)
 								{
-									conf.set(Assistance::ro__db_thread_string::KEY_ERASE);
+									conf.set(Constants::ro__db_thread_string::KEY_ERASE);
 								}
 								else if (ev.keyboard.keycode == ALLEGRO_KEY_ENTER || ev.keyboard.keycode == ALLEGRO_KEY_PAD_ENTER)
 								{
-									conf.set(Assistance::ro__db_thread_string::KEY_SET);
+									conf.set(Constants::ro__db_thread_string::KEY_SET);
 								}
 								//const char* actch = al_keycode_to_name(ev.keyboard.keycode); // prints literally key name KEY26 A B C
 								//if (ev.keyboard.unichar > 32) logg.debug("[THR_KBM] KEYCHAR= %d ~= %c", ev.keyboard.keycode, ev.keyboard.unichar);
 								//else                          logg.debug("[THR_KBM] KEYCHAR= %d", ev.keyboard.keycode);
 							}
 							if (ev.type == ALLEGRO_EVENT_MOUSE_AXES) {
-								conf.set(Assistance::ro__db_mouse_float::RAW_MOUSE_X, ev.mouse.x);
-								conf.set(Assistance::ro__db_mouse_float::RAW_MOUSE_Y, ev.mouse.y);
+								conf.set(Constants::ro__db_mouse_double::RAW_MOUSE_X, ev.mouse.x);
+								conf.set(Constants::ro__db_mouse_double::RAW_MOUSE_Y, ev.mouse.y);
 
 							}
 							if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
-								conf.set(((Assistance::ro__db_mouse_boolean)ev.mouse.button), true);
+								conf.set(((Constants::ro__db_mouse_boolean)ev.mouse.button), true);
 							}
 							if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
-								conf.set(((Assistance::ro__db_mouse_boolean)ev.mouse.button), false);
+								conf.set(((Constants::ro__db_mouse_boolean)ev.mouse.button), false);
 							}
 						}
 					}
@@ -616,7 +621,7 @@ namespace LSW {
 				}
 				logg << L::SLF << fsr(__FUNCSIG__) << "Closing stuff!" << L::ELF;
 
-				__l_thr_cl_run(Assistance::io__threads_taskid::END);
+				__l_thr_cl_run(Constants::io__threads_taskid::END);
 
 				delete thread_kbmouse.thread_arguments;
 
@@ -641,7 +646,7 @@ namespace LSW {
 			}
 		}
 
-		void Console::__l_thr_fc()
+		void Manager::__l_thr_fc()
 		{
 			try {
 				gfile logg;
@@ -661,7 +666,7 @@ namespace LSW {
 				thread_functional.thread_arguments = new __functional_routines();
 
 				// verify if there's something to load before anything
-				__l_thr_fc_run(Assistance::io__threads_taskid::START);
+				__l_thr_fc_run(Constants::io__threads_taskid::START);
 
 				thread_functional.thread_arguments->start();
 
@@ -673,7 +678,7 @@ namespace LSW {
 				while (!thr_shared_arg.should_exit)
 				{
 					try {
-						conf.set(Assistance::ro__db_statistics_double::INSTANT_ADVANCEDFUNCSPERSECOND, thread_functional.thread_arguments->getNumInstantSCallsDefault());
+						conf.set(Constants::ro__db_statistics_double::INSTANT_ADVANCEDFUNCSPERSECOND, thread_functional.thread_arguments->getNumInstantSCallsDefault());
 
 						while (thread_functional.pause_thread) {
 							Sleep(10);
@@ -683,17 +688,17 @@ namespace LSW {
 
 						thread_functional.thread_arguments->hasEventWait();
 
-						if (thread_functional.thread_arguments->isThisThis(+Assistance::ro__thread_functional_routines_timers::LOOPTRACK))
+						if (thread_functional.thread_arguments->isThisThis(+Constants::ro__thread_functional_routines_timers::LOOPTRACK))
 						{
-							conf.set(Assistance::ro__db_statistics_sizet::ADVANCEDFUNCSPERSECOND, thread_functional.thread_arguments->getNumCallsDefault());
+							conf.set(Constants::ro__db_statistics_sizet::ADVANCEDFUNCSPERSECOND, thread_functional.thread_arguments->getNumCallsDefault());
 						}
-						else if (thread_functional.thread_arguments->isThisThis(+Assistance::ro__thread_functional_routines_timers::FUNCTIONALITY_LOOP))
+						else if (thread_functional.thread_arguments->isThisThis(+Constants::ro__thread_functional_routines_timers::FUNCTIONALITY_LOOP))
 						{
-							__l_thr_kb_run(Assistance::io__threads_taskid::LOOP);
+							__l_thr_kb_run(Constants::io__threads_taskid::LOOP);
 						}
-						else if (thread_functional.thread_arguments->isThisThis(+Assistance::ro__thread_functional_routines_timers::FUNCTIONALITY_ONCE_AND_CHECKNEWFUNCS))
+						else if (thread_functional.thread_arguments->isThisThis(+Constants::ro__thread_functional_routines_timers::FUNCTIONALITY_ONCE_AND_CHECKNEWFUNCS))
 						{
-							__l_thr_kb_run(Assistance::io__threads_taskid::ONCE);
+							__l_thr_kb_run(Constants::io__threads_taskid::ONCE);
 
 							for (size_t k = 0; k < func_list_super.size(); k++)
 							{
@@ -787,7 +792,7 @@ namespace LSW {
 
 				logg << L::SLF << fsr(__FUNCSIG__) << "Closing stuff!" << L::ELF;
 
-				__l_thr_fc_run(Assistance::io__threads_taskid::END);
+				__l_thr_fc_run(Constants::io__threads_taskid::END);
 				//quickmap.clear();
 
 				delete thread_functional.thread_arguments;
@@ -816,54 +821,54 @@ namespace LSW {
 
 
 
-		void Console::__l_thr_md_run(const Assistance::io__threads_taskid tid)
+		void Manager::__l_thr_md_run(const Constants::io__threads_taskid tid)
 		{
 			if (thread_maindisplay.functions[+tid]) {
-				if (tid != Assistance::io__threads_taskid::LOOP && thread_maindisplay.has_called_once[+tid]) return;
+				if (tid != Constants::io__threads_taskid::LOOP && thread_maindisplay.has_called_once[+tid]) return;
 				thread_maindisplay.functions[+tid]();
 				Sleep(10);
 			}
 		}
 
-		void Console::__l_thr_cl_run(const Assistance::io__threads_taskid tid)
+		void Manager::__l_thr_cl_run(const Constants::io__threads_taskid tid)
 		{
 			if (thread_collision.functions[+tid]) {
-				if (tid != Assistance::io__threads_taskid::LOOP && thread_collision.has_called_once[+tid]) return;
+				if (tid != Constants::io__threads_taskid::LOOP && thread_collision.has_called_once[+tid]) return;
 				thread_collision.functions[+tid]();
 				Sleep(10);
 			}
 		}
 
-		void Console::__l_thr_kb_run(const Assistance::io__threads_taskid tid)
+		void Manager::__l_thr_kb_run(const Constants::io__threads_taskid tid)
 		{
 			if (thread_kbmouse.functions[+tid]) {
-				if (tid != Assistance::io__threads_taskid::LOOP && thread_kbmouse.has_called_once[+tid]) return;
+				if (tid != Constants::io__threads_taskid::LOOP && thread_kbmouse.has_called_once[+tid]) return;
 				thread_kbmouse.functions[+tid]();
 				Sleep(10);
 			}
 		}
 
-		void Console::__l_thr_fc_run(const Assistance::io__threads_taskid tid)
+		void Manager::__l_thr_fc_run(const Constants::io__threads_taskid tid)
 		{
 			if (thread_functional.functions[+tid]) {
-				if (tid != Assistance::io__threads_taskid::LOOP && thread_functional.has_called_once[+tid]) return;
+				if (tid != Constants::io__threads_taskid::LOOP && thread_functional.has_called_once[+tid]) return;
 				thread_functional.functions[+tid]();
 				Sleep(10);
 			}
 		}
 
-		Console::Console()
+		Manager::Manager()
 		{
 			al_init_user_event_source(&evsrc);
 		}
 
-		Console::~Console()
+		Manager::~Manager()
 		{
 			stop();
 			al_destroy_user_event_source(&evsrc);
 		}
 
-		void Console::start()
+		void Manager::start()
 		{
 			///launch([](void* v) {return; }, [](void* v) {return; }); // do nothing, just go
 
@@ -883,7 +888,7 @@ namespace LSW {
 			al_set_target_bitmap(NULL);
 		}
 
-		/*void Console::launch(const std::function <void(void*)> f_disp, const std::function <void(void*)> f_cols)
+		/*void Manager::launch(const std::function <void(void*)> f_disp, const std::function <void(void*)> f_cols)
 		{
 			thr_shared_arg.should_exit = false;
 
@@ -896,7 +901,7 @@ namespace LSW {
 			///thr_cl = new std::thread([=] {__l_thr_cl(); }); // not ready yet
 		}*/
 
-		void Console::stop()
+		void Manager::stop()
 		{
 			thr_shared_arg.should_exit = true;
 
@@ -912,17 +917,17 @@ namespace LSW {
 			thread_kbmouse.thr_itself = nullptr;
 			thread_functional.thr_itself = nullptr;
 		}
-		void Console::shouldStop()
+		void Manager::shouldStop()
 		{
 			thr_shared_arg.should_exit = true;
 		}
 
-		bool Console::isOpen()
+		bool Manager::isOpen()
 		{
 			return (md != nullptr && thread_maindisplay.am_i_running && thread_collision.am_i_running && thread_kbmouse.am_i_running && thread_collision.am_i_running);
 		}
 
-		bool Console::isRunning()
+		bool Manager::isRunning()
 		{
 			bool stillrunning = !thr_shared_arg.should_exit;
 			if (!stillrunning) {
@@ -931,166 +936,166 @@ namespace LSW {
 			return stillrunning;
 		}
 
-		void Console::resetSimpleOnceTask(const Assistance::io__thread_ids which)
+		void Manager::resetSimpleOnceTask(const Constants::io__thread_ids which)
 		{
-			setSimpleTask(which, Assistance::io__threads_taskid::ONCE, std::function<void(void)>());
+			setSimpleTask(which, Constants::io__threads_taskid::ONCE, std::function<void(void)>());
 		}
 
-		void Console::setSimpleTask(const Assistance::io__thread_ids which, const Assistance::io__threads_taskid tid, std::function<void(void)> f)
+		void Manager::setSimpleTask(const Constants::io__thread_ids which, const Constants::io__threads_taskid tid, std::function<void(void)> f)
 		{
 			switch (which) {
-			case Assistance::io__thread_ids::DRAWING:
-				if (tid != Assistance::io__threads_taskid::size) {
+			case Constants::io__thread_ids::DRAWING:
+				if (tid != Constants::io__threads_taskid::size) {
 					if (f) thread_maindisplay.functions[+tid] = f;
 					thread_maindisplay.has_called_once[+tid] = false;
 				}
 				break;
-			case Assistance::io__thread_ids::COLLIDING:
-				if (tid != Assistance::io__threads_taskid::size) {
+			case Constants::io__thread_ids::COLLIDING:
+				if (tid != Constants::io__threads_taskid::size) {
 					if (f) thread_collision.functions[+tid] = f;
 					thread_collision.has_called_once[+tid] = false;
 				}
 				break;
-			case Assistance::io__thread_ids::USERINPUT:
-				if (tid != Assistance::io__threads_taskid::size) {
+			case Constants::io__thread_ids::USERINPUT:
+				if (tid != Constants::io__threads_taskid::size) {
 					if (f) thread_kbmouse.functions[+tid] = f;
 					thread_kbmouse.has_called_once[+tid] = false;
 				}
 				break;
-			case Assistance::io__thread_ids::FUNCTIONAL:
-				if (tid != Assistance::io__threads_taskid::size) {
+			case Constants::io__thread_ids::FUNCTIONAL:
+				if (tid != Constants::io__threads_taskid::size) {
 					if (f) thread_functional.functions[+tid] = f;
 					thread_functional.has_called_once[+tid] = false;
 				}
 				break;
 			}
 		}
-		void Console::unsetSimpleTask(const Assistance::io__thread_ids which, const Assistance::io__threads_taskid tid)
+		void Manager::unsetSimpleTask(const Constants::io__thread_ids which, const Constants::io__threads_taskid tid)
 		{
 			switch (which) {
-			case Assistance::io__thread_ids::DRAWING:
-				if (tid != Assistance::io__threads_taskid::size) thread_maindisplay.functions[+tid] = std::function<void(void)>();
+			case Constants::io__thread_ids::DRAWING:
+				if (tid != Constants::io__threads_taskid::size) thread_maindisplay.functions[+tid] = std::function<void(void)>();
 				break;
-			case Assistance::io__thread_ids::COLLIDING:
-				if (tid != Assistance::io__threads_taskid::size) thread_collision.functions[+tid] = std::function<void(void)>();
+			case Constants::io__thread_ids::COLLIDING:
+				if (tid != Constants::io__threads_taskid::size) thread_collision.functions[+tid] = std::function<void(void)>();
 				break;
-			case Assistance::io__thread_ids::USERINPUT:
-				if (tid != Assistance::io__threads_taskid::size) thread_kbmouse.functions[+tid] = std::function<void(void)>();
+			case Constants::io__thread_ids::USERINPUT:
+				if (tid != Constants::io__threads_taskid::size) thread_kbmouse.functions[+tid] = std::function<void(void)>();
 				break;
-			case Assistance::io__thread_ids::FUNCTIONAL:
-				if (tid != Assistance::io__threads_taskid::size) thread_functional.functions[+tid] = std::function<void(void)>();
+			case Constants::io__thread_ids::FUNCTIONAL:
+				if (tid != Constants::io__threads_taskid::size) thread_functional.functions[+tid] = std::function<void(void)>();
 				break;
 			}
 		}
 
-		bool Console::hasTasked(const Assistance::io__thread_ids which, const Assistance::io__threads_taskid tid)
+		bool Manager::hasTasked(const Constants::io__thread_ids which, const Constants::io__threads_taskid tid)
 		{
 			switch (which) {
-			case Assistance::io__thread_ids::DRAWING:
+			case Constants::io__thread_ids::DRAWING:
 				return thread_maindisplay.has_called_once[+tid];
-			case Assistance::io__thread_ids::COLLIDING:
+			case Constants::io__thread_ids::COLLIDING:
 				return thread_collision.has_called_once[+tid];
-			case Assistance::io__thread_ids::USERINPUT:
+			case Constants::io__thread_ids::USERINPUT:
 				return thread_kbmouse.has_called_once[+tid];
-			case Assistance::io__thread_ids::FUNCTIONAL:
+			case Constants::io__thread_ids::FUNCTIONAL:
 				return thread_functional.has_called_once[+tid];
 			}
 			return 0;
 		}
 
-		size_t Console::getCallsPerSecondOnThread(const Assistance::io__thread_ids o)
+		size_t Manager::getCallsPerSecondOnThread(const Constants::io__thread_ids o)
 		{
 			switch (o) {
-			case Assistance::io__thread_ids::DRAWING:
+			case Constants::io__thread_ids::DRAWING:
 				return thread_maindisplay.thread_arguments->getNumFullCalls();
-			case Assistance::io__thread_ids::COLLIDING:
+			case Constants::io__thread_ids::COLLIDING:
 				return thread_collision.thread_arguments->getNumFullCalls();
-			case Assistance::io__thread_ids::USERINPUT:
+			case Constants::io__thread_ids::USERINPUT:
 				return thread_kbmouse.thread_arguments->getNumFullCalls();
-			case Assistance::io__thread_ids::FUNCTIONAL:
+			case Constants::io__thread_ids::FUNCTIONAL:
 				return thread_functional.thread_arguments->getNumFullCalls();
 			}
 			return 0;
 		}
 
-		double Console::getInstantSCallsOnThread(const Assistance::io__thread_ids o)
+		double Manager::getInstantSCallsOnThread(const Constants::io__thread_ids o)
 		{
 			switch (o) {
-			case Assistance::io__thread_ids::DRAWING:
+			case Constants::io__thread_ids::DRAWING:
 				return thread_maindisplay.thread_arguments->getNumFullInstantSCalls();
-			case Assistance::io__thread_ids::COLLIDING:
+			case Constants::io__thread_ids::COLLIDING:
 				return thread_collision.thread_arguments->getNumFullInstantSCalls();
-			case Assistance::io__thread_ids::USERINPUT:
+			case Constants::io__thread_ids::USERINPUT:
 				return thread_kbmouse.thread_arguments->getNumFullInstantSCalls();
-			case Assistance::io__thread_ids::FUNCTIONAL:
+			case Constants::io__thread_ids::FUNCTIONAL:
 				return thread_functional.thread_arguments->getNumFullInstantSCalls();
 			}
 			return 0;
 		}
 
-		void Console::pauseThread(const Assistance::io__thread_ids o)
+		void Manager::pauseThread(const Constants::io__thread_ids o)
 		{
 			switch (o) {
-			case Assistance::io__thread_ids::ALL:
+			case Constants::io__thread_ids::ALL:
 				thread_maindisplay.pause_thread = thread_collision.pause_thread = thread_kbmouse.pause_thread = thread_functional.pause_thread = true;
 				break;
-			case Assistance::io__thread_ids::DRAWING:
+			case Constants::io__thread_ids::DRAWING:
 				thread_maindisplay.pause_thread = true;
 				break;
-			case Assistance::io__thread_ids::COLLIDING:
+			case Constants::io__thread_ids::COLLIDING:
 				thread_collision.pause_thread = true;
 				break;
-			case Assistance::io__thread_ids::USERINPUT:
+			case Constants::io__thread_ids::USERINPUT:
 				thread_kbmouse.pause_thread = true;
 				break;
-			case Assistance::io__thread_ids::FUNCTIONAL:
+			case Constants::io__thread_ids::FUNCTIONAL:
 				thread_functional.pause_thread = true;
 				break;
 			}
 		}
 
-		bool Console::hasThreadPaused(const Assistance::io__thread_ids o)
+		bool Manager::hasThreadPaused(const Constants::io__thread_ids o)
 		{
 			switch (o) {
-			case Assistance::io__thread_ids::ALL:
+			case Constants::io__thread_ids::ALL:
 				return !thread_maindisplay.tasking && !thread_collision.tasking && !thread_kbmouse.tasking && !thread_functional.tasking;
-			case Assistance::io__thread_ids::DRAWING:
+			case Constants::io__thread_ids::DRAWING:
 				return !thread_maindisplay.tasking;
-			case Assistance::io__thread_ids::COLLIDING:
+			case Constants::io__thread_ids::COLLIDING:
 				return !thread_collision.tasking;
-			case Assistance::io__thread_ids::USERINPUT:
+			case Constants::io__thread_ids::USERINPUT:
 				return !thread_kbmouse.tasking;
-			case Assistance::io__thread_ids::FUNCTIONAL:
+			case Constants::io__thread_ids::FUNCTIONAL:
 				return !thread_functional.tasking;
 			}
 			return false;
 		}
 
-		void Console::resumeThread(const Assistance::io__thread_ids o)
+		void Manager::resumeThread(const Constants::io__thread_ids o)
 		{
 			switch (o) {
-			case Assistance::io__thread_ids::ALL:
+			case Constants::io__thread_ids::ALL:
 				thread_maindisplay.pause_thread = thread_collision.pause_thread = thread_kbmouse.pause_thread = thread_functional.pause_thread = false;
 				break;
-			case Assistance::io__thread_ids::DRAWING:
+			case Constants::io__thread_ids::DRAWING:
 				thread_maindisplay.pause_thread = false;
 				break;
-			case Assistance::io__thread_ids::COLLIDING:
+			case Constants::io__thread_ids::COLLIDING:
 				thread_collision.pause_thread = false;
 				break;
-			case Assistance::io__thread_ids::USERINPUT:
+			case Constants::io__thread_ids::USERINPUT:
 				thread_kbmouse.pause_thread = false;
 				break;
-			case Assistance::io__thread_ids::FUNCTIONAL:
+			case Constants::io__thread_ids::FUNCTIONAL:
 				thread_functional.pause_thread = false;
 				break;
 			}
 		}
 
-		void Console::addCustomTask(std::function<int(void)> f, const int id, const double t)
+		void Manager::addCustomTask(std::function<int(void)> f, const int id, const double t)
 		{
 			if (!f) {
-				throw Abort::abort(__FUNCSIG__, "Can't add funtion to Console because it's not set properly!");
+				throw Abort::abort(__FUNCSIG__, "Can't add funtion to Manager because it's not set properly!");
 				return;
 			}
 
@@ -1117,17 +1122,17 @@ namespace LSW {
 			//f_dis.push_back(ff);
 		}
 
-		void Console::delayCustomTaskTicksBy(const int p, const LONGLONG tt)
+		void Manager::delayCustomTaskTicksBy(const int p, const LONGLONG tt)
 		{
 			func_list_super[p].calls = -tt;
 		}
 
-		void Console::removeCustomTask(const int p)
+		void Manager::removeCustomTask(const int p)
 		{
 			func_list_super[p].should_run = false;
 		}
 
-		void Console::sendEvent(const Assistance::ro__my_events t, const intptr_t a, const intptr_t b, const intptr_t c, const intptr_t d)
+		void Manager::sendEvent(const Constants::ro__my_events t, const intptr_t a, const intptr_t b, const intptr_t c, const intptr_t d)
 		{
 			ALLEGRO_EVENT ev;
 			ev.type = +t;
@@ -1138,7 +1143,7 @@ namespace LSW {
 			al_emit_user_event(&evsrc, &ev, NULL);
 		}
 
-		Display* const Console::_display_handle()
+		Display* const Manager::_display_handle()
 		{
 			return md;
 		}

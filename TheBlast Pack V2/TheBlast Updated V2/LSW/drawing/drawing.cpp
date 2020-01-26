@@ -8,34 +8,34 @@ namespace LSW {
 		int Camera::lastapply = 0;
 
 
-		/*const Assistance::cl__sprite_direction_mult resolveDir(const int d)
+		/*const Constants::cl__sprite_direction_mult resolveDir(const int d)
 		{
-			if ((d & +Assistance::directions::NORTH) && (d & +Assistance::directions::SOUTH) && (d & +Assistance::directions::WEST) && (d & +Assistance::directions::EAST))
-				return Assistance::cl__sprite_direction_mult::STAY;
+			if ((d & +Constants::directions::NORTH) && (d & +Constants::directions::SOUTH) && (d & +Constants::directions::WEST) && (d & +Constants::directions::EAST))
+				return Constants::cl__sprite_direction_mult::STAY;
 
-			if ((d & +Assistance::directions::NORTH) && (d & +Assistance::directions::SOUTH))
-				return Assistance::cl__sprite_direction_mult::GO_EAST;
+			if ((d & +Constants::directions::NORTH) && (d & +Constants::directions::SOUTH))
+				return Constants::cl__sprite_direction_mult::GO_EAST;
 
-			if ((d & +Assistance::directions::WEST) && (d & +Assistance::directions::EAST))
-				return Assistance::cl__sprite_direction_mult::GO_NORTH;
+			if ((d & +Constants::directions::WEST) && (d & +Constants::directions::EAST))
+				return Constants::cl__sprite_direction_mult::GO_NORTH;
 
 
 			switch (d)
 			{
-			case +Assistance::directions::NORTH: // block is north
-				return Assistance::cl__sprite_direction_mult::GO_SOUTH;
-			case +Assistance::directions::SOUTH: // block is south
-				return Assistance::cl__sprite_direction_mult::GO_NORTH;
-			case +Assistance::directions::EAST: // block is east
-				return Assistance::cl__sprite_direction_mult::GO_WEST;
-			case +Assistance::directions::WEST: // block is west
-				return Assistance::cl__sprite_direction_mult::GO_EAST;
+			case +Constants::directions::NORTH: // block is north
+				return Constants::cl__sprite_direction_mult::GO_SOUTH;
+			case +Constants::directions::SOUTH: // block is south
+				return Constants::cl__sprite_direction_mult::GO_NORTH;
+			case +Constants::directions::EAST: // block is east
+				return Constants::cl__sprite_direction_mult::GO_WEST;
+			case +Constants::directions::WEST: // block is west
+				return Constants::cl__sprite_direction_mult::GO_EAST;
 			}
 
-			return Assistance::cl__sprite_direction_mult::GO_NORTH;
+			return Constants::cl__sprite_direction_mult::GO_NORTH;
 		}*/
 
-		void draw_simple_bar(const float perc, const ALLEGRO_COLOR bg, const float w, const float h)
+		void draw_simple_bar(const double perc, const ALLEGRO_COLOR bg, const double w, const double h)
 		{
 			Camera gcam;
 			gcam.applyNoSave(camera_preset());
@@ -56,12 +56,12 @@ namespace LSW {
 			al_draw_prim(v, NULL, NULL, 0, 4, ALLEGRO_PRIM_TRIANGLE_STRIP);
 		}
 
-		void draw_simple_txt(ALLEGRO_FONT* f, const std::string s, ALLEGRO_COLOR c, const int flag, const float scale)
+		void draw_simple_txt(ALLEGRO_FONT* f, const std::string s, ALLEGRO_COLOR c, const int flag, const double scale)
 		{
 			Camera gcam;
 			camera_preset cp;
-			cp.set(Assistance::io__camera_float::SCALE_G, scale / Constants::text_default_sharpness_font);
-			cp.set(Assistance::io__camera_float::SCALE_Y, 2.5);
+			cp.set(Constants::io__camera_double::SCALE_G, scale / Constants::text_default_sharpness_font);
+			cp.set(Constants::io__camera_double::SCALE_Y, 2.5);
 			gcam.applyNoSave(cp);
 			al_draw_text(f, c, 0, - 0.6 * Constants::text_default_sharpness_font, flag, s.c_str());
 			gcam.apply();
@@ -88,27 +88,32 @@ namespace LSW {
 
 		void matrix_draw_help()
 		{
-			float m[2] = { 0.0 };
-			float limits[4] = { 0.0 };
+			double m[2] = { 0.0 };
+			double limits[4] = { 0.0 };
 			Database db;
 			Camera cam;
 			camera_preset psf = cam.get();
 			camera_preset org = camera_preset();
 
-			db.get(Assistance::ro__db_mouse_float::RAW_MOUSE_X, m[0]);
-			db.get(Assistance::ro__db_mouse_float::RAW_MOUSE_Y, m[1]);
+			db.get(Constants::ro__db_mouse_double::RAW_MOUSE_X, m[0]);
+			db.get(Constants::ro__db_mouse_double::RAW_MOUSE_Y, m[1]);
 
-			limits[0] = psf.get(Assistance::io__camera_float::LIMIT_MIN_X);
-			limits[1] = psf.get(Assistance::io__camera_float::LIMIT_MIN_Y);
-			limits[2] = psf.get(Assistance::io__camera_float::LIMIT_MAX_X);
-			limits[3] = psf.get(Assistance::io__camera_float::LIMIT_MAX_Y);
+			limits[0] = psf.get(Constants::io__camera_double::LIMIT_MIN_X);
+			limits[1] = psf.get(Constants::io__camera_double::LIMIT_MIN_Y);
+			limits[2] = psf.get(Constants::io__camera_double::LIMIT_MAX_X);
+			limits[3] = psf.get(Constants::io__camera_double::LIMIT_MAX_Y);
 
 			psf.refresh();
 
+			float mt[2];
+			for (short n = 0; n < 2; n++) mt[n] = +m[n];
+
 			ALLEGRO_TRANSFORM untransf = psf.quick();
 			al_invert_transform(&untransf);
-			al_transform_coordinates(&untransf, &m[0], &m[1]);
+			al_transform_coordinates(&untransf, &mt[0], &mt[1]);
 
+			m[0] = +mt[0];
+			m[1] = +mt[1];
 
 			ALLEGRO_COLOR co = al_map_rgba_f(0.5, 0.5, 0.5, 0.5);
 			ALLEGRO_COLOR cp = al_map_rgba_f(0.5, 0.25, 0.0, 0.5);
@@ -146,7 +151,7 @@ namespace LSW {
 			al_draw_line(0.1, 1, -0.1, 1, cp, 0.005);
 
 			// limits
-			if (psf.get(Assistance::io__camera_boolean::RESPECT_LIMITS)) al_draw_rectangle(limits[0], limits[1], limits[2], limits[3], cp2, 0.010);
+			if (psf.get(Constants::io__camera_boolean::RESPECT_LIMITS)) al_draw_rectangle(limits[0], limits[1], limits[2], limits[3], cp2, 0.010);
 
 
 			cam.apply();
@@ -155,7 +160,7 @@ namespace LSW {
 
 		bool camera_preset::canWrite()
 		{
-			return !b[+Assistance::io__camera_boolean::READONLY_NOW];
+			return !b[+Constants::io__camera_boolean::READONLY_NOW];
 		}
 
 		void camera_preset::refresh()
@@ -164,7 +169,7 @@ namespace LSW {
 			if (!d) return;
 
 			latest = easyTransform(d,
-				p[+Assistance::io__camera_float::OFFSET_X], p[+Assistance::io__camera_float::OFFSET_Y], p[+Assistance::io__camera_float::SCALE_X] * p[+Assistance::io__camera_float::SCALE_G], p[+Assistance::io__camera_float::SCALE_Y] * p[+Assistance::io__camera_float::SCALE_G], p[+Assistance::io__camera_float::ROTATION_RAD]);
+				p[+Constants::io__camera_double::OFFSET_X], p[+Constants::io__camera_double::OFFSET_Y], p[+Constants::io__camera_double::SCALE_X] * p[+Constants::io__camera_double::SCALE_G], p[+Constants::io__camera_double::SCALE_Y] * p[+Constants::io__camera_double::SCALE_G], p[+Constants::io__camera_double::ROTATION_RAD]);
 		}
 
 		void camera_preset::reset()
@@ -179,29 +184,29 @@ namespace LSW {
 			layers.clear();
 		}
 
-		void camera_preset::set(const Assistance::io__camera_float u, const float v)
+		void camera_preset::set(const Constants::io__camera_double u, const double v)
 		{
 			if (!canWrite()) {
 				throw Abort::abort(__FUNCSIG__, "Attempted to set a value to a camera_preset that has the flag READONLY set!");
 				return;
 			}
 
-			if (u == Assistance::io__camera_float::size) throw Abort::abort(__FUNCSIG__, "Shouldn't try to set ::size!");
+			if (u == Constants::io__camera_double::size) throw Abort::abort(__FUNCSIG__, "Shouldn't try to set ::size!");
 			p[+u] = v;
 			refresh();
 		}
 
-		void camera_preset::set(const Assistance::io__camera_boolean u, const bool v)
+		void camera_preset::set(const Constants::io__camera_boolean u, const bool v)
 		{
-			if (u != Assistance::io__camera_boolean::READONLY_NOW && !canWrite()) { // there has to be a way to unlock
+			if (u != Constants::io__camera_boolean::READONLY_NOW && !canWrite()) { // there has to be a way to unlock
 				throw Abort::abort(__FUNCSIG__, "Attempted to set a value to a camera_preset that has the flag READONLY set!");
 				return;
 			}
-			if (u == Assistance::io__camera_boolean::size) throw Abort::abort(__FUNCSIG__, "Shouldn't try to set ::size!");
+			if (u == Constants::io__camera_boolean::size) throw Abort::abort(__FUNCSIG__, "Shouldn't try to set ::size!");
 			b[+u] = v;
 		}
 
-		void camera_preset::merge(const Assistance::io__camera_float u, const float v)
+		void camera_preset::merge(const Constants::io__camera_double u, const double v)
 		{
 			if (!canWrite()) {
 				throw Abort::abort(__FUNCSIG__, "Attempted to merge a value to a camera_preset that has the flag READONLY set!");
@@ -209,29 +214,29 @@ namespace LSW {
 			}
 
 			switch (u) {
-			case Assistance::io__camera_float::SCALE_X:
-			case Assistance::io__camera_float::SCALE_Y:
-			case Assistance::io__camera_float::SCALE_G:
+			case Constants::io__camera_double::SCALE_X:
+			case Constants::io__camera_double::SCALE_Y:
+			case Constants::io__camera_double::SCALE_G:
 				p[+u] *= v;
 				break;				
-			case Assistance::io__camera_float::OFFSET_X:
-			case Assistance::io__camera_float::OFFSET_Y:
-			case Assistance::io__camera_float::ROTATION_RAD:
+			case Constants::io__camera_double::OFFSET_X:
+			case Constants::io__camera_double::OFFSET_Y:
+			case Constants::io__camera_double::ROTATION_RAD:
 				p[+u] += v;
 				break;
 			}
 			refresh();
 		}
 
-		float camera_preset::get(const Assistance::io__camera_float u) const
+		double camera_preset::get(const Constants::io__camera_double u) const
 		{
-			if (u == Assistance::io__camera_float::size) throw Abort::abort(__FUNCSIG__, "Shouldn't try to get ::size!");
+			if (u == Constants::io__camera_double::size) throw Abort::abort(__FUNCSIG__, "Shouldn't try to get ::size!");
 			return p[+u];
 		}
 
-		bool camera_preset::get(const Assistance::io__camera_boolean u) const
+		bool camera_preset::get(const Constants::io__camera_boolean u) const
 		{
-			if (u == Assistance::io__camera_boolean::size) throw Abort::abort(__FUNCSIG__, "Shouldn't try to get ::size!");
+			if (u == Constants::io__camera_boolean::size) throw Abort::abort(__FUNCSIG__, "Shouldn't try to get ::size!");
 			return b[+u];
 		}
 
@@ -327,10 +332,10 @@ namespace LSW {
 			if (!d) return ALLEGRO_TRANSFORM();
 
 			g_t = easyTransform(d,
-				lastTransf.get(Assistance::io__camera_float::OFFSET_X), lastTransf.get(Assistance::io__camera_float::OFFSET_Y),
-				lastTransf.get(Assistance::io__camera_float::SCALE_X) * lastTransf.get(Assistance::io__camera_float::SCALE_G),
-				lastTransf.get(Assistance::io__camera_float::SCALE_Y) * lastTransf.get(Assistance::io__camera_float::SCALE_G),
-				lastTransf.get(Assistance::io__camera_float::ROTATION_RAD));
+				lastTransf.get(Constants::io__camera_double::OFFSET_X), lastTransf.get(Constants::io__camera_double::OFFSET_Y),
+				lastTransf.get(Constants::io__camera_double::SCALE_X) * lastTransf.get(Constants::io__camera_double::SCALE_G),
+				lastTransf.get(Constants::io__camera_double::SCALE_Y) * lastTransf.get(Constants::io__camera_double::SCALE_G),
+				lastTransf.get(Constants::io__camera_double::ROTATION_RAD));
 
 			al_use_transform(&g_t);
 			return g_t;
@@ -356,14 +361,14 @@ namespace LSW {
 
 		
 
-		ALLEGRO_BITMAP* Sprite::__sprite_smart_images::get(const Assistance::io__sprite_tie_func_to_state stt)
+		ALLEGRO_BITMAP* Sprite::__sprite_smart_images::get(const Constants::io__sprite_tie_func_to_state stt)
 		{
 			if (copies.size() == 0) {
 				throw Abort::abort(__FUNCSIG__, "No bitmap found!", 1);
 				return nullptr;
 			}
 
-			if (stt == Assistance::io__sprite_tie_func_to_state::size) {
+			if (stt == Constants::io__sprite_tie_func_to_state::size) {
 				auto now = al_get_time();
 				auto siz = copies.size();
 
@@ -392,8 +397,8 @@ namespace LSW {
 			else {
 				auto vv = pair[+stt];
 				if (vv >= copies.size() || vv == std::string::npos) {
-					if (pair[+Assistance::io__sprite_tie_func_to_state::COLLISION_NONE] != std::string::npos) return get(Assistance::io__sprite_tie_func_to_state::COLLISION_NONE); // like default one
-					return get(Assistance::io__sprite_tie_func_to_state::size);
+					if (pair[+Constants::io__sprite_tie_func_to_state::COLLISION_NONE] != std::string::npos) return get(Constants::io__sprite_tie_func_to_state::COLLISION_NONE); // like default one
+					return get(Constants::io__sprite_tie_func_to_state::size);
 				}
 
 				lastcall = 0;
@@ -452,13 +457,13 @@ namespace LSW {
 				difftimeanim = v;
 			}
 		}
-		void Sprite::__sprite_smart_images::setState(const Assistance::io__sprite_tie_func_to_state s, const size_t v)
+		void Sprite::__sprite_smart_images::setState(const Constants::io__sprite_tie_func_to_state s, const size_t v)
 		{
-			if (s != Assistance::io__sprite_tie_func_to_state::size) pair[+s] = v;
+			if (s != Constants::io__sprite_tie_func_to_state::size) pair[+s] = v;
 		}
-		size_t Sprite::__sprite_smart_images::getState(const Assistance::io__sprite_tie_func_to_state s)
+		size_t Sprite::__sprite_smart_images::getState(const Constants::io__sprite_tie_func_to_state s)
 		{
-			if (s != Assistance::io__sprite_tie_func_to_state::size) return pair[+s];
+			if (s != Constants::io__sprite_tie_func_to_state::size) return pair[+s];
 			return std::string::npos;
 		}
 		void Sprite::__sprite_smart_images::loop(const bool b)
@@ -577,24 +582,24 @@ namespace LSW {
 		{
 			Database conf;
 			bool debugging = false;
-			conf.get(Assistance::io__conf_boolean::ULTRADEBUG, debugging, Constants::_is_on_debug_mode);
+			conf.get(Constants::io__conf_boolean::ULTRADEBUG, debugging, Constants::_is_on_debug_mode);
 			debugging |= Constants::_is_on_debug_mode;
 						
-			dval[+Assistance::io__sprite_double::SCALEX] = 1.0;
-			dval[+Assistance::io__sprite_double::SCALEY] = 1.0;
-			dval[+Assistance::io__sprite_double::SCALEG] = 1.0;
-			dval[+Assistance::io__sprite_double::SMOOTHNESS_X] = Constants::sprite_default_smoothness;
-			dval[+Assistance::io__sprite_double::SMOOTHNESS_Y] = Constants::sprite_default_smoothness;
-			dval[+Assistance::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY] = 0.0;
-			dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] = 0.0;
-			dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] = 0.0;
-			bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM] = true;
-			bval[+Assistance::io__sprite_boolean::SHOWBOX] = debugging;
-			bval[+Assistance::io__sprite_boolean::SHOWDOT] = debugging;
-			bval[+Assistance::io__sprite_boolean::RESPECT_CAMERA_LIMITS] = true;
-			dval[+Assistance::io__sprite_double::SPEEDXY_LIMIT] = Constants::intensity_player_run_max;
-			dval[+Assistance::io__sprite_double::ACCELERATION_X] = Constants::intensity_player_run_max * 0.333;
-			dval[+Assistance::io__sprite_double::ACCELERATION_Y] = Constants::intensity_player_run_max * 0.333;
+			dval[+Constants::io__sprite_double::SCALEX] = 1.0;
+			dval[+Constants::io__sprite_double::SCALEY] = 1.0;
+			dval[+Constants::io__sprite_double::SCALEG] = 1.0;
+			dval[+Constants::io__sprite_double::SMOOTHNESS_X] = Constants::sprite_default_smoothness;
+			dval[+Constants::io__sprite_double::SMOOTHNESS_Y] = Constants::sprite_default_smoothness;
+			dval[+Constants::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY] = 0.0;
+			dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X] = 0.0;
+			dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y] = 0.0;
+			bval[+Constants::io__sprite_boolean::AFFECTED_BY_CAM] = true;
+			bval[+Constants::io__sprite_boolean::SHOWBOX] = debugging;
+			bval[+Constants::io__sprite_boolean::SHOWDOT] = debugging;
+			bval[+Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS] = true;
+			dval[+Constants::io__sprite_double::SPEEDXY_LIMIT] = Constants::intensity_player_run_max;
+			dval[+Constants::io__sprite_double::ACCELERATION_X] = Constants::intensity_player_run_max * 0.333;
+			dval[+Constants::io__sprite_double::ACCELERATION_Y] = Constants::intensity_player_run_max * 0.333;
 		}
 
 
@@ -604,47 +609,47 @@ namespace LSW {
 
 		bool Sprite::fastIsColliding(camera_preset psf) // rad
 		{
-			psf.set(Assistance::io__camera_boolean::READONLY_NOW, false);
+			psf.set(Constants::io__camera_boolean::READONLY_NOW, false);
 
-			if (data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_MOUSEONLY) { // HERE
+			if (data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY) { // HERE
 				
-				data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = false;
+				data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = false;
 
-				if (data.bval[+Assistance::io__sprite_boolean::FOLLOWMOUSE]) {
-					data.bval[+Assistance::io__sprite_boolean::RO_IS_MOUSE_COLLIDING] = true;
+				if (data.bval[+Constants::io__sprite_boolean::FOLLOWMOUSE]) {
+					data.bval[+Constants::io__sprite_boolean::RO_IS_MOUSE_COLLIDING] = true;
 				}
 				else {
-					float m[2] = { 0.0 };
+					double m[2] = { 0.0 };
 					bool is_mouse_pressed = false;
 					Database db;
 
-					db.get(Assistance::ro__db_mouse_float::MOUSE_X, m[0]);
-					db.get(Assistance::ro__db_mouse_float::MOUSE_Y, m[1]);
-					db.get(Assistance::ro__db_mouse_boolean::IS_ANY_PRESSED, is_mouse_pressed);
+					db.get(Constants::ro__db_mouse_double::MOUSE_X, m[0]);
+					db.get(Constants::ro__db_mouse_double::MOUSE_Y, m[1]);
+					db.get(Constants::ro__db_mouse_boolean::IS_ANY_PRESSED, is_mouse_pressed);
 
 
-					data.dval[+Assistance::io__sprite_double::RO_MOUSE_DISTANCE_X] = (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX]) - (double)m[0];
-					data.dval[+Assistance::io__sprite_double::RO_MOUSE_DISTANCE_Y] = (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY]) - (double)m[1];
+					data.dval[+Constants::io__sprite_double::RO_MOUSE_DISTANCE_X] = (data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX]) - m[0];
+					data.dval[+Constants::io__sprite_double::RO_MOUSE_DISTANCE_Y] = (data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY]) - m[1];
 
 
-					data.bval[+Assistance::io__sprite_boolean::RO_IS_MOUSE_COLLIDING] = (
-						(fabs(data.dval[+Assistance::io__sprite_double::RO_MOUSE_DISTANCE_X]) < 0.5 * data.dval[+Assistance::io__sprite_double::SCALEX] * data.dval[+Assistance::io__sprite_double::SCALEG]) &&
-						(fabs(data.dval[+Assistance::io__sprite_double::RO_MOUSE_DISTANCE_Y]) < 0.5 * data.dval[+Assistance::io__sprite_double::SCALEY] * data.dval[+Assistance::io__sprite_double::SCALEG])
+					data.bval[+Constants::io__sprite_boolean::RO_IS_MOUSE_COLLIDING] = (
+						(fabs(data.dval[+Constants::io__sprite_double::RO_MOUSE_DISTANCE_X]) < 0.5 * data.dval[+Constants::io__sprite_double::SCALEX] * data.dval[+Constants::io__sprite_double::SCALEG]) &&
+						(fabs(data.dval[+Constants::io__sprite_double::RO_MOUSE_DISTANCE_Y]) < 0.5 * data.dval[+Constants::io__sprite_double::SCALEY] * data.dval[+Constants::io__sprite_double::SCALEG])
 						);
 
-					if (data.bval[+Assistance::io__sprite_boolean::RO_IS_MOUSE_COLLIDING]) {
-						data.dval[+Assistance::io__sprite_double::RO_LAST_MOUSE_COLLISION] = al_get_time();
+					if (data.bval[+Constants::io__sprite_boolean::RO_IS_MOUSE_COLLIDING]) {
+						data.dval[+Constants::io__sprite_double::RO_LAST_MOUSE_COLLISION] = al_get_time();
 						if (is_mouse_pressed) {
-							data.new_state = Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK;
+							data.new_state = Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK;
 						}
 						else {
-							data.new_state = Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON;
+							data.new_state = Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON;
 						}
 					}
 				}
 			}
 			else {
-				data.bval[+Assistance::io__sprite_boolean::RO_IS_MOUSE_COLLIDING] = false;
+				data.bval[+Constants::io__sprite_boolean::RO_IS_MOUSE_COLLIDING] = false;
 			}
 
 			return false;
@@ -652,27 +657,27 @@ namespace LSW {
 
 		void Sprite::checkTied()
 		{
-			if (data.bval[+Assistance::io__sprite_boolean::TIE_SIZE_TO_DISPLAY] && data.dval[+Assistance::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY] != 0.0 && al_get_time() - data.dval[+Assistance::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY] > 0.0) {
+			if (data.bval[+Constants::io__sprite_boolean::TIE_SIZE_TO_DISPLAY] && data.dval[+Constants::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY] != 0.0 && al_get_time() - data.dval[+Constants::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY] > 0.0) {
 				Database db;
 				int nv[2];
 
-				db.get(Assistance::io__conf_integer::SCREEN_X, nv[0], 0);
-				db.get(Assistance::io__conf_integer::SCREEN_Y, nv[1], 0);
+				db.get(Constants::io__conf_integer::SCREEN_X, nv[0], 0);
+				db.get(Constants::io__conf_integer::SCREEN_Y, nv[1], 0);
 
 				if (bmps.resizeAllTo(nv[0], nv[1])) {
-					data.dval[+Assistance::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY] = 0.0;
-					if (data.function_pair[+Assistance::io__sprite_tie_func_to_state::WHEN_BITMAPS_RESIZED_AUTO]) data.function_pair[+Assistance::io__sprite_tie_func_to_state::WHEN_BITMAPS_RESIZED_AUTO]();
+					data.dval[+Constants::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY] = 0.0;
+					if (data.function_pair[+Constants::io__sprite_tie_func_to_state::WHEN_BITMAPS_RESIZED_AUTO]) data.function_pair[+Constants::io__sprite_tie_func_to_state::WHEN_BITMAPS_RESIZED_AUTO]();
 				}
-				else data.dval[+Assistance::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY] = al_get_time() + 0.5;
+				else data.dval[+Constants::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY] = al_get_time() + 0.5;
 			}
 		}
 
 		bool Sprite::shouldThisCalcCollisionIn(const int l)
 		{
-			if (!data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM]) return false;
-			if (+data.collision_mode <= +Assistance::io__sprite_collision_mode::__COLLISION_HOLD_OR_TRANSPARENT_MAXVAL) return false;
+			if (!data.bval[+Constants::io__sprite_boolean::AFFECTED_BY_CAM]) return false;
+			if (+data.collision_mode <= +Constants::io__sprite_collision_mode::__COLLISION_HOLD_OR_TRANSPARENT_MAXVAL) return false;
 			if (l != layer) {
-				if (+data.collision_mode >= +Assistance::io__sprite_collision_mode::__COLLISION_ANYLAYER_MINVAL) return true;
+				if (+data.collision_mode >= +Constants::io__sprite_collision_mode::__COLLISION_ANYLAYER_MINVAL) return true;
 				return false;
 			}
 			return true; // same layer and not transparent
@@ -683,28 +688,28 @@ namespace LSW {
 			bmps.reset();
 		}
 
-		void Sprite::hook(const Assistance::io__sprite_tie_func_to_state w, std::function<void(void)> f)
+		void Sprite::hook(const Constants::io__sprite_tie_func_to_state w, std::function<void(void)> f)
 		{
-			if (w != Assistance::io__sprite_tie_func_to_state::size) data.function_pair[+w] = f;
+			if (w != Constants::io__sprite_tie_func_to_state::size) data.function_pair[+w] = f;
 		}
 
-		void Sprite::unhook(const Assistance::io__sprite_tie_func_to_state w)
+		void Sprite::unhook(const Constants::io__sprite_tie_func_to_state w)
 		{
-			if (w != Assistance::io__sprite_tie_func_to_state::size) data.function_pair[+w] = std::function<void(void)>();
+			if (w != Constants::io__sprite_tie_func_to_state::size) data.function_pair[+w] = std::function<void(void)>();
 		}
 
-		void Sprite::set(const Assistance::io__sprite_string_vector u, const std::vector<std::string> v, float* perc)
+		void Sprite::set(const Constants::io__sprite_string_vector u, const std::vector<std::string> v, float* perc)
 		{
 			if (perc) *perc = 0.00f;
 			size_t countt = 0;
 			switch (u) {
-			case Assistance::io__sprite_string_vector::ADDMULTIPLE:
+			case Constants::io__sprite_string_vector::ADDMULTIPLE:
 				for (auto& i : v) {
 					bmps.load(i);
 					if (perc) *perc = 1.00f * countt++ / v.size();
 				}
 				break;
-			case Assistance::io__sprite_string_vector::REMOVEMULTIPLE:
+			case Constants::io__sprite_string_vector::REMOVEMULTIPLE:
 				for (auto& i : v) {
 					bmps.remove(i);
 					if (perc) *perc = 1.00f * countt++ / v.size();
@@ -714,73 +719,73 @@ namespace LSW {
 			if (perc) *perc = 1.00f;
 		}
 
-		void Sprite::set(const Assistance::io__sprite_string u, const std::string v)
+		void Sprite::set(const Constants::io__sprite_string u, const std::string v)
 		{
 			switch (u) {
-			case Assistance::io__sprite_string::ADD:
+			case Constants::io__sprite_string::ADD:
 				bmps.load(v);
 				break;
-			case Assistance::io__sprite_string::REMOVE:
+			case Constants::io__sprite_string::REMOVE:
 				bmps.remove(v);
 				break;
-			case Assistance::io__sprite_string::ID:
+			case Constants::io__sprite_string::ID:
 				sprite_id = v;
 				break;
 			}
 		}
-		void Sprite::set(const Assistance::io__sprite_double u, const double v)
+		void Sprite::set(const Constants::io__sprite_double u, const double v)
 		{
 			switch (u) {
-			case Assistance::io__sprite_double::ANIMATION_FPS:  // don't forget COLLISION_STATE can bug this one
+			case Constants::io__sprite_double::ANIMATION_FPS:  // don't forget COLLISION_STATE can bug this one
 				bmps.setFPS(v);
 				break;
-			/*case Assistance::io__sprite_double::RO_SPEEDX:
-				if (v > 0.0 && data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_EAST]) {
+			/*case Constants::io__sprite_double::RO_SPEEDX:
+				if (v > 0.0 && data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_EAST]) {
 					data.dval[+u] = v;
-					data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_NORTH] = data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_SOUTH] = data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_WEST] = true;
+					data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_NORTH] = data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_SOUTH] = data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_WEST] = true;
 				}
-				if (v < 0.0 && data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_WEST]) {
+				if (v < 0.0 && data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_WEST]) {
 					data.dval[+u] = v;
-					data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_NORTH] = data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_SOUTH] = data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_EAST] = true;
+					data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_NORTH] = data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_SOUTH] = data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_EAST] = true;
 				}
 				break;
-			case Assistance::io__sprite_double::RO_SPEEDY:
-				if (v > 0.0 && data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_SOUTH]) {
+			case Constants::io__sprite_double::RO_SPEEDY:
+				if (v > 0.0 && data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_SOUTH]) {
 					data.dval[+u] = v;
-					data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_EAST] = data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_WEST] = data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_NORTH] = true;
+					data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_EAST] = data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_WEST] = data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_NORTH] = true;
 				}
-				if (v < 0.0 && data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_NORTH]) {
+				if (v < 0.0 && data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_NORTH]) {
 					data.dval[+u] = v;
-					data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_EAST] = data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_WEST] = data.tempblock_dirs[+Assistance::cl__sprite_direction_mult::GO_SOUTH] = true;
+					data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_EAST] = data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_WEST] = data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_SOUTH] = true;
 				}
 				break;*/
 			default:
 				data.dval[+u] = v;
 				// target set to value
 				switch (+u) {
-				case +Assistance::io__sprite_double::POSX:
-					data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] = v;
+				case +Constants::io__sprite_double::POSX:
+					data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] = v;
 					break;
-				case +Assistance::io__sprite_double::POSY:
-					data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] = v;
+				case +Constants::io__sprite_double::POSY:
+					data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] = v;
 					break;
-				case +Assistance::io__sprite_double::ROTATION:
-					data.dtarg[+Assistance::ro__sprite_target_double::TARG_ROTATION] = v;
+				case +Constants::io__sprite_double::ROTATION:
+					data.dtarg[+Constants::ro__sprite_target_double::TARG_ROTATION] = v;
 					break;
 				}
 				break;
 			}
 		}
-		void Sprite::set(const Assistance::io__sprite_boolean u, const bool v)
+		void Sprite::set(const Constants::io__sprite_boolean u, const bool v)
 		{
 			switch (u) {
-			case Assistance::io__sprite_boolean::LOOPFRAMES:
+			case Constants::io__sprite_boolean::LOOPFRAMES:
 				bmps.loop(v);
 				break;
-			case Assistance::io__sprite_boolean::HAS_DONE_LOOP_ONCE:
+			case Constants::io__sprite_boolean::HAS_DONE_LOOP_ONCE:
 				// nothing to do
 				break;
-			case Assistance::io__sprite_boolean::ZERO_RESETS_POSITION_INSTEAD_OF_FREEZING: // setFPS(0) stops animation or reset to 0?
+			case Constants::io__sprite_boolean::ZERO_RESETS_POSITION_INSTEAD_OF_FREEZING: // setFPS(0) stops animation or reset to 0?
 				bmps.resetInsteadOfPause(v);
 				break;
 			default:
@@ -788,13 +793,13 @@ namespace LSW {
 				break;
 			}
 		}
-		void Sprite::set(const Assistance::io__sprite_integer u, const int v)
+		void Sprite::set(const Constants::io__sprite_integer u, const int v)
 		{
 			switch (u) {
-			case Assistance::io__sprite_integer::LAYER:
+			case Constants::io__sprite_integer::LAYER:
 				layer = v;
 				break;
-			case Assistance::io__sprite_integer::ADD_ANOTHER_LAYER_COLLISION:
+			case Constants::io__sprite_integer::ADD_ANOTHER_LAYER_COLLISION:
 			{
 				bool has = false;
 				data.layers_colliding_m.lock();
@@ -810,7 +815,7 @@ namespace LSW {
 				data.layers_colliding_m.unlock();
 			}
 				break;
-			case Assistance::io__sprite_integer::REMOVE_LAYER_COLLISION:
+			case Constants::io__sprite_integer::REMOVE_LAYER_COLLISION:
 			{
 				data.layers_colliding_m.lock();
 
@@ -826,81 +831,81 @@ namespace LSW {
 				break;
 			}
 		}
-		void Sprite::set(const Assistance::io__sprite_sizet u, const size_t v)
+		void Sprite::set(const Constants::io__sprite_sizet u, const size_t v)
 		{
 			switch (u) {
-			case Assistance::io__sprite_sizet::FRAME:
+			case Constants::io__sprite_sizet::FRAME:
 				bmps.setFPS(-(int)(v));
 				break;
 			}
 		}
-		void Sprite::set(const Assistance::io__sprite_color u, const ALLEGRO_COLOR v)
+		void Sprite::set(const Constants::io__sprite_color u, const ALLEGRO_COLOR v)
 		{
 			switch (u) {
-			case Assistance::io__sprite_color::TINT:
+			case Constants::io__sprite_color::TINT:
 				data.tint = v;
 				break;
 			}
 		}
 
-		void Sprite::set(const Assistance::io__sprite_tie_func_to_state u, const size_t v)
+		void Sprite::set(const Constants::io__sprite_tie_func_to_state u, const size_t v)
 		{
 			bmps.setState(u, v);
 		}
 
-		void Sprite::set(const Assistance::io__sprite_collision_mode m)
+		void Sprite::set(const Constants::io__sprite_collision_mode m)
 		{
 			data.collision_mode = m;
 			//for (auto& i : data.tempblock_dirs) i = true;
 		}
 
-		void Sprite::set(const Assistance::cl__sprite_direction_mult d)
+		void Sprite::set(const Constants::cl__sprite_direction_mult d)
 		{
 			switch (d) {
-			case Assistance::cl__sprite_direction_mult::GO_NORTH:
-				data.combined_direction_i_wanna_go |= +Assistance::directions::NORTH;
+			case Constants::cl__sprite_direction_mult::GO_NORTH:
+				data.combined_direction_i_wanna_go |= +Constants::directions::NORTH;
 				break;
-			case Assistance::cl__sprite_direction_mult::GO_SOUTH:
-				data.combined_direction_i_wanna_go |= +Assistance::directions::SOUTH;
+			case Constants::cl__sprite_direction_mult::GO_SOUTH:
+				data.combined_direction_i_wanna_go |= +Constants::directions::SOUTH;
 				break;
-			case Assistance::cl__sprite_direction_mult::GO_EAST:
-				data.combined_direction_i_wanna_go |= +Assistance::directions::EAST;
+			case Constants::cl__sprite_direction_mult::GO_EAST:
+				data.combined_direction_i_wanna_go |= +Constants::directions::EAST;
 				break;
-			case Assistance::cl__sprite_direction_mult::GO_WEST:
-				data.combined_direction_i_wanna_go |= +Assistance::directions::WEST;
+			case Constants::cl__sprite_direction_mult::GO_WEST:
+				data.combined_direction_i_wanna_go |= +Constants::directions::WEST;
 				break;
-			case Assistance::cl__sprite_direction_mult::STOP_NORTH:
-				data.combined_direction_i_wanna_go &= ~ +Assistance::directions::NORTH;
+			case Constants::cl__sprite_direction_mult::STOP_NORTH:
+				data.combined_direction_i_wanna_go &= ~ +Constants::directions::NORTH;
 				break;
-			case Assistance::cl__sprite_direction_mult::STOP_SOUTH:
-				data.combined_direction_i_wanna_go &= ~+ Assistance::directions::SOUTH;
+			case Constants::cl__sprite_direction_mult::STOP_SOUTH:
+				data.combined_direction_i_wanna_go &= ~+ Constants::directions::SOUTH;
 				break;
-			case Assistance::cl__sprite_direction_mult::STOP_EAST:
-				data.combined_direction_i_wanna_go &= ~+ Assistance::directions::EAST;
+			case Constants::cl__sprite_direction_mult::STOP_EAST:
+				data.combined_direction_i_wanna_go &= ~+ Constants::directions::EAST;
 				break;
-			case Assistance::cl__sprite_direction_mult::STOP_WEST:
-				data.combined_direction_i_wanna_go &= ~+ Assistance::directions::WEST;
+			case Constants::cl__sprite_direction_mult::STOP_WEST:
+				data.combined_direction_i_wanna_go &= ~+ Constants::directions::WEST;
 				break;
 			}
 		}
 
-		bool Sprite::get(const Assistance::io__sprite_string u, std::string& v)
+		bool Sprite::get(const Constants::io__sprite_string u, std::string& v)
 		{
 			switch (u) {
-			case Assistance::io__sprite_string::ADD:
-			case Assistance::io__sprite_string::REMOVE:
+			case Constants::io__sprite_string::ADD:
+			case Constants::io__sprite_string::REMOVE:
 				// no sense
 				return false;
-			case Assistance::io__sprite_string::ID:
+			case Constants::io__sprite_string::ID:
 				v = sprite_id;
 				return true;
 			}
 			return false;
 		}
-		bool Sprite::get(const Assistance::io__sprite_double u, double& v)
+		bool Sprite::get(const Constants::io__sprite_double u, double& v)
 		{
 			switch (u) {
-			case Assistance::io__sprite_double::ANIMATION_FPS:
+			case Constants::io__sprite_double::ANIMATION_FPS:
 				// no way
 				return false;
 			default:
@@ -909,22 +914,22 @@ namespace LSW {
 			}
 			return false;
 		}
-		bool Sprite::get(const Assistance::ro__sprite_target_double u, double& v)
+		bool Sprite::get(const Constants::ro__sprite_target_double u, double& v)
 		{
-			if (u == Assistance::ro__sprite_target_double::size) return false;
+			if (u == Constants::ro__sprite_target_double::size) return false;
 			v = data.dtarg[+u];
 			return true;
 		}
-		bool Sprite::get(const Assistance::io__sprite_boolean u, bool& v)
+		bool Sprite::get(const Constants::io__sprite_boolean u, bool& v)
 		{
 			switch (u) {
-			case Assistance::io__sprite_boolean::LOOPFRAMES:
+			case Constants::io__sprite_boolean::LOOPFRAMES:
 				// no way
 				return false;
-			case Assistance::io__sprite_boolean::HAS_DONE_LOOP_ONCE:
+			case Constants::io__sprite_boolean::HAS_DONE_LOOP_ONCE:
 				v = bmps.hasLoopEndedOnce();
 				return true;
-			case Assistance::io__sprite_boolean::IS_IT_ON_LAST_FRAME:
+			case Constants::io__sprite_boolean::IS_IT_ON_LAST_FRAME:
 				v = bmps.isOnLastFrame();
 				return true;
 			default:
@@ -933,44 +938,44 @@ namespace LSW {
 			}
 			return false;
 		}
-		bool Sprite::get(const Assistance::io__sprite_integer u, int& v)
+		bool Sprite::get(const Constants::io__sprite_integer u, int& v)
 		{
 			switch (u) {
-			case Assistance::io__sprite_integer::LAYER:
+			case Constants::io__sprite_integer::LAYER:
 				v = layer;
 				return true;
 			}
 			return false;
 		}
-		bool Sprite::get(const Assistance::io__sprite_sizet u, size_t& v)
+		bool Sprite::get(const Constants::io__sprite_sizet u, size_t& v)
 		{
 			switch (u) {
-			case Assistance::io__sprite_sizet::FRAME:
+			case Constants::io__sprite_sizet::FRAME:
 				v = bmps.lastFrame();
 				return true;
 			}
 			return false;
 		}
-		bool Sprite::get(const Assistance::ro__sprite_state u, Assistance::io__sprite_tie_func_to_state& v)
+		bool Sprite::get(const Constants::ro__sprite_state u, Constants::io__sprite_tie_func_to_state& v)
 		{
 			switch (u) {
-			case Assistance::ro__sprite_state::STATE:
+			case Constants::ro__sprite_state::STATE:
 				v = data.last_state;
 				return true;
 			}
 			return false;
 		}
-		bool Sprite::get(const Assistance::io__sprite_color u, ALLEGRO_COLOR& v)
+		bool Sprite::get(const Constants::io__sprite_color u, ALLEGRO_COLOR& v)
 		{
 			switch (u) {
-			case Assistance::io__sprite_color::TINT:
+			case Constants::io__sprite_color::TINT:
 				v = data.tint;
 				return true;
 			}
 			return false;
 		}
 
-		void Sprite::get(const Assistance::io__sprite_tie_func_to_state u, size_t& v)
+		void Sprite::get(const Constants::io__sprite_tie_func_to_state u, size_t& v)
 		{
 			v = bmps.getState(u);
 		}
@@ -980,36 +985,36 @@ namespace LSW {
 			g = bmps.get();
 		}
 
-		void Sprite::get(Assistance::io__sprite_collision_mode& m)
+		void Sprite::get(Constants::io__sprite_collision_mode& m)
 		{
 			m = data.collision_mode;
 		}
 
 
-		bool Sprite::isEq(const Assistance::io__sprite_string w, const std::string v)
+		bool Sprite::isEq(const Constants::io__sprite_string w, const std::string v)
 		{
 			std::string g;
 			get(w, g);
 			return g == v;
 		}
-		bool Sprite::isEq(const Assistance::io__sprite_double w, const double v)
+		bool Sprite::isEq(const Constants::io__sprite_double w, const double v)
 		{
 			double g;
 			get(w, g);
 			return g == v;
 		}
-		bool Sprite::isEq(const Assistance::io__sprite_boolean w, const bool v)
+		bool Sprite::isEq(const Constants::io__sprite_boolean w, const bool v)
 		{
 			bool g;
 			get(w, g);
 			return g == v;
 		}
-		bool Sprite::isEq(const Assistance::io__sprite_integer w, const int v)
+		bool Sprite::isEq(const Constants::io__sprite_integer w, const int v)
 		{
 			int g;
 			get(w, g); 
 			return g == v || [&]() {
-				if (w != Assistance::io__sprite_integer::LAYER) return false; // return false forcing anything but LAYER to be TRUE on g == v part
+				if (w != Constants::io__sprite_integer::LAYER) return false; // return false forcing anything but LAYER to be TRUE on g == v part
 
 				data.layers_colliding_m.lock();
 				for (auto& i : data.layers_colliding) {
@@ -1022,35 +1027,35 @@ namespace LSW {
 				return false;
 			}();
 		}
-		bool Sprite::isEq(const Assistance::io__sprite_sizet w, const size_t v)
+		bool Sprite::isEq(const Constants::io__sprite_sizet w, const size_t v)
 		{
 			size_t g;
 			get(w, g);
 			return g == v;
 		}
-		bool Sprite::isEq(const Assistance::ro__sprite_state w, const Assistance::io__sprite_tie_func_to_state v)
+		bool Sprite::isEq(const Constants::ro__sprite_state w, const Constants::io__sprite_tie_func_to_state v)
 		{
-			Assistance::io__sprite_tie_func_to_state g;
+			Constants::io__sprite_tie_func_to_state g;
 			get(w, g);
 			return g == v;
 		}
-		bool Sprite::isEq(const Assistance::io__sprite_color w, const ALLEGRO_COLOR v)
+		bool Sprite::isEq(const Constants::io__sprite_color w, const ALLEGRO_COLOR v)
 		{
 			ALLEGRO_COLOR g;
 			get(w, g);
 			return ((g.a == v.a) && (g.r == v.r) && (g.g == v.g) && (g.b == v.b));
 		}
 
-		bool Sprite::isEq(const Assistance::io__sprite_tie_func_to_state w, const size_t v)
+		bool Sprite::isEq(const Constants::io__sprite_tie_func_to_state w, const size_t v)
 		{
 			size_t g;
 			get(w, g);
 			return g == v;
 		}
 
-		bool Sprite::isEq(const Assistance::io__sprite_collision_mode v)
+		bool Sprite::isEq(const Constants::io__sprite_collision_mode v)
 		{
-			Assistance::io__sprite_collision_mode g;
+			Constants::io__sprite_collision_mode g;
 			get(g);
 			return g == v;
 		}
@@ -1058,34 +1063,34 @@ namespace LSW {
 		void Sprite::draw(const int is_layer)
 		{
 			if (layer != is_layer) return;
-			if (!data.bval[+Assistance::io__sprite_boolean::DRAW]) return;
+			if (!data.bval[+Constants::io__sprite_boolean::DRAW]) return;
 
 			checkTied();
 
-			if (data.function_pair[+Assistance::io__sprite_tie_func_to_state::WHEN_DRAWING]) data.function_pair[+Assistance::io__sprite_tie_func_to_state::WHEN_DRAWING]();
+			if (data.function_pair[+Constants::io__sprite_tie_func_to_state::WHEN_DRAWING]) data.function_pair[+Constants::io__sprite_tie_func_to_state::WHEN_DRAWING]();
 
-			ALLEGRO_BITMAP* rn = bmps.get((data.bval[+Assistance::io__sprite_boolean::USE_STATE_AS_BITMAP] ? data.last_state : Assistance::io__sprite_tie_func_to_state::size));
+			ALLEGRO_BITMAP* rn = bmps.get((data.bval[+Constants::io__sprite_boolean::USE_STATE_AS_BITMAP] ? data.last_state : Constants::io__sprite_tie_func_to_state::size));
 
 			if (!rn) return; // if doesn't have what to draw (possible), skip
 
 			Camera camm;
 			camera_preset psf = camm.get();
 
-			if (!data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM]) psf = camera_preset();
+			if (!data.bval[+Constants::io__sprite_boolean::AFFECTED_BY_CAM]) psf = camera_preset();
 
 
 			double timee = al_get_time();
-			double dt = timee - data.dtarg[+Assistance::ro__sprite_target_double::INTERN_LASTDRAW];
-			data.dtarg[+Assistance::ro__sprite_target_double::INTERN_LASTDRAW] = timee;
+			double dt = timee - data.dtarg[+Constants::ro__sprite_target_double::INTERN_LASTDRAW];
+			data.dtarg[+Constants::ro__sprite_target_double::INTERN_LASTDRAW] = timee;
 
-			//if (!data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] && data.countdown_col == 0) {
+			//if (!data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] && data.countdown_col == 0) {
 				double perc_run = Constants::__i_col_pos_t_update * dt; // ex: 5 per sec * 0.2 (1/5 sec) = 1, so posx = actual posx...
 				if (perc_run > 1.0) perc_run = 1.0; // 1.0 is "set value"
 				if (perc_run < 1.0 / 10000) perc_run = 1.0 / 10000; // can't be infinitely smooth right? come on
 
-				data.dval[+Assistance::io__sprite_double::POSX] = (1.0 - perc_run) * data.dval[+Assistance::io__sprite_double::POSX] + perc_run * data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX];
-				data.dval[+Assistance::io__sprite_double::POSY] = (1.0 - perc_run) * data.dval[+Assistance::io__sprite_double::POSY] + perc_run * data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY];
-				data.dval[+Assistance::io__sprite_double::ROTATION] = (1.0 - perc_run) * data.dval[+Assistance::io__sprite_double::ROTATION] + perc_run * data.dtarg[+Assistance::ro__sprite_target_double::TARG_ROTATION];
+				data.dval[+Constants::io__sprite_double::POSX] = (1.0 - perc_run) * data.dval[+Constants::io__sprite_double::POSX] + perc_run * data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX];
+				data.dval[+Constants::io__sprite_double::POSY] = (1.0 - perc_run) * data.dval[+Constants::io__sprite_double::POSY] + perc_run * data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY];
+				data.dval[+Constants::io__sprite_double::ROTATION] = (1.0 - perc_run) * data.dval[+Constants::io__sprite_double::ROTATION] + perc_run * data.dtarg[+Constants::ro__sprite_target_double::TARG_ROTATION];
 			//}
 
 
@@ -1097,48 +1102,48 @@ namespace LSW {
 				throw Abort::abort(__FUNCSIG__, "Somehow the texture have < 0 width / height id=[" + this->sprite_id + "] COLLISION_NONE={" + std::to_string(bmpx) + "," + std::to_string(bmpy) + "}", 1);
 			}
 
-			cx = 1.0f * bmpx * ((data.dval[+Assistance::io__sprite_double::CENTERX] + 1.0) * 0.5);
-			cy = 1.0f * bmpy * ((data.dval[+Assistance::io__sprite_double::CENTERY] + 1.0) * 0.5);
-			rot_rad = 1.0f * data.dval[+Assistance::io__sprite_double::ROTATION] * ALLEGRO_PI / 180.0;
-			/*px = 1.0f * data.dval[+Assistance::io__sprite_double::POSX] * cos(rot_rad) + data.dval[+Assistance::io__sprite_double::POSY] * sin(rot_rad);
-			py = 1.0f * data.dval[+Assistance::io__sprite_double::POSY] * cos(rot_rad) - data.dval[+Assistance::io__sprite_double::POSX] * sin(rot_rad);*/
-			px = data.dval[+Assistance::io__sprite_double::POSX];
-			py = data.dval[+Assistance::io__sprite_double::POSY];
-			dsx = 1.0f * data.dval[+Assistance::io__sprite_double::SCALEX] * data.dval[+Assistance::io__sprite_double::SCALEG] * (1.0 / bmpx);
-			dsy = 1.0f * data.dval[+Assistance::io__sprite_double::SCALEY] * data.dval[+Assistance::io__sprite_double::SCALEG] * (1.0 / bmpy);
+			cx = 1.0f * bmpx * ((data.dval[+Constants::io__sprite_double::CENTERX] + 1.0) * 0.5);
+			cy = 1.0f * bmpy * ((data.dval[+Constants::io__sprite_double::CENTERY] + 1.0) * 0.5);
+			rot_rad = 1.0f * data.dval[+Constants::io__sprite_double::ROTATION] * ALLEGRO_PI / 180.0;
+			/*px = 1.0f * data.dval[+Constants::io__sprite_double::POSX] * cos(rot_rad) + data.dval[+Constants::io__sprite_double::POSY] * sin(rot_rad);
+			py = 1.0f * data.dval[+Constants::io__sprite_double::POSY] * cos(rot_rad) - data.dval[+Constants::io__sprite_double::POSX] * sin(rot_rad);*/
+			px = data.dval[+Constants::io__sprite_double::POSX];
+			py = data.dval[+Constants::io__sprite_double::POSY];
+			dsx = 1.0f * data.dval[+Constants::io__sprite_double::SCALEX] * data.dval[+Constants::io__sprite_double::SCALEG] * (1.0 / bmpx);
+			dsy = 1.0f * data.dval[+Constants::io__sprite_double::SCALEY] * data.dval[+Constants::io__sprite_double::SCALEG] * (1.0 / bmpy);
 
 			// draw
 			camm.applyNoSave(psf);
 
-			if (data.bval[+Assistance::io__sprite_boolean::USE_TINTED_DRAWING])	al_draw_tinted_scaled_rotated_bitmap(rn, data.tint, cx, cy, px, py, dsx, dsy, rot_rad, 0);
+			if (data.bval[+Constants::io__sprite_boolean::USE_TINTED_DRAWING])	al_draw_tinted_scaled_rotated_bitmap(rn, data.tint, cx, cy, px, py, dsx, dsy, rot_rad, 0);
 			else																    al_draw_scaled_rotated_bitmap(rn, cx, cy, px, py, dsx, dsy, rot_rad, 0);
 
 			// debug
 
-			if (data.bval[+Assistance::io__sprite_boolean::SHOWBOX] || data.bval[+Assistance::io__sprite_boolean::SHOWDOT])
+			if (data.bval[+Constants::io__sprite_boolean::SHOWBOX] || data.bval[+Constants::io__sprite_boolean::SHOWDOT])
 			{
 				ALLEGRO_COLOR colorr = 
 					al_map_rgba(
-						data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] ? 195 : 15,
+						data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] ? 195 : 15,
 						115,
-						data.bval[+Assistance::io__sprite_boolean::RO_IS_MOUSE_COLLIDING] ? 195 : 15,
+						data.bval[+Constants::io__sprite_boolean::RO_IS_MOUSE_COLLIDING] ? 195 : 15,
 						195
 					);
 				camera_preset psf = camm.get();
 
-				if (data.bval[+Assistance::io__sprite_boolean::FOLLOWMOUSE]) colorr = al_map_rgba(195, 0, 195, 195);
+				if (data.bval[+Constants::io__sprite_boolean::FOLLOWMOUSE]) colorr = al_map_rgba(195, 0, 195, 195);
 				//else if (al_get_time() - lastresetcollisioncall < Defaults::diff_time_show_last_resetCollision) colorr = al_map_rgb(255, 255, 0);
 
-				if (data.bval[+Assistance::io__sprite_boolean::SHOWBOX]) {
-					al_draw_filled_circle(px - cx * dsx, py - cy * dsy, 0.1f * (fabs(psf.get(Assistance::io__camera_float::SCALE_G) * sqrt(psf.get(Assistance::io__camera_float::SCALE_X) * psf.get(Assistance::io__camera_float::SCALE_Y)) * 0.20f) + 0.05f), colorr);
-					al_draw_filled_circle(px - cx * dsx, py + cy * dsy, 0.1f * (fabs(psf.get(Assistance::io__camera_float::SCALE_G) * sqrt(psf.get(Assistance::io__camera_float::SCALE_X) * psf.get(Assistance::io__camera_float::SCALE_Y)) * 0.20f) + 0.05f), colorr);
-					al_draw_filled_circle(px + cx * dsx, py - cy * dsy, 0.1f * (fabs(psf.get(Assistance::io__camera_float::SCALE_G) * sqrt(psf.get(Assistance::io__camera_float::SCALE_X) * psf.get(Assistance::io__camera_float::SCALE_Y)) * 0.20f) + 0.05f), colorr);
-					al_draw_filled_circle(px + cx * dsx, py + cy * dsy, 0.1f * (fabs(psf.get(Assistance::io__camera_float::SCALE_G) * sqrt(psf.get(Assistance::io__camera_float::SCALE_X) * psf.get(Assistance::io__camera_float::SCALE_Y)) * 0.20f) + 0.05f), colorr);
+				if (data.bval[+Constants::io__sprite_boolean::SHOWBOX]) {
+					al_draw_filled_circle(px - cx * dsx, py - cy * dsy, 0.1f * (fabs(psf.get(Constants::io__camera_double::SCALE_G) * sqrt(psf.get(Constants::io__camera_double::SCALE_X) * psf.get(Constants::io__camera_double::SCALE_Y)) * 0.20f) + 0.05f), colorr);
+					al_draw_filled_circle(px - cx * dsx, py + cy * dsy, 0.1f * (fabs(psf.get(Constants::io__camera_double::SCALE_G) * sqrt(psf.get(Constants::io__camera_double::SCALE_X) * psf.get(Constants::io__camera_double::SCALE_Y)) * 0.20f) + 0.05f), colorr);
+					al_draw_filled_circle(px + cx * dsx, py - cy * dsy, 0.1f * (fabs(psf.get(Constants::io__camera_double::SCALE_G) * sqrt(psf.get(Constants::io__camera_double::SCALE_X) * psf.get(Constants::io__camera_double::SCALE_Y)) * 0.20f) + 0.05f), colorr);
+					al_draw_filled_circle(px + cx * dsx, py + cy * dsy, 0.1f * (fabs(psf.get(Constants::io__camera_double::SCALE_G) * sqrt(psf.get(Constants::io__camera_double::SCALE_X) * psf.get(Constants::io__camera_double::SCALE_Y)) * 0.20f) + 0.05f), colorr);
 				}
 
-				if (data.bval[+Assistance::io__sprite_boolean::SHOWDOT])
+				if (data.bval[+Constants::io__sprite_boolean::SHOWDOT])
 				{
-					al_draw_filled_circle(px, py, 0.1f * (fabs(psf.get(Assistance::io__camera_float::SCALE_G) * sqrt(psf.get(Assistance::io__camera_float::SCALE_X) * psf.get(Assistance::io__camera_float::SCALE_Y)) * 0.30f) + 0.12f), colorr);
+					al_draw_filled_circle(px, py, 0.1f * (fabs(psf.get(Constants::io__camera_double::SCALE_G) * sqrt(psf.get(Constants::io__camera_double::SCALE_X) * psf.get(Constants::io__camera_double::SCALE_Y)) * 0.30f) + 0.12f), colorr);
 				}
 			}
 
@@ -1152,12 +1157,12 @@ namespace LSW {
 
 		void Sprite::clearUp()
 		{
-			data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = false;
-			data.bval[+Assistance::io__sprite_boolean::RO_IS_MOUSE_COLLIDING] = false;
-			data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_ABOUT_TO_COLLIDE] = false;
-			data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] = 0.0;// 2.0 * data.dval[+Assistance::io__sprite_double::SCALEX] * data.dval[+Assistance::io__sprite_double::SCALEG];
-			data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] = 0.0;// 2.0 * data.dval[+Assistance::io__sprite_double::SCALEY] * data.dval[+Assistance::io__sprite_double::SCALEG];
-			data.new_state = Assistance::io__sprite_tie_func_to_state::COLLISION_NONE;
+			data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = false;
+			data.bval[+Constants::io__sprite_boolean::RO_IS_MOUSE_COLLIDING] = false;
+			data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_ABOUT_TO_COLLIDE] = false;
+			data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X] = 0.0;// 2.0 * data.dval[+Constants::io__sprite_double::SCALEX] * data.dval[+Constants::io__sprite_double::SCALEG];
+			data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y] = 0.0;// 2.0 * data.dval[+Constants::io__sprite_double::SCALEY] * data.dval[+Constants::io__sprite_double::SCALEG];
+			data.new_state = Constants::io__sprite_tie_func_to_state::COLLISION_NONE;
 			data.col_data.clear();
 			//data.direction_col = 0;
 			__debug_s.clear();
@@ -1166,10 +1171,10 @@ namespace LSW {
 		void Sprite::process(const int is_layer, camera_preset psf)
 		{
 			//data.where_i_wanna_go
-			psf.set(Assistance::io__camera_boolean::READONLY_NOW, false);
+			psf.set(Constants::io__camera_boolean::READONLY_NOW, false);
 
 			if ((layer != is_layer) &&
-				(data.collision_mode != Assistance::io__sprite_collision_mode::COLLISION_ANY_ELASTIC && data.collision_mode != Assistance::io__sprite_collision_mode::COLLISION_ANY_ROUGH) // HERE
+				(data.collision_mode != Constants::io__sprite_collision_mode::COLLISION_ANY_ELASTIC && data.collision_mode != Constants::io__sprite_collision_mode::COLLISION_ANY_ROUGH) // HERE
 				&& ([&]() {
 					data.layers_colliding_m.lock();
 					for (auto& i : data.layers_colliding) {
@@ -1189,29 +1194,29 @@ namespace LSW {
 			}
 
 
-			if (!data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM]) psf = camera_preset();
+			if (!data.bval[+Constants::io__sprite_boolean::AFFECTED_BY_CAM]) psf = camera_preset();
 
 			// LIMIT
 
-			if (fabs(data.dval[+Assistance::io__sprite_double::RO_SPEEDX]) > data.dval[+Assistance::io__sprite_double::SPEEDXY_LIMIT])
+			if (fabs(data.dval[+Constants::io__sprite_double::RO_SPEEDX]) > data.dval[+Constants::io__sprite_double::SPEEDXY_LIMIT])
 			{
-				data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = 
-					(data.dval[+Assistance::io__sprite_double::RO_SPEEDX] > 0.0) ? data.dval[+Assistance::io__sprite_double::SPEEDXY_LIMIT] : -data.dval[+Assistance::io__sprite_double::SPEEDXY_LIMIT];
+				data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 
+					(data.dval[+Constants::io__sprite_double::RO_SPEEDX] > 0.0) ? data.dval[+Constants::io__sprite_double::SPEEDXY_LIMIT] : -data.dval[+Constants::io__sprite_double::SPEEDXY_LIMIT];
 			}
-			if (fabs(data.dval[+Assistance::io__sprite_double::RO_SPEEDY]) > data.dval[+Assistance::io__sprite_double::SPEEDXY_LIMIT])
+			if (fabs(data.dval[+Constants::io__sprite_double::RO_SPEEDY]) > data.dval[+Constants::io__sprite_double::SPEEDXY_LIMIT])
 			{
-				data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = 
-					(data.dval[+Assistance::io__sprite_double::RO_SPEEDY] > 0.0) ? data.dval[+Assistance::io__sprite_double::SPEEDXY_LIMIT] : -data.dval[+Assistance::io__sprite_double::SPEEDXY_LIMIT];
+				data.dval[+Constants::io__sprite_double::RO_SPEEDY] = 
+					(data.dval[+Constants::io__sprite_double::RO_SPEEDY] > 0.0) ? data.dval[+Constants::io__sprite_double::SPEEDXY_LIMIT] : -data.dval[+Constants::io__sprite_double::SPEEDXY_LIMIT];
 			}
 
 
-			data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] += data.dval[+Assistance::io__sprite_double::RO_SPEEDX];
-			data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] += data.dval[+Assistance::io__sprite_double::RO_SPEEDY];
+			data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] += data.dval[+Constants::io__sprite_double::RO_SPEEDX];
+			data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] += data.dval[+Constants::io__sprite_double::RO_SPEEDY];
 
-			data.dtarg[+Assistance::ro__sprite_target_double::TARG_ROTATION] += data.dval[+Assistance::io__sprite_double::SPEEDROT];
+			data.dtarg[+Constants::ro__sprite_target_double::TARG_ROTATION] += data.dval[+Constants::io__sprite_double::SPEEDROT];
 
-			data.dval[+Assistance::io__sprite_double::RO_SPEEDX] *= data.dval[+Assistance::io__sprite_double::SMOOTHNESS_X] * psf.get(Assistance::io__camera_float::SLIPPERINESS);
-			data.dval[+Assistance::io__sprite_double::RO_SPEEDY] *= data.dval[+Assistance::io__sprite_double::SMOOTHNESS_Y] * psf.get(Assistance::io__camera_float::SLIPPERINESS);
+			data.dval[+Constants::io__sprite_double::RO_SPEEDX] *= data.dval[+Constants::io__sprite_double::SMOOTHNESS_X] * psf.get(Constants::io__camera_double::SLIPPERINESS);
+			data.dval[+Constants::io__sprite_double::RO_SPEEDY] *= data.dval[+Constants::io__sprite_double::SMOOTHNESS_Y] * psf.get(Constants::io__camera_double::SLIPPERINESS);
 
 			fastIsColliding(psf);
 		}
@@ -1228,18 +1233,18 @@ namespace LSW {
 			if (!mf->isThisCollidableIn(is_layer)) {	// test if not transparent so it causes collision with moveable objects
 				return;
 			}
-			mf->get(Assistance::io__sprite_string::ID, friendsname);
+			mf->get(Constants::io__sprite_string::ID, friendsname);
 			double multiplier = mf->doesThisReflect() ? 1.0 : 1.0;
 
 			
 
-			//if (+data.collision_mode <= +Assistance::io__sprite_collision_mode::__COLLISION_HOLD_OR_TRANSPARENT_MAXVAL) return; // all of them before because they are 0, 1, 2 and 3, and this is the 3, so <= 3 = nope
-			//if (is_layer != layer && data.collision_mode != Assistance::io__sprite_collision_mode::COLLISION_ANY_ELASTIC && data.collision_mode != Assistance::io__sprite_collision_mode::COLLISION_ANY_ROUGH) return;
+			//if (+data.collision_mode <= +Constants::io__sprite_collision_mode::__COLLISION_HOLD_OR_TRANSPARENT_MAXVAL) return; // all of them before because they are 0, 1, 2 and 3, and this is the 3, so <= 3 = nope
+			//if (is_layer != layer && data.collision_mode != Constants::io__sprite_collision_mode::COLLISION_ANY_ELASTIC && data.collision_mode != Constants::io__sprite_collision_mode::COLLISION_ANY_ROUGH) return;
 			//if (mf == this) return;
 			//if (!mf) return;
-			//if (mf->isEq(Assistance::io__sprite_collision_mode::COLLISION_TRANSPARENT)) return;
-			//if (mf->isEq(Assistance::io__sprite_collision_mode::COLLISION_MOUSEONLY)) return;
-			//if (!(mf->isEq(Assistance::io__sprite_collision_mode::COLLISION_ANY_ELASTIC) || mf->isEq(Assistance::io__sprite_collision_mode::COLLISION_ANY_ROUGH) || mf->isEq(Assistance::io__sprite_integer::LAYER, is_layer))) return;
+			//if (mf->isEq(Constants::io__sprite_collision_mode::COLLISION_TRANSPARENT)) return;
+			//if (mf->isEq(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY)) return;
+			//if (!(mf->isEq(Constants::io__sprite_collision_mode::COLLISION_ANY_ELASTIC) || mf->isEq(Constants::io__sprite_collision_mode::COLLISION_ANY_ROUGH) || mf->isEq(Constants::io__sprite_integer::LAYER, is_layer))) return;
 
 			// OBRIGATORIAMENTE:
 			// this -> ou é SAMELAYER ou ANYLAYER
@@ -1250,28 +1255,28 @@ namespace LSW {
 			double otherscl[3] = { 1.0 };
 
 			std::string oid;
-			mf->get(Assistance::io__sprite_string::ID, oid);
+			mf->get(Constants::io__sprite_string::ID, oid);
 
-			mf->get(Assistance::ro__sprite_target_double::TARG_POSX, otherpos[0]);
-			mf->get(Assistance::ro__sprite_target_double::TARG_POSY, otherpos[1]);
+			mf->get(Constants::ro__sprite_target_double::TARG_POSX, otherpos[0]);
+			mf->get(Constants::ro__sprite_target_double::TARG_POSY, otherpos[1]);
 
-			mf->get(Assistance::io__sprite_double::SCALEX, otherscl[0]);
-			mf->get(Assistance::io__sprite_double::SCALEY, otherscl[1]);
-			mf->get(Assistance::io__sprite_double::SCALEG, otherscl[2]);
+			mf->get(Constants::io__sprite_double::SCALEX, otherscl[0]);
+			mf->get(Constants::io__sprite_double::SCALEY, otherscl[1]);
+			mf->get(Constants::io__sprite_double::SCALEG, otherscl[2]);
 
 			otherscl[0] *= otherscl[2];
 			otherscl[1] *= otherscl[2];
 			otherscl[2] = 1.0; // just to be sure nothing wrong happens
 
 
-			double dxx = (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX]) - otherpos[0];
-			double dyy = (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY]) - otherpos[1];
+			double dxx = (data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX]) - otherpos[0];
+			double dyy = (data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY]) - otherpos[1];
 
-			double distx = 0.5 * (data.dval[+Assistance::io__sprite_double::SCALEX] * data.dval[+Assistance::io__sprite_double::SCALEG] + otherscl[0]);
-			double disty = 0.5 * (data.dval[+Assistance::io__sprite_double::SCALEY] * data.dval[+Assistance::io__sprite_double::SCALEG] + otherscl[1]);
+			double distx = 1e-50 + 0.5 * fabs(data.dval[+Constants::io__sprite_double::SCALEX] * data.dval[+Constants::io__sprite_double::SCALEG] + otherscl[0]);
+			double disty = 1e-50 + 0.5 * fabs(data.dval[+Constants::io__sprite_double::SCALEY] * data.dval[+Constants::io__sprite_double::SCALEG] + otherscl[1]);
 
-			double distx2 = distx + fabs(1.0 * data.dval[+Assistance::io__sprite_double::RO_SPEEDX]);
-			double disty2 = disty + fabs(1.0 * data.dval[+Assistance::io__sprite_double::RO_SPEEDY]);
+			double distx2 = distx + fabs(1.0 * data.dval[+Constants::io__sprite_double::RO_SPEEDX]);
+			double disty2 = disty + fabs(1.0 * data.dval[+Constants::io__sprite_double::RO_SPEEDY]);
 
 
 
@@ -1287,21 +1292,21 @@ namespace LSW {
 
 				if (adapt_dxx > adapt_dyy) { // from horiz
 					if (dxx > 0.0) { // block on the left of me
-						this_collision.diretion_by_centers_interpreted = +Assistance::directions::WEST;
+						this_collision.diretion_by_centers_interpreted = +Constants::directions::WEST;
 						__debug_s += "W@" + std::to_string(adapt_dxx) + ":" + std::to_string(adapt_dyy) + ";";
 					}
 					else {
-						this_collision.diretion_by_centers_interpreted = +Assistance::directions::EAST;
+						this_collision.diretion_by_centers_interpreted = +Constants::directions::EAST;
 						__debug_s += "E@" + std::to_string(adapt_dxx) + ":" + std::to_string(adapt_dyy) + ";";
 					}
 				}
 				else { // from vertc
 					if (dyy > 0.0) { // block on top
-						this_collision.diretion_by_centers_interpreted = +Assistance::directions::NORTH;
+						this_collision.diretion_by_centers_interpreted = +Constants::directions::NORTH;
 						__debug_s += "N@" + std::to_string(adapt_dxx) + ":" + std::to_string(adapt_dyy) + ";";
 					}
 					else {
-						this_collision.diretion_by_centers_interpreted = +Assistance::directions::SOUTH;
+						this_collision.diretion_by_centers_interpreted = +Constants::directions::SOUTH;
 						__debug_s += "S@" + std::to_string(adapt_dxx) + ":" + std::to_string(adapt_dyy) + ";";
 					}
 				}
@@ -1311,17 +1316,17 @@ namespace LSW {
 
 				data.col_data.push_back(this_collision);
 
-				data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = true;
+				data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = true;
 			}
 
 			else if (adapt_dxx2 < 1.0 && adapt_dyy2 < 1.0) // is about to collide soon
 			{
 
 				//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << sprite_id << " WILL COL W/ " << friendsname << L::EL;
-				data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_ABOUT_TO_COLLIDE] = true;
+				data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_ABOUT_TO_COLLIDE] = true;
 			
-				data.dval[+Assistance::io__sprite_double::RO_SPEEDX] *= 0.49; // < 0.50 so it won't bypass collision
-				data.dval[+Assistance::io__sprite_double::RO_SPEEDY] *= 0.49; // < 0.50 "
+				data.dval[+Constants::io__sprite_double::RO_SPEEDX] *= 0.49; // < 0.50 so it won't bypass collision
+				data.dval[+Constants::io__sprite_double::RO_SPEEDY] *= 0.49; // < 0.50 "
 
 				if (adapt_dxx > adapt_dyy) { // from horiz
 					if (dxx > 0.0)	__debug_s += "w@" + std::to_string(adapt_dxx) + ":" + std::to_string(adapt_dyy) + ";";
@@ -1336,97 +1341,108 @@ namespace LSW {
 
 		void Sprite::applyCollideData(camera_preset psf)
 		{
-			psf.set(Assistance::io__camera_boolean::READONLY_NOW, false);
+			psf.set(Constants::io__camera_boolean::READONLY_NOW, false);
 
-			if (data.last_state != data.new_state && data.new_state != Assistance::io__sprite_tie_func_to_state::size) {
+			if (data.last_state != data.new_state && data.new_state != Constants::io__sprite_tie_func_to_state::size) {
 				__debug_s += "CF_STATE;";
 				if (data.function_pair[+data.new_state]) data.function_pair[+data.new_state]();
 			}
 			data.last_state = data.new_state;
 
-			int directions_can_go = +Assistance::directions::EAST | +Assistance::directions::WEST | +Assistance::directions::NORTH | +Assistance::directions::SOUTH;
+			int directions_can_go = +Constants::directions::EAST | +Constants::directions::WEST | +Constants::directions::NORTH | +Constants::directions::SOUTH;
 
 			for (auto& i : data.col_data) directions_can_go &= ~i.diretion_by_centers_interpreted;
 
 			// KEYBOARD INPUT
-			if (data.combined_direction_i_wanna_go & +Assistance::directions::NORTH) {
-				if (directions_can_go & +Assistance::directions::NORTH) data.dval[+Assistance::io__sprite_double::RO_SPEEDY] -= data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+			if (data.combined_direction_i_wanna_go & +Constants::directions::NORTH) {
+				if (directions_can_go & +Constants::directions::NORTH) data.dval[+Constants::io__sprite_double::RO_SPEEDY] -= data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
 				else __debug_s += "NO_GO_NORTH;";
 			}
-			if (data.combined_direction_i_wanna_go & +Assistance::directions::SOUTH) {
-				if (directions_can_go & +Assistance::directions::SOUTH) data.dval[+Assistance::io__sprite_double::RO_SPEEDY] += data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+			if (data.combined_direction_i_wanna_go & +Constants::directions::SOUTH) {
+				if (directions_can_go & +Constants::directions::SOUTH) data.dval[+Constants::io__sprite_double::RO_SPEEDY] += data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
 				else __debug_s += "NO_GO_SOUTH;";
 			}
-			if (data.combined_direction_i_wanna_go & +Assistance::directions::EAST) {
-				if (directions_can_go & +Assistance::directions::EAST) data.dval[+Assistance::io__sprite_double::RO_SPEEDX] += data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+			if (data.combined_direction_i_wanna_go & +Constants::directions::EAST) {
+				if (directions_can_go & +Constants::directions::EAST) data.dval[+Constants::io__sprite_double::RO_SPEEDX] += data.dval[+Constants::io__sprite_double::ACCELERATION_X];
 				else __debug_s += "NO_GO_EAST;";
 			}
-			if (data.combined_direction_i_wanna_go & +Assistance::directions::WEST) {
-				if (directions_can_go & +Assistance::directions::WEST) data.dval[+Assistance::io__sprite_double::RO_SPEEDX] -= data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+			if (data.combined_direction_i_wanna_go & +Constants::directions::WEST) {
+				if (directions_can_go & +Constants::directions::WEST) data.dval[+Constants::io__sprite_double::RO_SPEEDX] -= data.dval[+Constants::io__sprite_double::ACCELERATION_X];
 				else __debug_s += "NO_GO_WEST;";
 			}
 
 
 			// COLLISION
 
-			if (data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING]) {
+			if (data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING]) {
 
-				data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = 0.0;
+				data.dval[+Constants::io__sprite_double::RO_SPEEDY] = data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 0.0;
 
 				int where_are_them_at = 0;
-				double sum_pos[2] = { 0.0,0.0 };
+				double sum_pos[2] = { Constants::sprite_default_min_movement, Constants::sprite_default_min_movement };
+				size_t amount_sum[2] = { 0,0 };
+
+				for (auto& i : data.col_data) where_are_them_at |= i.diretion_by_centers_interpreted;
+				const auto b = Tools::translBinary(where_are_them_at, 4); // NORTH SOUTH EAST WEST
 
 				for (auto& i : data.col_data) {
-					where_are_them_at |= i.diretion_by_centers_interpreted;
-					sum_pos[0] += i.expected_walk_distances[0];
-					sum_pos[1] += i.expected_walk_distances[1];
+					if (b[2] || b[3]) {
+						sum_pos[0] += i.expected_walk_distances[0];
+						amount_sum[0]++;
+					}
+					if (b[0] || b[1]) {
+						sum_pos[1] += i.expected_walk_distances[1];
+						amount_sum[1]++;
+					}
 				}
 
-				if (data.col_data.size() > 0) for (auto& i : sum_pos) i /= 1.0 * data.col_data.size();
+				if (data.col_data.size() > 0) {
+					sum_pos[0] /= 1.0 * amount_sum[0];
+					sum_pos[1] /= 1.0 * amount_sum[1];
+				}
 
-				const auto b = Tools::translBinary(where_are_them_at, 4); // NORTH SOUTH EAST WEST
 
 				if (b[0] && b[1] && b[2] && b[3]) { // fully smashed
 					__debug_s += "SMASHED;";
 				}
 
 				else if (b[1] && b[2] && b[3]) { // north is free (smashed horizontally)
-					data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = -0.25 * data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+					data.dval[+Constants::io__sprite_double::RO_SPEEDY] = -0.25 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
 				}
 				else if (b[0] && b[1] && b[2]) { // west is free (smashed vertically)
-					data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = -0.25 * data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+					data.dval[+Constants::io__sprite_double::RO_SPEEDX] = -0.25 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
 				}
 
 				else if (b[0] && b[1]) { // so go east (smashed vertically)
-					data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = 0.25 * data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+					data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 0.25 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
 				}
 				else if (b[2] && b[3]) { // so go south (smashed horizontally)
-					data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = 0.25 * data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+					data.dval[+Constants::io__sprite_double::RO_SPEEDY] = 0.25 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
 				}
 				
 				else if (b[0]) { // so go south
-					if ((data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_ANY_ELASTIC) || (data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC))
-						data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = 1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
-					else if ((data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_ANY_ROUGH) || (data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH))
-						data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] += sum_pos[1];
+					if ((data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_ANY_ELASTIC) || (data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC))
+						data.dval[+Constants::io__sprite_double::RO_SPEEDY] = 1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
+					else if ((data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_ANY_ROUGH) || (data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH))
+						data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] += sum_pos[1];
 				}
 				else if (b[1]) { // so go north
-					if ((data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_ANY_ELASTIC) || (data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC))
-						data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = -1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
-					else if ((data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_ANY_ROUGH) || (data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH))
-						data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] -= sum_pos[1];
+					if ((data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_ANY_ELASTIC) || (data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC))
+						data.dval[+Constants::io__sprite_double::RO_SPEEDY] = -1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
+					else if ((data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_ANY_ROUGH) || (data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH))
+						data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] -= sum_pos[1];
 				}
 				else if (b[2]) { // so go west
-					if ((data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_ANY_ELASTIC) || (data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC))
-						data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = -1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
-					else if ((data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_ANY_ROUGH) || (data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH))
-						data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] -= sum_pos[0];
+					if ((data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_ANY_ELASTIC) || (data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC))
+						data.dval[+Constants::io__sprite_double::RO_SPEEDX] = -1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
+					else if ((data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_ANY_ROUGH) || (data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH))
+						data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] -= sum_pos[0];
 				}
 				else if (b[3]) { // so go east
-					if ((data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_ANY_ELASTIC) || (data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC))
-						data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = 1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
-					else if ((data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_ANY_ROUGH) || (data.collision_mode == Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH))
-						data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] += sum_pos[0];
+					if ((data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_ANY_ELASTIC) || (data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC))
+						data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
+					else if ((data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_ANY_ROUGH) || (data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH))
+						data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] += sum_pos[0];
 				}
 				else {
 					throw Abort::warn(__FUNCSIG__, "Unexpected collision behaviour!");
@@ -1444,15 +1460,15 @@ namespace LSW {
 								__debug_s += "SMASHED;";
 							}
 							else { // can go west
-								data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = -1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+								data.dval[+Constants::io__sprite_double::RO_SPEEDX] = -1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
 							}
 						}
 						else { // can go east
-							data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = 1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+							data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
 						}
 					}
 					else { // can go south
-						data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = 1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+						data.dval[+Constants::io__sprite_double::RO_SPEEDY] = 1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
 					}
 				}
 				else if (b[1]) // block on south
@@ -1463,15 +1479,15 @@ namespace LSW {
 								__debug_s += "SMASHED;";
 							}
 							else { // can go west
-								data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = -1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+								data.dval[+Constants::io__sprite_double::RO_SPEEDX] = -1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
 							}
 						}
 						else { // can go east
-							data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = 1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+							data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
 						}
 					}
 					else { // can go north
-						data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = -1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+						data.dval[+Constants::io__sprite_double::RO_SPEEDY] = -1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
 					}
 				}
 				else if (b[2]) // block on east
@@ -1482,15 +1498,15 @@ namespace LSW {
 								__debug_s += "SMASHED;";
 							}
 							else { // can go south
-								data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = 1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+								data.dval[+Constants::io__sprite_double::RO_SPEEDY] = 1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
 							}
 						}
 						else { // can go north
-							data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = -1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+							data.dval[+Constants::io__sprite_double::RO_SPEEDY] = -1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
 						}
 					}
 					else { // can go west
-						data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = -1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+						data.dval[+Constants::io__sprite_double::RO_SPEEDX] = -1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
 					}
 				}
 				else if (b[3]) // block on west
@@ -1501,110 +1517,110 @@ namespace LSW {
 								__debug_s += "SMASHED;";
 							}
 							else { // can go south
-								data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = 1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+								data.dval[+Constants::io__sprite_double::RO_SPEEDY] = 1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
 							}
 						}
 						else { // can go north
-							data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = -1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_Y];
+							data.dval[+Constants::io__sprite_double::RO_SPEEDY] = -1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
 						}
 					}
 					else { // can go east
-						data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = 1.0 * data.dval[+Assistance::io__sprite_double::ACCELERATION_X];
+						data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
 					}
 				}*/
 
 
 
 				//switch (data.collision_mode) {
-				//case Assistance::io__sprite_collision_mode::COLLISION_ANY_ELASTIC:
-				//case Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC:
+				//case Constants::io__sprite_collision_mode::COLLISION_ANY_ELASTIC:
+				//case Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC:
 
 					//__debug_s += "COL_ELASTIC;";
 
-					//if (data.direction_col & +Assistance::directions::NORTH) { // the block at north, so go down
-					//	data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_Y];
+					//if (data.direction_col & +Constants::directions::NORTH) { // the block at north, so go down
+					//	data.dval[+Constants::io__sprite_double::RO_SPEEDY] = fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * data.dval[+Constants::io__sprite_double::SMOOTHNESS_Y];
 					//}
-					//if (data.direction_col & +Assistance::directions::SOUTH) {
-					//	data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = -fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_Y];
+					//if (data.direction_col & +Constants::directions::SOUTH) {
+					//	data.dval[+Constants::io__sprite_double::RO_SPEEDY] = -fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * data.dval[+Constants::io__sprite_double::SMOOTHNESS_Y];
 					//}
-					//if (data.direction_col & +Assistance::directions::WEST) {
-					//	data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_X];
+					//if (data.direction_col & +Constants::directions::WEST) {
+					//	data.dval[+Constants::io__sprite_double::RO_SPEEDX] = fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * data.dval[+Constants::io__sprite_double::SMOOTHNESS_X];
 					//}
-					//if (data.direction_col & +Assistance::directions::EAST) {
-					//	data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = -fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_X];
+					//if (data.direction_col & +Constants::directions::EAST) {
+					//	data.dval[+Constants::io__sprite_double::RO_SPEEDX] = -fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * data.dval[+Constants::io__sprite_double::SMOOTHNESS_X];
 					//}
 
 					/////break;
-				//case Assistance::io__sprite_collision_mode::COLLISION_ANY_ROUGH:
-				//case Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH:
+				//case Constants::io__sprite_collision_mode::COLLISION_ANY_ROUGH:
+				//case Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH:
 
 					//__debug_s += "COL_ROUGH;";
-					/*data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = 0.0;
-					data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = 0.0;*/
+					/*data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 0.0;
+					data.dval[+Constants::io__sprite_double::RO_SPEEDY] = 0.0;*/
 
 
 
 					//bool dealt = false;
 
-					//if ((data.direction_col & +Assistance::directions::NORTH) && (data.direction_col & +Assistance::directions::SOUTH) && (data.direction_col & +Assistance::directions::WEST) && (data.direction_col & +Assistance::directions::EAST)) // colliding everywhere, so random lmao
+					//if ((data.direction_col & +Constants::directions::NORTH) && (data.direction_col & +Constants::directions::SOUTH) && (data.direction_col & +Constants::directions::WEST) && (data.direction_col & +Constants::directions::EAST)) // colliding everywhere, so random lmao
 					//{
 					//	int which = rand() % 4;
 					//	switch (which) {
 					//	case 0:
-					//		data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
+					//		data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
 					//		break;
 					//	case 1:
-					//		data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
+					//		data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
 					//		break;
 					//	case 2:
-					//		data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
+					//		data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
 					//		break;
 					//	case 3:
-					//		data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
+					//		data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
 					//		break;
 					//	}
 					//	dealt = true;
 					//}
 
 					//if (!dealt) { // colliding on two sides at the same time
-					//	if ((data.direction_col & +Assistance::directions::NORTH) && (data.direction_col & +Assistance::directions::SOUTH))
+					//	if ((data.direction_col & +Constants::directions::NORTH) && (data.direction_col & +Constants::directions::SOUTH))
 					//	{
-					//		if (data.direction_col & +Assistance::directions::WEST) {
-					//			data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
+					//		if (data.direction_col & +Constants::directions::WEST) {
+					//			data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
 					//		}
-					//		else if (data.direction_col & +Assistance::directions::EAST) {
-					//			data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
+					//		else if (data.direction_col & +Constants::directions::EAST) {
+					//			data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
 					//		}
 					//		else {
 					//			int which = rand() % 2;
 					//			switch(which){
 					//			case 0:
-					//				data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
+					//				data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
 					//				break;
 					//			case 1:
-					//				data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
+					//				data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
 					//				break;
 					//			}
 					//		}
 					//		dealt = true;
 					//	}
 
-					//	if ((data.direction_col & +Assistance::directions::WEST) && (data.direction_col & +Assistance::directions::EAST))
+					//	if ((data.direction_col & +Constants::directions::WEST) && (data.direction_col & +Constants::directions::EAST))
 					//	{
-					//		if (data.direction_col & +Assistance::directions::NORTH) { // the block at north, so go down
-					//			data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
+					//		if (data.direction_col & +Constants::directions::NORTH) { // the block at north, so go down
+					//			data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
 					//		}
-					//		else if (data.direction_col & +Assistance::directions::SOUTH) {
-					//			data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
+					//		else if (data.direction_col & +Constants::directions::SOUTH) {
+					//			data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
 					//		}
 					//		else {
 					//			int which = rand() % 2;
 					//			switch (which) {
 					//			case 0:
-					//				data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
+					//				data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
 					//				break;
 					//			case 1:
-					//				data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
+					//				data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
 					//				break;
 					//			}
 					//		}
@@ -1613,17 +1629,17 @@ namespace LSW {
 					//}
 
 					//if (!dealt) { // one side only (easier)
-					//	if (data.direction_col & +Assistance::directions::NORTH) { // the block at north, so go down
-					//		data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
+					//	if (data.direction_col & +Constants::directions::NORTH) { // the block at north, so go down
+					//		data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
 					//	}
-					//	if (data.direction_col & +Assistance::directions::SOUTH) {
-					//		data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
+					//	if (data.direction_col & +Constants::directions::SOUTH) {
+					//		data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
 					//	}
-					//	if (data.direction_col & +Assistance::directions::WEST) {
-					//		data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
+					//	if (data.direction_col & +Constants::directions::WEST) {
+					//		data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
 					//	}
-					//	if (data.direction_col & +Assistance::directions::EAST) {
-					//		data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
+					//	if (data.direction_col & +Constants::directions::EAST) {
+					//		data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
 					//	}
 					//}
 
@@ -1632,73 +1648,73 @@ namespace LSW {
 			}
 
 
-			/*if (data.bval[+Assistance::io__sprite_boolean::RO_IS_OTHERS_COLLIDING]) {
+			/*if (data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING]) {
 
 				// speed must not be higher than the distance to collision
-				if (fabs(data.dval[+Assistance::io__sprite_double::RO_SPEEDX]) > data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) {
-					int mult = (data.dval[+Assistance::io__sprite_double::RO_SPEEDX] < 0 ? -1 : 1);
-					data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = mult * data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X];
+				if (fabs(data.dval[+Constants::io__sprite_double::RO_SPEEDX]) > data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) {
+					int mult = (data.dval[+Constants::io__sprite_double::RO_SPEEDX] < 0 ? -1 : 1);
+					data.dval[+Constants::io__sprite_double::RO_SPEEDX] = mult * data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X];
 				}
-				if (fabs(data.dval[+Assistance::io__sprite_double::RO_SPEEDY]) > data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) {
-					int mult = (data.dval[+Assistance::io__sprite_double::RO_SPEEDY] < 0 ? -1 : 1);
-					data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = mult * data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y];
+				if (fabs(data.dval[+Constants::io__sprite_double::RO_SPEEDY]) > data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) {
+					int mult = (data.dval[+Constants::io__sprite_double::RO_SPEEDY] < 0 ? -1 : 1);
+					data.dval[+Constants::io__sprite_double::RO_SPEEDY] = mult * data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y];
 				}
 
 
 				// limit the maximum power of pos += distance value				
-				if (data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] > Constants::sprite_default_limit_colision_speed_any)
-					data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] = Constants::sprite_default_limit_colision_speed_any;
+				if (data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X] > Constants::sprite_default_limit_colision_speed_any)
+					data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X] = Constants::sprite_default_limit_colision_speed_any;
 
-				if (data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] > Constants::sprite_default_limit_colision_speed_any)
-					data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] = Constants::sprite_default_limit_colision_speed_any;
+				if (data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y] > Constants::sprite_default_limit_colision_speed_any)
+					data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y] = Constants::sprite_default_limit_colision_speed_any;
 
 
 				auto d_g = resolveDir(data.direction_col);
 
 
 				switch (data.collision_mode) {
-				case Assistance::io__sprite_collision_mode::COLLISION_ANY_ELASTIC:
-				case Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC:
+				case Constants::io__sprite_collision_mode::COLLISION_ANY_ELASTIC:
+				case Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC:
 					{
 						__debug_s += "COL_ELASTIC;";
 						switch (d_g) {
-						case Assistance::cl__sprite_direction_mult::GO_NORTH:
-							data.dval[+Assistance::io__sprite_double::RO_SPEEDY] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_Y];
+						case Constants::cl__sprite_direction_mult::GO_NORTH:
+							data.dval[+Constants::io__sprite_double::RO_SPEEDY] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * data.dval[+Constants::io__sprite_double::SMOOTHNESS_Y];
 							break;
-						case Assistance::cl__sprite_direction_mult::GO_SOUTH:
-							data.dval[+Assistance::io__sprite_double::RO_SPEEDY] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_Y];
+						case Constants::cl__sprite_direction_mult::GO_SOUTH:
+							data.dval[+Constants::io__sprite_double::RO_SPEEDY] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * data.dval[+Constants::io__sprite_double::SMOOTHNESS_Y];
 							break;
-						case Assistance::cl__sprite_direction_mult::GO_WEST:
-							data.dval[+Assistance::io__sprite_double::RO_SPEEDX] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_X];
+						case Constants::cl__sprite_direction_mult::GO_WEST:
+							data.dval[+Constants::io__sprite_double::RO_SPEEDX] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * data.dval[+Constants::io__sprite_double::SMOOTHNESS_X];
 							break;
-						case Assistance::cl__sprite_direction_mult::GO_EAST:
-							data.dval[+Assistance::io__sprite_double::RO_SPEEDX] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]) * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_X];
+						case Constants::cl__sprite_direction_mult::GO_EAST:
+							data.dval[+Constants::io__sprite_double::RO_SPEEDX] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * data.dval[+Constants::io__sprite_double::SMOOTHNESS_X];
 							break;
 						}
 
 						
-						//data.dval[+Assistance::io__sprite_double::RO_SPEEDX] += data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X] * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_X];
-						//data.dval[+Assistance::io__sprite_double::RO_SPEEDY] += data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y] * data.dval[+Assistance::io__sprite_double::SMOOTHNESS_Y];
+						//data.dval[+Constants::io__sprite_double::RO_SPEEDX] += data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X] * data.dval[+Constants::io__sprite_double::SMOOTHNESS_X];
+						//data.dval[+Constants::io__sprite_double::RO_SPEEDY] += data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y] * data.dval[+Constants::io__sprite_double::SMOOTHNESS_Y];
 					}
 				break;
-				case Assistance::io__sprite_collision_mode::COLLISION_ANY_ROUGH:
-				case Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH:
+				case Constants::io__sprite_collision_mode::COLLISION_ANY_ROUGH:
+				case Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH:
 					{
 						__debug_s += "COL_ROUGH;";
-						data.dval[+Assistance::io__sprite_double::RO_SPEEDX] = 0.0;
-						data.dval[+Assistance::io__sprite_double::RO_SPEEDY] = 0.0;
+						data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 0.0;
+						data.dval[+Constants::io__sprite_double::RO_SPEEDY] = 0.0;
 						switch (d_g) {
-						case Assistance::cl__sprite_direction_mult::GO_NORTH:
-							data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]);
+						case Constants::cl__sprite_direction_mult::GO_NORTH:
+							data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]);
 							break;
-						case Assistance::cl__sprite_direction_mult::GO_SOUTH:
-							data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_Y]);
+						case Constants::cl__sprite_direction_mult::GO_SOUTH:
+							data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]);
 							break;
-						case Assistance::cl__sprite_direction_mult::GO_WEST:
-							data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] -= fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]);
+						case Constants::cl__sprite_direction_mult::GO_WEST:
+							data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]);
 							break;
-						case Assistance::cl__sprite_direction_mult::GO_EAST:
-							data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] += fabs(data.dval[+Assistance::io__sprite_double::RO_OTHERS_DISTANCE_X]);
+						case Constants::cl__sprite_direction_mult::GO_EAST:
+							data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]);
 							break;
 						}
 					}
@@ -1706,26 +1722,26 @@ namespace LSW {
 				}
 			}*/
 
-			if (psf.get(Assistance::io__camera_boolean::RESPECT_LIMITS) && !(data.bval[+Assistance::io__sprite_boolean::FOLLOWMOUSE] || !data.bval[+Assistance::io__sprite_boolean::RESPECT_CAMERA_LIMITS])) /* FOLLOWMOUSE may glitch if outside limits, so skip limits then */
+			if (psf.get(Constants::io__camera_boolean::RESPECT_LIMITS) && !(data.bval[+Constants::io__sprite_boolean::FOLLOWMOUSE] || !data.bval[+Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS])) /* FOLLOWMOUSE may glitch if outside limits, so skip limits then */
 			{
-				double lxl = (double)psf.get(Assistance::io__camera_float::LIMIT_MIN_X); // limit x lower
-				double lyl = (double)psf.get(Assistance::io__camera_float::LIMIT_MIN_Y); // limit y lower
-				double lxh = (double)psf.get(Assistance::io__camera_float::LIMIT_MAX_X); // limit x higher
-				double lyh = (double)psf.get(Assistance::io__camera_float::LIMIT_MAX_Y); // limit y higher
+				double lxl = psf.get(Constants::io__camera_double::LIMIT_MIN_X); // limit x lower
+				double lyl = psf.get(Constants::io__camera_double::LIMIT_MIN_Y); // limit y lower
+				double lxh = psf.get(Constants::io__camera_double::LIMIT_MAX_X); // limit x higher
+				double lyh = psf.get(Constants::io__camera_double::LIMIT_MAX_Y); // limit y higher
 
-				if (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] < lxl) data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] = lxl;
-				if (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] > lxh) data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSX] = lxh;
-				if (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] < lyl) data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] = lyl;
-				if (data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] > lyh) data.dtarg[+Assistance::ro__sprite_target_double::TARG_POSY] = lyh;
+				if (data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] < lxl) data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] = lxl;
+				if (data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] > lxh) data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] = lxh;
+				if (data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] < lyl) data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] = lyl;
+				if (data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] > lyh) data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] = lyh;
 			}
 		}
 
 		bool Sprite::isThisCollidableIn(const int l) // BLOCKS COLLIDE JUST WITH OTHERS, SO THIS ONLY WORKS TO TEST IF *SOMEONE* SHOULD COLLIDE WITH THIS (not the "should I collide?" inside itself because BLOCK doesn't collide with anyone, but anyone collides with block (HOLD))
 		{
-			if (!data.bval[+Assistance::io__sprite_boolean::AFFECTED_BY_CAM]) return false;
-			if (+data.collision_mode <= +Assistance::io__sprite_collision_mode::__COLLISION_TRANSPARENT_MAXVAL) return false;
+			if (!data.bval[+Constants::io__sprite_boolean::AFFECTED_BY_CAM]) return false;
+			if (+data.collision_mode <= +Constants::io__sprite_collision_mode::__COLLISION_TRANSPARENT_MAXVAL) return false;
 			if (l != layer) {
-				if (+data.collision_mode >= +Assistance::io__sprite_collision_mode::__COLLISION_ANYLAYER_MINVAL) return true;
+				if (+data.collision_mode >= +Constants::io__sprite_collision_mode::__COLLISION_ANYLAYER_MINVAL) return true;
 				return false;
 			}
 			return true; // same layer and not transparent
@@ -1733,7 +1749,7 @@ namespace LSW {
 
 		bool Sprite::doesThisReflect()
 		{
-			return (+data.collision_mode > +Assistance::io__sprite_collision_mode::__COLLISION_HOLD_OR_TRANSPARENT_MAXVAL);
+			return (+data.collision_mode > +Constants::io__sprite_collision_mode::__COLLISION_HOLD_OR_TRANSPARENT_MAXVAL);
 		}
 
 		std::string Sprite::__debug_str()
@@ -1750,7 +1766,7 @@ namespace LSW {
 
 		void Text::_draw(const double targ_draw_xy[2])
 		{
-			al_draw_text(data.font, data.c, 1.0 * targ_draw_xy[0] / (data.d[+Assistance::io__text_double::SCALEG]), 1.0 * targ_draw_xy[1] / (data.d[+Assistance::io__text_double::SCALEG]), data.i[+Assistance::io__text_integer::MODE], data.str[+Assistance::io__text_string::PROCESSED_STRING].c_str());
+			al_draw_text(data.font, data.c, 1.0 * targ_draw_xy[0] / (data.d[+Constants::io__text_double::SCALEG]), 1.0 * targ_draw_xy[1] / (data.d[+Constants::io__text_double::SCALEG]), data.i[+Constants::io__text_integer::MODE], data.str[+Constants::io__text_string::PROCESSED_STRING].c_str());
 		}
 		void Text::_interpretTags(std::string& s)
 		{
@@ -1760,10 +1776,10 @@ namespace LSW {
 			for (bool b = true; b;)
 			{
 				b = false;
-				for (size_t q = 0; q < +Assistance::tags_e::size; q++)
+				for (size_t q = 0; q < +Constants::tags_e::size; q++)
 				{
 					size_t poss = 0;
-					if ((poss = fina.find(Assistance::tags[q].s())) != std::string::npos)
+					if ((poss = fina.find(Constants::tags[q].s())) != std::string::npos)
 					{
 						b = true;
 						Camera cam;
@@ -1774,186 +1790,186 @@ namespace LSW {
 
 						switch (q)
 						{
-						case +Assistance::tags_e::T_POSX:
-							sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSX] + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX] + (double)cam.get().get(Assistance::io__camera_float::OFFSET_X)));
+						case +Constants::tags_e::T_POSX:
+							sprintf_s(tempstr_c, "%.3lf", (data.d[+Constants::io__text_double::POSX] + data.d[+Constants::io__text_double::LAST_FOLLOW_POSX] + +(cam.get().get(Constants::io__camera_double::OFFSET_X))));
 							break;
-						case +Assistance::tags_e::T_POSY:
-							sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSY] + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY] + (double)cam.get().get(Assistance::io__camera_float::OFFSET_Y)));
+						case +Constants::tags_e::T_POSY:
+							sprintf_s(tempstr_c, "%.3lf", (data.d[+Constants::io__text_double::POSY] + data.d[+Constants::io__text_double::LAST_FOLLOW_POSY] + +cam.get().get(Constants::io__camera_double::OFFSET_Y)));
 							break;
-						case +Assistance::tags_e::T_SCREEN_POSX:
-							sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSX] * (data.b[+Assistance::io__text_boolean::AFFECTED_BY_CAM] ? (double)(cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_X)) : 1.0) + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX] * (double)(cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_X))));
+						case +Constants::tags_e::T_SCREEN_POSX:
+							sprintf_s(tempstr_c, "%.3lf", (data.d[+Constants::io__text_double::POSX] * (data.b[+Constants::io__text_boolean::AFFECTED_BY_CAM] ? +(cam.get().get(Constants::io__camera_double::SCALE_G) * cam.get().get(Constants::io__camera_double::SCALE_X)) : 1.0) + data.d[+Constants::io__text_double::LAST_FOLLOW_POSX] * +(cam.get().get(Constants::io__camera_double::SCALE_G) * cam.get().get(Constants::io__camera_double::SCALE_X))));
 							break;
-						case +Assistance::tags_e::T_SCREEN_POSY:
-							sprintf_s(tempstr_c, "%.3lf", (data.d[+Assistance::io__text_double::POSY] * (data.b[+Assistance::io__text_boolean::AFFECTED_BY_CAM] ? (double)(cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_Y)) : 1.0) + data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY] * (double)(cam.get().get(Assistance::io__camera_float::SCALE_G) * cam.get().get(Assistance::io__camera_float::SCALE_Y))));
-							break;
-
-						case +Assistance::tags_e::T_CAM_X:
-							sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::OFFSET_X));
-							break;
-						case +Assistance::tags_e::T_CAM_Y:
-							sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::OFFSET_Y));
-							break;
-						case +Assistance::tags_e::T_CAM_ZOOM:
-							sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::SCALE_G) * sqrt(cam.get().get(Assistance::io__camera_float::SCALE_X) * cam.get().get(Assistance::io__camera_float::SCALE_Y)));
-							break;
-						case +Assistance::tags_e::T_CAM_ZOOMG:
-							sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::SCALE_G));
-							break;
-						case +Assistance::tags_e::T_CAM_ZOOMX:
-							sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::SCALE_X));
-							break;
-						case +Assistance::tags_e::T_CAM_ZOOMY:
-							sprintf_s(tempstr_c, "%.3f", cam.get().get(Assistance::io__camera_float::SCALE_Y));
+						case +Constants::tags_e::T_SCREEN_POSY:
+							sprintf_s(tempstr_c, "%.3lf", (data.d[+Constants::io__text_double::POSY] * (data.b[+Constants::io__text_boolean::AFFECTED_BY_CAM] ? +(cam.get().get(Constants::io__camera_double::SCALE_G) * cam.get().get(Constants::io__camera_double::SCALE_Y)) : 1.0) + data.d[+Constants::io__text_double::LAST_FOLLOW_POSY] * +(cam.get().get(Constants::io__camera_double::SCALE_G) * cam.get().get(Constants::io__camera_double::SCALE_Y))));
 							break;
 
-						case +Assistance::tags_e::T_ISFOLLOWING:
+						case +Constants::tags_e::T_CAM_X:
+							sprintf_s(tempstr_c, "%.3f", cam.get().get(Constants::io__camera_double::OFFSET_X));
+							break;
+						case +Constants::tags_e::T_CAM_Y:
+							sprintf_s(tempstr_c, "%.3f", cam.get().get(Constants::io__camera_double::OFFSET_Y));
+							break;
+						case +Constants::tags_e::T_CAM_ZOOM:
+							sprintf_s(tempstr_c, "%.3f", cam.get().get(Constants::io__camera_double::SCALE_G) * sqrt(cam.get().get(Constants::io__camera_double::SCALE_X) * cam.get().get(Constants::io__camera_double::SCALE_Y)));
+							break;
+						case +Constants::tags_e::T_CAM_ZOOMG:
+							sprintf_s(tempstr_c, "%.3f", cam.get().get(Constants::io__camera_double::SCALE_G));
+							break;
+						case +Constants::tags_e::T_CAM_ZOOMX:
+							sprintf_s(tempstr_c, "%.3f", cam.get().get(Constants::io__camera_double::SCALE_X));
+							break;
+						case +Constants::tags_e::T_CAM_ZOOMY:
+							sprintf_s(tempstr_c, "%.3f", cam.get().get(Constants::io__camera_double::SCALE_Y));
+							break;
+
+						case +Constants::tags_e::T_ISFOLLOWING:
 							sprintf_s(tempstr_c, "%s", (follow ? "Y" : "N"));
 							break;
-						case +Assistance::tags_e::T_COLOR_R:
+						case +Constants::tags_e::T_COLOR_R:
 							sprintf_s(tempstr_c, "%.3f", data.c.r);
 							break;
-						case +Assistance::tags_e::T_COLOR_G:
+						case +Constants::tags_e::T_COLOR_G:
 							sprintf_s(tempstr_c, "%.3f", data.c.g);
 							break;
-						case +Assistance::tags_e::T_COLOR_B:
+						case +Constants::tags_e::T_COLOR_B:
 							sprintf_s(tempstr_c, "%.3f", data.c.b);
 							break;
-						case +Assistance::tags_e::T_COLOR_A:
+						case +Constants::tags_e::T_COLOR_A:
 							sprintf_s(tempstr_c, "%.3f", data.c.a);
 							break;
-						case +Assistance::tags_e::T_MODE:
-							sprintf_s(tempstr_c, "%d", data.i[+Assistance::io__text_integer::MODE]);
+						case +Constants::tags_e::T_MODE:
+							sprintf_s(tempstr_c, "%d", data.i[+Constants::io__text_integer::MODE]);
 							break;
-						case +Assistance::tags_e::T_TIME:
+						case +Constants::tags_e::T_TIME:
 							sprintf_s(tempstr_c, "%.3lf", al_get_time());
 							break;
 
-						case +Assistance::tags_e::T_GB_RESX:
+						case +Constants::tags_e::T_GB_RESX:
 							sprintf_s(tempstr_c, "%d", (d ? al_get_display_width(d) : -1));
 							break;
-						case +Assistance::tags_e::T_GB_RESY:
+						case +Constants::tags_e::T_GB_RESY:
 							sprintf_s(tempstr_c, "%d", (d ? al_get_display_height(d) : -1));
 							break;
-						case +Assistance::tags_e::T_REFRESHRATE:
+						case +Constants::tags_e::T_REFRESHRATE:
 							sprintf_s(tempstr_c, "%d", ((d) ? al_get_display_refresh_rate(d) : -1));
 							break;
 
 
-						case +Assistance::tags_e::T_FPS:
+						case +Constants::tags_e::T_FPS:
 						{
 							size_t t;
-							conf.get(Assistance::ro__db_statistics_sizet::FRAMESPERSECOND, t);
+							conf.get(Constants::ro__db_statistics_sizet::FRAMESPERSECOND, t);
 							sprintf_s(tempstr_c, "%zu", t);
 						}
 						break;
-						case +Assistance::tags_e::T_TPS:
+						case +Constants::tags_e::T_TPS:
 						{
 							size_t t;
-							conf.get(Assistance::ro__db_statistics_sizet::COLLISIONSPERSECOND, t);
+							conf.get(Constants::ro__db_statistics_sizet::COLLISIONSPERSECOND, t);
 							sprintf_s(tempstr_c, "%zu", t);
 						}
 						break;
-						case +Assistance::tags_e::T_UPS:
+						case +Constants::tags_e::T_UPS:
 						{
 							size_t t;
-							conf.get(Assistance::ro__db_statistics_sizet::USEREVENTSPERSECOND, t);
+							conf.get(Constants::ro__db_statistics_sizet::USEREVENTSPERSECOND, t);
 							sprintf_s(tempstr_c, "%zu", t);
 						}
 						break;
-						case +Assistance::tags_e::T_APS:
+						case +Constants::tags_e::T_APS:
 						{
 							size_t t;
-							conf.get(Assistance::ro__db_statistics_sizet::ADVANCEDFUNCSPERSECOND, t);
+							conf.get(Constants::ro__db_statistics_sizet::ADVANCEDFUNCSPERSECOND, t);
 							sprintf_s(tempstr_c, "%zu", t);
 						}
 						break;
 
-						case +Assistance::tags_e::T_I_FPS:
+						case +Constants::tags_e::T_I_FPS:
 						{
 							double dt;
-							conf.get(Assistance::ro__db_statistics_double::INSTANT_FRAMESPERSECOND, dt);
+							conf.get(Constants::ro__db_statistics_double::INSTANT_FRAMESPERSECOND, dt);
 							sprintf_s(tempstr_c, "%05.1lf", 1.0 / dt);
 						}
 						break;
-						case +Assistance::tags_e::T_I_TPS:
+						case +Constants::tags_e::T_I_TPS:
 						{
 							double dt;
-							conf.get(Assistance::ro__db_statistics_double::INSTANT_COLLISIONSPERSECOND, dt);
+							conf.get(Constants::ro__db_statistics_double::INSTANT_COLLISIONSPERSECOND, dt);
 							sprintf_s(tempstr_c, "%05.1lf", 1.0 / dt);
 						}
 						break;
-						case +Assistance::tags_e::T_I_UPS:
+						case +Constants::tags_e::T_I_UPS:
 						{
 							double dt;
-							conf.get(Assistance::ro__db_statistics_double::INSTANT_USEREVENTSPERSECOND, dt);
+							conf.get(Constants::ro__db_statistics_double::INSTANT_USEREVENTSPERSECOND, dt);
 							sprintf_s(tempstr_c, "%05.1lf", 1.0 / dt);
 						}
 						break;
-						case +Assistance::tags_e::T_I_APS:
+						case +Constants::tags_e::T_I_APS:
 						{
 							double dt;
-							conf.get(Assistance::ro__db_statistics_double::INSTANT_ADVANCEDFUNCSPERSECOND, dt);
+							conf.get(Constants::ro__db_statistics_double::INSTANT_ADVANCEDFUNCSPERSECOND, dt);
 							sprintf_s(tempstr_c, "%05.1lf", 1.0 / dt);
 						}
 						break;
 
-						case +Assistance::tags_e::T_MS_FPS:
+						case +Constants::tags_e::T_MS_FPS:
 						{
 							double dt;
-							conf.get(Assistance::ro__db_statistics_double::INSTANT_FRAMESPERSECOND, dt);
+							conf.get(Constants::ro__db_statistics_double::INSTANT_FRAMESPERSECOND, dt);
 							sprintf_s(tempstr_c, "%04.3lf", 1000.0 * dt);
 						}
 						break;
-						case +Assistance::tags_e::T_MS_TPS:
+						case +Constants::tags_e::T_MS_TPS:
 						{
 							double dt;
-							conf.get(Assistance::ro__db_statistics_double::INSTANT_COLLISIONSPERSECOND, dt);
+							conf.get(Constants::ro__db_statistics_double::INSTANT_COLLISIONSPERSECOND, dt);
 							sprintf_s(tempstr_c, "%04.3lf", 1000.0 * dt);
 						}
 						break;
-						case +Assistance::tags_e::T_MS_UPS:
+						case +Constants::tags_e::T_MS_UPS:
 						{
 							double dt;
-							conf.get(Assistance::ro__db_statistics_double::INSTANT_USEREVENTSPERSECOND, dt);
+							conf.get(Constants::ro__db_statistics_double::INSTANT_USEREVENTSPERSECOND, dt);
 							sprintf_s(tempstr_c, "%04.3lf", 1000.0 * dt);
 						}
 						break;
-						case +Assistance::tags_e::T_MS_APS:
+						case +Constants::tags_e::T_MS_APS:
 						{
 							double dt;
-							conf.get(Assistance::ro__db_statistics_double::INSTANT_ADVANCEDFUNCSPERSECOND, dt);
+							conf.get(Constants::ro__db_statistics_double::INSTANT_ADVANCEDFUNCSPERSECOND, dt);
 							sprintf_s(tempstr_c, "%04.3lf", 1000.0 * dt);
 						}
 						break;
 
 
-						case +Assistance::tags_e::T_SPRITE_FRAME:
+						case +Constants::tags_e::T_SPRITE_FRAME:
 							if (follow) {
 								size_t f;
-								follow->get(Assistance::io__sprite_sizet::FRAME, f);
+								follow->get(Constants::io__sprite_sizet::FRAME, f);
 								sprintf_s(tempstr_c, "%zu", f);
 							}
 							else sprintf_s(tempstr_c, "NULL");
 							break;
-						case +Assistance::tags_e::T_MOUSE_X:
+						case +Constants::tags_e::T_MOUSE_X:
 						{
-							float x;
-							conf.get(Assistance::ro__db_mouse_float::MOUSE_X, x);
+							double x;
+							conf.get(Constants::ro__db_mouse_double::MOUSE_X, x);
 							sprintf_s(tempstr_c, "%.3f", x);
 						}
 						break;
-						case +Assistance::tags_e::T_MOUSE_Y:
+						case +Constants::tags_e::T_MOUSE_Y:
 						{
-							float y;
-							conf.get(Assistance::ro__db_mouse_float::MOUSE_Y, y);
+							double y;
+							conf.get(Constants::ro__db_mouse_double::MOUSE_Y, y);
 							sprintf_s(tempstr_c, "%.3f", y);
 						}
 						break;
-						case +Assistance::tags_e::T_LASTSTRING:
+						case +Constants::tags_e::T_LASTSTRING:
 						{
 							std::string str;
 							size_t p = 0;
-							conf.get(Assistance::ro__db_string::LAST_STRING, str);
+							conf.get(Constants::ro__db_string::LAST_STRING, str);
 							for (p = 0; p < 128 && p < str.length(); p++) tempstr_c[p] = str[p];
 							if (p < 128) tempstr_c[p] = '\0';
 							/*std::string str;
@@ -1962,11 +1978,11 @@ namespace LSW {
 							//sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
 						}
 						break;
-						case +Assistance::tags_e::T_CURRSTRING:
+						case +Constants::tags_e::T_CURRSTRING:
 						{
 							std::string str;
 							size_t p = 0;
-							conf.get(Assistance::ro__db_string::CURRENT_STRING, str);
+							conf.get(Constants::ro__db_string::CURRENT_STRING, str);
 							for (p = 0; p < 128 && p < str.length(); p++) tempstr_c[p] = str[p];
 							if (p < 128) tempstr_c[p] = '\0';
 							/*std::string str;
@@ -1981,31 +1997,31 @@ namespace LSW {
 							//sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
 						}
 						break;
-						case +Assistance::tags_e::T_SPRITE_SPEEDX:
+						case +Constants::tags_e::T_SPRITE_SPEEDX:
 							if (follow) {
 								double val;
-								follow->get(Assistance::io__sprite_double::RO_SPEEDX, val);
+								follow->get(Constants::io__sprite_double::RO_SPEEDX, val);
 								sprintf_s(tempstr_c, "%.3lf", val);
 							}
 							else sprintf_s(tempstr_c, "NULL");
 							break;
-						case +Assistance::tags_e::T_SPRITE_SPEEDY:
+						case +Constants::tags_e::T_SPRITE_SPEEDY:
 							if (follow) {
 								double val;
-								follow->get(Assistance::io__sprite_double::RO_SPEEDY, val);
+								follow->get(Constants::io__sprite_double::RO_SPEEDY, val);
 								sprintf_s(tempstr_c, "%.3lf", val);
 							}
 							else sprintf_s(tempstr_c, "NULL");
 							break;
-						case +Assistance::tags_e::T_SPRITE_NAME:
+						case +Constants::tags_e::T_SPRITE_NAME:
 							if (follow) {
 								std::string temp;
-								follow->get(Assistance::io__sprite_string::ID, temp);
+								follow->get(Constants::io__sprite_string::ID, temp);
 								sprintf_s(tempstr_c, "%s", temp.c_str());
 							}
 							else sprintf_s(tempstr_c, "NULL");
 							break;
-						case +Assistance::tags_e::T_SPRITE_ENTITY_HEALTH:
+						case +Constants::tags_e::T_SPRITE_ENTITY_HEALTH:
 							/*if (follow) {
 								Entities::entity* ent = nullptr;
 								void* trash = nullptr;
@@ -2020,7 +2036,7 @@ namespace LSW {
 							else sprintf_s(tempstr_c, "UNDEF");*/
 							sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
 							break;
-						case +Assistance::tags_e::T_SPRITE_ENTITY_NAME:
+						case +Constants::tags_e::T_SPRITE_ENTITY_NAME:
 							/*if (follow) {
 
 								Entities::entity* ent = nullptr;
@@ -2036,7 +2052,7 @@ namespace LSW {
 							else sprintf_s(tempstr_c, "UNDEF");*/
 							sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
 							break;
-						case +Assistance::tags_e::_T_SPRITE_DEBUG:
+						case +Constants::tags_e::_T_SPRITE_DEBUG:
 							if (follow) {
 								std::string str = follow->__debug_str();
 
@@ -2047,57 +2063,57 @@ namespace LSW {
 							}
 							else sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
 							break;
-						case +Assistance::tags_e::T_TEXTURES_LOADED:
+						case +Constants::tags_e::T_TEXTURES_LOADED:
 						{
 							__template_static_vector<ALLEGRO_BITMAP> Textures;
 							sprintf_s(tempstr_c, "%zu", Textures.size());
 						}
 						break;
-						case +Assistance::tags_e::T_FONTS_LOADED:
+						case +Constants::tags_e::T_FONTS_LOADED:
 						{
 							__template_static_vector<ALLEGRO_FONT> Fonts;
 							sprintf_s(tempstr_c, "%zu", Fonts.size());
 						}
 						break;
-						case +Assistance::tags_e::T_SAMPLES_LOADED:
+						case +Constants::tags_e::T_SAMPLES_LOADED:
 						{
 							__template_static_vector<ALLEGRO_SAMPLE> Samples;
 							sprintf_s(tempstr_c, "%zu", Samples.size());
 						}
 						break;
-						case +Assistance::tags_e::T_SPRITES_LOADED:
+						case +Constants::tags_e::T_SPRITES_LOADED:
 						{
 							__template_static_vector<Sprite> Sprites;
 							sprintf_s(tempstr_c, "%zu", Sprites.size());
 						}
 						break;
-						case +Assistance::tags_e::T_TEXTS_LOADED:
+						case +Constants::tags_e::T_TEXTS_LOADED:
 						{
 							__template_static_vector<Text> Texts;
 							sprintf_s(tempstr_c, "%zu", Texts.size());
 						}
 						break;
-						case +Assistance::tags_e::T_TRACKS_LOADED:
+						case +Constants::tags_e::T_TRACKS_LOADED:
 						{
 							__template_static_vector<Track> Tracks;
 							sprintf_s(tempstr_c, "%zu", Tracks.size());
 						}
 						break;
-						case +Assistance::tags_e::T_SPRITE_STATE:
+						case +Constants::tags_e::T_SPRITE_STATE:
 							if (follow) {
-								Assistance::io__sprite_tie_func_to_state stat;
-								follow->get(Assistance::ro__sprite_state::STATE, stat);
+								Constants::io__sprite_tie_func_to_state stat;
+								follow->get(Constants::ro__sprite_state::STATE, stat);
 								switch (stat) {
-								case Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON:
+								case Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON:
 									sprintf_s(tempstr_c, "MOUSE ON");
 									break;
-								case Assistance::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK:
+								case Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK:
 									sprintf_s(tempstr_c, "MOUSE CLICK");
 									break;
-								case Assistance::io__sprite_tie_func_to_state::COLLISION_COLLIDED_OTHER:
+								case Constants::io__sprite_tie_func_to_state::COLLISION_COLLIDED_OTHER:
 									sprintf_s(tempstr_c, "OTHER COLLIDING");
 									break;
-								case Assistance::io__sprite_tie_func_to_state::COLLISION_NONE:
+								case Constants::io__sprite_tie_func_to_state::COLLISION_NONE:
 									sprintf_s(tempstr_c, "NONE");
 									break;
 								}
@@ -2107,7 +2123,7 @@ namespace LSW {
 						}
 
 
-						if (fina.length() > (poss + Assistance::tags[q].s().length()))  fina = fina.substr(0, poss) + tempstr_c + fina.substr(poss + Assistance::tags[q].s().length());
+						if (fina.length() > (poss + Constants::tags[q].s().length()))  fina = fina.substr(0, poss) + tempstr_c + fina.substr(poss + Constants::tags[q].s().length());
 						else														    fina = fina.substr(0, poss) + tempstr_c;
 					}
 				}
@@ -2143,22 +2159,22 @@ namespace LSW {
 			logg << L::SLF << fsr(__FUNCSIG__) << "Registered spawn of Text #" + std::to_string((size_t)this) << L::ELF;
 			logg.flush();*/
 
-			data.d[+Assistance::io__text_double::POSX] = 0.0;
-			data.d[+Assistance::io__text_double::POSY] = 0.0;
-			data.d[+Assistance::io__text_double::SCALEX] = 1.0;
-			data.d[+Assistance::io__text_double::SCALEY] = 1.0;
-			data.d[+Assistance::io__text_double::ROTATION] = 0.0;
-			data.d[+Assistance::io__text_double::SCALEG] = 1.0;
-			data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX] = 0.0;
-			data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY] = 0.0;
-			data.d[+Assistance::io__text_double::LAST_INTERPRET] = 0.0;
-			data.d[+Assistance::io__text_double::UPDATETIME] = 1.0 / 24;
+			data.d[+Constants::io__text_double::POSX] = 0.0;
+			data.d[+Constants::io__text_double::POSY] = 0.0;
+			data.d[+Constants::io__text_double::SCALEX] = 1.0;
+			data.d[+Constants::io__text_double::SCALEY] = 1.0;
+			data.d[+Constants::io__text_double::ROTATION] = 0.0;
+			data.d[+Constants::io__text_double::SCALEG] = 1.0;
+			data.d[+Constants::io__text_double::LAST_FOLLOW_POSX] = 0.0;
+			data.d[+Constants::io__text_double::LAST_FOLLOW_POSY] = 0.0;
+			data.d[+Constants::io__text_double::LAST_INTERPRET] = 0.0;
+			data.d[+Constants::io__text_double::UPDATETIME] = 1.0 / 24;
 
-			data.i[+Assistance::io__text_integer::LAYER] = 0;
-			data.i[+Assistance::io__text_integer::MODE] = ALLEGRO_ALIGN_CENTER;
+			data.i[+Constants::io__text_integer::LAYER] = 0;
+			data.i[+Constants::io__text_integer::MODE] = ALLEGRO_ALIGN_CENTER;
 
-			data.b[+Assistance::io__text_boolean::AFFECTED_BY_CAM] = true;
-			data.b[+Assistance::io__text_boolean::SHOW] = true;
+			data.b[+Constants::io__text_boolean::AFFECTED_BY_CAM] = true;
+			data.b[+Constants::io__text_boolean::SHOW] = true;
 
 			data.font = nullptr;
 			data.c = al_map_rgb(255, 255, 255);
@@ -2171,88 +2187,88 @@ namespace LSW {
 		}*/
 
 
-		void Text::set(const Assistance::io__text_string o, const std::string e)
+		void Text::set(const Constants::io__text_string o, const std::string e)
 		{
 			data.str[+o] = e;
 
 			switch (o) {
-			case Assistance::io__text_string::FOLLOW_SPRITE:
+			case Constants::io__text_string::FOLLOW_SPRITE:
 				setFollow(e);
 				break;
-			case Assistance::io__text_string::FONT:
+			case Constants::io__text_string::FONT:
 				__template_static_vector<ALLEGRO_FONT> fonts;
 				fonts.get(e, data.font);
 				break;
 			}
 		}
 
-		void Text::set(const Assistance::io__text_boolean o, const bool e)
+		void Text::set(const Constants::io__text_boolean o, const bool e)
 		{
-			if (o != Assistance::io__text_boolean::size) data.b[+o] = e;
+			if (o != Constants::io__text_boolean::size) data.b[+o] = e;
 		}
 
-		void Text::set(const Assistance::io__text_double o, const double e)
+		void Text::set(const Constants::io__text_double o, const double e)
 		{
-			if (o != Assistance::io__text_double::size) data.d[+o] = e;
+			if (o != Constants::io__text_double::size) data.d[+o] = e;
 		}
 
-		void Text::set(const Assistance::io__text_color o, const ALLEGRO_COLOR e)
+		void Text::set(const Constants::io__text_color o, const ALLEGRO_COLOR e)
 		{
 			data.c = e; // no ::size
 		}
 
-		void Text::set(const Assistance::io__text_integer o, const int e)
+		void Text::set(const Constants::io__text_integer o, const int e)
 		{
-			if (o != Assistance::io__text_integer::size) data.i[+o] = e;
+			if (o != Constants::io__text_integer::size) data.i[+o] = e;
 		}
 
 
-		void Text::get(const Assistance::io__text_string o, std::string& e)
+		void Text::get(const Constants::io__text_string o, std::string& e)
 		{
-			if (o != Assistance::io__text_string::size) e = data.str[+o];
+			if (o != Constants::io__text_string::size) e = data.str[+o];
 		}
-		void Text::get(const Assistance::io__text_boolean o, bool& e)
+		void Text::get(const Constants::io__text_boolean o, bool& e)
 		{
-			if (o != Assistance::io__text_boolean::size) e = data.b[+o];
+			if (o != Constants::io__text_boolean::size) e = data.b[+o];
 		}
-		void Text::get(const Assistance::io__text_double o, double& e)
+		void Text::get(const Constants::io__text_double o, double& e)
 		{
-			if (o != Assistance::io__text_double::size) e = data.d[+o];
+			if (o != Constants::io__text_double::size) e = data.d[+o];
 		}
-		void Text::get(const Assistance::io__text_integer o, int& e)
+		void Text::get(const Constants::io__text_integer o, int& e)
 		{
-			if (o != Assistance::io__text_integer::size) e = data.i[+o];
+			if (o != Constants::io__text_integer::size) e = data.i[+o];
 		}
-		void Text::get(const Assistance::io__text_color o, ALLEGRO_COLOR& e)
+		void Text::get(const Constants::io__text_color o, ALLEGRO_COLOR& e)
 		{
 			e = data.c; // no ::size
 		}
 
-		const bool Text::isEq(const Assistance::io__text_color e, const ALLEGRO_COLOR v)
+		const bool Text::isEq(const Constants::io__text_color e, const ALLEGRO_COLOR v)
 		{
 			ALLEGRO_COLOR g;
 			get(e, g);
 			return ((g.r == v.r) && (g.g == v.g) && (g.b == v.b) && (g.a == v.a));
 		}
-		const bool Text::isEq(const Assistance::io__text_string e, const std::string v)
+		const bool Text::isEq(const Constants::io__text_string e, const std::string v)
 		{
 			std::string g;
 			get(e, g);
 			return g == v;
 		}
-		const bool Text::isEq(const Assistance::io__text_boolean e, const bool v)
+		const bool Text::isEq(const Constants::io__text_boolean e, const bool v)
 		{
 			bool g;
 			get(e, g);
 			return g == v;
 		}
-		const bool Text::isEq(const Assistance::io__text_double e, const double v)
+		const bool Text::isEq(const Constants::io__text_double e, const double v)
 		{
 			double g;
 			get(e, g);
 			return g == v;
 		}
-		const bool Text::isEq(const Assistance::io__text_integer e, const int v)
+		const bool Text::isEq(const Constants::io__text_integer e, const int v)
 		{
 			int g;
 			get(e, g);
@@ -2262,26 +2278,26 @@ namespace LSW {
 
 		void Text::draw(const int is_layer)
 		{
-			if (!data.b[+Assistance::io__text_boolean::SHOW]) return;
+			if (!data.b[+Constants::io__text_boolean::SHOW]) return;
 			if (!data.font) return;
-			if (is_layer != data.i[+Assistance::io__text_integer::LAYER]) return;
+			if (is_layer != data.i[+Constants::io__text_integer::LAYER]) return;
 
 			if (follow) {
-				if (follow->isEq(Assistance::io__sprite_boolean::DRAW, false)) return;
+				if (follow->isEq(Constants::io__sprite_boolean::DRAW, false)) return;
 			}
 
-			if (al_get_time() - data.d[+Assistance::io__text_double::LAST_INTERPRET] > data.d[+Assistance::io__text_double::UPDATETIME]) {
+			if (al_get_time() - data.d[+Constants::io__text_double::LAST_INTERPRET] > data.d[+Constants::io__text_double::UPDATETIME]) {
 				
-				if (al_get_time() - data.d[+Assistance::io__text_double::LAST_INTERPRET] > data.d[+Assistance::io__text_double::UPDATETIME] * 3) data.d[+Assistance::io__text_double::LAST_INTERPRET] = al_get_time();
-				else data.d[+Assistance::io__text_double::LAST_INTERPRET] += data.d[+Assistance::io__text_double::UPDATETIME];
+				if (al_get_time() - data.d[+Constants::io__text_double::LAST_INTERPRET] > data.d[+Constants::io__text_double::UPDATETIME] * 3) data.d[+Constants::io__text_double::LAST_INTERPRET] = al_get_time();
+				else data.d[+Constants::io__text_double::LAST_INTERPRET] += data.d[+Constants::io__text_double::UPDATETIME];
 				
-				std::string b4 = data.str[+Assistance::io__text_string::PROCESSED_STRING];
-				data.str[+Assistance::io__text_string::PROCESSED_STRING] = data.str[+Assistance::io__text_string::STRING];
-				_interpretTags(data.str[+Assistance::io__text_string::PROCESSED_STRING]);
+				std::string b4 = data.str[+Constants::io__text_string::PROCESSED_STRING];
+				data.str[+Constants::io__text_string::PROCESSED_STRING] = data.str[+Constants::io__text_string::STRING];
+				_interpretTags(data.str[+Constants::io__text_string::PROCESSED_STRING]);
 			}
 
-			while (data.d[+Assistance::io__text_double::ROTATION] > 360.0) data.d[+Assistance::io__text_double::ROTATION] -= 360.0;
-			while (data.d[+Assistance::io__text_double::ROTATION] < 0.0) data.d[+Assistance::io__text_double::ROTATION] += 360.0;
+			while (data.d[+Constants::io__text_double::ROTATION] > 360.0) data.d[+Constants::io__text_double::ROTATION] -= 360.0;
+			while (data.d[+Constants::io__text_double::ROTATION] < 0.0) data.d[+Constants::io__text_double::ROTATION] += 360.0;
 
 			// follow sprite stuff
 			double rotation = 0.0;
@@ -2289,21 +2305,21 @@ namespace LSW {
 			Camera cam;
 			
 			camera_preset preset = cam.get();
-			preset.set(Assistance::io__camera_boolean::READONLY_NOW, false);
+			preset.set(Constants::io__camera_boolean::READONLY_NOW, false);
 
 			ALLEGRO_BITMAP* d = al_get_target_bitmap();
 			if (!d) return;// throw "TEXT::DRAW - NO DISPLAY!";
 
 			if (follow) {
-				follow->get(Assistance::io__sprite_double::POSX, data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX]);
-				follow->get(Assistance::io__sprite_double::POSY, data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY]);
-				follow->get(Assistance::io__sprite_double::ROTATION, rotation);
+				follow->get(Constants::io__sprite_double::POSX, data.d[+Constants::io__text_double::LAST_FOLLOW_POSX]);
+				follow->get(Constants::io__sprite_double::POSY, data.d[+Constants::io__text_double::LAST_FOLLOW_POSY]);
+				follow->get(Constants::io__sprite_double::ROTATION, rotation);
 			}
 			else {
-				data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX] = data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY] = 0.0;
+				data.d[+Constants::io__text_double::LAST_FOLLOW_POSX] = data.d[+Constants::io__text_double::LAST_FOLLOW_POSY] = 0.0;
 			}
 
-			double t_rotation_rad = (data.d[+Assistance::io__text_double::ROTATION])*ALLEGRO_PI / 180.0;
+			double t_rotation_rad = (data.d[+Constants::io__text_double::ROTATION])*ALLEGRO_PI / 180.0;
 			double p_rotation_rad = (rotation)*ALLEGRO_PI / 180.0;
 			double rotation_rad = t_rotation_rad + p_rotation_rad;
 
@@ -2313,32 +2329,32 @@ namespace LSW {
 			double pos_now[2];
 
 			pos_now[0] = 1.0 * Constants::text_default_sharpness_font * 
-				(((data.d[+Assistance::io__text_double::POSX]) * cos(p_rotation_rad))
-					- ((data.d[+Assistance::io__text_double::POSY]) * sin(p_rotation_rad)) 
-					+ data.d[+Assistance::io__text_double::LAST_FOLLOW_POSX]);
+				(((data.d[+Constants::io__text_double::POSX]) * cos(p_rotation_rad))
+					- ((data.d[+Constants::io__text_double::POSY]) * sin(p_rotation_rad)) 
+					+ data.d[+Constants::io__text_double::LAST_FOLLOW_POSX]);
 
 			pos_now[1] = 1.0 * Constants::text_default_sharpness_font * 
-				(((data.d[+Assistance::io__text_double::POSY]) * cos(p_rotation_rad)) 
-					- ((data.d[+Assistance::io__text_double::POSX]) * sin(p_rotation_rad)) 
-					+ data.d[+Assistance::io__text_double::LAST_FOLLOW_POSY]);
+				(((data.d[+Constants::io__text_double::POSY]) * cos(p_rotation_rad)) 
+					- ((data.d[+Constants::io__text_double::POSX]) * sin(p_rotation_rad)) 
+					+ data.d[+Constants::io__text_double::LAST_FOLLOW_POSY]);
 
 
 			double targ_draw_xy[2];
 			targ_draw_xy[0] = pos_now[0] * cos(rotation_rad) + pos_now[1] * sin(rotation_rad);
 			targ_draw_xy[1] = pos_now[1] * cos(rotation_rad) - pos_now[0] * sin(rotation_rad);
-			targ_draw_xy[0] /= data.d[+Assistance::io__text_double::SCALEX];
-			targ_draw_xy[1] /= data.d[+Assistance::io__text_double::SCALEY];
+			targ_draw_xy[0] /= data.d[+Constants::io__text_double::SCALEX];
+			targ_draw_xy[1] /= data.d[+Constants::io__text_double::SCALEY];
 
 
-			if (!data.b[+Assistance::io__text_boolean::AFFECTED_BY_CAM]) preset.reset();
+			if (!data.b[+Constants::io__text_boolean::AFFECTED_BY_CAM]) preset.reset();
 
-			preset.set(Assistance::io__camera_float::SCALE_G,  preset.get(Assistance::io__camera_float::SCALE_G) * data.d[+Assistance::io__text_double::SCALEG] * 1.0 / Constants::text_default_sharpness_font);
-			preset.set(Assistance::io__camera_float::SCALE_X, preset.get(Assistance::io__camera_float::SCALE_X) * data.d[+Assistance::io__text_double::SCALEX]);
-			preset.set(Assistance::io__camera_float::SCALE_Y, preset.get(Assistance::io__camera_float::SCALE_Y) * data.d[+Assistance::io__text_double::SCALEY]);
-			preset.set(Assistance::io__camera_float::OFFSET_X, preset.get(Assistance::io__camera_float::OFFSET_X) * Constants::text_default_sharpness_font / data.d[+Assistance::io__text_double::SCALEG]);
-			preset.set(Assistance::io__camera_float::OFFSET_Y, preset.get(Assistance::io__camera_float::OFFSET_Y) * Constants::text_default_sharpness_font / data.d[+Assistance::io__text_double::SCALEG]);
+			preset.set(Constants::io__camera_double::SCALE_G,  preset.get(Constants::io__camera_double::SCALE_G) * data.d[+Constants::io__text_double::SCALEG] * 1.0 / Constants::text_default_sharpness_font);
+			preset.set(Constants::io__camera_double::SCALE_X, preset.get(Constants::io__camera_double::SCALE_X) * data.d[+Constants::io__text_double::SCALEX]);
+			preset.set(Constants::io__camera_double::SCALE_Y, preset.get(Constants::io__camera_double::SCALE_Y) * data.d[+Constants::io__text_double::SCALEY]);
+			preset.set(Constants::io__camera_double::OFFSET_X, preset.get(Constants::io__camera_double::OFFSET_X) * Constants::text_default_sharpness_font / data.d[+Constants::io__text_double::SCALEG]);
+			preset.set(Constants::io__camera_double::OFFSET_Y, preset.get(Constants::io__camera_double::OFFSET_Y) * Constants::text_default_sharpness_font / data.d[+Constants::io__text_double::SCALEG]);
 
-			preset.set(Assistance::io__camera_float::ROTATION_RAD, preset.get(Assistance::io__camera_float::ROTATION_RAD) + rotation_rad);
+			preset.set(Constants::io__camera_double::ROTATION_RAD, preset.get(Constants::io__camera_double::ROTATION_RAD) + rotation_rad);
 			cam.applyNoSave(preset);
 
 			_draw(targ_draw_xy);
@@ -2366,7 +2382,7 @@ namespace LSW {
 		}
 
 
-		void Bubbles::init(const unsigned amout, const float mfps, const int layer)
+		void Bubbles::init(const unsigned amout, const double mfps, const int layer)
 		{
 			if (firstcall) {
 
@@ -2374,8 +2390,8 @@ namespace LSW {
 				__template_static_vector<Sprite> sprites;
 
 				Database db;
-				db.get(Assistance::io__conf_integer::SCREEN_X, siz[0], 1920);
-				db.get(Assistance::io__conf_integer::SCREEN_Y, siz[1], 1080);
+				db.get(Constants::io__conf_integer::SCREEN_X, siz[0], 1920);
+				db.get(Constants::io__conf_integer::SCREEN_Y, siz[1], 1080);
 
 				siz[0] *= 0.8;
 				siz[1] *= 0.8;
@@ -2386,15 +2402,15 @@ namespace LSW {
 				imglw = textures.customLoad("BKG_NULL",	[&](ALLEGRO_BITMAP*& b) -> bool { return (b = al_create_bitmap(siz[0], siz[1]));}); // don't worry, it won't create if it is already there
 				disguy = sprites.create("BKG_NULL"); // this one too
 
-				disguy->set(Assistance::io__sprite_string::REMOVE, "BKG_NULL"); // guarantee no duplicated stuff because it might have it already
-				disguy->set(Assistance::io__sprite_string::ADD, "BKG_NULL");
-				disguy->set(Assistance::io__sprite_double::ANIMATION_FPS, 0);
-				disguy->set(Assistance::io__sprite_boolean::DRAW, true);
-				disguy->set(Assistance::io__sprite_boolean::TIE_SIZE_TO_DISPLAY, true);
-				disguy->set(Assistance::io__sprite_string::ID, "BKG_NULL");
-				disguy->set(Assistance::io__sprite_integer::LAYER, layer);
-				disguy->set(Assistance::io__sprite_double::SCALEG, 2.0);
-				disguy->set(Assistance::io__sprite_boolean::AFFECTED_BY_CAM, true);
+				disguy->set(Constants::io__sprite_string::REMOVE, "BKG_NULL"); // guarantee no duplicated stuff because it might have it already
+				disguy->set(Constants::io__sprite_string::ADD, "BKG_NULL");
+				disguy->set(Constants::io__sprite_double::ANIMATION_FPS, 0);
+				disguy->set(Constants::io__sprite_boolean::DRAW, true);
+				disguy->set(Constants::io__sprite_boolean::TIE_SIZE_TO_DISPLAY, true);
+				disguy->set(Constants::io__sprite_string::ID, "BKG_NULL");
+				disguy->set(Constants::io__sprite_integer::LAYER, layer);
+				disguy->set(Constants::io__sprite_double::SCALEG, 2.0);
+				disguy->set(Constants::io__sprite_boolean::AFFECTED_BY_CAM, true);
 
 				if (mfps <= 0) fps = -1;
 				else if (1.0/mfps > 1.0) fps = 1.0/mfps;
@@ -2439,10 +2455,10 @@ namespace LSW {
 				for (auto& i : positions)
 				{
 					al_draw_filled_circle(i.lastpositionscalculated[0], i.lastpositionscalculated[1], i.lastsize, al_map_rgba_f(
-						(float)maxone(al_get_time() * 0.3f * ((rand() % 1000) / 1000.0f)) * (1.0f - (Constants::amountofblur_bubbles / 100.0f)),
-						(float)maxone(al_get_time() * 0.1f * ((rand() % 1000) / 1000.0f)) * (1.0f - (Constants::amountofblur_bubbles / 100.0f)),
-						(float)maxone(al_get_time() * 0.8f * ((rand() % 1000) / 1000.0f)) * (1.0f - (Constants::amountofblur_bubbles / 100.0f)),
-						(float)(1.0f - (Constants::amountofblur_bubbles / 100.0f))));
+						+maxone(al_get_time() * 0.3f * ((rand() % 1000) / 1000.0f)) * (1.0f - (Constants::amountofblur_bubbles / 100.0f)),
+						+maxone(al_get_time() * 0.1f * ((rand() % 1000) / 1000.0f)) * (1.0f - (Constants::amountofblur_bubbles / 100.0f)),
+						+maxone(al_get_time() * 0.8f * ((rand() % 1000) / 1000.0f)) * (1.0f - (Constants::amountofblur_bubbles / 100.0f)),
+						+(1.0f - (Constants::amountofblur_bubbles / 100.0f))));
 				}
 
 				al_set_target_bitmap(lastpoint);
@@ -2461,7 +2477,7 @@ namespace LSW {
 			Camera cam;
 			auto cpy = cam.get();
 			for (auto& o : cpy) {
-				if (continuee |= disguy->isEq(Assistance::io__sprite_integer::LAYER, o)) break;
+				if (continuee |= disguy->isEq(Constants::io__sprite_integer::LAYER, o)) break;
 			}
 
 			if (continuee && ((al_get_time() - lastdraw) >= (1.0 / fps) || fps == -1))

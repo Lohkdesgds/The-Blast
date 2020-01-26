@@ -44,6 +44,9 @@
     <Filter Include="gaming\map_gen">
       <UniqueIdentifier>{88b38599-36f6-4dbf-b78d-21b5dfb8ee71}</UniqueIdentifier>
     </Filter>
+    <Filter Include="base\_include_all">
+      <UniqueIdentifier>{50698a0a-9d2d-45f4-bae3-6e71ea63e61c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="starter.cpp">
@@ -108,6 +111,9 @@
     </ClInclude>
     <ClInclude Include="LSW\map_gen\map.h">
       <Filter>gaming\map_gen</Filter>
+    </ClInclude>
+    <ClInclude Include="LSW\lsw.h">
+      <Filter>base\_include_all</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

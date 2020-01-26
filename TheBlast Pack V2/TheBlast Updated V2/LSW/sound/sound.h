@@ -35,7 +35,7 @@ namespace LSW {
 		
 		*/
 
-		namespace Assistance {
+		namespace Constants {
 
 			enum class io__track_boolean { PLAYING };
 			enum class io__track_float { VOLUME, SPEED };
@@ -56,7 +56,7 @@ namespace LSW {
 		public:
 			Mixer();
 
-			void volume(const float);
+			void volume(const double);
 			void attachInstance(ALLEGRO_SAMPLE_INSTANCE*);
 		};
 				
@@ -69,15 +69,15 @@ namespace LSW {
 			Track();
 			void unload();
 
-			void set(const Assistance::io__track_boolean, const bool);
-			void set(const Assistance::io__track_float, const float);
-			void set(const Assistance::io__track_integer, const Assistance::io__track_integer_modes);
-			void set(const Assistance::io__track_string, const std::string);
+			void set(const Constants::io__track_boolean, const bool);
+			void set(const Constants::io__track_float, const double);
+			void set(const Constants::io__track_integer, const Constants::io__track_integer_modes);
+			void set(const Constants::io__track_string, const std::string);
 
-			void get(const Assistance::io__track_boolean, bool&);
-			void get(const Assistance::io__track_float, float&);
-			void get(const Assistance::io__track_integer, int&);
-			void get(const Assistance::io__track_string, std::string&);
+			void get(const Constants::io__track_boolean, bool&);
+			void get(const Constants::io__track_float, double&);
+			void get(const Constants::io__track_integer, int&);
+			void get(const Constants::io__track_string, std::string&);
 		};
 
 

@@ -150,7 +150,7 @@ namespace LSW {
 						
 						evv.user.data1 = (intptr_t)g.memline[g.memlinecount].line;
 						evv.user.data2 = (intptr_t)&g.memline[g.memlinecount].event_color;
-						evv.type = +Assistance::ro__my_events::LOG_CLOUDLAUNCH_RAW;
+						evv.type = +Constants::ro__my_events::LOG_CLOUDLAUNCH_RAW;
 						al_emit_user_event(&g.evsrc, &evv, NULL);
 						g.now.clear();
 

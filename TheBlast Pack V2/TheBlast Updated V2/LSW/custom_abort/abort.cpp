@@ -3,14 +3,12 @@
 namespace LSW {
 	namespace v4 {
 		namespace Abort {
-
 			abort::abort(std::string from, std::string detail, const int d)
 			{
 				from_where = from;
 				dtls = detail;
 				errn = d;
 			}
-
 			std::string LSW::v4::Abort::abort::from()
 			{
 				return from_where;
@@ -24,10 +22,6 @@ namespace LSW {
 			{
 				return errn;
 			}
-
-
-			
-
 		}
 	}
 }

@@ -31,9 +31,9 @@
 namespace LSW {
 	namespace v4 {
 
-		namespace Assistance {
+		namespace Constants {
 
-			enum class io__camera_float	 		 { SCALE_X, SCALE_Y, SCALE_G, OFFSET_X, OFFSET_Y, ROTATION_RAD, SLIPPERINESS, LIMIT_MIN_X, LIMIT_MIN_Y, LIMIT_MAX_X, LIMIT_MAX_Y, size };
+			enum class io__camera_double		 { SCALE_X, SCALE_Y, SCALE_G, OFFSET_X, OFFSET_Y, ROTATION_RAD, SLIPPERINESS, LIMIT_MIN_X, LIMIT_MIN_Y, LIMIT_MAX_X, LIMIT_MAX_Y, size };
 			enum class io__camera_boolean	 	 { RESPECT_LIMITS, READONLY_NOW, size };
 			
 			enum class io__sprite_string_vector	 { ADDMULTIPLE, REMOVEMULTIPLE };
@@ -93,30 +93,20 @@ __slice("%cam_zoom_combined%", +tags_e::T_CAM_ZOOM), __slice("%cam_zoom_g%", +ta
 __slice("%last_string%", +tags_e::T_LASTSTRING), __slice("%mouse_x%", +tags_e::T_MOUSE_X), __slice("%mouse_y%", +tags_e::T_MOUSE_Y), __slice("%sprite_speed_x%", +tags_e::T_SPRITE_SPEEDX),__slice("%sprite_speed_y%", +tags_e::T_SPRITE_SPEEDY),
 __slice("%sprite_name%", +tags_e::T_SPRITE_NAME), __slice("%entity_name%", +tags_e::T_SPRITE_ENTITY_NAME), __slice("%entity_health%", +tags_e::T_SPRITE_ENTITY_HEALTH), __slice("%sprite_debug%", +tags_e::_T_SPRITE_DEBUG), __slice("%num_images%", +tags_e::T_TEXTURES_LOADED),
 __slice("%num_fonts%", +tags_e::T_FONTS_LOADED),__slice("%num_samples%", +tags_e::T_SAMPLES_LOADED), __slice("%num_sprites%", +tags_e::T_SPRITES_LOADED), __slice("%num_texts%", +tags_e::T_TEXTS_LOADED), __slice("%num_tracks%", +tags_e::T_TRACKS_LOADED),
-__slice("%sprite_state%", +tags_e::T_SPRITE_STATE) };
-			/*
-			
-		typedef __template_static_vector<ALLEGRO_BITMAP>  Textures;
-		typedef __template_static_vector<ALLEGRO_FONT>    Fonts;
-		typedef __template_static_vector<ALLEGRO_SAMPLE>  Samples;
-
-		typedef __template_static_vector<Sprite>		  Sprites;
-		typedef __template_static_vector<Text>			  Texts;
-		typedef __template_static_vector<Track>			  Tracks;
-			*/
+__slice("%sprite_state%", +tags_e::T_SPRITE_STATE) };			
 		}
 
-		//const Assistance::cl__sprite_direction_mult resolveDir(const int);
+		//const Constants::cl__sprite_direction_mult resolveDir(const int);
 
-		void draw_simple_bar(const float, const ALLEGRO_COLOR = al_map_rgb(0, 0, 0), const float = 0.98, const float = 0.95); // w, h
+		void draw_simple_bar(const double, const ALLEGRO_COLOR = al_map_rgb(0, 0, 0), const double = 0.98, const double = 0.95); // w, h
 		void draw_confuse_rectangle(const float, const float, const float, const float, const ALLEGRO_COLOR, const ALLEGRO_COLOR, const ALLEGRO_COLOR, const ALLEGRO_COLOR);
-		void draw_simple_txt(ALLEGRO_FONT*, const std::string, ALLEGRO_COLOR = al_map_rgb(255,255,255), const int = ALLEGRO_ALIGN_CENTER, const float = 0.2);
+		void draw_simple_txt(ALLEGRO_FONT*, const std::string, ALLEGRO_COLOR = al_map_rgb(255,255,255), const int = ALLEGRO_ALIGN_CENTER, const double = 0.2);
 		ALLEGRO_TRANSFORM easyTransform(ALLEGRO_DISPLAY* const, const float, const float, const float, const float, const float);
 		void matrix_draw_help();
 
 		class camera_preset {
-			float p[+Assistance::io__camera_float::size] = { 1.0,1.0,1.0,0.0,0.0,0.0,Constants::camera_default_slipperiness, 0.0, 0.0, 0.0, 0.0 };
-			bool b[+Assistance::io__camera_boolean::size] = { false };
+			double p[+Constants::io__camera_double::size] = { 1.0,1.0,1.0,0.0,0.0,0.0,Constants::camera_default_slipperiness, 0.0, 0.0, 0.0, 0.0 };
+			bool b[+Constants::io__camera_boolean::size] = { false };
 			ALLEGRO_TRANSFORM latest = ALLEGRO_TRANSFORM();
 			std::vector<int> layers; // layers enabled
 			std::string internal_id = "unknown";
@@ -126,13 +116,13 @@ __slice("%sprite_state%", +tags_e::T_SPRITE_STATE) };
 			void refresh(); // guaranteed ALLEGRO_TRANSFORM ready to use (less thinking when already set up)
 			void reset();
 
-			void set(const Assistance::io__camera_float, const float);
-			void set(const Assistance::io__camera_boolean, const bool);
+			void set(const Constants::io__camera_double, const double);
+			void set(const Constants::io__camera_boolean, const bool);
 
-			void merge(const Assistance::io__camera_float, const float);
+			void merge(const Constants::io__camera_double, const double);
 
-			float get(const Assistance::io__camera_float) const;
-			bool get(const Assistance::io__camera_boolean) const;
+			double get(const Constants::io__camera_double) const;
+			bool get(const Constants::io__camera_boolean) const;
 
 			void setInternalID(const std::string);
 			std::string getInternalID(); // mostly debugging (to be implemented)
@@ -168,33 +158,33 @@ __slice("%sprite_state%", +tags_e::T_SPRITE_STATE) };
 		class Sprite {
 
 			struct ___collision_data {
-				int diretion_by_centers_interpreted = 0; // Assistance::directions
+				int diretion_by_centers_interpreted = 0; // Constants::directions
 				double expected_walk_distances[2] = { 0.0,0.0 };
 			};
 			
 			struct __sprite_smart_data {
 
-				double dval[+Assistance::io__sprite_double::size] = { 0.0 };
-				double dtarg[+Assistance::ro__sprite_target_double::size] = { 0.0 };
-				bool bval[+Assistance::io__sprite_boolean::size] = { false };
+				double dval[+Constants::io__sprite_double::size] = { 0.0 };
+				double dtarg[+Constants::ro__sprite_target_double::size] = { 0.0 };
+				bool bval[+Constants::io__sprite_boolean::size] = { false };
 				ALLEGRO_COLOR tint = al_map_rgb(255, 255, 255);
 				std::vector<int> layers_colliding;
 				std::mutex layers_colliding_m;
-				Assistance::io__sprite_tie_func_to_state last_state = Assistance::io__sprite_tie_func_to_state::size;
-				Assistance::io__sprite_tie_func_to_state new_state = Assistance::io__sprite_tie_func_to_state::size;
-				std::function<void(void)> function_pair[+Assistance::io__sprite_tie_func_to_state::size];
+				Constants::io__sprite_tie_func_to_state last_state = Constants::io__sprite_tie_func_to_state::size;
+				Constants::io__sprite_tie_func_to_state new_state = Constants::io__sprite_tie_func_to_state::size;
+				std::function<void(void)> function_pair[+Constants::io__sprite_tie_func_to_state::size];
 
-				Assistance::io__sprite_collision_mode collision_mode = Assistance::io__sprite_collision_mode::COLLISION_SAMELAYER_HOLD_STATIC;
+				Constants::io__sprite_collision_mode collision_mode = Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_HOLD_STATIC;
 				/*int direction_col = 0; // where is the block I stepped on?
 				int direction_predict = 0;
 				size_t countdown_col = 0;*/
 
-				//Assistance::cl__sprite_direction_mult where_i_wanna_go = Assistance::cl__sprite_direction_mult::STAY;
+				//Constants::cl__sprite_direction_mult where_i_wanna_go = Constants::cl__sprite_direction_mult::STAY;
 				int combined_direction_i_wanna_go = 0;
 
 				std::vector<___collision_data> col_data;
 
-				//bool tempblock_dirs[+Assistance::cl__sprite_direction_mult::size] = { false };
+				//bool tempblock_dirs[+Constants::cl__sprite_direction_mult::size] = { false };
 
 				__sprite_smart_data();
 			};
@@ -215,15 +205,15 @@ __slice("%sprite_state%", +tags_e::T_SPRITE_STATE) };
 				std::vector<__custom_data*> copies;
 				bool reset_instead_of_pause = false;
 
-				size_t pair[+Assistance::io__sprite_tie_func_to_state::size] = { std::string::npos };
+				size_t pair[+Constants::io__sprite_tie_func_to_state::size] = { std::string::npos };
 			public:
-				ALLEGRO_BITMAP* get(const Assistance::io__sprite_tie_func_to_state = Assistance::io__sprite_tie_func_to_state::size);
+				ALLEGRO_BITMAP* get(const Constants::io__sprite_tie_func_to_state = Constants::io__sprite_tie_func_to_state::size);
 				size_t lastFrame();
 				ALLEGRO_BITMAP* load(const std::string); // id
 				void remove(const std::string);
 				void setFPS(const double = 0); // 0 = no cycle, < 0 = static one (-1 == first aka 0), x > 0 = x changes per sec
-				void setState(const Assistance::io__sprite_tie_func_to_state, const size_t = std::string::npos);
-				size_t getState(const Assistance::io__sprite_tie_func_to_state);
+				void setState(const Constants::io__sprite_tie_func_to_state, const size_t = std::string::npos);
+				size_t getState(const Constants::io__sprite_tie_func_to_state);
 				void loop(const bool = true);
 				bool hasLoopEndedOnce();
 				bool isOnLastFrame();
@@ -248,41 +238,41 @@ __slice("%sprite_state%", +tags_e::T_SPRITE_STATE) };
 		public:
 			~Sprite();
 
-			void hook(const Assistance::io__sprite_tie_func_to_state, std::function<void(void)>);
-			void unhook(const Assistance::io__sprite_tie_func_to_state);
+			void hook(const Constants::io__sprite_tie_func_to_state, std::function<void(void)>);
+			void unhook(const Constants::io__sprite_tie_func_to_state);
 
-			void set(const Assistance::io__sprite_string_vector, const std::vector<std::string>, float* = nullptr);
-			void set(const Assistance::io__sprite_string, const std::string);
-			void set(const Assistance::io__sprite_double, const double);
-			void set(const Assistance::io__sprite_boolean, const bool);
-			void set(const Assistance::io__sprite_integer, const int);
-			void set(const Assistance::io__sprite_sizet, const size_t);
-			void set(const Assistance::io__sprite_color, const ALLEGRO_COLOR);
-			void set(const Assistance::io__sprite_tie_func_to_state, const size_t = std::string::npos);
-			void set(const Assistance::io__sprite_collision_mode);
-			void set(const Assistance::cl__sprite_direction_mult); // set dir to go (GO_NORTH...)
+			void set(const Constants::io__sprite_string_vector, const std::vector<std::string>, float* = nullptr);
+			void set(const Constants::io__sprite_string, const std::string);
+			void set(const Constants::io__sprite_double, const double);
+			void set(const Constants::io__sprite_boolean, const bool);
+			void set(const Constants::io__sprite_integer, const int);
+			void set(const Constants::io__sprite_sizet, const size_t);
+			void set(const Constants::io__sprite_color, const ALLEGRO_COLOR);
+			void set(const Constants::io__sprite_tie_func_to_state, const size_t = std::string::npos);
+			void set(const Constants::io__sprite_collision_mode);
+			void set(const Constants::cl__sprite_direction_mult); // set dir to go (GO_NORTH...)
 
-			bool get(const Assistance::io__sprite_string, std::string&);
-			bool get(const Assistance::io__sprite_double, double&);
-			bool get(const Assistance::ro__sprite_target_double, double&);
-			bool get(const Assistance::io__sprite_boolean, bool&);
-			bool get(const Assistance::io__sprite_integer, int&);
-			bool get(const Assistance::io__sprite_sizet, size_t&);
-			bool get(const Assistance::ro__sprite_state, Assistance::io__sprite_tie_func_to_state&);
-			bool get(const Assistance::io__sprite_color, ALLEGRO_COLOR&);
-			void get(const Assistance::io__sprite_tie_func_to_state, size_t&);
+			bool get(const Constants::io__sprite_string, std::string&);
+			bool get(const Constants::io__sprite_double, double&);
+			bool get(const Constants::ro__sprite_target_double, double&);
+			bool get(const Constants::io__sprite_boolean, bool&);
+			bool get(const Constants::io__sprite_integer, int&);
+			bool get(const Constants::io__sprite_sizet, size_t&);
+			bool get(const Constants::ro__sprite_state, Constants::io__sprite_tie_func_to_state&);
+			bool get(const Constants::io__sprite_color, ALLEGRO_COLOR&);
+			void get(const Constants::io__sprite_tie_func_to_state, size_t&);
 			void get(ALLEGRO_BITMAP*&);
-			void get(Assistance::io__sprite_collision_mode&);
+			void get(Constants::io__sprite_collision_mode&);
 
-			bool isEq(const Assistance::io__sprite_string, const std::string);
-			bool isEq(const Assistance::io__sprite_double, const double);
-			bool isEq(const Assistance::io__sprite_boolean, const bool = true);
-			bool isEq(const Assistance::io__sprite_integer, const int);
-			bool isEq(const Assistance::io__sprite_sizet, const size_t);
-			bool isEq(const Assistance::ro__sprite_state, const Assistance::io__sprite_tie_func_to_state);
-			bool isEq(const Assistance::io__sprite_color, const ALLEGRO_COLOR);
-			bool isEq(const Assistance::io__sprite_tie_func_to_state, const size_t);
-			bool isEq(const Assistance::io__sprite_collision_mode);
+			bool isEq(const Constants::io__sprite_string, const std::string);
+			bool isEq(const Constants::io__sprite_double, const double);
+			bool isEq(const Constants::io__sprite_boolean, const bool = true);
+			bool isEq(const Constants::io__sprite_integer, const int);
+			bool isEq(const Constants::io__sprite_sizet, const size_t);
+			bool isEq(const Constants::ro__sprite_state, const Constants::io__sprite_tie_func_to_state);
+			bool isEq(const Constants::io__sprite_color, const ALLEGRO_COLOR);
+			bool isEq(const Constants::io__sprite_tie_func_to_state, const size_t);
+			bool isEq(const Constants::io__sprite_collision_mode);
 
 			void draw(const int);
 			void rebindReferences();
@@ -305,10 +295,10 @@ __slice("%sprite_state%", +tags_e::T_SPRITE_STATE) };
 			Sprite* follow = nullptr;
 
 			struct __custom_data {
-				std::string str[+Assistance::io__text_string::size];
-				bool b[+Assistance::io__text_boolean::size] = { false };
-				double d[+Assistance::io__text_double::size] = { 0 };
-				int i[+Assistance::io__text_integer::size] = { 0 };
+				std::string str[+Constants::io__text_string::size];
+				bool b[+Constants::io__text_boolean::size] = { false };
+				double d[+Constants::io__text_double::size] = { 0 };
+				int i[+Constants::io__text_integer::size] = { 0 };
 				ALLEGRO_COLOR c;
 				ALLEGRO_FONT* font = nullptr;
 				std::string __internal_debug_flag;
@@ -325,23 +315,23 @@ __slice("%sprite_state%", +tags_e::T_SPRITE_STATE) };
 			Text();
 			//~Text();
 			
-			void set(const Assistance::io__text_string, const std::string);
-			void set(const Assistance::io__text_boolean, const bool);
-			void set(const Assistance::io__text_double, const double);
-			void set(const Assistance::io__text_color, const ALLEGRO_COLOR);
-			void set(const Assistance::io__text_integer, const int);
+			void set(const Constants::io__text_string, const std::string);
+			void set(const Constants::io__text_boolean, const bool);
+			void set(const Constants::io__text_double, const double);
+			void set(const Constants::io__text_color, const ALLEGRO_COLOR);
+			void set(const Constants::io__text_integer, const int);
 
-			void get(const Assistance::io__text_string, std::string&);
-			void get(const Assistance::io__text_boolean, bool&);
-			void get(const Assistance::io__text_double, double&);
-			void get(const Assistance::io__text_color, ALLEGRO_COLOR&);
-			void get(const Assistance::io__text_integer, int&);
+			void get(const Constants::io__text_string, std::string&);
+			void get(const Constants::io__text_boolean, bool&);
+			void get(const Constants::io__text_double, double&);
+			void get(const Constants::io__text_color, ALLEGRO_COLOR&);
+			void get(const Constants::io__text_integer, int&);
 
-			const bool isEq(const Assistance::io__text_string, const std::string);
-			const bool isEq(const Assistance::io__text_boolean, const bool);
-			const bool isEq(const Assistance::io__text_double, const double);
-			const bool isEq(const Assistance::io__text_color, const ALLEGRO_COLOR);
-			const bool isEq(const Assistance::io__text_integer, const int);
+			const bool isEq(const Constants::io__text_string, const std::string);
+			const bool isEq(const Constants::io__text_boolean, const bool);
+			const bool isEq(const Constants::io__text_double, const double);
+			const bool isEq(const Constants::io__text_color, const ALLEGRO_COLOR);
+			const bool isEq(const Constants::io__text_integer, const int);
 
 			void draw(const int);
 		};
@@ -350,22 +340,22 @@ __slice("%sprite_state%", +tags_e::T_SPRITE_STATE) };
 
 		class Bubbles {
 			struct particle {
-				double posx, posy;
+				double posx = 0.0, posy = 0.0;
 				double lastsize = 1.0;
-				double lastpositionscalculated[2];
+				double lastpositionscalculated[2] = {0.0, 0.0};
 			};
 
 			std::vector<particle> positions;
 			unsigned amountofentities = 2;
-			float fps = 30;
+			double fps = 30;
 			double lastdraw = 0;
 			bool alreadyreset = false;
 
 			bool firstcall = true;
 
 
-			ALLEGRO_BITMAP* imglw;
-			Sprite* disguy;
+			ALLEGRO_BITMAP* imglw = nullptr;
+			Sprite* disguy = nullptr;
 
 			int siz[2] = { 0, 0 };
 
@@ -373,7 +363,7 @@ __slice("%sprite_state%", +tags_e::T_SPRITE_STATE) };
 		public:
 			// amount of entities running forever :3, fps and layer
 
-			void init(const unsigned, const float, const int = 0);
+			void init(const unsigned, const double, const int = 0);
 			void draw();
 			void think();
 		};

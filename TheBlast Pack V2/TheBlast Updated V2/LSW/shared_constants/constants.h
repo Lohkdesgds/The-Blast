@@ -26,7 +26,7 @@ __TIME__
 
 namespace LSW {
 	namespace v4 {
-		namespace Assistance {
+		namespace Constants {
 			// this have to be global, come on
 			enum class ro__my_events { LOG_CLOUDLAUNCH_RAW = 512, THRKBM_DISPLAY_SIZE, THRDRW_GOT_FORCED_RESIZE, THRKBM_GETSTRINGINPUT /* <-- TO BE DONE */ }; // THRDRW -> event for the THREAD_DRAW
 
@@ -36,9 +36,6 @@ namespace LSW {
 				EAST = 1 << 2,
 				WEST = 1 << 3
 			};
-		}
-
-		namespace Constants {
 
 			/* VERSIONING */
 			const std::string __interpret_date();
@@ -90,16 +87,16 @@ namespace LSW {
 			const double intensity_player_run_max = 0.020; // limit: 0.025
 			const double intensity_default_player_walk = 0.002;
 
-			const double sprite_default_offset_mult = 1.0005; // adjustment because collision might be colliding forever
+			const double sprite_default_min_movement = 0.01; // adjustment because collision might be colliding forever
 			// some fx
-			const float amountofblur_bubbles = 85.0;
+			const double amountofblur_bubbles = 85.0;
 			const unsigned amountof_linesperline_draw = 20;
 			const double precision_rotation_draw = 0.6 * ALLEGRO_PI / 360.0;
 
 
 
 			// sound.h stuff
-			const float start_default_global_volume = 0.5;
+			const double start_default_global_volume = 0.5;
 			
 
 

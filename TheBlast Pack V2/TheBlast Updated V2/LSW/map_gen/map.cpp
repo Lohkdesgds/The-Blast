@@ -25,7 +25,7 @@ namespace LSW {
 				for (auto& i : pts) {
 					if (!isThis(i, +blocks::BLOCK)) ok = false;
 				}
-				if (ok) res |= +Assistance::directions::WEST;
+				if (ok) res |= +Constants::directions::WEST;
 			}
 			// righty
 			{
@@ -46,7 +46,7 @@ namespace LSW {
 				for (auto& i : pts) {
 					if (!isThis(i, +blocks::BLOCK)) ok = false;
 				}
-				if (ok) res |= +Assistance::directions::EAST;
+				if (ok) res |= +Constants::directions::EAST;
 			}
 			// northy
 			{
@@ -67,7 +67,7 @@ namespace LSW {
 				for (auto& i : pts) {
 					if (!isThis(i, +blocks::BLOCK)) ok = false;
 				}
-				if (ok) res |= +Assistance::directions::NORTH;
+				if (ok) res |= +Constants::directions::NORTH;
 			}
 			// southy
 			{
@@ -88,7 +88,7 @@ namespace LSW {
 				for (auto& i : pts) {
 					if (!isThis(i, +blocks::BLOCK)) ok = false;
 				}
-				if (ok) res |= +Assistance::directions::SOUTH;
+				if (ok) res |= +Constants::directions::SOUTH;
 			}
 
 			return res;
@@ -168,12 +168,12 @@ namespace LSW {
 						}
 
 						switch (which) {
-						case +Assistance::directions::NORTH:
+						case +Constants::directions::NORTH:
 						{
 							p.y--;
 							for (auto& i : road) {
 								if (i == p) {
-									ws -= +Assistance::directions::NORTH;
+									ws -= +Constants::directions::NORTH;
 									continue;
 								}
 							}
@@ -181,12 +181,12 @@ namespace LSW {
 							if (get(p) != +blocks::TRAVELLED) get(p) = +blocks::EMPTY;
 						}
 						break;
-						case +Assistance::directions::SOUTH:
+						case +Constants::directions::SOUTH:
 						{
 							p.y++;
 							for (auto& i : road) {
 								if (i == p) {
-									ws -= +Assistance::directions::SOUTH;
+									ws -= +Constants::directions::SOUTH;
 									continue;
 								}
 							}
@@ -194,12 +194,12 @@ namespace LSW {
 							if (get(p) != +blocks::TRAVELLED) get(p) = +blocks::EMPTY;
 						}
 						break;
-						case +Assistance::directions::EAST:
+						case +Constants::directions::EAST:
 						{
 							p.x++;
 							for (auto& i : road) {
 								if (i == p) {
-									ws -= +Assistance::directions::EAST;
+									ws -= +Constants::directions::EAST;
 									continue;
 								}
 							}
@@ -207,12 +207,12 @@ namespace LSW {
 							if (get(p) != +blocks::TRAVELLED) get(p) = +blocks::EMPTY;
 						}
 						break;
-						case +Assistance::directions::WEST:
+						case +Constants::directions::WEST:
 						{
 							p.x--;
 							for (auto& i : road) {
 								if (i == p) {
-									ws -= +Assistance::directions::WEST;
+									ws -= +Constants::directions::WEST;
 									continue;
 								}
 							}
