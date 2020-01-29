@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TheBlast Updated V2", "TheB
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SingleMerge", "SingleMerge\SingleMerge.vcxproj", "{9DB3E7B1-20E6-4EC3-9F5B-C7421A22CAD3}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TheBlast Updated V2 - Server Side", "TheBlast Updated V2 - Server Side\TheBlast Updated V2 - Server Side.vcxproj", "{4FAA7ED8-6E80-404B-AD60-2EC773686001}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -31,6 +33,14 @@ Global
 		{9DB3E7B1-20E6-4EC3-9F5B-C7421A22CAD3}.Release|x64.Build.0 = Release|x64
 		{9DB3E7B1-20E6-4EC3-9F5B-C7421A22CAD3}.Release|x86.ActiveCfg = Release|Win32
 		{9DB3E7B1-20E6-4EC3-9F5B-C7421A22CAD3}.Release|x86.Build.0 = Release|Win32
+		{4FAA7ED8-6E80-404B-AD60-2EC773686001}.Debug|x64.ActiveCfg = Debug|x64
+		{4FAA7ED8-6E80-404B-AD60-2EC773686001}.Debug|x64.Build.0 = Debug|x64
+		{4FAA7ED8-6E80-404B-AD60-2EC773686001}.Debug|x86.ActiveCfg = Debug|Win32
+		{4FAA7ED8-6E80-404B-AD60-2EC773686001}.Debug|x86.Build.0 = Debug|Win32
+		{4FAA7ED8-6E80-404B-AD60-2EC773686001}.Release|x64.ActiveCfg = Release|x64
+		{4FAA7ED8-6E80-404B-AD60-2EC773686001}.Release|x64.Build.0 = Release|x64
+		{4FAA7ED8-6E80-404B-AD60-2EC773686001}.Release|x86.ActiveCfg = Release|Win32
+		{4FAA7ED8-6E80-404B-AD60-2EC773686001}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

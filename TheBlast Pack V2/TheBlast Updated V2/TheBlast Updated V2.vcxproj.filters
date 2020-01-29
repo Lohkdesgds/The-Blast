@@ -47,82 +47,109 @@
     <Filter Include="base\_include_all">
       <UniqueIdentifier>{50698a0a-9d2d-45f4-bae3-6e71ea63e61c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="gaming\packet_raw">
+      <UniqueIdentifier>{8894e2d5-cd59-43f7-b7cd-09071c0cc2fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\downloader">
+      <UniqueIdentifier>{563cd6bf-b759-4636-8fc9-3dfa438f4f8d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\hash_gen">
+      <UniqueIdentifier>{fd4885cb-c27d-465b-a930-1f16687cf58a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\LSW\custom_abort\abort.cpp">
+      <Filter>base\custom_abort</Filter>
+    </ClCompile>
+    <ClCompile Include="..\LSW\tools\tools.cpp">
+      <Filter>base\tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\LSW\system\system.cpp">
+      <Filter>base\system</Filter>
+    </ClCompile>
+    <ClCompile Include="..\LSW\drawing\drawing.cpp">
+      <Filter>base\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\LSW\console\console.cpp">
+      <Filter>base\console</Filter>
+    </ClCompile>
+    <ClCompile Include="..\LSW\sound\sound.cpp">
+      <Filter>base\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="..\LSW\map_gen\map.cpp">
+      <Filter>gaming\map_gen</Filter>
+    </ClCompile>
     <ClCompile Include="starter.cpp">
       <Filter>main</Filter>
     </ClCompile>
-    <ClCompile Include="LSW\custom_abort\abort.cpp">
-      <Filter>base\custom_abort</Filter>
+    <ClCompile Include="..\LSW\package_raw\package_raw.cpp">
+      <Filter>gaming\packet_raw</Filter>
     </ClCompile>
-    <ClCompile Include="LSW\tools\tools.cpp">
-      <Filter>base\tools</Filter>
+    <ClCompile Include="..\LSW\download_manager\downloader.cpp">
+      <Filter>base\downloader</Filter>
     </ClCompile>
-    <ClCompile Include="LSW\system\system.cpp">
-      <Filter>base\system</Filter>
-    </ClCompile>
-    <ClCompile Include="LSW\drawing\drawing.cpp">
-      <Filter>base\drawing</Filter>
-    </ClCompile>
-    <ClCompile Include="LSW\console\console.cpp">
-      <Filter>base\console</Filter>
-    </ClCompile>
-    <ClCompile Include="LSW\sound\sound.cpp">
-      <Filter>base\sound</Filter>
-    </ClCompile>
-    <ClCompile Include="LSW\map_gen\map.cpp">
-      <Filter>gaming\map_gen</Filter>
+    <ClCompile Include="..\LSW\hash\sha256.cpp">
+      <Filter>base\hash_gen</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="LSW\custom_abort\abort.h">
+    <ClInclude Include="..\LSW\custom_abort\abort.h">
       <Filter>base\custom_abort</Filter>
     </ClInclude>
-    <ClInclude Include="LSW\tools\tools.h">
+    <ClInclude Include="..\LSW\tools\tools.h">
       <Filter>base\tools</Filter>
     </ClInclude>
-    <ClInclude Include="LSW\system\system.h">
+    <ClInclude Include="..\LSW\system\system.h">
       <Filter>base\system</Filter>
     </ClInclude>
-    <ClInclude Include="LSW\drawing\drawing.h">
+    <ClInclude Include="..\LSW\drawing\drawing.h">
       <Filter>base\drawing</Filter>
     </ClInclude>
-    <ClInclude Include="LSW\organizer\organizer.h">
+    <ClInclude Include="..\LSW\organizer\organizer.h">
       <Filter>base\organizer</Filter>
     </ClInclude>
-    <ClInclude Include="LSW\console\console.h">
+    <ClInclude Include="..\LSW\console\console.h">
       <Filter>base\console</Filter>
     </ClInclude>
-    <ClInclude Include="LSW\big_templates\big_templates.h">
+    <ClInclude Include="..\LSW\big_templates\big_templates.h">
       <Filter>base\big_templates</Filter>
     </ClInclude>
-    <ClInclude Include="LSW\logger\logger.h">
+    <ClInclude Include="..\LSW\logger\logger.h">
       <Filter>base\log</Filter>
     </ClInclude>
-    <ClInclude Include="LSW\sound\sound.h">
+    <ClInclude Include="..\LSW\sound\sound.h">
       <Filter>base\sound</Filter>
     </ClInclude>
-    <ClInclude Include="LSW\shared_constants\constants.h">
+    <ClInclude Include="..\LSW\shared_constants\constants.h">
       <Filter>base\shared_constants</Filter>
     </ClInclude>
     <ClInclude Include="resource.h" />
-    <ClInclude Include="LSW\big_templates\small_templates.h">
+    <ClInclude Include="..\LSW\big_templates\small_templates.h">
       <Filter>base\big_templates</Filter>
     </ClInclude>
-    <ClInclude Include="LSW\map_gen\map.h">
+    <ClInclude Include="..\LSW\map_gen\map.h">
       <Filter>gaming\map_gen</Filter>
     </ClInclude>
-    <ClInclude Include="LSW\lsw.h">
+    <ClInclude Include="..\LSW\lsw.h">
       <Filter>base\_include_all</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
+    <ClInclude Include="..\LSW\package_raw\package_raw.h">
+      <Filter>gaming\packet_raw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\LSW\download_manager\downloader.h">
+      <Filter>base\downloader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\LSW\hash\sha256.h">
+      <Filter>base\hash_gen</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TheBlast Updated V2.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon1.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

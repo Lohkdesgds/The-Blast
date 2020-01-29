@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="packet_raw">
+      <UniqueIdentifier>{a9fb0d46-80b0-421d-aad3-241d35f39bf4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="main">
+      <UniqueIdentifier>{71079d3f-ebfb-48dc-8269-db8d1990c12b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main_server.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\LSW\package_raw\package_raw.cpp">
+      <Filter>packet_raw</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\LSW\package_raw\package_raw.h">
+      <Filter>packet_raw</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

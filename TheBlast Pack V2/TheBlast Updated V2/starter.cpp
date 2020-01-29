@@ -1,8 +1,9 @@
+#include "../LSW/lsw.h"
+
 #include <iostream>
 #include <string>
 #include <Windows.h>
 
-#include "LSW/lsw.h"
 
 using namespace LSW::v4;
 
@@ -13,6 +14,7 @@ enum class my_custom_funcs { LOADING_ANIMATION/*at: setup_animation_functional (
 int main(int argc, const char* argv[])
 {
 	try {
+
 		/*************************************************************************************
 
 			# Start stuff:
@@ -27,6 +29,7 @@ int main(int argc, const char* argv[])
 
 		// this has to be like the first one
 		gfile logg;
+
 
 		// needed initialization
 		alert("BETA/ALPHA", "This is a beta or alpha version of the game.", "There might be some issues here and there, so be nice and report to @Lohkdesgds at Twitter, Gamejolt or GitHub! Thanks!");
@@ -76,6 +79,8 @@ int main(int argc, const char* argv[])
 			sprites.clear(); texts.clear(); fonts.clear(); textures.clear();
 		};
 		const std::function<void(void)> set_consol_mainthread_start		= [&bubble_think_task, &bubble_draw_task, &bubble, & consol]() {
+
+			const int default_bitmap_size = 4096; // 4096x4096
 
 			const double animsize[2] = { 0.35, 0.07 };
 
@@ -127,11 +132,13 @@ int main(int argc, const char* argv[])
 
 			auto atlas_wild = textures.load("ATLAS0", "atlas0.png");
 
+			double prop[2] = { al_get_bitmap_width(atlas_wild) * 1.0 / default_bitmap_size ,al_get_bitmap_height(atlas_wild) * 1.0 / default_bitmap_size };
+
 			for (int q = 0; q < 8; q++) {
 				for (int p = 0; p < 4; p++) {
 					if ((q < 7) || (p == 0)) {
 						textures.customLoad("PAUSE_" + std::string((p + q * 4) < 10 ? "0" : "") + std::to_string(p + q * 4),
-							[&atlas_wild, &p, &q](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, p * 512, q * 128, 512, 128)); }
+							[&atlas_wild, &p, &q, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, p * 512 * prop[0], q * 128 * prop[1], 512, 128)); }
 						);
 
 						draw_simple_bar(0.10 + ((p + q * 4) * 0.25f / 31), al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Loading pause animation #" + std::string((p + q * 4) < 10 ? "0" : "") + std::to_string(p + q * 4) + "...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
@@ -142,7 +149,7 @@ int main(int argc, const char* argv[])
 				for (int p = 0; p < 4; p++) {
 					if ((q < 21) || (p == 0)) {
 						textures.customLoad("LOGO_" + std::string((p + q * 4) < 10 ? "0" : "") + std::to_string(p + q * 4),
-							[&atlas_wild, &p, &q](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, p * 512 + 2048, q * 128, 512, 128)); }
+							[&atlas_wild, &p, &q, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, (p * 512 + 2048) * prop[0], q * 128 * prop[1], 512, 128)); }
 						);
 
 						draw_simple_bar(0.35 + ((p + q * 4) * 0.45f / 87), al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Loading logo animation #" + std::string((p + q * 4) < 10 ? "0" : "") + std::to_string(p + q * 4) + "...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
@@ -153,25 +160,25 @@ int main(int argc, const char* argv[])
 			draw_simple_bar(0.80, al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Loading main textures...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
 
 
-			textures.customLoad("BACKGROUND_START", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 0, 2560, 2048, 1154)); });
-			textures.customLoad("BAR_OFF", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512, 1408, 1024, 128)); });
-			textures.customLoad("BAR_ON", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512, 1280, 1024, 128)); });
-			textures.customLoad("MOUSE", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1536, 1024, 256, 256)); });
-			textures.customLoad("MAIN_LOGO", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512, 1024, 1024, 512)); });
+			textures.customLoad("BACKGROUND_START", [&atlas_wild, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 0, 2560 * prop[1], 2048 * prop[0], 1154 * prop[1])); });
+			textures.customLoad("BAR_OFF", [&atlas_wild, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512 * prop[0], 1408 * prop[1], 1024 * prop[0], 128 * prop[1])); });
+			textures.customLoad("BAR_ON", [&atlas_wild, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512 * prop[0], 1280 * prop[1], 1024 * prop[0], 128 * prop[1])); });
+			textures.customLoad("MOUSE", [&atlas_wild, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1536 * prop[0], 1024 * prop[1], 256 * prop[0], 256 * prop[1])); });
+			textures.customLoad("MAIN_LOGO", [&atlas_wild, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512 * prop[0], 1024 * prop[1], 1024 * prop[0], 512 * prop[1])); });
 
 
 			draw_simple_bar(0.85, al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Loading blocks...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
 
-			textures.customLoad("BLOCK_00", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 0, 1536, 512, 512)); }); /// BLOCK
-			textures.customLoad("BLOCK_01", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 0, 1024, 512, 512)); }); /// DIRT
-			textures.customLoad("BLOCK_02", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1536, 1536, 512, 512)); }); ///	LIFE
-			textures.customLoad("BLOCK_03", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512, 2048, 512, 512)); }); /// ?
-			textures.customLoad("BLOCK_04", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512, 2048, 512, 512)); }); /// ?
-			textures.customLoad("BLOCK_05", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1024, 2048, 512, 512)); }); /// X
-			textures.customLoad("BLOCK_06", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512, 1536, 512, 512)); }); /// DESTR 1
-			textures.customLoad("BLOCK_07", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1024, 1536, 512, 512)); }); /// DESTR 2
-			textures.customLoad("BLOCK_08", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1536, 1536, 512, 512)); }); /// DESTR 3
-			textures.customLoad("BLOCK_09", [&atlas_wild](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 0, 2048, 512, 512)); }); /// DESTR 4
+			textures.customLoad("BLOCK_00", [&atlas_wild, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 0, 1536 * prop[1], 512 * prop[0], 512 * prop[1])); }); /// BLOCK
+			textures.customLoad("BLOCK_01", [&atlas_wild, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 0, 1024 * prop[1], 512 * prop[0], 512 * prop[1])); }); /// DIRT
+			textures.customLoad("BLOCK_02", [&atlas_wild, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1536 * prop[0], 1536 * prop[1], 512 * prop[0], 512 * prop[1])); }); ///	LIFE
+			textures.customLoad("BLOCK_03", [&atlas_wild, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512 * prop[0], 2048 * prop[1], 512 * prop[0], 512 * prop[1])); }); /// ?
+			textures.customLoad("BLOCK_04", [&atlas_wild, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512 * prop[0], 2048 * prop[1], 512 * prop[0], 512 * prop[1])); }); /// ?
+			textures.customLoad("BLOCK_05", [&atlas_wild, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1024 * prop[0], 2048 * prop[1], 512 * prop[0], 512 * prop[1])); }); /// X
+			textures.customLoad("BLOCK_06", [&atlas_wild, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512 * prop[0], 1536 * prop[1], 512 * prop[0], 512 * prop[1])); }); /// DESTR 1
+			textures.customLoad("BLOCK_07", [&atlas_wild, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1024 * prop[0], 1536 * prop[1], 512 * prop[0], 512 * prop[1])); }); /// DESTR 2
+			textures.customLoad("BLOCK_08", [&atlas_wild, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1536 * prop[0], 1536 * prop[1], 512 * prop[0], 512 * prop[1])); }); /// DESTR 3
+			textures.customLoad("BLOCK_09", [&atlas_wild, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 0, 2048 * prop[1], 512 * prop[0], 512 * prop[1])); }); /// DESTR 4
 
 
 
