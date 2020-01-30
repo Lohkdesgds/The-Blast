@@ -381,6 +381,7 @@ int main(int argc, const char* argv[])
 		logg.flush();
 
 		while (!consol.isOpen()) Sleep(20);
+		if (!consol.isRunning()) return -1;
 
 		logg << L::SLF << fsr(__FUNCSIG__) << "The tea time continues until all textures and stuff are loaded..." << L::ELF;
 		while (consol.hasTasked(Constants::io__thread_ids::DRAWING, Constants::io__threads_taskid::START)) Sleep(20);

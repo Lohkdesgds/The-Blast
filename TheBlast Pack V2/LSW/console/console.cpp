@@ -32,9 +32,10 @@ namespace LSW {
 
 		void Manager::__l_thr_md()
 		{
+			gfile logg;
+
 			try {
 				Database conf;
-				gfile logg;
 				std::string& thrid = thread_maindisplay.threadid_str;
 
 				logg << L::SLF << fsr(__FUNCSIG__) << "Initializing..." << L::ELF;
@@ -268,32 +269,39 @@ namespace LSW {
 				delete thread_maindisplay.thread_arguments;
 
 				thread_maindisplay.thread_arguments = nullptr;
-
-				thr_shared_arg.threadcountm.lock();
-				thr_shared_arg.threadcount--;
-				thr_shared_arg.threadcountm.unlock();
-
-				//textures.clear();
-
-				thread_maindisplay.am_i_running = false;
-				logg << L::SLF << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::ELF;
 			}
 			catch (Abort::abort a)
 			{
+				thr_shared_arg.threadcountm.lock();
+				thr_shared_arg.threadcount--;
+				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
 				forceExit("Something went wrong at MDTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
 			}
 			catch (...)
 			{
+				thr_shared_arg.threadcountm.lock();
+				thr_shared_arg.threadcount--;
+				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
 				forceExit("Something went wrong at MDTHR!", "There was a unknown error! What a sad thing to happen!");
 			}
+
+			thr_shared_arg.threadcountm.lock();
+			thr_shared_arg.threadcount--;
+			thr_shared_arg.threadcountm.unlock();
+
+			//textures.clear();
+
+			thread_maindisplay.am_i_running = false;
+			logg << L::SLF << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::ELF;
 		}
 
 		void Manager::__l_thr_cl()
 		{
+			gfile logg;
+
 			try {
-				gfile logg;
 				Sprites sprites;
 				Database conf;
 				std::string& thrid = thread_collision.threadid_str;
@@ -407,30 +415,37 @@ namespace LSW {
 				delete thread_collision.thread_arguments;
 
 				thread_collision.thread_arguments = nullptr;
-
-				thr_shared_arg.threadcountm.lock();
-				thr_shared_arg.threadcount--;
-				thr_shared_arg.threadcountm.unlock();
-
-				thread_collision.am_i_running = false;
-				logg << L::SLF << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::ELF;
 			}
 			catch (Abort::abort a)
 			{
+				thr_shared_arg.threadcountm.lock();
+				thr_shared_arg.threadcount--;
+				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
 				forceExit("Something went wrong at CLTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
 			}
 			catch (...)
 			{
+				thr_shared_arg.threadcountm.lock();
+				thr_shared_arg.threadcount--;
+				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
 				forceExit("Something went wrong at CLTHR!", "There was a unknown error! What a sad thing to happen!");
 			}
+
+			thr_shared_arg.threadcountm.lock();
+			thr_shared_arg.threadcount--;
+			thr_shared_arg.threadcountm.unlock();
+
+			thread_collision.am_i_running = false;
+			logg << L::SLF << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::ELF;
 		}
 
 		void Manager::__l_thr_kb()
 		{
+			gfile logg;
+
 			try {
-				gfile logg;
 				Sprites sprites;
 				Database conf;
 				std::string& thrid = thread_kbmouse.threadid_str;
@@ -630,30 +645,37 @@ namespace LSW {
 				delete thread_kbmouse.thread_arguments;
 
 				thread_kbmouse.thread_arguments = nullptr;
-
-				thr_shared_arg.threadcountm.lock();
-				thr_shared_arg.threadcount--;
-				thr_shared_arg.threadcountm.unlock();
-
-				thread_kbmouse.am_i_running = false;
-				logg << L::SLF << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::ELF;
 			}
 			catch (Abort::abort a)
 			{
+				thr_shared_arg.threadcountm.lock();
+				thr_shared_arg.threadcount--;
+				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
 				forceExit("Something went wrong at KBTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
 			}
 			catch (...)
 			{
+				thr_shared_arg.threadcountm.lock();
+				thr_shared_arg.threadcount--;
+				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
 				forceExit("Something went wrong at KBTHR!", "There was a unknown error! What a sad thing to happen!");
 			}
+
+			thr_shared_arg.threadcountm.lock();
+			thr_shared_arg.threadcount--;
+			thr_shared_arg.threadcountm.unlock();
+
+			thread_kbmouse.am_i_running = false;
+			logg << L::SLF << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::ELF;
 		}
 
 		void Manager::__l_thr_fc()
 		{
+			gfile logg;
+
 			try {
-				gfile logg;
 				Database conf;
 				std::string& thrid = thread_functional.threadid_str;
 				//std::map<ALLEGRO_TIMER*, size_t> quickmap;
@@ -802,24 +824,30 @@ namespace LSW {
 				delete thread_functional.thread_arguments;
 
 				thread_functional.thread_arguments = nullptr;
-
-				thr_shared_arg.threadcountm.lock();
-				thr_shared_arg.threadcount--;
-				thr_shared_arg.threadcountm.unlock();
-
-				thread_functional.am_i_running = false;
-				logg << L::SLF << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::ELF;
 			}
 			catch (Abort::abort a)
 			{
+				thr_shared_arg.threadcountm.lock();
+				thr_shared_arg.threadcount--;
+				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
 				forceExit("Something went wrong at FCTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
 			}
 			catch (...)
 			{
+				thr_shared_arg.threadcountm.lock();
+				thr_shared_arg.threadcount--;
+				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
 				forceExit("Something went wrong at FCTHR!", "There was a unknown error! What a sad thing to happen!");
 			}
+
+			thr_shared_arg.threadcountm.lock();
+			thr_shared_arg.threadcount--;
+			thr_shared_arg.threadcountm.unlock();
+
+			thread_functional.am_i_running = false;
+			logg << L::SLF << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::ELF;
 		}
 
 
@@ -928,12 +956,12 @@ namespace LSW {
 
 		bool Manager::isOpen()
 		{
-			return (md != nullptr && thread_maindisplay.am_i_running && thread_collision.am_i_running && thread_kbmouse.am_i_running && thread_collision.am_i_running);
+			return (thr_shared_arg.threadcount > 0 && md != nullptr && thread_maindisplay.am_i_running && thread_collision.am_i_running && thread_kbmouse.am_i_running && thread_collision.am_i_running);
 		}
 
 		bool Manager::isRunning()
 		{
-			bool stillrunning = !thr_shared_arg.should_exit;
+			bool stillrunning = !thr_shared_arg.should_exit && thr_shared_arg.threadcount > 0;
 			if (!stillrunning) {
 				stop();
 			}
@@ -1060,6 +1088,8 @@ namespace LSW {
 
 		bool Manager::hasThreadPaused(const Constants::io__thread_ids o)
 		{
+			if (!isRunning()) throw Abort::abort(__FUNCSIG__, "Threads are dead, so pausing them is not possible (no sense)");
+
 			switch (o) {
 			case Constants::io__thread_ids::ALL:
 				return !thread_maindisplay.tasking && !thread_collision.tasking && !thread_kbmouse.tasking && !thread_functional.tasking;

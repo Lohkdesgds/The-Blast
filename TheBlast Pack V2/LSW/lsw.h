@@ -38,6 +38,7 @@ namespace LSW {
 
 				logg << L::SLF << fsr(__FUNCSIG__) << "Verifying updates..." << L::ELF;
 
+#ifndef _DEBUG
 				{
 					download d;
 					d.get(Constants::default_hash_check_url.c_str());
@@ -81,7 +82,14 @@ namespace LSW {
 					else {
 						logg << L::SLF << fsr(__FUNCSIG__) << "Failed checking hash :(" << L::ELF;
 					}
-				}
+			}
+
+#else
+				logg << L::SLF << fsr(__FUNCSIG__) << "Debug version detected. Not checking updates." << L::ELF;
+
+#endif // !_DEBUG
+
+				
 
 				logg << L::SLF << fsr(__FUNCSIG__) << "Initializing variables..." << L::ELF;
 				init = new all;
