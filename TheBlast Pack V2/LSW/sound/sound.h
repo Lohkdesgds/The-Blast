@@ -57,6 +57,7 @@ namespace LSW {
 			Mixer();
 
 			void volume(const double);
+			double getVolume();
 			void attachInstance(ALLEGRO_SAMPLE_INSTANCE*);
 		};
 				

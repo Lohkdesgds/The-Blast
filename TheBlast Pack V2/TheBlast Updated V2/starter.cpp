@@ -760,8 +760,9 @@ s->set(Constants::io__sprite_integer::LAYER, -10);
 			// OPTIONS PART
 			{ // -09
 				{
+					size_t counter = 0;
 					{
-						Sprite* s = sprites.create("BUTTON_OPTIONS_0");
+						Sprite* s = sprites.create("BUTTON_OPTIONS_" + counter);
 						s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
 						s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
 						s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
@@ -769,7 +770,7 @@ s->set(Constants::io__sprite_integer::LAYER, -10);
 						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
 						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
 						s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&__assist_g, &versatile_select]() {versatile_select(main_gamemodes::MENU); }); // [&modern,&__assist_g]()->void {modern = __assist_g; });
-						s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_0");
+						s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + counter);
 						s->set(Constants::io__sprite_boolean::DRAW, true);
 						s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
 						s->set(Constants::io__sprite_double::SCALEG, 0.16);
@@ -778,23 +779,23 @@ s->set(Constants::io__sprite_integer::LAYER, -10);
 						s->set(Constants::io__sprite_double::POSX, -0.7);
 						s->set(Constants::io__sprite_double::POSY, -0.8);
 
-						Text* t = texts.create("BUTTON_OPTIONS_0_T");
+						Text* t = texts.create("BUTTON_OPTIONS_" + counter + std::string("_T"));
 						t->set(Constants::io__text_string::FONT, "DEFAULT");
 						t->set(Constants::io__text_string::STRING, "Go back to Menu");
-						t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_0_T");
+						t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_" + counter + std::string("_T"));
 						t->set(Constants::io__text_boolean::SHOW, true);
 						t->set(Constants::io__text_double::SCALEG, 0.07);
 						t->set(Constants::io__text_double::SCALEX, 0.7);
 						t->set(Constants::io__text_double::POSY, -0.055);
-						t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_0");
+						t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_" + counter++);
 						t->set(Constants::io__text_integer::LAYER, -9);
-						t->set(Constants::io__text_double::UPDATETIME, 1.0 / 20);
+						t->set(Constants::io__text_double::UPDATETIME, 1.0 / 10);
 						t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
 						t->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, [](std::string& str) {std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
 					}
 
 					{
-						Sprite* s = sprites.create("BUTTON_OPTIONS_1");
+						Sprite* s = sprites.create("BUTTON_OPTIONS_" + counter);
 						s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
 						s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
 						s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
@@ -802,7 +803,7 @@ s->set(Constants::io__sprite_integer::LAYER, -10);
 						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
 						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
 						s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&keyb_kbf_osd_switch]() { keyb_kbf_osd_switch(); }); // [&modern,&__assist_g]()->void {modern = __assist_g; });
-						s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_1");
+						s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + counter);
 						s->set(Constants::io__sprite_boolean::DRAW, true);
 						s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
 						s->set(Constants::io__sprite_double::SCALEG, 0.16);
@@ -810,17 +811,17 @@ s->set(Constants::io__sprite_integer::LAYER, -10);
 						s->set(Constants::io__sprite_integer::LAYER, -9);
 						s->set(Constants::io__sprite_double::POSY, -0.4);
 
-						Text* t = texts.create("BUTTON_OPTIONS_1_T");
+						Text* t = texts.create("BUTTON_OPTIONS_" + counter + std::string("_T"));
 						t->set(Constants::io__text_string::FONT, "DEFAULT");
 						t->set(Constants::io__text_string::STRING, "Switch OSD");
-						t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_1_T");
+						t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_" + counter + std::string("_T"));
 						t->set(Constants::io__text_boolean::SHOW, true);
 						t->set(Constants::io__text_double::SCALEG, 0.07);
 						t->set(Constants::io__text_double::SCALEX, 0.7);
 						t->set(Constants::io__text_double::POSY, -0.055);
-						t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_1");
+						t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_" + counter++);
 						t->set(Constants::io__text_integer::LAYER, -9);
-						t->set(Constants::io__text_double::UPDATETIME, 1.0 / 20);
+						t->set(Constants::io__text_double::UPDATETIME, 1.0 / 10);
 						t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
 						t->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, [&conf](std::string& str) {
 							bool is_osd_enabled = true;
@@ -831,7 +832,7 @@ s->set(Constants::io__sprite_integer::LAYER, -10);
 					}
 
 					{
-						Sprite* s = sprites.create("BUTTON_OPTIONS_2");
+						Sprite* s = sprites.create("BUTTON_OPTIONS_" + counter);
 						s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
 						s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
 						s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
@@ -839,7 +840,7 @@ s->set(Constants::io__sprite_integer::LAYER, -10);
 						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
 						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
 						s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&keyb_fullscreen_window]() {keyb_fullscreen_window(); }); // [&modern,&__assist_g]()->void {modern = __assist_g; });
-						s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_2");
+						s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + counter);
 						s->set(Constants::io__sprite_boolean::DRAW, true);
 						s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
 						s->set(Constants::io__sprite_double::SCALEG, 0.16);
@@ -847,17 +848,17 @@ s->set(Constants::io__sprite_integer::LAYER, -10);
 						s->set(Constants::io__sprite_integer::LAYER, -9);
 						s->set(Constants::io__sprite_double::POSY, -0.2);
 
-						Text* t = texts.create("BUTTON_OPTIONS_2_T");
+						Text* t = texts.create("BUTTON_OPTIONS_" + counter + std::string("_T"));
 						t->set(Constants::io__text_string::FONT, "DEFAULT");
 						t->set(Constants::io__text_string::STRING, "Toggle Fullscreen");
-						t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_2_T");
+						t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_" + counter + std::string("_T"));
 						t->set(Constants::io__text_boolean::SHOW, true);
 						t->set(Constants::io__text_double::SCALEG, 0.07);
 						t->set(Constants::io__text_double::SCALEX, 0.7);
 						t->set(Constants::io__text_double::POSY, -0.055);
-						t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_2");
+						t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_" + counter++);
 						t->set(Constants::io__text_integer::LAYER, -9);
-						t->set(Constants::io__text_double::UPDATETIME, 1.0 / 20);
+						t->set(Constants::io__text_double::UPDATETIME, 1.0 / 10);
 						t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
 						t->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, [&conf, &__assist](std::string& str) {
 							bool is_osd_enabled = true;
@@ -865,6 +866,122 @@ s->set(Constants::io__sprite_integer::LAYER, -10);
 							str = std::string("Right now it is: ") + (__assist[1] ? "Fullscreen" : "Windowed");
 							});
 						t->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [](std::string& str) { str = "Switched!"; });
+					}
+
+					// progress bar lower part
+					{
+						Sprite* s = sprites.create("BUTTON_OPTIONS_" + counter);
+						s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
+						s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
+						s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + counter);
+						s->set(Constants::io__sprite_boolean::DRAW, true);
+						s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
+						s->set(Constants::io__sprite_double::SCALEG, 0.16);
+						s->set(Constants::io__sprite_double::SCALEX, 5.5);
+						s->set(Constants::io__sprite_integer::LAYER, -9);
+						s->set(Constants::io__sprite_double::POSY, 0.0);
+						s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&conf, &mixer]() {
+							double dx = 0;
+							conf.get(Constants::ro__db_mouse_double::MOUSE_X, dx);
+							if (dx > 0.342) dx = 0.342;
+							if (dx < -0.342) dx = -0.342;
+							double vol = (dx + 0.342) / (0.342 * 2.0);
+							mixer.volume(vol);
+							}, true); // [&modern,&__assist_g]()->void {modern = __assist_g; });
+						
+						Text* t = texts.create("BUTTON_OPTIONS_" + counter + std::string("_T"));
+						t->set(Constants::io__text_string::FONT, "DEFAULT");
+						t->set(Constants::io__text_string::STRING, "Volume: %volume_perc%");
+						t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_" + counter + std::string("_T"));
+						t->set(Constants::io__text_boolean::SHOW, true);
+						t->set(Constants::io__text_double::SCALEG, 0.07);
+						t->set(Constants::io__text_double::SCALEX, 0.7);
+						t->set(Constants::io__text_double::POSY, -0.055);
+						t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_" + counter++);
+						t->set(Constants::io__text_integer::LAYER, -9);
+						t->set(Constants::io__text_double::UPDATETIME, 1.0 / 10);
+						t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
+						t->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [t, &mixer](std::string& str) { 
+							str = "%volume_perc%";
+							t->set(Constants::io__text_double::POSX, mixer.getVolume()* (0.342 * 2.0) - 0.342);
+							});
+						t->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, [t](std::string& str) {
+							t->set(Constants::io__text_double::POSX, 0.0);
+							});
+						t->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, [t](std::string& str) {
+							t->set(Constants::io__text_double::POSX, 0.0);
+							});
+
+					}
+
+					// progress bar upper part
+					{
+						Sprite* s = sprites.create("BUTTON_OPTIONS_" + counter);											   
+						s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
+						s->hook(Constants::io__sprite_tie_func_to_state::WHEN_DRAWING, [s, &mixer]() {	s->set(Constants::io__sprite_double::POSX, mixer.getVolume()* (0.342 * 2.0) - 0.342); }); // [&modern,&__assist_g]()->void {modern = __assist_g; });
+						s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + counter++);
+						s->set(Constants::io__sprite_boolean::DRAW, true);
+						s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
+						s->set(Constants::io__sprite_double::SCALEG, 0.16);
+						s->set(Constants::io__sprite_double::SCALEX, 1.2);
+						s->set(Constants::io__sprite_integer::LAYER, -9);
+						s->set(Constants::io__sprite_double::POSY, 0.0);
+						s->set(Constants::io__sprite_double::POSX, mixer.getVolume() * (0.342 * 2.0) - 0.342);
+					}
+
+
+
+					{
+						ALLEGRO_BITMAP* lmao = textures.customLoad("BUTTON_OPTIONS_IMG_" + counter, [](ALLEGRO_BITMAP*& b)->bool {return (b = al_create_bitmap(720, 480));});
+						{
+							ALLEGRO_BITMAP* trg = al_get_target_bitmap();
+							int xx = al_get_bitmap_width(lmao);
+							int yy = al_get_bitmap_height(lmao);
+							al_set_target_bitmap(lmao);
+							al_clear_to_color(al_map_rgba_f(0, 0.13f, 0.2f, 0.2f));
+							al_draw_rounded_rectangle(15,15,xx - 15, yy - 15, 20,20, al_map_rgba_f(0, 0.3f, 0.3f, 0.3f), 27);
+							al_set_target_bitmap(trg);
+						}
+						Sprite* s = sprites.create("BUTTON_OPTIONS_" + counter);
+						s->set(Constants::io__sprite_string::ADD, "BUTTON_OPTIONS_IMG_" + counter);
+						s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + counter);
+						s->set(Constants::io__sprite_boolean::DRAW, true);
+						s->set(Constants::io__sprite_collision_mode::COLLISION_TRANSPARENT);
+						s->set(Constants::io__sprite_double::SCALEG, 1.2);
+						s->set(Constants::io__sprite_double::SCALEY, 0.6);
+						s->set(Constants::io__sprite_boolean::SHOWBOX, false);
+						s->set(Constants::io__sprite_boolean::SHOWDOT, false);
+						s->set(Constants::io__sprite_integer::LAYER, -9);
+						s->set(Constants::io__sprite_double::POSY, 0.5);
+
+						std::string strings[] = {
+							"The Blast version %version%",
+							"LSW 2019",
+							"- - - - - - - - - - - - - -",
+							"Thanks for downloading the game!",
+							"- - - - - - - - - - - - - -",
+							"Beta testers:",
+							"Lohk, Lupspie, Lyvon",
+							". . .",
+							". ."
+						};
+
+						for(int u = 0; u < 9; u++)
+						{
+							Text* t = texts.create("BUTTON_OPTIONS_" + counter + std::string("_T_") + std::to_string(u));
+							t->set(Constants::io__text_string::FONT, "DEFAULT");
+							t->set(Constants::io__text_string::STRING, strings[u]);
+							t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_" + counter + std::string("_T"));
+							t->set(Constants::io__text_boolean::SHOW, true);
+							t->set(Constants::io__text_double::SCALEG, 0.069);
+							t->set(Constants::io__text_double::SCALEX, 0.7);
+							t->set(Constants::io__text_double::POSY, - 0.316 + 0.0671 * u/*-0.055*/);
+							t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_" + counter);
+							t->set(Constants::io__text_integer::LAYER, -9);
+							t->set(Constants::io__text_double::UPDATETIME, 1.0 / 2);
+							t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
+						}
+						counter++;
 					}
 				}
 			}
@@ -911,7 +1028,7 @@ s->set(Constants::io__sprite_integer::LAYER, -10);
 					t->set(Constants::io__text_double::POSY, -0.055);
 					t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_GAMING_3");
 					t->set(Constants::io__text_integer::LAYER, -1);
-					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 20);
+					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 2);
 					t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
 					t->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, [](std::string& str) {std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
 				}
@@ -942,7 +1059,7 @@ s->set(Constants::io__sprite_integer::LAYER, -10);
 					t->set(Constants::io__text_double::POSY, -0.055);
 					t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_GAMING_4");
 					t->set(Constants::io__text_integer::LAYER, -1);
-					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 20);
+					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 2);
 					t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
 					t->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, [](std::string& str) {std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
 				}
@@ -985,7 +1102,7 @@ s->set(Constants::io__sprite_integer::LAYER, -10);
 					t->set(Constants::io__text_double::POSY, -0.97);
 					t->set(Constants::io__text_double::POSX, -1.0);
 					t->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
-					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 12);
+					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 30);
 					t->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
 					t->set(Constants::io__text_integer::LAYER, 100);
 				}

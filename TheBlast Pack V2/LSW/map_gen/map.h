@@ -10,7 +10,7 @@
 namespace LSW {
 	namespace v4 {
 
-		enum class blocks { BLOCK, EMPTY, TRAVELLED };
+		enum class blocks { BLOCK, EMPTY, TRAVELLED, EXIT, NOTEXIT, BRICKING_0, BRICKING_1, BRICKING_2, BRICKED };
 
 		class World {
 			int* wrld = nullptr;

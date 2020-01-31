@@ -675,7 +675,8 @@ namespace LSW {
 							data.new_state = Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK;
 						}
 						else {
-							data.new_state = Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON;
+							if (data.new_state == Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK) data.new_state = Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_UNCLICK;
+							else data.new_state = Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON;
 						}
 					}
 				}
@@ -720,9 +721,12 @@ namespace LSW {
 			bmps.reset();
 		}
 
-		void Sprite::hook(const Constants::io__sprite_tie_func_to_state w, std::function<void(void)> f)
+		void Sprite::hook(const Constants::io__sprite_tie_func_to_state w, std::function<void(void)> f, const bool looping)
 		{
-			if (w != Constants::io__sprite_tie_func_to_state::size) data.function_pair[+w] = f;
+			if (w != Constants::io__sprite_tie_func_to_state::size) {
+				data.function_pair[+w] = f;
+				data.function_pair_looping[+w] = looping;
+			}
 		}
 
 		void Sprite::unhook(const Constants::io__sprite_tie_func_to_state w)
@@ -1255,6 +1259,7 @@ namespace LSW {
 
 		void Sprite::collideWith(const int is_layer, Sprite* const mf)
 		{
+			if (!this) throw Abort::warn(__FUNCSIG__, "Unexpected null pointer");
 			//gfile logg;
 			std::string friendsname;
 
@@ -1375,9 +1380,12 @@ namespace LSW {
 		{
 			psf.set(Constants::io__camera_boolean::READONLY_NOW, false);
 
-			if (data.last_state != data.new_state && data.new_state != Constants::io__sprite_tie_func_to_state::size) {
-				__debug_s += "CF_STATE;";
-				if (data.function_pair[+data.new_state]) data.function_pair[+data.new_state]();
+			if (data.new_state != Constants::io__sprite_tie_func_to_state::size) {
+				if (data.last_state != data.new_state) {
+					__debug_s += "CF_STATE;";
+					if (data.function_pair[+data.new_state]) data.function_pair[+data.new_state]();
+				}
+				else if (data.function_pair_looping[+data.new_state]) data.function_pair[+data.new_state](); // run anyway (if loop)
 			}
 			data.last_state = data.new_state;
 
@@ -1798,15 +1806,7 @@ namespace LSW {
 
 		void Text::_draw(const double targ_draw_xy[2])
 		{
-			std::string tempstr = data.str[+Constants::io__text_string::PROCESSED_STRING];
-
-			if (follow) {
-				Constants::io__sprite_tie_func_to_state st;
-				follow->get(Constants::ro__sprite_state::STATE, st);
-				if (data.pair_tied[+st]) data.pair_tied[+st](tempstr);
-			}
-
-			al_draw_text(data.font, data.c, 1.0 * targ_draw_xy[0] / (data.d[+Constants::io__text_double::SCALEG]), 1.0 * targ_draw_xy[1] / (data.d[+Constants::io__text_double::SCALEG]), data.i[+Constants::io__text_integer::MODE], tempstr.c_str());
+			al_draw_text(data.font, data.c, 1.0 * targ_draw_xy[0] / (data.d[+Constants::io__text_double::SCALEG]), 1.0 * targ_draw_xy[1] / (data.d[+Constants::io__text_double::SCALEG]), data.i[+Constants::io__text_integer::MODE], data.str[+Constants::io__text_string::PROCESSED_STRING].c_str());
 		}
 		void Text::_interpretTags(std::string& s)
 		{
@@ -2160,6 +2160,18 @@ namespace LSW {
 							}
 							else sprintf_s(tempstr_c, "NULL");
 						break;
+						case +Constants::tags_e::T_VOLUME:
+						{
+							Mixer mixer;
+							sprintf_s(tempstr_c, "%.0lf%c", mixer.getVolume() * 100.0, '%');
+						}
+						break;
+						case +Constants::tags_e::T_VERSION:
+						{
+							Mixer mixer;
+							sprintf_s(tempstr_c, "%s", Constants::version_app.c_str());
+						}
+						break;
 						}
 
 
@@ -2335,9 +2347,16 @@ namespace LSW {
 				
 				if (al_get_time() - data.d[+Constants::io__text_double::LAST_INTERPRET] > data.d[+Constants::io__text_double::UPDATETIME] * 3) data.d[+Constants::io__text_double::LAST_INTERPRET] = al_get_time();
 				else data.d[+Constants::io__text_double::LAST_INTERPRET] += data.d[+Constants::io__text_double::UPDATETIME];
+
+				std::string working_now = data.str[+Constants::io__text_string::STRING];
+				if (follow) {
+					Constants::io__sprite_tie_func_to_state st;
+					follow->get(Constants::ro__sprite_state::STATE, st);
+					if (data.pair_tied[+st]) data.pair_tied[+st](working_now);
+				}
 				
 				std::string b4 = data.str[+Constants::io__text_string::PROCESSED_STRING];
-				data.str[+Constants::io__text_string::PROCESSED_STRING] = data.str[+Constants::io__text_string::STRING];
+				data.str[+Constants::io__text_string::PROCESSED_STRING] = working_now;
 				_interpretTags(data.str[+Constants::io__text_string::PROCESSED_STRING]);
 			}
 

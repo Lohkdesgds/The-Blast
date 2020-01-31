@@ -35,7 +35,14 @@ namespace LSW {
 
 		void Mixer::volume(const double v)
 		{
+			Database conf;
 			al_set_mixer_gain(control.mixing, v);
+			conf.set(Constants::io__conf_double::LAST_VOLUME, v);
+		}
+
+		double Mixer::getVolume()
+		{
+			return al_get_mixer_gain(control.mixing);
 		}
 
 		void Mixer::attachInstance(ALLEGRO_SAMPLE_INSTANCE* si)
