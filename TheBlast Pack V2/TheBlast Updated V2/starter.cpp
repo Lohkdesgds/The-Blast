@@ -8,8 +8,8 @@
 using namespace LSW::v4;
 
 
-enum class main_gamemodes { HASNT_STARTED_YET=-2, LOADING, MENU, OPTIONS, PAUSE, GAMING };
-enum class my_custom_funcs { LOADING_ANIMATION/*at: setup_animation_functional (starter.cpp)*/,BUBBLE_TASK/*at: set_consol_mainthread_start*/,UPDATE_CAMERA };
+enum class main_gamemodes { HASNT_STARTED_YET=-2, LOADING, MENU, OPTIONS, PAUSE, GAMING, MULTIPLAYER };
+enum class my_custom_funcs { LOADING_ANIMATION/*at: setup_animation_functional (starter.cpp)*/,BUBBLE_TASK/*at: set_consol_mainthread_start*/ };
 
 int main(int argc, const char* argv[])
 {
@@ -25,7 +25,9 @@ int main(int argc, const char* argv[])
 
 		// used by lambdas
 		main_gamemodes modern = main_gamemodes::HASNT_STARTED_YET;
-		bool assist[3] = { false, false, false }; // 1: LOADING_ANIMATION, 2: FULLSCREEN/WINDOW TOGGLE, 3: GAMEBOXMAIN Sprite down below on loop
+		bool __assist[3] = { false, false, false }; // 1: LOADING_ANIMATION, 2: FULLSCREEN/WINDOW TOGGLE, 3: GAMEBOXMAIN Sprite down below on loop
+		main_gamemodes __assist_g = modern;
+		double __assist_t_button = 0;
 
 		// this has to be like the first one
 		gfile logg;
@@ -43,10 +45,12 @@ int main(int argc, const char* argv[])
 		Texts texts;
 		Tracks tracks;
 		Camera gcam;
-		Bubbles bubble;
 		Mixer mixer;
 		Manager consol;
 		Database conf;
+
+		BubblesFX bubble;
+		LiningFX lines;
 
 		logg << L::SLF << fsr(__FUNCSIG__) << "Setting up dynamic functions..." << L::ELF;
 
@@ -58,7 +62,7 @@ int main(int argc, const char* argv[])
 		{
 			int __s;
 			conf.get(Constants::io__conf_integer::SCREEN_FLAGS, __s, 0);
-			assist[1] = (__s & ALLEGRO_FULLSCREEN_WINDOW) || (__s & ALLEGRO_FULLSCREEN);
+			__assist[1] = (__s & ALLEGRO_FULLSCREEN_WINDOW) || (__s & ALLEGRO_FULLSCREEN);
 		}
 
 		// functional-only lambdas
@@ -66,11 +70,19 @@ int main(int argc, const char* argv[])
 			gcam.apply(+modern);
 			return 0;
 		};
-		const std::function< int(void)> bubble_think_task				= [&bubble]()->int {
-			bubble.think(); return 0; 
+		const std::function< int(void)> bubble_think_task				= [&bubble, &gcam]()->int {
+			auto cpy = gcam.get();
+			for (auto& o : cpy) if (bubble.think(o)) return 0;
+			return 0;
 		};
-		const std::function< int(void)> bubble_draw_task				= [&bubble]()->int {
-			bubble.draw(); 
+		const std::function< int(void)> fxs_draw_task					= [&bubble, &lines, &gcam]()->int {
+			auto cpy = gcam.get();
+			bool hasdone[2] = { false,false };
+			for (auto& o : cpy) {
+				if (!hasdone[0]) hasdone[0] |= bubble.draw(o);
+				if (!hasdone[1]) hasdone[1] |= lines.draw(o);
+				if (hasdone[0] && hasdone[1]) break;
+			}
 			return 0;
 		};
 
@@ -78,7 +90,7 @@ int main(int argc, const char* argv[])
 		const std::function<void(void)> set_consol_mainthread_end		= [&textures, &sprites, &texts, &fonts]() {
 			sprites.clear(); texts.clear(); fonts.clear(); textures.clear();
 		};
-		const std::function<void(void)> set_consol_mainthread_start		= [&bubble_think_task, &bubble_draw_task, &bubble, & consol]() {
+		const std::function<void(void)> set_consol_mainthread_start		= [&bubble_think_task, &bubble, &lines, & consol]() {
 
 			const int default_bitmap_size = 4096; // 4096x4096
 
@@ -98,8 +110,8 @@ int main(int argc, const char* argv[])
 
 			__g_sys.setInterface();
 
-			bubble.init(200, -1, -99);
-			consol.setSimpleTask(Constants::io__thread_ids::DRAWING, Constants::io__threads_taskid::LOOP, bubble_draw_task);
+			bubble.init(200, -1, -10001); // MENU
+			lines.init(-10002); // PAUSE
 			consol.addCustomTask(bubble_think_task, +my_custom_funcs::BUBBLE_TASK, 1.0 / 24);
 
 
@@ -164,7 +176,7 @@ int main(int argc, const char* argv[])
 			textures.customLoad("BAR_OFF", [&atlas_wild, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512 * prop[0], 1408 * prop[1], 1024 * prop[0], 128 * prop[1])); });
 			textures.customLoad("BAR_ON", [&atlas_wild, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512 * prop[0], 1280 * prop[1], 1024 * prop[0], 128 * prop[1])); });
 			textures.customLoad("MOUSE", [&atlas_wild, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 1536 * prop[0], 1024 * prop[1], 256 * prop[0], 256 * prop[1])); });
-			textures.customLoad("MAIN_LOGO", [&atlas_wild, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512 * prop[0], 1024 * prop[1], 1024 * prop[0], 512 * prop[1])); });
+			textures.customLoad("MAIN_LOGO", [&atlas_wild, &prop](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_sub_bitmap(atlas_wild, 512 * prop[0], 1024 * prop[1], 1024 * prop[0], 256 * prop[1])); });
 
 
 			draw_simple_bar(0.85, al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Loading blocks...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
@@ -206,23 +218,23 @@ int main(int argc, const char* argv[])
 		};
 
 		// button related (also quick function call)
-		const std::function<void(void)> setup_animation_functional		= [&consol, &modern, &sprites, &assist, &logg]()->void {
+		const std::function<void(void)> setup_animation_functional		= [&consol, &modern, &sprites, &__assist, &logg]()->void {
 			logg << L::SL << fsr(__FUNCSIG__) << "Setting up LOADING_ANIM animation" << L::EL;
 			consol.addCustomTask([&]()->int {
 				//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "(lambda animation task)" << L::EL;
 				Sprite* s = nullptr; if (!sprites.get("LOADING_ANIM", s)) return 0; // if running while program is being closed it can hurt
 				if (modern != main_gamemodes::LOADING) {
-					assist[0] = false;
+					__assist[0] = false;
 					modern = main_gamemodes::LOADING;
 					logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Resetting LOADING_ANIM animation to then run LOADING animation" << L::EL;
 				}
-				else if (s->isEq(Constants::io__sprite_boolean::IS_IT_ON_LAST_FRAME, true) && !assist[0])
+				else if (s->isEq(Constants::io__sprite_boolean::IS_IT_ON_LAST_FRAME, true) && !__assist[0])
 				{
 					logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Done doing LOADING animation" << L::EL;
-					assist[0] = true;
+					__assist[0] = true;
 					return -40; // 40 cycles because it updates 40 per sec //Sleep(2000);
 				}
-				else if (assist[0]) {
+				else if (__assist[0]) {
 					modern = main_gamemodes::MENU;
 					s->set(Constants::io__sprite_double::ANIMATION_FPS, 0);
 					logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Finally removed itself" << L::EL;
@@ -232,16 +244,23 @@ int main(int argc, const char* argv[])
 				}, +my_custom_funcs::LOADING_ANIMATION, 1.0 / 20);
 			logg << L::SL << fsr(__FUNCSIG__) << "Has set LOADING_ANIM to run" << L::EL;
 		};
-		const std::function<void(void)> skip_animation_functional		= [&assist] {
-			assist[0] = true;
+		const std::function<void(void)> skip_animation_functional		= [&__assist] {
+			__assist[0] = true;
 		};
 		const std::function<void(void)> exit_game						= [&consol] {
 			consol.shouldStop();
 		};
 
+		const std::function<void(const main_gamemodes)> versatile_select= [&modern, &__assist_g, &__assist_t_button](const main_gamemodes gt) {
+			if (al_get_time() - __assist_t_button > Constants::default_delay_click) {
+				modern = gt;
+				__assist_t_button = al_get_time();
+			}
+		};
+
 		// keybinds
-		const std::function<void(void)> keyb_fullscreen_window			= [&consol, &assist]() {
-			consol.sendEvent(Constants::ro__my_events::THRDRW_GOT_FORCED_RESIZE, (intptr_t)(assist[1] = !assist[1]));
+		const std::function<void(void)> keyb_fullscreen_window			= [&consol, &__assist]() {
+			consol.sendEvent(Constants::ro__my_events::THRDRW_GOT_FORCED_RESIZE, (intptr_t)(__assist[1] = !__assist[1]));
 		};
 		const int						keyb_fullscreen_window_key		= ALLEGRO_KEY_F11;
 		const std::function<void(void)> keyb_printscreen				= [&consol]() {
@@ -307,6 +326,28 @@ int main(int argc, const char* argv[])
 			}
 		};
 
+		const std::function<void(void)> keyb_kbf_pause_switch			= [&modern, &__assist_g]() {
+			
+			if (modern == main_gamemodes::GAMING || modern == main_gamemodes::MULTIPLAYER) {
+				__assist_g = modern;
+				modern = main_gamemodes::PAUSE;
+			}
+			else if (modern == main_gamemodes::PAUSE) {
+				modern = __assist_g;
+			}
+		};
+
+		const std::function<void(void)> keyb_kbf_osd_switch             = [&texts, &conf](){
+			auto lit = texts.getList([](const std::string a)->bool {return a.find("osd_stuff") == 0; });
+			
+			if (lit.size() > 0) {
+				bool def = false;
+				lit[0]->get(Constants::io__text_boolean::SHOW, def);
+				for (auto& i : lit) i->set(Constants::io__text_boolean::SHOW, !def);
+				conf.set(Constants::io__conf_boolean::WAS_OSD_ON, !def);
+			}
+		};
+
 		const int						keyb_kbf_go_north_key			= ALLEGRO_KEY_W;
 		const int						keyb_kbf_go_south_key			= ALLEGRO_KEY_S;
 		const int						keyb_kbf_go_west_key			= ALLEGRO_KEY_A;
@@ -316,6 +357,10 @@ int main(int argc, const char* argv[])
 		const int						keyb_kbf_go_south_key_a			= ALLEGRO_KEY_DOWN;
 		const int						keyb_kbf_go_west_key_a			= ALLEGRO_KEY_LEFT;
 		const int						keyb_kbf_go_east_key_a			= ALLEGRO_KEY_RIGHT;
+
+		const int						keyb_kbf_pause_switch_key		= ALLEGRO_KEY_ESCAPE;
+
+		const int						keyb_kbf_osd_switch_key		    = ALLEGRO_KEY_F3;
 
 		
 		logg << L::SLF << fsr(__FUNCSIG__) << "Setting up load/unload base..." << L::ELF;
@@ -353,13 +398,17 @@ int main(int argc, const char* argv[])
 			conf.set(Constants::io__db_functional_opt::KEYBOARD_LEFT, keyb_kbf_go_south_key_a, keyb_kbf_go_reset_south);
 			conf.set(Constants::io__db_functional_opt::KEYBOARD_LEFT, keyb_kbf_go_west_key_a, keyb_kbf_go_reset_west);
 			conf.set(Constants::io__db_functional_opt::KEYBOARD_LEFT, keyb_kbf_go_east_key_a, keyb_kbf_go_reset_east);
+
+			conf.set(Constants::io__db_functional_opt::KEYBOARD_KEY, keyb_kbf_pause_switch_key, keyb_kbf_pause_switch);
+
+			conf.set(Constants::io__db_functional_opt::KEYBOARD_KEY, keyb_kbf_osd_switch_key, keyb_kbf_osd_switch);
 		}
 
 
 		consol.setSimpleTask(Constants::io__thread_ids::DRAWING, Constants::io__threads_taskid::END, set_consol_mainthread_end);
 		consol.setSimpleTask(Constants::io__thread_ids::DRAWING, Constants::io__threads_taskid::START, set_consol_mainthread_start);
-
-		consol.addCustomTask(reapply_cam_settings, +my_custom_funcs::UPDATE_CAMERA, 1.0 / 20);
+		consol.setSimpleTask(Constants::io__thread_ids::DRAWING, Constants::io__threads_taskid::LOOP, [&reapply_cam_settings, &fxs_draw_task]() {reapply_cam_settings(); fxs_draw_task(); });
+		//consol.addCustomTask(reapply_cam_settings, +my_custom_funcs::UPDATE_CAMERA, 1.0 / 20);
 
 
 
@@ -427,6 +476,7 @@ int main(int argc, const char* argv[])
 				// menu
 				camera_preset cp;
 				cp.setInternalID("Menu preset");
+				cp.setLayer(-10001, true); // bubbles
 				cp.setLayer(-10, true);
 				cp.setLayer(-99, true); // bubble animation
 				cp.setLayer(99, true); // mouse
@@ -443,6 +493,7 @@ int main(int argc, const char* argv[])
 				// options
 				camera_preset cp;
 				cp.setInternalID("Options preset");
+				cp.setLayer(-10001, true); // bubbles
 				cp.setLayer(-9, true);
 				cp.setLayer(99, true); // mouse
 				cp.setLayer(-99, true); // bubble animation
@@ -459,6 +510,7 @@ int main(int argc, const char* argv[])
 				// pause
 				camera_preset cp;
 				cp.setInternalID("Pause preset");
+				cp.setLayer(-10002, true); // lines
 				cp.setLayer(-1, true);
 				cp.setLayer(99, true); // mouse
 				cp.setLayer(-98, true); // lines animation
@@ -475,6 +527,24 @@ int main(int argc, const char* argv[])
 				// game
 				camera_preset cp;
 				cp.setInternalID("Gaming preset (dynamic)");
+				cp.setLayer(0, true);
+				cp.setLayer(1, true);
+				cp.setLayer(100, true); // DEBUG LINE
+				cp.set(Constants::io__camera_boolean::RESPECT_LIMITS, true);
+				cp.set(Constants::io__camera_double::LIMIT_MIN_X, -1.05);
+				cp.set(Constants::io__camera_double::LIMIT_MIN_Y, -1.05);
+				cp.set(Constants::io__camera_double::LIMIT_MAX_X, 1.05);
+				cp.set(Constants::io__camera_double::LIMIT_MAX_Y, 1.05);
+				//cp.set(Constants::io__camera_double::SLIPPERINESS, 1.0);
+				//cp.set(Constants::io__camera_double::SCALE_G, 0.95);
+				//cp.set(Constants::io__camera_double::SCALE_X, 1.0175);
+				cp.set(Constants::io__camera_boolean::READONLY_NOW, true);
+				gcam.set(cp, +main_gamemodes::GAMING);
+			}
+			{
+				// game
+				camera_preset cp;
+				cp.setInternalID("Multiplayer preset (dynamic)");
 				cp.setLayer(0, true);
 				cp.setLayer(1, true);
 				cp.setLayer(100, true); // DEBUG LINE
@@ -533,28 +603,32 @@ int main(int argc, const char* argv[])
 				s->set(Constants::io__sprite_integer::LAYER, 0);
 			}*/
 
+
+			// LOADING PART
 			{
-				Sprite* s = sprites.create("LOADING_ANIM");
-				s->set(Constants::io__sprite_string_vector::ADDMULTIPLE, Tools::genStrFormat("LOGO_##", 85));
-				s->set(Constants::io__sprite_string::ID, "LOADING_ANIM");
-				s->set(Constants::io__sprite_boolean::DRAW, true);
-				s->set(Constants::io__sprite_double::SCALEG, 0.4);
-				s->set(Constants::io__sprite_double::SCALEX, 1.4);
-				s->set(Constants::io__sprite_integer::LAYER, -50);
-				s->set(Constants::io__sprite_double::ANIMATION_FPS, 1.0 / 20);
-				s->set(Constants::io__sprite_boolean::LOOPFRAMES, false);
-				s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-				s->set(Constants::io__sprite_boolean::ZERO_RESETS_POSITION_INSTEAD_OF_FREEZING, true);
-				//s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&modern]()->void {modern = main_gamemodes::MENU; });
-			}
-			{
-				Sprite* s = sprites.create("LOADING_SKIP_ALL_SCREEN");
-				s->set(Constants::io__sprite_string::ID, "LOADING_SKIP_ALL_SCREEN");
-				s->set(Constants::io__sprite_boolean::DRAW, false);
-				s->set(Constants::io__sprite_double::SCALEG, 2.0);
-				s->set(Constants::io__sprite_integer::LAYER, -50);
-				s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-				s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, skip_animation_functional);
+				{
+					Sprite* s = sprites.create("LOADING_ANIM");
+					s->set(Constants::io__sprite_string_vector::ADDMULTIPLE, Tools::genStrFormat("LOGO_##", 85));
+					s->set(Constants::io__sprite_string::ID, "LOADING_ANIM");
+					s->set(Constants::io__sprite_boolean::DRAW, true);
+					s->set(Constants::io__sprite_double::SCALEG, 0.4);
+					s->set(Constants::io__sprite_double::SCALEX, 1.4);
+					s->set(Constants::io__sprite_integer::LAYER, -50);
+					s->set(Constants::io__sprite_double::ANIMATION_FPS, 1.0 / 20);
+					s->set(Constants::io__sprite_boolean::LOOPFRAMES, false);
+					s->set(Constants::io__sprite_collision_mode::COLLISION_TRANSPARENT);
+					s->set(Constants::io__sprite_boolean::ZERO_RESETS_POSITION_INSTEAD_OF_FREEZING, true);
+					//s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&modern]()->void {modern = main_gamemodes::MENU; });
+				}
+				{
+					Sprite* s = sprites.create("LOADING_SKIP_ALL_SCREEN");
+					s->set(Constants::io__sprite_string::ID, "LOADING_SKIP_ALL_SCREEN");
+					s->set(Constants::io__sprite_boolean::DRAW, false);
+					s->set(Constants::io__sprite_double::SCALEG, 2.0);
+					s->set(Constants::io__sprite_integer::LAYER, -50);
+					s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
+					s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, skip_animation_functional);
+				}
 			}
 
 			/*
@@ -574,7 +648,21 @@ int main(int argc, const char* argv[])
 			all:		 99 (mouse)
 			*/
 
+			// MENU PART
 			{
+				{
+					Sprite* s = sprites.create("MENU_LOGO");
+					s->set(Constants::io__sprite_string::ADD, "MAIN_LOGO");
+					s->set(Constants::io__sprite_string::ID, "MENU_LOGO");
+					s->set(Constants::io__sprite_boolean::DRAW, true);
+					s->set(Constants::io__sprite_collision_mode::COLLISION_TRANSPARENT);
+					s->set(Constants::io__sprite_double::SCALEG, 1.20);
+					s->set(Constants::io__sprite_double::SCALEY, 0.5);
+s->set(Constants::io__sprite_double::POSY, -0.55);
+s->set(Constants::io__sprite_double::ANIMATION_FPS, 1.0 / 24);
+s->set(Constants::io__sprite_integer::LAYER, -10);
+				}
+				{
 				Sprite* s = sprites.create("BUTTON_MENU_0");
 				s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
 				s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
@@ -582,68 +670,8 @@ int main(int argc, const char* argv[])
 				s->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
 				s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
 				s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
-				s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&modern]()->void {modern = main_gamemodes::GAMING; });
+				s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&versatile_select]() {versatile_select(main_gamemodes::GAMING); }); // [&modern]()->void {modern = main_gamemodes::GAMING; });
 				s->set(Constants::io__sprite_string::ID, "BUTTON_MENU_0");
-				s->set(Constants::io__sprite_boolean::DRAW, true);
-				s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-				s->set(Constants::io__sprite_double::SCALEG, 0.18);
-				s->set(Constants::io__sprite_double::SCALEX, 5.5);
-				s->set(Constants::io__sprite_double::POSY, -0.35);
-				s->set(Constants::io__sprite_integer::LAYER, -10);
-
-				Text* t = texts.create("BUTTON_MENU_0_T");
-				t->set(Constants::io__text_string::FONT, "DEFAULT");
-				t->set(Constants::io__text_string::STRING, "GO GAMING | %sprite_state%");
-				t->set(Constants::io__text_string::ID, "BUTTON_MENU_0_T");
-				t->set(Constants::io__text_boolean::SHOW, true);
-				t->set(Constants::io__text_double::SCALEG, 0.08);
-				t->set(Constants::io__text_double::SCALEX, 0.7);
-				t->set(Constants::io__text_double::POSY, -0.060);
-				t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_MENU_0");
-				t->set(Constants::io__text_integer::LAYER, -10);
-				t->set(Constants::io__text_double::UPDATETIME, 1.0 / 20);
-				t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
-			}
-			{
-				Sprite* s = sprites.create("BUTTON_MENU_1");
-				s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
-				s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
-				s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-				s->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
-				s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
-				s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
-				s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, setup_animation_functional);
-				s->set(Constants::io__sprite_string::ID, "BUTTON_MENU_1");
-				s->set(Constants::io__sprite_boolean::DRAW, true);
-				s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-				s->set(Constants::io__sprite_double::SCALEG, 0.18);
-				s->set(Constants::io__sprite_double::SCALEX, 5.5);
-				s->set(Constants::io__sprite_double::POSY, -0.05);
-				s->set(Constants::io__sprite_integer::LAYER, -10);
-
-				Text* t = texts.create("BUTTON_MENU_1_T");
-				t->set(Constants::io__text_string::FONT, "DEFAULT");
-				t->set(Constants::io__text_string::STRING, "GO LOADING | %sprite_state%");
-				t->set(Constants::io__text_string::ID, "BUTTON_MENU_1_T");
-				t->set(Constants::io__text_boolean::SHOW, true);
-				t->set(Constants::io__text_double::SCALEG, 0.08);
-				t->set(Constants::io__text_double::SCALEX, 0.7);
-				t->set(Constants::io__text_double::POSY, -0.060);
-				t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_MENU_1");
-				t->set(Constants::io__text_integer::LAYER, -10);
-				t->set(Constants::io__text_double::UPDATETIME, 1.0 / 20);
-				t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
-			}
-			{
-				Sprite* s = sprites.create("BUTTON_MENU_2");
-				s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
-				s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
-				s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-				s->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
-				s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
-				s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
-				s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, exit_game);
-				s->set(Constants::io__sprite_string::ID, "BUTTON_MENU_2");
 				s->set(Constants::io__sprite_boolean::DRAW, true);
 				s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
 				s->set(Constants::io__sprite_double::SCALEG, 0.18);
@@ -651,49 +679,273 @@ int main(int argc, const char* argv[])
 				s->set(Constants::io__sprite_double::POSY, 0.25);
 				s->set(Constants::io__sprite_integer::LAYER, -10);
 
-				Text* t = texts.create("BUTTON_MENU_2_T");
+				Text* t = texts.create("BUTTON_MENU_0_T");
 				t->set(Constants::io__text_string::FONT, "DEFAULT");
-				t->set(Constants::io__text_string::STRING, "EXIT | %sprite_state%");
-				t->set(Constants::io__text_string::ID, "BUTTON_MENU_2_T");
+				t->set(Constants::io__text_string::STRING, "Start Game");
+				t->set(Constants::io__text_string::ID, "BUTTON_MENU_0_T");
 				t->set(Constants::io__text_boolean::SHOW, true);
 				t->set(Constants::io__text_double::SCALEG, 0.08);
 				t->set(Constants::io__text_double::SCALEX, 0.7);
-				t->set(Constants::io__text_double::POSY, -0.060);
-				t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_MENU_2");
+				t->set(Constants::io__text_double::POSY, -0.055);
+				t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_MENU_0");
 				t->set(Constants::io__text_integer::LAYER, -10);
 				t->set(Constants::io__text_double::UPDATETIME, 1.0 / 20);
 				t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
-			}
-			{
-				Sprite* s = sprites.create("BUTTON_GAMING_0");
-				s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
-				s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
-				s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-				s->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
-				s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
-				s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
-				s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&modern]()->void {modern = main_gamemodes::MENU; });
-				s->set(Constants::io__sprite_string::ID, "BUTTON_GAMING_0");
-				s->set(Constants::io__sprite_boolean::DRAW, true);
-				s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-				s->set(Constants::io__sprite_double::SCALEG, 0.14);
-				s->set(Constants::io__sprite_double::SCALEX, 5.5);
-				s->set(Constants::io__sprite_double::POSY, -0.9);
-				s->set(Constants::io__sprite_double::POSX, 0.45);
-				s->set(Constants::io__sprite_integer::LAYER, 1);
+				t->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, [](std::string& str) {std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
+				}
+				{
+					Sprite* s = sprites.create("BUTTON_MENU_1");
+					s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
+					s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
+					s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
+					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
+					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
+					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
+					s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&versatile_select]() {versatile_select(main_gamemodes::OPTIONS); }); // setup_animation_functional);
+					s->set(Constants::io__sprite_string::ID, "BUTTON_MENU_1");
+					s->set(Constants::io__sprite_boolean::DRAW, true);
+					s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
+					s->set(Constants::io__sprite_double::SCALEG, 0.18);
+					s->set(Constants::io__sprite_double::SCALEX, 5.5);
+					s->set(Constants::io__sprite_double::POSY, 0.45);
+					s->set(Constants::io__sprite_integer::LAYER, -10);
 
-				Text* t = texts.create("BUTTON_GAMING_0_T");
-				t->set(Constants::io__text_string::FONT, "DEFAULT");
-				t->set(Constants::io__text_string::STRING, "GO MENU | %sprite_state%");
-				t->set(Constants::io__text_string::ID, "BUTTON_GAMING_0_T");
-				t->set(Constants::io__text_boolean::SHOW, true);
-				t->set(Constants::io__text_double::SCALEG, 0.07);
-				t->set(Constants::io__text_double::SCALEX, 0.7);
-				t->set(Constants::io__text_double::POSY, -0.060);
-				t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_GAMING_0");
-				t->set(Constants::io__text_integer::LAYER, 1);
-				t->set(Constants::io__text_double::UPDATETIME, 1.0 / 20);
-				t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
+					Text* t = texts.create("BUTTON_MENU_1_T");
+					t->set(Constants::io__text_string::FONT, "DEFAULT");
+					t->set(Constants::io__text_string::STRING, "Options & About");
+					t->set(Constants::io__text_string::ID, "BUTTON_MENU_1_T");
+					t->set(Constants::io__text_boolean::SHOW, true);
+					t->set(Constants::io__text_double::SCALEG, 0.08);
+					t->set(Constants::io__text_double::SCALEX, 0.7);
+					t->set(Constants::io__text_double::POSY, -0.055);
+					t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_MENU_1");
+					t->set(Constants::io__text_integer::LAYER, -10);
+					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 20);
+					t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
+					t->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, [](std::string& str) {std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
+				}
+				{
+					Sprite* s = sprites.create("BUTTON_MENU_2");
+					s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
+					s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
+					s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
+					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
+					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
+					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
+					s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, exit_game);
+					s->set(Constants::io__sprite_string::ID, "BUTTON_MENU_2");
+					s->set(Constants::io__sprite_boolean::DRAW, true);
+					s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
+					s->set(Constants::io__sprite_double::SCALEG, 0.18);
+					s->set(Constants::io__sprite_double::SCALEX, 5.5);
+					s->set(Constants::io__sprite_double::POSY, 0.65);
+					s->set(Constants::io__sprite_integer::LAYER, -10);
+
+					Text* t = texts.create("BUTTON_MENU_2_T");
+					t->set(Constants::io__text_string::FONT, "DEFAULT");
+					t->set(Constants::io__text_string::STRING, "Exit Game");
+					t->set(Constants::io__text_string::ID, "BUTTON_MENU_2_T");
+					t->set(Constants::io__text_boolean::SHOW, true);
+					t->set(Constants::io__text_double::SCALEG, 0.08);
+					t->set(Constants::io__text_double::SCALEX, 0.7);
+					t->set(Constants::io__text_double::POSY, -0.055);
+					t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_MENU_2");
+					t->set(Constants::io__text_integer::LAYER, -10);
+					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 20);
+					t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
+					t->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, [](std::string& str) {std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
+				}
+			}
+
+			// OPTIONS PART
+			{ // -09
+				{
+					{
+						Sprite* s = sprites.create("BUTTON_OPTIONS_0");
+						s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
+						s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
+						s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
+						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
+						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
+						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
+						s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&__assist_g, &versatile_select]() {versatile_select(main_gamemodes::MENU); }); // [&modern,&__assist_g]()->void {modern = __assist_g; });
+						s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_0");
+						s->set(Constants::io__sprite_boolean::DRAW, true);
+						s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
+						s->set(Constants::io__sprite_double::SCALEG, 0.16);
+						s->set(Constants::io__sprite_double::SCALEX, 3.5);
+						s->set(Constants::io__sprite_integer::LAYER, -9);
+						s->set(Constants::io__sprite_double::POSX, -0.7);
+						s->set(Constants::io__sprite_double::POSY, -0.8);
+
+						Text* t = texts.create("BUTTON_OPTIONS_0_T");
+						t->set(Constants::io__text_string::FONT, "DEFAULT");
+						t->set(Constants::io__text_string::STRING, "Go back to Menu");
+						t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_0_T");
+						t->set(Constants::io__text_boolean::SHOW, true);
+						t->set(Constants::io__text_double::SCALEG, 0.07);
+						t->set(Constants::io__text_double::SCALEX, 0.7);
+						t->set(Constants::io__text_double::POSY, -0.055);
+						t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_0");
+						t->set(Constants::io__text_integer::LAYER, -9);
+						t->set(Constants::io__text_double::UPDATETIME, 1.0 / 20);
+						t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
+						t->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, [](std::string& str) {std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
+					}
+
+					{
+						Sprite* s = sprites.create("BUTTON_OPTIONS_1");
+						s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
+						s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
+						s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
+						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
+						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
+						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
+						s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&keyb_kbf_osd_switch]() { keyb_kbf_osd_switch(); }); // [&modern,&__assist_g]()->void {modern = __assist_g; });
+						s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_1");
+						s->set(Constants::io__sprite_boolean::DRAW, true);
+						s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
+						s->set(Constants::io__sprite_double::SCALEG, 0.16);
+						s->set(Constants::io__sprite_double::SCALEX, 5.5);
+						s->set(Constants::io__sprite_integer::LAYER, -9);
+						s->set(Constants::io__sprite_double::POSY, -0.4);
+
+						Text* t = texts.create("BUTTON_OPTIONS_1_T");
+						t->set(Constants::io__text_string::FONT, "DEFAULT");
+						t->set(Constants::io__text_string::STRING, "Switch OSD");
+						t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_1_T");
+						t->set(Constants::io__text_boolean::SHOW, true);
+						t->set(Constants::io__text_double::SCALEG, 0.07);
+						t->set(Constants::io__text_double::SCALEX, 0.7);
+						t->set(Constants::io__text_double::POSY, -0.055);
+						t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_1");
+						t->set(Constants::io__text_integer::LAYER, -9);
+						t->set(Constants::io__text_double::UPDATETIME, 1.0 / 20);
+						t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
+						t->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, [&conf](std::string& str) {
+							bool is_osd_enabled = true;
+							conf.get(Constants::io__conf_boolean::WAS_OSD_ON, is_osd_enabled, true);
+							str = std::string("Right now it is: ") + (is_osd_enabled ? "enabled" : "disabled");
+							});
+						t->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [](std::string& str) { str = "Switched!"; });
+					}
+
+					{
+						Sprite* s = sprites.create("BUTTON_OPTIONS_2");
+						s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
+						s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
+						s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
+						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
+						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
+						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
+						s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&keyb_fullscreen_window]() {keyb_fullscreen_window(); }); // [&modern,&__assist_g]()->void {modern = __assist_g; });
+						s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_2");
+						s->set(Constants::io__sprite_boolean::DRAW, true);
+						s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
+						s->set(Constants::io__sprite_double::SCALEG, 0.16);
+						s->set(Constants::io__sprite_double::SCALEX, 5.5);
+						s->set(Constants::io__sprite_integer::LAYER, -9);
+						s->set(Constants::io__sprite_double::POSY, -0.2);
+
+						Text* t = texts.create("BUTTON_OPTIONS_2_T");
+						t->set(Constants::io__text_string::FONT, "DEFAULT");
+						t->set(Constants::io__text_string::STRING, "Toggle Fullscreen");
+						t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_2_T");
+						t->set(Constants::io__text_boolean::SHOW, true);
+						t->set(Constants::io__text_double::SCALEG, 0.07);
+						t->set(Constants::io__text_double::SCALEX, 0.7);
+						t->set(Constants::io__text_double::POSY, -0.055);
+						t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_2");
+						t->set(Constants::io__text_integer::LAYER, -9);
+						t->set(Constants::io__text_double::UPDATETIME, 1.0 / 20);
+						t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
+						t->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, [&conf, &__assist](std::string& str) {
+							bool is_osd_enabled = true;
+							conf.get(Constants::io__conf_boolean::WAS_OSD_ON, is_osd_enabled, true);
+							str = std::string("Right now it is: ") + (__assist[1] ? "Fullscreen" : "Windowed");
+							});
+						t->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [](std::string& str) { str = "Switched!"; });
+					}
+				}
+			}
+
+			// PAUSE PART
+			{
+				{
+					Sprite* s = sprites.create("PAUSE_ANIM");
+					s->set(Constants::io__sprite_string_vector::ADDMULTIPLE, Tools::genStrFormat("PAUSE_##", 29));
+					s->set(Constants::io__sprite_string::ID, "PAUSE_ANIM");
+					s->set(Constants::io__sprite_boolean::DRAW, true);
+					s->set(Constants::io__sprite_collision_mode::COLLISION_TRANSPARENT);
+					s->set(Constants::io__sprite_double::SCALEG, 0.80);
+					s->set(Constants::io__sprite_double::SCALEY, 0.65);
+					s->set(Constants::io__sprite_double::POSY, -0.25);
+					s->set(Constants::io__sprite_double::ANIMATION_FPS, 1.0 / 24);
+					s->set(Constants::io__sprite_integer::LAYER, -1);
+				}
+
+				{
+					Sprite* s = sprites.create("BUTTON_GAMING_3");
+					s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
+					s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
+					s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
+					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
+					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
+					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
+					s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&__assist_g, &versatile_select]() {versatile_select(__assist_g); }); // [&modern,&__assist_g]()->void {modern = __assist_g; });
+					s->set(Constants::io__sprite_string::ID, "BUTTON_GAMING_3");
+					s->set(Constants::io__sprite_boolean::DRAW, true);
+					s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
+					s->set(Constants::io__sprite_double::SCALEG, 0.17);
+					s->set(Constants::io__sprite_double::SCALEX, 4.8);
+					s->set(Constants::io__sprite_double::POSY, 0.4);
+					s->set(Constants::io__sprite_integer::LAYER, -1);
+
+					Text* t = texts.create("BUTTON_GAMING_3_T");
+					t->set(Constants::io__text_string::FONT, "DEFAULT");
+					t->set(Constants::io__text_string::STRING, "Continue");
+					t->set(Constants::io__text_string::ID, "BUTTON_GAMING_3_T");
+					t->set(Constants::io__text_boolean::SHOW, true);
+					t->set(Constants::io__text_double::SCALEG, 0.07);
+					t->set(Constants::io__text_double::SCALEX, 0.7);
+					t->set(Constants::io__text_double::POSY, -0.055);
+					t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_GAMING_3");
+					t->set(Constants::io__text_integer::LAYER, -1);
+					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 20);
+					t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
+					t->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, [](std::string& str) {std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
+				}
+				{
+					Sprite* s = sprites.create("BUTTON_GAMING_4");
+					s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
+					s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
+					s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
+					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
+					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
+					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
+					s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&versatile_select]() {versatile_select(main_gamemodes::MENU); }); //  [&modern]()->void {modern = main_gamemodes::MENU; });
+					s->set(Constants::io__sprite_string::ID, "BUTTON_GAMING_4");
+					s->set(Constants::io__sprite_boolean::DRAW, true);
+					s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
+					s->set(Constants::io__sprite_double::SCALEG, 0.17);
+					s->set(Constants::io__sprite_double::SCALEX, 4.8);
+					s->set(Constants::io__sprite_double::POSY, 0.6);
+					s->set(Constants::io__sprite_integer::LAYER, -1);
+
+					Text* t = texts.create("BUTTON_GAMING_4_T");
+					t->set(Constants::io__text_string::FONT, "DEFAULT");
+					t->set(Constants::io__text_string::STRING, "Go back to Menu");
+					t->set(Constants::io__text_string::ID, "BUTTON_GAMING_4_T");
+					t->set(Constants::io__text_boolean::SHOW, true);
+					t->set(Constants::io__text_double::SCALEG, 0.07);
+					t->set(Constants::io__text_double::SCALEX, 0.7);
+					t->set(Constants::io__text_double::POSY, -0.055);
+					t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_GAMING_4");
+					t->set(Constants::io__text_integer::LAYER, -1);
+					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 20);
+					t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
+					t->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, [](std::string& str) {std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
+				}
 			}
 
 			/*
@@ -702,95 +954,101 @@ int main(int argc, const char* argv[])
 			[#$:$#$:$#$:$#$:$#$:$#$:$#$:$#$:$#$:$#<-------------------->#$:$#$:$#$:$#$:$#$:$#$:$#$:$#$:$#$:$#]
 			*/
 
+			// TEXT ALONE STUFF
 			{
-				Text* const t = texts.create("osd_stuff0");
-				t->set(Constants::io__text_string::FONT, "DEFAULT");
-				t->set(Constants::io__text_string::STRING, "M:%mouse_x%,%mouse_y% | C:%cam_x%,%cam_y%@~%cam_zoom_combined% | S:%curr_string%[%last_string%]");
-				t->set(Constants::io__text_string::ID, "osd_stuff0");
-				t->set(Constants::io__text_boolean::SHOW, true);
-				t->set(Constants::io__text_double::SCALEG, 0.025);
-				t->set(Constants::io__text_double::SCALEX, 0.6);
-				t->set(Constants::io__text_double::POSY, -1.00);
-				t->set(Constants::io__text_double::POSX, -1.0);
-				t->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
-				t->set(Constants::io__text_double::UPDATETIME, 1.0 / 4);
-				t->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
-				t->set(Constants::io__text_integer::LAYER, 100);
-			}
-			{
-				Text* const t = texts.create("osd_stuff1");
-				t->set(Constants::io__text_string::FONT, "DEFAULT");
-				t->set(Constants::io__text_string::STRING, "FPS: %int_fps%|%instant_fps% [%ms_fps% ms]");
-				t->set(Constants::io__text_string::ID, "osd_stuff1");
-				t->set(Constants::io__text_boolean::SHOW, true);
-				t->set(Constants::io__text_double::SCALEG, 0.025);
-				t->set(Constants::io__text_double::SCALEX, 0.6);
-				t->set(Constants::io__text_double::POSY, -0.97);
-				t->set(Constants::io__text_double::POSX, -1.0);
-				t->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
-				t->set(Constants::io__text_double::UPDATETIME, 1.0 / 12);
-				t->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
-				t->set(Constants::io__text_integer::LAYER, 100);
-			}
-			{
-				Text* const t = texts.create("osd_stuff2");
-				t->set(Constants::io__text_string::FONT, "DEFAULT");
-				t->set(Constants::io__text_string::STRING, "TPS: %int_tps%|%instant_tps% [%ms_tps% ms]");
-				t->set(Constants::io__text_string::ID, "osd_stuff2");
-				t->set(Constants::io__text_boolean::SHOW, true);
-				t->set(Constants::io__text_double::SCALEG, 0.025);
-				t->set(Constants::io__text_double::SCALEX, 0.6);
-				t->set(Constants::io__text_double::POSY, -0.94);
-				t->set(Constants::io__text_double::POSX, -1.0);
-				t->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
-				t->set(Constants::io__text_double::UPDATETIME, 1.0 / 3);
-				t->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
-				t->set(Constants::io__text_integer::LAYER, 100);
-			}
-			{
-				Text* const t = texts.create("osd_stuff3");
-				t->set(Constants::io__text_string::FONT, "DEFAULT");
-				t->set(Constants::io__text_string::STRING, "UPS: %int_ups%|%instant_ups% [%ms_ups% ms]");
-				t->set(Constants::io__text_string::ID, "osd_stuff3");
-				t->set(Constants::io__text_boolean::SHOW, true);
-				t->set(Constants::io__text_double::SCALEG, 0.025);
-				t->set(Constants::io__text_double::SCALEX, 0.6);
-				t->set(Constants::io__text_double::POSY, -0.91);
-				t->set(Constants::io__text_double::POSX, -1.0);
-				t->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
-				t->set(Constants::io__text_double::UPDATETIME, 1.0 / 4);
-				t->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
-				t->set(Constants::io__text_integer::LAYER, 100);
-			}
-			{
-				Text* const t = texts.create("osd_stuff4");
-				t->set(Constants::io__text_string::FONT, "DEFAULT");
-				t->set(Constants::io__text_string::STRING, "APS: %int_aps%|%instant_aps% [%ms_aps% ms]");
-				t->set(Constants::io__text_string::ID, "osd_stuff4");
-				t->set(Constants::io__text_boolean::SHOW, true);
-				t->set(Constants::io__text_double::SCALEG, 0.025);
-				t->set(Constants::io__text_double::SCALEX, 0.6);
-				t->set(Constants::io__text_double::POSY, -0.88);
-				t->set(Constants::io__text_double::POSX, -1.0);
-				t->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
-				t->set(Constants::io__text_double::UPDATETIME, 1.0 / 6);
-				t->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
-				t->set(Constants::io__text_integer::LAYER, 100);
-			}
-			{
-				Text* const t = texts.create("osd_stuff5");
-				t->set(Constants::io__text_string::FONT, "DEFAULT");
-				t->set(Constants::io__text_string::STRING, "D:%curr_res_x%:%curr_res_y%@%curr_refresh_rate% | I:%num_images%,S:%num_sprites%,T:%num_texts%,A:%num_tracks%");
-				t->set(Constants::io__text_string::ID, "osd_stuff5");
-				t->set(Constants::io__text_boolean::SHOW, true);
-				t->set(Constants::io__text_double::SCALEG, 0.025);
-				t->set(Constants::io__text_double::SCALEX, 0.6);
-				t->set(Constants::io__text_double::POSY, -0.85);
-				t->set(Constants::io__text_double::POSX, -1.0);
-				t->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
-				t->set(Constants::io__text_double::UPDATETIME, 1.0 / 3);
-				t->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
-				t->set(Constants::io__text_integer::LAYER, 100);
+				bool is_osd_enabled = true;
+				conf.get(Constants::io__conf_boolean::WAS_OSD_ON, is_osd_enabled, true);
+
+				{
+					Text* const t = texts.create("osd_stuff0");
+					t->set(Constants::io__text_string::FONT, "DEFAULT");
+					t->set(Constants::io__text_string::STRING, "M:%mouse_x%,%mouse_y% | C:%cam_x%,%cam_y%@~%cam_zoom_combined% | S:%curr_string%[%last_string%]");
+					t->set(Constants::io__text_string::ID, "osd_stuff0");
+					t->set(Constants::io__text_boolean::SHOW, is_osd_enabled);
+					t->set(Constants::io__text_double::SCALEG, 0.025);
+					t->set(Constants::io__text_double::SCALEX, 0.6);
+					t->set(Constants::io__text_double::POSY, -1.00);
+					t->set(Constants::io__text_double::POSX, -1.0);
+					t->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
+					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 4);
+					t->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
+					t->set(Constants::io__text_integer::LAYER, 100);
+				}
+				{
+					Text* const t = texts.create("osd_stuff1");
+					t->set(Constants::io__text_string::FONT, "DEFAULT");
+					t->set(Constants::io__text_string::STRING, "FPS: %int_fps%|%instant_fps% [%ms_fps% ms]");
+					t->set(Constants::io__text_string::ID, "osd_stuff1");
+					t->set(Constants::io__text_boolean::SHOW, is_osd_enabled);
+					t->set(Constants::io__text_double::SCALEG, 0.025);
+					t->set(Constants::io__text_double::SCALEX, 0.6);
+					t->set(Constants::io__text_double::POSY, -0.97);
+					t->set(Constants::io__text_double::POSX, -1.0);
+					t->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
+					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 12);
+					t->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
+					t->set(Constants::io__text_integer::LAYER, 100);
+				}
+				{
+					Text* const t = texts.create("osd_stuff2");
+					t->set(Constants::io__text_string::FONT, "DEFAULT");
+					t->set(Constants::io__text_string::STRING, "TPS: %int_tps%|%instant_tps% [%ms_tps% ms]");
+					t->set(Constants::io__text_string::ID, "osd_stuff2");
+					t->set(Constants::io__text_boolean::SHOW, is_osd_enabled);
+					t->set(Constants::io__text_double::SCALEG, 0.025);
+					t->set(Constants::io__text_double::SCALEX, 0.6);
+					t->set(Constants::io__text_double::POSY, -0.94);
+					t->set(Constants::io__text_double::POSX, -1.0);
+					t->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
+					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 3);
+					t->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
+					t->set(Constants::io__text_integer::LAYER, 100);
+				}
+				{
+					Text* const t = texts.create("osd_stuff3");
+					t->set(Constants::io__text_string::FONT, "DEFAULT");
+					t->set(Constants::io__text_string::STRING, "UPS: %int_ups%|%instant_ups% [%ms_ups% ms]");
+					t->set(Constants::io__text_string::ID, "osd_stuff3");
+					t->set(Constants::io__text_boolean::SHOW, is_osd_enabled);
+					t->set(Constants::io__text_double::SCALEG, 0.025);
+					t->set(Constants::io__text_double::SCALEX, 0.6);
+					t->set(Constants::io__text_double::POSY, -0.91);
+					t->set(Constants::io__text_double::POSX, -1.0);
+					t->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
+					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 4);
+					t->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
+					t->set(Constants::io__text_integer::LAYER, 100);
+				}
+				{
+					Text* const t = texts.create("osd_stuff4");
+					t->set(Constants::io__text_string::FONT, "DEFAULT");
+					t->set(Constants::io__text_string::STRING, "APS: %int_aps%|%instant_aps% [%ms_aps% ms]");
+					t->set(Constants::io__text_string::ID, "osd_stuff4");
+					t->set(Constants::io__text_boolean::SHOW, is_osd_enabled);
+					t->set(Constants::io__text_double::SCALEG, 0.025);
+					t->set(Constants::io__text_double::SCALEX, 0.6);
+					t->set(Constants::io__text_double::POSY, -0.88);
+					t->set(Constants::io__text_double::POSX, -1.0);
+					t->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
+					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 6);
+					t->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
+					t->set(Constants::io__text_integer::LAYER, 100);
+				}
+				{
+					Text* const t = texts.create("osd_stuff5");
+					t->set(Constants::io__text_string::FONT, "DEFAULT");
+					t->set(Constants::io__text_string::STRING, "D:%curr_res_x%:%curr_res_y%@%curr_refresh_rate% | I:%num_images%,S:%num_sprites%,T:%num_texts%,A:%num_tracks%");
+					t->set(Constants::io__text_string::ID, "osd_stuff5");
+					t->set(Constants::io__text_boolean::SHOW, is_osd_enabled);
+					t->set(Constants::io__text_double::SCALEG, 0.025);
+					t->set(Constants::io__text_double::SCALEX, 0.6);
+					t->set(Constants::io__text_double::POSY, -0.85);
+					t->set(Constants::io__text_double::POSX, -1.0);
+					t->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
+					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 3);
+					t->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
+					t->set(Constants::io__text_integer::LAYER, 100);
+				}
 			}
 		}
 
@@ -810,7 +1068,7 @@ int main(int argc, const char* argv[])
 		temporary_fun_text->set(Constants::io__text_boolean::SHOW, true);
 		temporary_fun_text->set(Constants::io__text_double::SCALEG, 0.1);
 		temporary_fun_text->set(Constants::io__text_double::SCALEX, 0.8);
-		temporary_fun_text->set(Constants::io__text_double::POSY, 0.65);
+		temporary_fun_text->set(Constants::io__text_double::POSY, 0.85);
 		temporary_fun_text->set(Constants::io__text_integer::LAYER, -10);
 		temporary_fun_text->set(Constants::io__text_double::UPDATETIME, 1.0/10);
 
@@ -839,38 +1097,12 @@ int main(int argc, const char* argv[])
 		**************************************************************************************/
 
 
-		/*{
-			Sprite* s = sprites.create("PLAYER");
-			s->set(Constants::io__sprite_string::ID, "PLAYER");
-			s->set(Constants::io__sprite_boolean::DRAW, true);
-			s->set(Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH);
-			s->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, true);
-			//s->set(Constants::io__sprite_boolean::SHOWDOT, true);
-			s->set(Constants::io__sprite_boolean::SHOWBOX, false);
-			s->set(Constants::io__sprite_double::SCALEG, 0.065);
-			s->set(Constants::io__sprite_double::SCALEY, 1.81);
-			s->set(Constants::io__sprite_string::ADD, "BLOCK_05");
-			s->set(Constants::io__sprite_integer::LAYER, 1);
-
-
-			Text* t = texts.create("PLAYER_T");
-			t->set(Constants::io__text_string::FONT, "DEFAULT");
-			t->set(Constants::io__text_string::STRING, "%sprite_debug%");
-			t->set(Constants::io__text_string::ID, "PLAYER_T");
-			t->set(Constants::io__text_boolean::SHOW, true);
-			t->set(Constants::io__text_double::SCALEG, 0.06);
-			t->set(Constants::io__text_double::SCALEX, 0.7);
-			t->set(Constants::io__text_double::POSY, 0.060);
-			t->set(Constants::io__text_string::FOLLOW_SPRITE, "PLAYER");
-			t->set(Constants::io__text_integer::LAYER, 1);
-			t->set(Constants::io__text_double::UPDATETIME, 1.0 / 4);
-			t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
-		}*/
-
 
 
 		bool has_map_gen = false;
 		World* wd = nullptr;
+
+		const std::function<bool(const main_gamemodes)> isGamingLocally = [](const main_gamemodes u)->bool {return (u == main_gamemodes::PAUSE || u == main_gamemodes::GAMING); };
 
 
 		for (size_t counttt = 0; consol.isRunning(); counttt++) {
@@ -878,7 +1110,7 @@ int main(int argc, const char* argv[])
 
 
 			if (modern == main_gamemodes::MENU) temporary_fun_text->set(Constants::io__text_string::STRING, "Counting here lmao " + std::to_string(counttt) + "!");
-			if (modern == main_gamemodes::GAMING) {
+			if (isGamingLocally(modern)) {
 				if (!has_map_gen)
 				{
 					int mult = rand() % 4 + 1;
@@ -905,7 +1137,7 @@ int main(int argc, const char* argv[])
 						s->set(Constants::io__sprite_integer::LAYER, 1);
 
 
-						Text* t = texts.create("PLAYER_T");
+						/*Text* t = texts.create("PLAYER_T");
 						t->set(Constants::io__text_string::FONT, "DEFAULT");
 						t->set(Constants::io__text_string::STRING, "%sprite_debug%");
 						t->set(Constants::io__text_string::ID, "PLAYER_T");
@@ -916,7 +1148,7 @@ int main(int argc, const char* argv[])
 						t->set(Constants::io__text_string::FOLLOW_SPRITE, "PLAYER");
 						t->set(Constants::io__text_integer::LAYER, 1);
 						t->set(Constants::io__text_double::UPDATETIME, 1.0 / 4);
-						t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
+						t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));*/
 					}
 
 					wd->generate(al_get_time()*20.0);
@@ -934,8 +1166,9 @@ int main(int argc, const char* argv[])
 								s->set(Constants::io__sprite_boolean::DRAW, false); // no draw for now
 								s->set(Constants::io__sprite_collision_mode::COLLISION_ANY_HOLD_STATIC);
 								//s->set(Constants::io__sprite_boolean::SHOWDOT, true);
+								s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
 								s->set(Constants::io__sprite_boolean::SHOWBOX, false);
-								s->set(Constants::io__sprite_double::SCALEG, 0.132 / mult);
+								s->set(Constants::io__sprite_double::SCALEG, 0.130 / mult);
 								s->set(Constants::io__sprite_double::SCALEY, 1.81);
 								s->set(Constants::io__sprite_string::ADD, "BLOCK_0" + std::string(wd->readPos(x, y) ? "1" : "0"));
 								s->set(Constants::io__sprite_integer::LAYER, 0);
@@ -994,11 +1227,11 @@ int main(int argc, const char* argv[])
 						s->set(Constants::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY, al_get_time());
 						s->set(Constants::io__sprite_string::ADD, "GAMEBOXMAIN_I");
 						s->set(Constants::io__sprite_integer::LAYER, 0);
-						s->hook(Constants::io__sprite_tie_func_to_state::WHEN_BITMAPS_RESIZED_AUTO, [&assist]() {
-							assist[2] = false;
+						s->hook(Constants::io__sprite_tie_func_to_state::WHEN_BITMAPS_RESIZED_AUTO, [&__assist]() {
+							__assist[2] = false;
 							});
-						s->hook(Constants::io__sprite_tie_func_to_state::WHEN_DRAWING, [&sprites, &gcam, s, &assist]() {
-							if (!assist[2]) {
+						s->hook(Constants::io__sprite_tie_func_to_state::WHEN_DRAWING, [&sprites, &gcam, s, &__assist]() {
+							if (!__assist[2]) {
 								auto vct = sprites.getList([](const std::string a)->bool {return a.find("GAMEBOX_") == 0; });
 								ALLEGRO_BITMAP* trg = nullptr;
 								s->get(trg);
@@ -1013,7 +1246,7 @@ int main(int argc, const char* argv[])
 								}
 
 								al_set_target_bitmap(old_trg);
-								assist[2] = true;
+								__assist[2] = true;
 							}
 							});
 					}
@@ -1031,7 +1264,7 @@ int main(int argc, const char* argv[])
 					sprites.remove([](const std::string a)->bool {return a.find("GAMEBOX_") == 0; });
 					sprites.remove("GAMEBOXMAIN");
 					sprites.remove("PLAYER");
-					texts.remove("PLAYER_T");
+					//texts.remove("PLAYER_T");
 					consol.resumeThread();
 					has_map_gen = false;
 				}

@@ -102,6 +102,7 @@ __slice("%sprite_state%", +tags_e::T_SPRITE_STATE) };
 		void draw_confuse_rectangle(const float, const float, const float, const float, const ALLEGRO_COLOR, const ALLEGRO_COLOR, const ALLEGRO_COLOR, const ALLEGRO_COLOR);
 		void draw_simple_txt(ALLEGRO_FONT*, const std::string, ALLEGRO_COLOR = al_map_rgb(255,255,255), const int = ALLEGRO_ALIGN_CENTER, const double = 0.2);
 		ALLEGRO_TRANSFORM easyTransform(ALLEGRO_DISPLAY* const, const float, const float, const float, const float, const float);
+		ALLEGRO_TRANSFORM easyTransform(ALLEGRO_BITMAP* const, const float, const float, const float, const float, const float);
 		void matrix_draw_help();
 
 		class camera_preset {
@@ -148,7 +149,8 @@ __slice("%sprite_state%", +tags_e::T_SPRITE_STATE) };
 			void set(const camera_preset&, const int = 0);
 			void apply(const int);
 			void apply();
-			ALLEGRO_TRANSFORM applyNoSave(camera_preset);
+			ALLEGRO_TRANSFORM applyNoSave(ALLEGRO_BITMAP* const, camera_preset = camera_preset());
+			ALLEGRO_TRANSFORM applyNoSave(camera_preset = camera_preset());
 			void applyNoSave(ALLEGRO_TRANSFORM*);
 			camera_preset& get(const int);
 			camera_preset& get();
@@ -302,6 +304,8 @@ __slice("%sprite_state%", +tags_e::T_SPRITE_STATE) };
 				ALLEGRO_COLOR c;
 				ALLEGRO_FONT* font = nullptr;
 				std::string __internal_debug_flag;
+
+				std::function<void(std::string&)> pair_tied[+Constants::io__sprite_tie_func_to_state::size]; // if SPRITE has this flag, then TEXT has it too
 			};
 
 			__custom_data data;		
@@ -320,6 +324,7 @@ __slice("%sprite_state%", +tags_e::T_SPRITE_STATE) };
 			void set(const Constants::io__text_double, const double);
 			void set(const Constants::io__text_color, const ALLEGRO_COLOR);
 			void set(const Constants::io__text_integer, const int);
+			void set(const Constants::io__sprite_tie_func_to_state, const std::function<void(std::string&)> = std::function<void(std::string&)>()); // set and unset if no arg
 
 			void get(const Constants::io__text_string, std::string&);
 			void get(const Constants::io__text_boolean, bool&);
@@ -338,7 +343,7 @@ __slice("%sprite_state%", +tags_e::T_SPRITE_STATE) };
 
 
 
-		class Bubbles {
+		class BubblesFX {
 			struct particle {
 				double posx = 0.0, posy = 0.0;
 				double lastsize = 1.0;
@@ -364,8 +369,21 @@ __slice("%sprite_state%", +tags_e::T_SPRITE_STATE) };
 			// amount of entities running forever :3, fps and layer
 
 			void init(const unsigned, const double, const int = 0);
-			void draw();
-			void think();
+			bool draw(const int);
+			bool think(const int);
+		};
+
+		class LiningFX {
+			ALLEGRO_BITMAP* imglw = nullptr;
+			Sprite* disguy = nullptr;
+
+			int siz[2] = { 0, 0 };
+
+			const double maxone(double, const double = 1.0);
+		public:
+			void init(const int = 0);
+
+			bool draw(const int);
 		};
 	}
 }

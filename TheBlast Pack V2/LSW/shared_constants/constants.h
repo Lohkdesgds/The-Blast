@@ -101,6 +101,9 @@ namespace LSW {
 
 			// sound.h stuff
 			const double start_default_global_volume = 0.5;
+
+			// button stuff
+			const double default_delay_click = 0.7;
 			
 
 

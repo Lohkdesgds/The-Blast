@@ -81,19 +81,24 @@ namespace LSW {
 				logg << L::SLF << fsr(__FUNCSIG__) << "Creating local stuff..." << L::ELF;
 
 
-				Text* const mtt = texts.create("lastlogtext");
-				mtt->set(Constants::io__text_string::FONT, "DEFAULT");
-				mtt->set(Constants::io__text_string::STRING, "Syncronization in progress... (LOG)");
-				mtt->set(Constants::io__text_string::ID, "lastlogtext");
-				mtt->set(Constants::io__text_boolean::SHOW, true);
-				mtt->set(Constants::io__text_double::SCALEG, 0.03);
-				mtt->set(Constants::io__text_double::SCALEX, 0.55);
-				mtt->set(Constants::io__text_double::POSY, 0.965); // 0.935
-				mtt->set(Constants::io__text_double::POSX, -1.0);
-				mtt->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
-				mtt->set(Constants::io__text_double::UPDATETIME, 1.0 / 5);
-				mtt->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
-				mtt->set(Constants::io__text_integer::LAYER, 100);
+				Text* const mtt = texts.create("osd_stuff_lastlogtext");
+				{
+					bool is_osd_enabled = true;
+					conf.get(Constants::io__conf_boolean::WAS_OSD_ON, is_osd_enabled, true);
+
+					mtt->set(Constants::io__text_string::FONT, "DEFAULT");
+					mtt->set(Constants::io__text_string::STRING, "Syncronization in progress... (LOG)");
+					mtt->set(Constants::io__text_string::ID, "osd_stuff_lastlogtext");
+					mtt->set(Constants::io__text_boolean::SHOW, is_osd_enabled);
+					mtt->set(Constants::io__text_double::SCALEG, 0.03);
+					mtt->set(Constants::io__text_double::SCALEX, 0.55);
+					mtt->set(Constants::io__text_double::POSY, 0.965); // 0.935
+					mtt->set(Constants::io__text_double::POSX, -1.0);
+					mtt->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
+					mtt->set(Constants::io__text_double::UPDATETIME, 1.0 / 5);
+					mtt->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
+					mtt->set(Constants::io__text_integer::LAYER, 100);
+				}
 
 				std::string mtt_s = "No new information";
 

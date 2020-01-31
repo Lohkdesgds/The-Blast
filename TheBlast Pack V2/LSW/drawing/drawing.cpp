@@ -85,6 +85,24 @@ namespace LSW {
 
 			return t;
 		}
+		ALLEGRO_TRANSFORM easyTransform(ALLEGRO_BITMAP* const d, const float x, const float y, const float sx, const float sy, const float r)
+		{
+			ALLEGRO_TRANSFORM t;
+
+			al_identity_transform(&t);
+
+			al_rotate_transform(&t,	r);
+
+			al_scale_transform(&t,
+ 				al_get_bitmap_width(d) * 0.5 * sx,
+				al_get_bitmap_height(d) * 0.5 * sy);
+
+			al_translate_transform(&t,
+				al_get_bitmap_width(d) * 0.5 - x * (al_get_bitmap_width(d) * 0.5 * sx),
+				al_get_bitmap_height(d) * 0.5 - y * (al_get_bitmap_height(d) * 0.5 * sy));
+
+			return t;
+		}
 
 		void matrix_draw_help()
 		{
@@ -324,7 +342,21 @@ namespace LSW {
 			applyNoSave(u);
 		}
 
-		
+		ALLEGRO_TRANSFORM Camera::applyNoSave(ALLEGRO_BITMAP* const d, camera_preset lastTransf)
+		{
+			if (!d) return ALLEGRO_TRANSFORM();
+
+			g_t = easyTransform(d,
+				lastTransf.get(Constants::io__camera_double::OFFSET_X), lastTransf.get(Constants::io__camera_double::OFFSET_Y),
+				lastTransf.get(Constants::io__camera_double::SCALE_X) * lastTransf.get(Constants::io__camera_double::SCALE_G),
+				lastTransf.get(Constants::io__camera_double::SCALE_Y) * lastTransf.get(Constants::io__camera_double::SCALE_G),
+				lastTransf.get(Constants::io__camera_double::ROTATION_RAD));
+
+			al_use_transform(&g_t);
+			return g_t;
+		}
+
+
 		ALLEGRO_TRANSFORM Camera::applyNoSave(camera_preset lastTransf)
 		{
 			ALLEGRO_DISPLAY* d = al_get_current_display();
@@ -1083,7 +1115,7 @@ namespace LSW {
 			double dt = timee - data.dtarg[+Constants::ro__sprite_target_double::INTERN_LASTDRAW];
 			data.dtarg[+Constants::ro__sprite_target_double::INTERN_LASTDRAW] = timee;
 
-			//if (!data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] && data.countdown_col == 0) {
+			if (!data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING]) {
 				double perc_run = Constants::__i_col_pos_t_update * dt; // ex: 5 per sec * 0.2 (1/5 sec) = 1, so posx = actual posx...
 				if (perc_run > 1.0) perc_run = 1.0; // 1.0 is "set value"
 				if (perc_run < 1.0 / 10000) perc_run = 1.0 / 10000; // can't be infinitely smooth right? come on
@@ -1091,7 +1123,7 @@ namespace LSW {
 				data.dval[+Constants::io__sprite_double::POSX] = (1.0 - perc_run) * data.dval[+Constants::io__sprite_double::POSX] + perc_run * data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX];
 				data.dval[+Constants::io__sprite_double::POSY] = (1.0 - perc_run) * data.dval[+Constants::io__sprite_double::POSY] + perc_run * data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY];
 				data.dval[+Constants::io__sprite_double::ROTATION] = (1.0 - perc_run) * data.dval[+Constants::io__sprite_double::ROTATION] + perc_run * data.dtarg[+Constants::ro__sprite_target_double::TARG_ROTATION];
-			//}
+			}
 
 
 			float cx, cy, px, py, dsx, dsy, rot_rad;
@@ -1397,7 +1429,7 @@ namespace LSW {
 				}
 
 				if (data.col_data.size() > 0) {
-					sum_pos[0] /= 1.0 * amount_sum[0];
+					sum_pos[0] /= 5.0 * amount_sum[0];
 					sum_pos[1] /= 1.0 * amount_sum[1];
 				}
 
@@ -1407,17 +1439,17 @@ namespace LSW {
 				}
 
 				else if (b[1] && b[2] && b[3]) { // north is free (smashed horizontally)
-					data.dval[+Constants::io__sprite_double::RO_SPEEDY] = -0.25 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
+					data.dval[+Constants::io__sprite_double::RO_SPEEDY] = -0.15 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
 				}
 				else if (b[0] && b[1] && b[2]) { // west is free (smashed vertically)
-					data.dval[+Constants::io__sprite_double::RO_SPEEDX] = -0.25 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
+					data.dval[+Constants::io__sprite_double::RO_SPEEDX] = -0.15 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
 				}
 
 				else if (b[0] && b[1]) { // so go east (smashed vertically)
-					data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 0.25 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
+					data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 0.15 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
 				}
 				else if (b[2] && b[3]) { // so go south (smashed horizontally)
-					data.dval[+Constants::io__sprite_double::RO_SPEEDY] = 0.25 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
+					data.dval[+Constants::io__sprite_double::RO_SPEEDY] = 0.15 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
 				}
 				
 				else if (b[0]) { // so go south
@@ -1766,7 +1798,15 @@ namespace LSW {
 
 		void Text::_draw(const double targ_draw_xy[2])
 		{
-			al_draw_text(data.font, data.c, 1.0 * targ_draw_xy[0] / (data.d[+Constants::io__text_double::SCALEG]), 1.0 * targ_draw_xy[1] / (data.d[+Constants::io__text_double::SCALEG]), data.i[+Constants::io__text_integer::MODE], data.str[+Constants::io__text_string::PROCESSED_STRING].c_str());
+			std::string tempstr = data.str[+Constants::io__text_string::PROCESSED_STRING];
+
+			if (follow) {
+				Constants::io__sprite_tie_func_to_state st;
+				follow->get(Constants::ro__sprite_state::STATE, st);
+				if (data.pair_tied[+st]) data.pair_tied[+st](tempstr);
+			}
+
+			al_draw_text(data.font, data.c, 1.0 * targ_draw_xy[0] / (data.d[+Constants::io__text_double::SCALEG]), 1.0 * targ_draw_xy[1] / (data.d[+Constants::io__text_double::SCALEG]), data.i[+Constants::io__text_integer::MODE], tempstr.c_str());
 		}
 		void Text::_interpretTags(std::string& s)
 		{
@@ -2222,6 +2262,11 @@ namespace LSW {
 			if (o != Constants::io__text_integer::size) data.i[+o] = e;
 		}
 
+		void Text::set(const Constants::io__sprite_tie_func_to_state o, const std::function<void(std::string&)> e)
+		{
+			if (o != Constants::io__sprite_tie_func_to_state::size) data.pair_tied[+o] = e;
+		}
+
 
 		void Text::get(const Constants::io__text_string o, std::string& e)
 		{
@@ -2367,7 +2412,7 @@ namespace LSW {
 
 
 
-		const double Bubbles::maxone(double gotten, const double prop)
+		const double BubblesFX::maxone(double gotten, const double prop)
 		{
 			while (gotten > 1.0) {
 				if (gotten > 1000.0) gotten -= 1000.0;
@@ -2382,7 +2427,7 @@ namespace LSW {
 		}
 
 
-		void Bubbles::init(const unsigned amout, const double mfps, const int layer)
+		void BubblesFX::init(const unsigned amout, const double mfps, const int layer)
 		{
 			if (firstcall) {
 
@@ -2410,7 +2455,7 @@ namespace LSW {
 				disguy->set(Constants::io__sprite_string::ID, "BKG_NULL");
 				disguy->set(Constants::io__sprite_integer::LAYER, layer);
 				disguy->set(Constants::io__sprite_double::SCALEG, 2.0);
-				disguy->set(Constants::io__sprite_boolean::AFFECTED_BY_CAM, true);
+				disguy->set(Constants::io__sprite_boolean::AFFECTED_BY_CAM, false);
 
 				if (mfps <= 0) fps = -1;
 				else if (1.0/mfps > 1.0) fps = 1.0/mfps;
@@ -2435,11 +2480,11 @@ namespace LSW {
 			}
 		}
 
-		void Bubbles::draw()
+		bool BubblesFX::draw(const int lyr)
 		{
-			if (firstcall) {
-				return;
-			}
+			if (firstcall) return false;
+			if (!disguy) return false;
+			if (!disguy->isEq(Constants::io__sprite_integer::LAYER, lyr)) return false;
 
 			if (alreadyreset) {
 				alreadyreset = false;
@@ -2463,24 +2508,15 @@ namespace LSW {
 
 				al_set_target_bitmap(lastpoint);
 			}
-
-			//al_draw_bitmap(dis, -1.0, -1.0, 0); 
-
+			return true;
 		}
-		void Bubbles::think()
+		bool BubblesFX::think(const int lyr)
 		{
-			if (firstcall) {
-				return;
-			}
+			if (firstcall) return false;
+			if (!disguy) return false;
+			if (!disguy->isEq(Constants::io__sprite_integer::LAYER, lyr)) return false;
 
-			bool continuee = false;
-			Camera cam;
-			auto cpy = cam.get();
-			for (auto& o : cpy) {
-				if (continuee |= disguy->isEq(Constants::io__sprite_integer::LAYER, o)) break;
-			}
-
-			if (continuee && ((al_get_time() - lastdraw) >= (1.0 / fps) || fps == -1))
+			if (((al_get_time() - lastdraw) >= (1.0 / fps) || fps == -1))
 			{
 				lastdraw = al_get_time();
 				alreadyreset = true;
@@ -2502,7 +2538,87 @@ namespace LSW {
 					i.lastpositionscalculated[1] = ((i.posy + 1.0) / 2.0) * siz[1];
 				}
 			}
+			return true;
 		}
 
+		const double LiningFX::maxone(double gotten, const double prop)
+		{
+			while (gotten > 1.0) {
+				if (gotten > 1000.0) gotten -= 1000.0;
+				else if (gotten > 100000.0) gotten -= 100000.0;
+				else if (gotten > 2.0) gotten -= 1.0;
+				else {
+					if (gotten > 1.0) gotten = 2.0 - gotten;
+					else gotten -= 1.0;
+				}
+			}
+			return gotten * prop;
+		}
+
+		void LiningFX::init(const int layer)
+		{
+			__template_static_vector<ALLEGRO_BITMAP> textures;
+			__template_static_vector<Sprite> sprites;
+
+			Database db;
+			db.get(Constants::io__conf_integer::SCREEN_X, siz[0], 1920);
+			db.get(Constants::io__conf_integer::SCREEN_Y, siz[1], 1080);
+			
+			if (siz[0] < 1280) siz[0] = 1280;
+			if (siz[1] < 720) siz[1] = 720;
+
+			imglw = textures.customLoad("LINES_NULL", [&](ALLEGRO_BITMAP*& b) -> bool { return (b = al_create_bitmap(siz[0], siz[1])); }); // don't worry, it won't create if it is already there
+			disguy = sprites.create("LINES_NULL"); // this one too
+
+			disguy->set(Constants::io__sprite_string::REMOVE, "LINES_NULL"); // guarantee no duplicated stuff because it might have it already
+			disguy->set(Constants::io__sprite_string::ADD, "LINES_NULL");
+			disguy->set(Constants::io__sprite_double::ANIMATION_FPS, 0);
+			disguy->set(Constants::io__sprite_boolean::DRAW, true);
+			disguy->set(Constants::io__sprite_boolean::TIE_SIZE_TO_DISPLAY, true);
+			disguy->set(Constants::io__sprite_string::ID, "LINES_NULL");
+			disguy->set(Constants::io__sprite_integer::LAYER, layer);
+			disguy->set(Constants::io__sprite_double::SCALEG, 2.0);
+			disguy->set(Constants::io__sprite_boolean::AFFECTED_BY_CAM, false);
+		}
+
+		bool LiningFX::draw(const int lyr)
+		{
+			if (!disguy) return false;
+			if (!disguy->isEq(Constants::io__sprite_integer::LAYER, lyr)) return false;
+
+			ALLEGRO_BITMAP* g = al_get_target_bitmap();
+			assert(g);
+
+			disguy->get(imglw);
+			al_set_target_bitmap(imglw);
+
+			al_clear_to_color(al_map_rgb_f(maxone(0.5 + cos(al_get_time() * 1.75), 0.6), maxone(0.5 + cos(al_get_time() * 2.15), 0.6), maxone((0.5 + cos(al_get_time() * 1.11)), 0.6)));
+
+			//int rad = 2;
+			//int xpress = al_get_bitmap_width(imglw);
+			//int ypress = al_get_bitmap_height(imglw);
+
+			const float precision = 0.1 * ALLEGRO_PI;// Constants::precision_rotation_draw;
+			const double timerr = al_get_time();
+			const ALLEGRO_COLOR using_rn = al_map_rgb_f(maxone(0.5 + cos(al_get_time() * 0.52), 0.7), maxone(0.5 + cos(al_get_time() * 0.15), 0.7), maxone((0.5 + cos(al_get_time() * 0.54)), 0.7));
+
+			Camera cam;
+			cam.applyNoSave(imglw);
+
+			for (float radd = 0; radd < ALLEGRO_PI * 2; radd += precision) {
+				ALLEGRO_VERTEX v[] = {
+				  { +(2.0 * cos(radd + timerr * 0.2)), +(2.0 * sin(radd + timerr * 0.2)), 0, 0, 0, using_rn},   //top left
+				  { +(2.0 * cos(radd + (precision * 0.5) + timerr * 0.2)), +(2.0 * sin(radd + (precision * 0.5) + timerr * 0.2)), 0, 0, 0, using_rn},   //top right
+				  { 0.0, 0.0, 0, 0, 0, using_rn}//,							  //center
+				  //{ corner_rightdn[0], corner_rightdn[1], 0, 0, 0, using_rn}, //bottom left
+				  //{ corner_rightup[0], corner_rightup[1], 0, 0, 0, using_rn}  //bottom right
+				};
+				al_draw_prim(v, NULL, NULL, 0, 3, ALLEGRO_PRIM_TRIANGLE_LIST);
+			}
+
+			al_set_target_bitmap(g);
+
+			return true;
+		}
 	}
 }
