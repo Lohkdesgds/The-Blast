@@ -257,7 +257,7 @@ namespace LSW {
 			}
 			size_t getNumCallsDefault() // if you wait, the amount of non-internal events (aka not internal timer). If you don't, every not-event return and local events
 			{
-				return benchmark[calls_per_sec_pos+1];
+				return benchmark[calls_per_sec_pos + 1];
 			}
 			double getNumInstantSCallsDefault() // if you wait, the amount of non-internal events (aka not internal timer). If you don't, every not-event return and local events
 			{
@@ -402,13 +402,14 @@ namespace LSW {
 			> Declaration doesn't need to set load/unload std::function s, so it can be accessed everywhere no problem
 
 		**************************************************************************************/
-		
+
 
 		template<typename T>
 		class __template_static_vector {
 			template<typename S> struct _d {
 				S* self = nullptr;
 				std::string id;
+				bool enabled = true;
 			};
 			template<typename Q> struct _i {
 				std::vector< _d<Q>* >					db;
@@ -445,9 +446,58 @@ namespace LSW {
 				else data.dbm.unlock();
 				data.dbmv = false;
 			}
+			bool rename(const std::string id, const std::string newid) {
+				data.dbm.lock();
+				for (auto& i : data.db) {
+					if (i->id == id) {
+						i->id = newid;
+						data.dbm.unlock();
+						return true;
+					}
+				}
+				data.dbm.unlock();
+				return false;
+			}
+			bool setEnabled(const std::string id, const bool val) {
+				data.dbm.lock();
+				for (auto& i : data.db) {
+					if (i->id == id) {
+						i->enabled = val;
+						data.dbm.unlock();
+						return true;
+					}
+				}
+				data.dbm.unlock();
+				return false;
+			}
+			size_t setEnabled(const std::function<bool(const std::string)> f, const std::function<bool(const std::string)> nf) {
+				size_t __ic = 0;
+				data.dbm.lock();
+				for (auto& i : data.db) {
+					if (f(i->id)) {
+						i->enabled = nf(i->id);
+						__ic++;
+					}
+				}
+				data.dbm.unlock();
+				return __ic;
+			}
+			size_t rename(const std::function<bool(const std::string)> f, const std::function<std::string(const std::string)> nf)
+			{
+				size_t __ic = 0;
+				data.dbm.lock();
+				for (auto& i : data.db) {
+					if (f(i->id)) {
+						i->id = nf(i->id);
+						__ic++;
+					}
+				}
+				data.dbm.unlock();
+				return __ic;
+			}
 			T* customLoad(const std::string id, std::function<bool(T*&)> f) {
 				T* b = nullptr;
-				bool r = get(id, b);
+				bool r = get(id, b, true);
 
 				if (!r) {
 					_d<T>* dt = new _d<T>();
@@ -464,9 +514,9 @@ namespace LSW {
 				return b;
 			}
 			T* create(const std::string id, const std::string path = "") { return load(id, path); }
-			T* load(const std::string id, const std::string path = "")	{
+			T* load(const std::string id, const std::string path = "") {
 				T* b = nullptr;
-				bool r = get(id, b);
+				bool r = get(id, b, true);
 
 				if (!r) {
 					_d<T>* dt = new _d<T>();
@@ -494,10 +544,10 @@ namespace LSW {
 				}
 				if (perc) *perc = 1.00;
 			}
-			bool get(const std::string id, T*& p) {
+			bool get(const std::string id, T*& p, const bool force_enabled = false) {
 				data.dbm.lock();
 				for (auto& i : data.db) {
-					if (i->id == id) {
+					if (i->id == id && (i->enabled || force_enabled)) {
 						p = i->self;
 						data.dbm.unlock();
 						return true;
@@ -506,28 +556,34 @@ namespace LSW {
 				data.dbm.unlock();
 				return false;
 			}
-			void remove(const std::string id) {
+			bool remove(const std::string id) {
+				data.dbm.lock();
 				for (size_t p = 0; p < data.db.size(); p++)
 				{
 					if (data.db[p]->id == id) {
-						data.dbm.lock();
 						data.unload(data.db[p]->self);
 						data.db.erase(data.db.begin() + p--);
 						data.dbm.unlock();
+						return true;
 					}
 				}
+				data.dbm.unlock();
+				return false;
 			}
-			void remove(const std::function<bool(const std::string)> f)
+			size_t remove(const std::function<bool(const std::string)> f)
 			{
+				size_t __ic = 0;
+				data.dbm.lock();
 				for (size_t p = 0; p < data.db.size(); p++)
 				{
 					if (f(data.db[p]->id)) {
-						data.dbm.lock();
 						data.unload(data.db[p]->self);
 						data.db.erase(data.db.begin() + p--);
-						data.dbm.unlock();
+						__ic++;
 					}
 				}
+				data.dbm.unlock();
+				return __ic;
 			}
 			std::vector<T*> getList(const std::function<bool(const std::string)> f)
 			{

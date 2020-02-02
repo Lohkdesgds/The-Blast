@@ -84,7 +84,7 @@ namespace LSW {
 				Text* const mtt = texts.create("osd_stuff_lastlogtext");
 				{
 					bool is_osd_enabled = true;
-					conf.get(Constants::io__conf_boolean::WAS_OSD_ON, is_osd_enabled, true);
+					conf.get(Constants::io__conf_boolean::WAS_OSD_ON, is_osd_enabled);
 
 					mtt->set(Constants::io__text_string::FONT, "DEFAULT");
 					mtt->set(Constants::io__text_string::STRING, "Syncronization in progress... (LOG)");
@@ -211,8 +211,14 @@ namespace LSW {
 						camera_preset ww = gcam.get();
 
 						for (auto& k : ww) {
-							for (auto& i : sprites) i->self->draw(k);
-							for (auto& i : texts)  i->self->draw(k);
+							for (auto& i : sprites) {
+								if (!i->enabled) continue;
+								i->self->draw(k);
+							}
+							for (auto& i : texts) {
+								if (!i->enabled) continue;
+								i->self->draw(k);
+							}
 						}
 
 						last_loop_had_error = 0;
@@ -244,6 +250,7 @@ namespace LSW {
 						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal exception at " << thrid << "! {" << oor.what() << "}" << L::ELF;
 						logg.flush();
 						pauseThread();
+						for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
 						askForceExit("ERROR!", ("There was an error at " + thrid + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 						resumeThread();
 						if (was_sprites_locked) sprites.unlock();
@@ -253,6 +260,7 @@ namespace LSW {
 						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal UNKNOWN exception at " << thrid << "!" << L::ELF;
 						logg.flush();
 						pauseThread();
+						for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
 						askForceExit("FATAL ERROR!", ("There was a fatal error (maybe fixable) at " + thrid + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 						resumeThread();
 						if (was_sprites_locked) sprites.unlock();
@@ -275,12 +283,22 @@ namespace LSW {
 
 				thread_maindisplay.thread_arguments = nullptr;
 			}
+			catch (Abort::warn a)
+			{
+				thr_shared_arg.threadcountm.lock();
+				thr_shared_arg.threadcount--;
+				thr_shared_arg.threadcountm.unlock();
+				pauseThread();
+				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+				forceExit("Something went bad at MDTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
+			}
 			catch (Abort::abort a)
 			{
 				thr_shared_arg.threadcountm.lock();
 				thr_shared_arg.threadcount--;
 				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
+				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
 				forceExit("Something went wrong at MDTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
 			}
 			catch (...)
@@ -289,6 +307,7 @@ namespace LSW {
 				thr_shared_arg.threadcount--;
 				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
+				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
 				forceExit("Something went wrong at MDTHR!", "There was a unknown error! What a sad thing to happen!");
 			}
 
@@ -368,20 +387,27 @@ namespace LSW {
 							camera_preset ww = gcam.get();
 							//float rr = ww.get(Constants::io__camera_double::ROTATION_RAD); // adjustment because canvas has been rotated so mouse will be at normal and stuff offset by this
 
-							for (auto& i : sprites) i->self->clearUp(); // set as no collision
+							for (auto& i : sprites) {
+								i->self->clearUp(); // set as no collision
+							}
 
 							for (auto& k : ww) {
 								for (auto& i : sprites) {
+									if (!i->enabled) continue;
 									i->self->process(k, ww); // process positioning
 
 									for (auto& j : sprites)
 									{
+										if (!j->enabled) continue;
 										i->self->collideWith(k, j->self); // see collisions
 									}
 								}
 							}
 
-							for (auto& i : sprites) i->self->applyCollideData(ww); // apply collision consequences
+							for (auto& i : sprites) {
+								if (!i->enabled) continue;
+								i->self->applyCollideData(ww); // apply collision consequences
+							}
 
 							last_loop_had_error = 0;
 						}
@@ -401,6 +427,7 @@ namespace LSW {
 						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal exception at " << thrid << "! {" << oor.what() << "}" << L::ELF;
 						logg.flush();
 						pauseThread();
+						for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
 						askForceExit("ERROR!", ("There was an error at " + thrid + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 						resumeThread();
 					}
@@ -409,6 +436,7 @@ namespace LSW {
 						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal UNKNOWN exception at " << thrid << "!" << L::ELF;
 						logg.flush();
 						pauseThread();
+						for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
 						askForceExit("FATAL ERROR!", ("There was a fatal error (maybe fixable) at " + thrid + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 						resumeThread();
 					}
@@ -421,12 +449,22 @@ namespace LSW {
 
 				thread_collision.thread_arguments = nullptr;
 			}
+			catch (Abort::warn a)
+			{
+				thr_shared_arg.threadcountm.lock();
+				thr_shared_arg.threadcount--;
+				thr_shared_arg.threadcountm.unlock();
+				pauseThread();
+				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+				forceExit("Something went bad at CLTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
+			}
 			catch (Abort::abort a)
 			{
 				thr_shared_arg.threadcountm.lock();
 				thr_shared_arg.threadcount--;
 				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
+				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
 				forceExit("Something went wrong at CLTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
 			}
 			catch (...)
@@ -435,6 +473,7 @@ namespace LSW {
 				thr_shared_arg.threadcount--;
 				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
+				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
 				forceExit("Something went wrong at CLTHR!", "There was a unknown error! What a sad thing to happen!");
 			}
 
@@ -542,6 +581,7 @@ namespace LSW {
 
 
 							for (auto& i : sprites) {
+								if (!i->enabled) continue;
 								if (i->self->isEq(Constants::io__sprite_boolean::FOLLOWMOUSE, true)) {
 									i->self->set(Constants::io__sprite_double::POSX, md[0]);
 									i->self->set(Constants::io__sprite_double::POSY, md[1]);
@@ -631,6 +671,7 @@ namespace LSW {
 						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal exception at " << thrid << "! {" << oor.what() << "}" << L::ELF;
 						logg.flush();
 						pauseThread();
+						for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
 						askForceExit("ERROR!", ("There was an error at " + thrid + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 						resumeThread();
 					}
@@ -639,6 +680,7 @@ namespace LSW {
 						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal UNKNOWN exception at " << thrid << "!" << L::ELF;
 						logg.flush();
 						pauseThread();
+						for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
 						askForceExit("FATAL ERROR!", ("There was a fatal error (maybe fixable) at " + thrid + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 						resumeThread();
 					}
@@ -651,12 +693,22 @@ namespace LSW {
 
 				thread_kbmouse.thread_arguments = nullptr;
 			}
+			catch (Abort::warn a)
+			{
+				thr_shared_arg.threadcountm.lock();
+				thr_shared_arg.threadcount--;
+				thr_shared_arg.threadcountm.unlock();
+				pauseThread();
+				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+				forceExit("Something went bad at KBTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
+			}
 			catch (Abort::abort a)
 			{
 				thr_shared_arg.threadcountm.lock();
 				thr_shared_arg.threadcount--;
 				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
+				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
 				forceExit("Something went wrong at KBTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
 			}
 			catch (...)
@@ -665,6 +717,7 @@ namespace LSW {
 				thr_shared_arg.threadcount--;
 				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
+				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
 				forceExit("Something went wrong at KBTHR!", "There was a unknown error! What a sad thing to happen!");
 			}
 
@@ -803,6 +856,7 @@ namespace LSW {
 						}
 						logg.flush();
 						pauseThread();
+						for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
 						askForceExit("ERROR!", ("There was a error at " + thrid + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 						resumeThread();
 					}
@@ -815,6 +869,7 @@ namespace LSW {
 						}
 						logg.flush();
 						pauseThread();
+						for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
 						askForceExit("FATAL ERROR!", ("There was a fatal error (maybe fixable) at " + thrid + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 						resumeThread();
 					}
@@ -830,12 +885,22 @@ namespace LSW {
 
 				thread_functional.thread_arguments = nullptr;
 			}
+			catch (Abort::warn a)
+			{
+				thr_shared_arg.threadcountm.lock();
+				thr_shared_arg.threadcount--;
+				thr_shared_arg.threadcountm.unlock();
+				pauseThread();
+				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+				forceExit("Something went bad at FCTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
+			}
 			catch (Abort::abort a)
 			{
 				thr_shared_arg.threadcountm.lock();
 				thr_shared_arg.threadcount--;
 				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
+				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
 				forceExit("Something went wrong at FCTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
 			}
 			catch (...)
@@ -844,6 +909,7 @@ namespace LSW {
 				thr_shared_arg.threadcount--;
 				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
+				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
 				forceExit("Something went wrong at FCTHR!", "There was a unknown error! What a sad thing to happen!");
 			}
 

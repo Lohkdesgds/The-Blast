@@ -361,6 +361,7 @@ namespace LSW {
 					throw Abort::abort(__FUNCSIG__, "Could not create display!");
 				}
 				al_convert_bitmaps();
+				al_hide_mouse_cursor(d);
 
 				this->x = x;
 				this->y = y;
@@ -423,10 +424,10 @@ namespace LSW {
 			Constants::display_mode md;
 
 			Database config;
-			config.get(Constants::io__conf_integer::SCREEN_X, md.x, 0);
-			config.get(Constants::io__conf_integer::SCREEN_Y, md.y, 0);
-			config.get(Constants::io__conf_integer::SCREEN_PREF_HZ, md.hz, 0);
-			config.get(Constants::io__conf_integer::SCREEN_FLAGS, flag, Constants::start_display_default_mode);
+			config.get(Constants::io__conf_integer::SCREEN_X, md.x);
+			config.get(Constants::io__conf_integer::SCREEN_Y, md.y);
+			config.get(Constants::io__conf_integer::SCREEN_PREF_HZ, md.hz);
+			config.get(Constants::io__conf_integer::SCREEN_FLAGS, flag);
 			flag |= Constants::start_display_obligatory_flag_mode; // obligatory flags like OpenGL and Resizable
 
 			__g_sys.setNewDisplayMode(flag);
@@ -545,15 +546,14 @@ namespace LSW {
 					set(Constants::io__conf_boolean::HAD_ERROR, true); // then texture download starts			// USED
 					set(Constants::io__conf_boolean::WAS_OSD_ON, false);										// USED
 					set(Constants::io__conf_boolean::ULTRADEBUG, false);										// USED
-					set(Constants::io__conf_double::LAST_VOLUME, 0.5);
-					set(Constants::io__conf_string::LAST_VERSION, Constants::version_app);						// nah
-					set(Constants::io__conf_string::LAST_PLAYERNAME, "Player");
-					set(Constants::io__conf_string::LAST_COLOR, "GREEN");
-					set(Constants::io__conf_integer::SCREEN_X, 0);
-					set(Constants::io__conf_integer::SCREEN_Y, 0);
-					set(Constants::io__conf_longlong::_TIMES_LIT, 0LL);
-					set(Constants::io__conf_integer::SCREEN_FLAGS, Constants::start_display_default_mode);
-					set(Constants::io__conf_integer::SCREEN_PREF_HZ, 0);
+					set(Constants::io__conf_double::LAST_VOLUME, 0.5);											// USED
+					set(Constants::io__conf_string::LAST_PLAYERNAME, "Player");									// USED
+					set(Constants::io__conf_color::LAST_COLOR_TRANSLATE, data.color);
+					set(Constants::io__conf_integer::SCREEN_X, 0);												// USED
+					set(Constants::io__conf_integer::SCREEN_Y, 0);												// USED
+					set(Constants::io__conf_longlong::_TIMES_LIT, 0LL);											// USED
+					set(Constants::io__conf_integer::SCREEN_FLAGS, Constants::start_display_default_mode);		// USED
+					set(Constants::io__conf_integer::SCREEN_PREF_HZ, 0);										// USED
 
 					if (!al_save_config_file(temporary.c_str(), data.c)) {
 						throw Abort::abort(__FUNCSIG__, "Cannot save Database file!");
@@ -561,10 +561,26 @@ namespace LSW {
 				}
 				else {
 					long long ll;
-					get(Constants::io__conf_longlong::_TIMES_LIT, ll, 0LL);
+					get(Constants::io__conf_longlong::_TIMES_LIT, ll);
 					ll++;
 					set(Constants::io__conf_longlong::_TIMES_LIT, ll);
 				}
+				set(Constants::io__conf_string::LAST_VERSION, Constants::version_app);
+
+				/*complicated stuff*/
+				{
+					std::string str;
+					if (get(Constants::ro__conf_color_str[+Constants::io__conf_color::LAST_COLOR_TRANSLATE], str)) {
+						if (str.length() > 0) {
+							if (str[0] == '{') {
+								sscanf_s(str.c_str(), "{%f;%f;%f}", &data.color.r, &data.color.g, &data.color.b);
+								data.color.a = 1.0;
+							}
+						}
+					}
+					set(Constants::io__conf_color::LAST_COLOR_TRANSLATE, data.color);
+				}
+
 			}
 			data.m.unlock();
 		}
@@ -620,6 +636,16 @@ namespace LSW {
 		{
 			set(Constants::ro__conf_string_str[+e], v);
 		}
+		void Database::set(const Constants::io__conf_color e, const ALLEGRO_COLOR clr)
+		{
+			if (e == Constants::io__conf_color::LAST_COLOR_TRANSLATE) {
+				data.color = clr;
+				data.color.a = 1.0;
+				char expurt[32];
+				sprintf_s(expurt, "{%.4f;%.4f;%.4f}", clr.r, clr.g, clr.b);
+				set(Constants::ro__conf_color_str[+e], expurt);
+			}
+		}
 		void Database::set(const Constants::io__db_boolean e, const bool v)
 		{
 			if (e != Constants::io__db_boolean::size) {
@@ -630,11 +656,17 @@ namespace LSW {
 					if (!data.b[+e]) {
 						data.curr_string.clear();
 						data.last_string.clear();
+						data.real_string_size = 0;
+						data.real_string_size_delayed = 0;
 						data.curr_string_keylen.clear();
 					}
 					break;
 				}
 			}
+		}
+		void Database::set(const Constants::io__db_sizet e, const size_t v)
+		{
+			if (e != Constants::io__db_sizet::size) data.sz[+e] = v;
 		}
 		void Database::set(const int al_keycod, const bool v)
 		{
@@ -679,26 +711,37 @@ namespace LSW {
 		{
 			if (isEq(Constants::io__db_boolean::SAVING_STRING_INPUT, false)) {
 				data.curr_string.clear();
+				data.real_string_size = 0;
+				data.real_string_size_delayed = 0;
 				return;
 			}
 
 			switch (e) {
 			case Constants::ro__db_thread_string::KEY_ADD:
-				data.curr_string += v;
-				data.curr_string_keylen.push_back(data.curr_string_keylen_val);
+				if (data.real_string_size < (data.sz[+Constants::io__db_sizet::MAXIMUM_STRING_INPUT_LEN] ? data.sz[+Constants::io__db_sizet::MAXIMUM_STRING_INPUT_LEN] : std::string::npos)) {
+					data.curr_string += v;
+					if (data.curr_string_keylen_val <= ++data.real_string_size_delayed) {
+						data.real_string_size++;
+						data.real_string_size_delayed = 0;
+					}
+					data.curr_string_keylen.push_back(data.curr_string_keylen_val);
+				}
 				break;
 			case Constants::ro__db_thread_string::KEY_ERASE:
-				if (data.curr_string.length() > 0) {
+				if (data.real_string_size > 0) {
 					char siz = data.curr_string_keylen.back();
-					for (char p = 0; p < siz; p++) {
+					for (char p = 0; p < siz; p++) { // multibyte
 						data.curr_string.pop_back();
 						data.curr_string_keylen.pop_back();
 					}
+					data.real_string_size--;
 				}
 				break;
 			case Constants::ro__db_thread_string::KEY_SET:
 				data.last_string = data.curr_string;
 				data.curr_string.clear();
+				data.real_string_size = 0;
+				data.real_string_size_delayed = 0;
 				data.curr_string_keylen.clear();
 				data.curr_string_keylen_val = 1;
 				break;
@@ -730,137 +773,195 @@ namespace LSW {
 			}
 		}
 
-		void Database::get(const std::string e, std::string& v, const std::string defaul)
+		bool Database::get(const std::string e, std::string& v)
 		{
 			if (!data.c) throw Abort::abort(__FUNCSIG__, "Cannot get \"" + e + "\" as \"" + v + "\".");
 			const char* chh = al_get_config_value(data.c, Constants::conf_string_default_txt.c_str(), e.c_str());
-			if (!chh) {
-				logg << L::SLF << "[CONF:GET()][WARN] There was no value to " << e << ", so the default value was set (" << defaul << ")." << L::ELF;
-				set(e, defaul);
-				v = defaul;
-				return;
-			}
+			if (!chh) return false;
 			v = chh;
+			return true;
 		}
-		void Database::get(const Constants::io__conf_boolean e, bool& v, const bool defaul)
+		bool Database::get(const Constants::io__conf_boolean e, bool& v)
 		{
 			std::string output;
-			get(Constants::ro__conf_boolean_str[+e], output, Constants::ro__conf_truefalse_str[(int)defaul]);
+			bool b = get(Constants::ro__conf_boolean_str[+e], output);
 			v = (output == Constants::ro__conf_truefalse_str[1 /*true*/]);
+			return b;
 		}
-		void Database::get(const Constants::io__conf_double e, double& v, const double defaul)
+		bool Database::get(const Constants::io__conf_double e, double& v)
 		{
 			std::string output;
-			get(Constants::ro__conf_float_str[+e], output, std::to_string(defaul));
+			bool b = get(Constants::ro__conf_float_str[+e], output);
 			v = atof(output.c_str());
+			return b;
 		}
-		void Database::get(const Constants::io__conf_integer e, int& v, const int defaul)
+		bool Database::get(const Constants::io__conf_integer e, int& v)
 		{
 			std::string output;
-			get(Constants::ro__conf_integer_str[+e], output, std::to_string(defaul));
+			bool b = get(Constants::ro__conf_integer_str[+e], output);
 			v = atoi(output.c_str());
+			return b;
 		}
-		void Database::get(const Constants::io__conf_longlong e, long long& v, const long long defaul)
+		bool Database::get(const Constants::io__conf_longlong e, long long& v)
 		{
 			std::string output;
-			get(Constants::ro__conf_longlong_str[+e], output, std::to_string(defaul));
+			bool b = get(Constants::ro__conf_longlong_str[+e], output);
 			v = atoll(output.c_str());
+			return b;
 		}
-		void Database::get(const Constants::io__conf_string e, std::string& v, const std::string defaul)
+		bool Database::get(const Constants::io__conf_string e, std::string& v)
 		{
 			std::string output;
-			get(Constants::ro__conf_string_str[+e], output, defaul);
+			bool b = get(Constants::ro__conf_string_str[+e], output);
 			v = output;
+			return b;
 		}
 
-		void Database::get(const Constants::io__db_boolean e, bool& v, const bool defaul)
+		bool Database::get(const Constants::io__conf_color e, ALLEGRO_COLOR& v)
 		{
-			if (e != Constants::io__db_boolean::size) v = data.b[+e];
-			else v = defaul;
+			if (e == Constants::io__conf_color::LAST_COLOR_TRANSLATE) {
+				v = data.color;
+				return true;
+			}
+			return false;
 		}
 
-		void Database::get(const Constants::ro__db_string e, std::string& v)
+		bool Database::get(const Constants::io__db_boolean e, bool& v)
+		{
+			if (e != Constants::io__db_boolean::size) {
+				v = data.b[+e];
+				return true;
+			}
+			return false;
+		}
+
+		bool Database::get(const Constants::io__db_sizet e, size_t& v)
+		{
+			if (e != Constants::io__db_sizet::size) {
+				v = data.sz[+e];
+				return true;
+			}
+			return false;
+		}
+
+		bool Database::get(const Constants::ro__db_string e, std::string& v)
 		{
 			switch (e) {
 			case Constants::ro__db_string::CURRENT_STRING:
 				v = data.curr_string;
-				break;
+				return true;
 			case Constants::ro__db_string::LAST_STRING:
 				v = data.last_string;
-				break;
+				return true;
 			}
+			return false;
 		}
 
-		void Database::get(const int al_keycod, bool& v, const bool defaul)
+		bool Database::get(const int al_keycod, bool& v, const bool defaul)
 		{
-			if (al_keycod >= 0 && al_keycod < ALLEGRO_KEY_MAX) v = data.keys[al_keycod];
-			else v = defaul;
+			if (al_keycod >= 0 && al_keycod < ALLEGRO_KEY_MAX) {
+				v = data.keys[al_keycod];
+				return true;
+			}
+			return false;
 		}
-		void Database::get(const Constants::ro__db_mouse_boolean e, bool& v)
+		bool Database::get(const Constants::ro__db_mouse_boolean e, bool& v)
 		{
-			if (e != Constants::ro__db_mouse_boolean::size) v = data.mouse[+e];
+			bool good = false;
+			if (e != Constants::ro__db_mouse_boolean::size) {
+				v = data.mouse[+e];
+				good = true;
+			}
 			if (e == Constants::ro__db_mouse_boolean::IS_ANY_PRESSED) {
 				v = false;
 				for (auto& i : data.mouse) v |= i;
+				good = true;
 			}
+			return good;
 		}
-		void Database::get(const Constants::ro__db_mouse_double e, double& v)
+		bool Database::get(const Constants::ro__db_mouse_double e, double& v)
 		{
-			v = +data.db_mouse_axes[+e];
+			if (e != Constants::ro__db_mouse_double::size) {
+				v = +data.db_mouse_axes[+e];
+				return true;
+			}
+			return false;
 		}
 
-		void Database::get(const Constants::ro__db_statistics_sizet e, size_t& v)
+		bool Database::get(const Constants::ro__db_statistics_sizet e, size_t& v)
 		{
-			if (e != Constants::ro__db_statistics_sizet::size) v = data.db_statistics_sizet[+e];
+			if (e != Constants::ro__db_statistics_sizet::size) {
+				v = data.db_statistics_sizet[+e];
+				return true;
+			}
+			return false;
 		}
 
-		void Database::get(const Constants::ro__db_statistics_double e, double& v)
+		bool Database::get(const Constants::ro__db_statistics_double e, double& v)
 		{
-			if (e != Constants::ro__db_statistics_double::size) v = data.db_statistics_double[+e];
+			if (e != Constants::ro__db_statistics_double::size) {
+				v = data.db_statistics_double[+e];
+				return true;
+			}
+			return false;
 		}
 
 
 		bool Database::isEq(const std::string e, const std::string v)
 		{
 			std::string oth;
-			get(e, oth, v); // meh
+			get(e, oth); // meh
 			return oth == v;
 		}
 		bool Database::isEq(const Constants::io__conf_boolean e, const bool v)
 		{
 			bool oth;
-			get(e, oth, v); // meh
+			get(e, oth); // meh
 			return oth == v;
 		}
 		bool Database::isEq(const Constants::io__conf_double e, const double v)
 		{
 			double oth;
-			get(e, oth, v); // meh
+			get(e, oth); // meh
 			return oth == v;
 		}
 		bool Database::isEq(const Constants::io__conf_integer e, const int v)
 		{
 			int oth;
-			get(e, oth, v); // meh
+			get(e, oth); // meh
 			return oth == v;
 		}
 		bool Database::isEq(const Constants::io__conf_longlong e, const long long v)
 		{
 			long long oth;
-			get(e, oth, v); // meh
+			get(e, oth); // meh
 			return oth == v;
 		}
 		bool Database::isEq(const Constants::io__conf_string e, const std::string v)
 		{
 			std::string oth;
-			get(e, oth, v); // meh
+			get(e, oth); // meh
 			return oth == v;
+		}
+
+		bool Database::isEq(const Constants::io__conf_color e, const ALLEGRO_COLOR v)
+		{
+			ALLEGRO_COLOR oth;
+			get(e, oth); // meh
+			return (oth.r == v.r) && (oth.g == v.g) && (oth.b == v.b) && (oth.a == v.a);
 		}
 
 		bool Database::isEq(const Constants::io__db_boolean e, const bool v)
 		{
 			bool oth;
-			get(e, oth, v); // meh
+			get(e, oth); // meh
+			return oth == v;
+		}
+
+		bool Database::isEq(const Constants::io__db_sizet e, const size_t v)
+		{
+			size_t oth;
+			get(e, oth); // meh
 			return oth == v;
 		}
 

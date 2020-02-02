@@ -36,11 +36,13 @@ namespace LSW {
 			enum class io__conf_double { LAST_VOLUME };
 			enum class io__conf_integer { SCREEN_X, SCREEN_Y, SCREEN_FLAGS, SCREEN_PREF_HZ };
 			enum class io__conf_longlong { _TIMES_LIT };
-			enum class io__conf_string { LAST_VERSION, LAST_PLAYERNAME, LAST_COLOR };
+			enum class io__conf_string { LAST_VERSION, LAST_PLAYERNAME };
+			enum class io__conf_color{ LAST_COLOR_TRANSLATE };
 
 			// internal configuration not from file but not automatically set or functional
 			enum class io__db_boolean { SAVING_STRING_INPUT, size };
-			enum class ro__db_string { LAST_STRING, CURRENT_STRING };
+			enum class io__db_sizet   { MAXIMUM_STRING_INPUT_LEN, size};
+			enum class ro__db_string  { LAST_STRING, CURRENT_STRING };
 
 			// on memory while running
 			enum class ro__db_mouse_boolean { MOUSE_0, MOUSE_1, MOUSE_2, MOUSE_3, MOUSE_4, MOUSE_5, MOUSE_6, MOUSE_7, size, IS_ANY_PRESSED }; // Constants::max_mouse_set_buttons
@@ -56,7 +58,8 @@ namespace LSW {
 			const std::string ro__conf_float_str[] = { "last_volume" };
 			const std::string ro__conf_integer_str[] = { "screen_width","screen_height", "last_display_flags","pref_refresh_rate" };
 			const std::string ro__conf_longlong_str[] = { "times_open" };
-			const std::string ro__conf_string_str[] = { "last_version","playername","playercolor" };
+			const std::string ro__conf_string_str[] = { "last_version","playername" };
+			const std::string ro__conf_color_str[] = { "playercolor" };
 
 			const std::string ro__conf_truefalse_str[] = { "false", "true" };
 
@@ -147,9 +150,14 @@ namespace LSW {
 
 				// memory but not automatically, I mean, it's like the Sprite stuff you know
 				bool b[+Constants::io__db_boolean::size] = { false };
+				size_t sz[+Constants::io__db_sizet::size] = { 0 };
+
+				ALLEGRO_COLOR color = al_map_rgb(0, 0, 0);
+
 				std::string curr_string;
 				std::vector<char> curr_string_keylen;
 				char curr_string_keylen_val = 1;
+				size_t real_string_size = 0, real_string_size_delayed = 0;
 				std::string last_string;
 
 				// purely automatic handleing
@@ -176,7 +184,10 @@ namespace LSW {
 			void set(const Constants::io__conf_integer, const int);
 			void set(const Constants::io__conf_longlong, const long long);
 			void set(const Constants::io__conf_string, const std::string);
+			void set(const Constants::io__conf_color, const ALLEGRO_COLOR);
+
 			void set(const Constants::io__db_boolean, const bool);
+			void set(const Constants::io__db_sizet, const size_t);
 
 			void set(const int, const bool); // Allegro key
 			void set(const Constants::ro__db_mouse_boolean, const bool);
@@ -188,20 +199,23 @@ namespace LSW {
 			void set(const Constants::io__db_functional_opt, const int, const std::function<void(void)> = std::function<void(void)>());
 			
 
-			void get(const std::string, std::string&, const std::string);
-			void get(const Constants::io__conf_boolean, bool&, const bool);
-			void get(const Constants::io__conf_double, double&, const double);
-			void get(const Constants::io__conf_integer, int&, const int);
-			void get(const Constants::io__conf_longlong, long long&, const long long);
-			void get(const Constants::io__conf_string, std::string&, const std::string);
-			void get(const Constants::io__db_boolean, bool&, const bool);
-			void get(const Constants::ro__db_string, std::string&);
+			bool get(const std::string, std::string&);
+			bool get(const Constants::io__conf_boolean, bool&);
+			bool get(const Constants::io__conf_double, double&);
+			bool get(const Constants::io__conf_integer, int&);
+			bool get(const Constants::io__conf_longlong, long long&);
+			bool get(const Constants::io__conf_string, std::string&);
+			bool get(const Constants::io__conf_color, ALLEGRO_COLOR&);
 
-			void get(const int, bool&, const bool); // Allegro key
-			void get(const Constants::ro__db_mouse_boolean, bool&);
-			void get(const Constants::ro__db_mouse_double, double&);
-			void get(const Constants::ro__db_statistics_sizet, size_t&);
-			void get(const Constants::ro__db_statistics_double, double&);
+			bool get(const Constants::io__db_boolean, bool&);
+			bool get(const Constants::io__db_sizet, size_t&);
+			bool get(const Constants::ro__db_string, std::string&);
+
+			bool get(const int, bool&, const bool); // Allegro key
+			bool get(const Constants::ro__db_mouse_boolean, bool&);
+			bool get(const Constants::ro__db_mouse_double, double&);
+			bool get(const Constants::ro__db_statistics_sizet, size_t&);
+			bool get(const Constants::ro__db_statistics_double, double&);
 
 
 			bool isEq(const std::string, const std::string);
@@ -210,7 +224,10 @@ namespace LSW {
 			bool isEq(const Constants::io__conf_integer, const int);
 			bool isEq(const Constants::io__conf_longlong, const long long);
 			bool isEq(const Constants::io__conf_string, const std::string);
+			bool isEq(const Constants::io__conf_color, const ALLEGRO_COLOR);
+
 			bool isEq(const Constants::io__db_boolean, const bool);
+			bool isEq(const Constants::io__db_sizet, const size_t);
 			bool isEq(const Constants::ro__db_string, const std::string);
 
 			bool isEq(const int, const bool); // Allegro key

@@ -23,9 +23,9 @@ namespace LSW {
 					throw Abort::abort(__FUNCSIG__, "Failed to set mixer in voice.");
 				}
 
-				double temp_vol_get;
+				double temp_vol_get = Constants::start_default_global_volume;
 				Database conf;
-				conf.get(Constants::io__conf_double::LAST_VOLUME, temp_vol_get, Constants::start_default_global_volume);
+				conf.get(Constants::io__conf_double::LAST_VOLUME, temp_vol_get);
 				conf.set(Constants::io__conf_double::LAST_VOLUME, temp_vol_get);
 
 				volume(temp_vol_get);

@@ -118,9 +118,18 @@ namespace LSW {
 			const unsigned d_dbg_t_avg = 25; // to functional thread
 
 
+			// map
 			const size_t map_size_default_x = 32;
 			const size_t map_size_default_y = 18;
+			const double scale_y_map = 1.77777777778;
+			const double scale_g_map_default = 0.1251;
 
+			// entity
+			const double heal_default =    0.2  / __i_col_pos_t_update; // X per sec
+			const double damage_default = -0.15 / __i_col_pos_t_update; // X per sec
+			const double min_health = 0.0;
+			const double max_health = 1.0;
+			const double gravity = 0.981 / __i_col_pos_t_update;
 
 
 

@@ -4,7 +4,7 @@
 namespace LSW {
 	namespace v4 {
 
-		std::map<int, camera_preset> Camera::presets;
+		std::map<int, Camera::paired> Camera::presets;
 		int Camera::lastapply = 0;
 
 
@@ -323,17 +323,18 @@ namespace LSW {
 			get();
 		}
 
-		void Camera::set(const camera_preset& p, const int i)
+		void Camera::set(const camera_preset& p, const int i, std::function<void(camera_preset&)> f)
 		{
-			presets[i] = p;
-			presets[i].refresh();
+			presets[i].preset = p;
+			presets[i].func = f;
+			presets[i].preset.refresh();
 		}
 
 		
 		void Camera::apply(const int a)
 		{
 			lastapply = a;
-			applyNoSave(presets[a]);
+			apply();
 		}
 
 		void Camera::apply()
@@ -382,8 +383,9 @@ namespace LSW {
 
 		camera_preset& Camera::get(const int u)
 		{
-			presets[u].refresh();
-			return presets[u];
+			presets[u].preset.refresh();
+			if (presets[u].func) presets[u].func(presets[u].preset);
+			return presets[u].preset;
 		}
 
 		camera_preset& Camera::get()
@@ -454,16 +456,18 @@ namespace LSW {
 			if (!imgs.get(id, cd->bmp)) throw Abort::abort(__FUNCSIG__, "Couldn't add " + id + " to the sprite!");
 			cd->idc = id;
 
-
-			int _flags = al_get_bitmap_flags(cd->bmp);
-			int _format = al_get_bitmap_format(cd->bmp);
-
 			copies.push_back(cd);
 
-			int _flags2 = al_get_bitmap_flags(cd->bmp);
-			int _format2 = al_get_bitmap_format(cd->bmp);
-
 			return cd->bmp;
+		}
+		ALLEGRO_BITMAP* Sprite::__sprite_smart_images::load(ALLEGRO_BITMAP* v, const std::string str)
+		{
+			if (!v) return nullptr;
+			__custom_data* cd = new __custom_data();
+			cd->idc = str;
+			cd->bmp = v;
+			copies.push_back(cd);
+			return v;
 		}
 		void Sprite::__sprite_smart_images::remove(const std::string id)
 		{
@@ -613,8 +617,8 @@ namespace LSW {
 		Sprite::__sprite_smart_data::__sprite_smart_data()
 		{
 			Database conf;
-			bool debugging = false;
-			conf.get(Constants::io__conf_boolean::ULTRADEBUG, debugging, Constants::_is_on_debug_mode);
+			bool debugging = Constants::_is_on_debug_mode;
+			conf.get(Constants::io__conf_boolean::ULTRADEBUG, debugging);
 			debugging |= Constants::_is_on_debug_mode;
 						
 			dval[+Constants::io__sprite_double::SCALEX] = 1.0;
@@ -645,7 +649,7 @@ namespace LSW {
 
 			if (data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY) { // HERE
 				
-				data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = false;
+				data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING_FROM_X] = data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING_FROM_Y] = false;
 
 				if (data.bval[+Constants::io__sprite_boolean::FOLLOWMOUSE]) {
 					data.bval[+Constants::io__sprite_boolean::RO_IS_MOUSE_COLLIDING] = true;
@@ -694,8 +698,8 @@ namespace LSW {
 				Database db;
 				int nv[2];
 
-				db.get(Constants::io__conf_integer::SCREEN_X, nv[0], 0);
-				db.get(Constants::io__conf_integer::SCREEN_Y, nv[1], 0);
+				db.get(Constants::io__conf_integer::SCREEN_X, nv[0]);
+				db.get(Constants::io__conf_integer::SCREEN_Y, nv[1]);
 
 				if (bmps.resizeAllTo(nv[0], nv[1])) {
 					data.dval[+Constants::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY] = 0.0;
@@ -709,7 +713,7 @@ namespace LSW {
 		{
 			if (!data.bval[+Constants::io__sprite_boolean::AFFECTED_BY_CAM]) return false;
 			if (+data.collision_mode <= +Constants::io__sprite_collision_mode::__COLLISION_HOLD_OR_TRANSPARENT_MAXVAL) return false;
-			if (l != layer) {
+			if (!isEq(Constants::io__sprite_integer::LAYER, l)) {
 				if (+data.collision_mode >= +Constants::io__sprite_collision_mode::__COLLISION_ANYLAYER_MINVAL) return true;
 				return false;
 			}
@@ -755,6 +759,27 @@ namespace LSW {
 			if (perc) *perc = 1.00f;
 		}
 
+		void Sprite::set(const Constants::io__sprite_string_vector u, const std::function<bool(const std::string)> f)
+		{
+			__template_static_vector<ALLEGRO_BITMAP> v;
+			switch (u) {
+			case Constants::io__sprite_string_vector::ADDMULTIPLE:
+				for (auto& i : v) {
+					if (f(i->id)) {
+						bmps.load(i->self, i->id);
+					}
+				}
+				break;
+			case Constants::io__sprite_string_vector::REMOVEMULTIPLE:
+				for (auto& i : v) {
+					if (f(i->id)) {
+						bmps.remove(i->id);
+					}
+				}
+				break;
+			}
+		}
+
 		void Sprite::set(const Constants::io__sprite_string u, const std::string v)
 		{
 			switch (u) {
@@ -775,26 +800,6 @@ namespace LSW {
 			case Constants::io__sprite_double::ANIMATION_FPS:  // don't forget COLLISION_STATE can bug this one
 				bmps.setFPS(v);
 				break;
-			/*case Constants::io__sprite_double::RO_SPEEDX:
-				if (v > 0.0 && data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_EAST]) {
-					data.dval[+u] = v;
-					data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_NORTH] = data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_SOUTH] = data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_WEST] = true;
-				}
-				if (v < 0.0 && data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_WEST]) {
-					data.dval[+u] = v;
-					data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_NORTH] = data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_SOUTH] = data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_EAST] = true;
-				}
-				break;
-			case Constants::io__sprite_double::RO_SPEEDY:
-				if (v > 0.0 && data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_SOUTH]) {
-					data.dval[+u] = v;
-					data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_EAST] = data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_WEST] = data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_NORTH] = true;
-				}
-				if (v < 0.0 && data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_NORTH]) {
-					data.dval[+u] = v;
-					data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_EAST] = data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_WEST] = data.tempblock_dirs[+Constants::cl__sprite_direction_mult::GO_SOUTH] = true;
-				}
-				break;*/
 			default:
 				data.dval[+u] = v;
 				// target set to value
@@ -835,7 +840,7 @@ namespace LSW {
 			case Constants::io__sprite_integer::LAYER:
 				layer = v;
 				break;
-			case Constants::io__sprite_integer::ADD_ANOTHER_LAYER_COLLISION:
+			case Constants::io__sprite_integer::ADD_ALT_LAYER:
 			{
 				bool has = false;
 				data.layers_colliding_m.lock();
@@ -851,7 +856,7 @@ namespace LSW {
 				data.layers_colliding_m.unlock();
 			}
 				break;
-			case Constants::io__sprite_integer::REMOVE_LAYER_COLLISION:
+			case Constants::io__sprite_integer::REMOVE_ALT_LAYER:
 			{
 				data.layers_colliding_m.lock();
 
@@ -1098,12 +1103,12 @@ namespace LSW {
 
 		void Sprite::draw(const int is_layer)
 		{
-			if (layer != is_layer) return;
+			if (!isEq(Constants::io__sprite_integer::LAYER, is_layer)) return;
 			if (!data.bval[+Constants::io__sprite_boolean::DRAW]) return;
 
 			checkTied();
 
-			if (data.function_pair[+Constants::io__sprite_tie_func_to_state::WHEN_DRAWING]) data.function_pair[+Constants::io__sprite_tie_func_to_state::WHEN_DRAWING]();
+			if (data.function_pair[+Constants::io__sprite_tie_func_to_state::ON_DRAW]) data.function_pair[+Constants::io__sprite_tie_func_to_state::ON_DRAW]();
 
 			ALLEGRO_BITMAP* rn = bmps.get((data.bval[+Constants::io__sprite_boolean::USE_STATE_AS_BITMAP] ? data.last_state : Constants::io__sprite_tie_func_to_state::size));
 
@@ -1119,14 +1124,16 @@ namespace LSW {
 			double dt = timee - data.dtarg[+Constants::ro__sprite_target_double::INTERN_LASTDRAW];
 			data.dtarg[+Constants::ro__sprite_target_double::INTERN_LASTDRAW] = timee;
 
-			if (!data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING]) {
-				double perc_run = Constants::__i_col_pos_t_update * dt; // ex: 5 per sec * 0.2 (1/5 sec) = 1, so posx = actual posx...
-				if (perc_run > 1.0) perc_run = 1.0; // 1.0 is "set value"
-				if (perc_run < 1.0 / 10000) perc_run = 1.0 / 10000; // can't be infinitely smooth right? come on
+			double perc_run = Constants::__i_col_pos_t_update * dt; // ex: 5 per sec * 0.2 (1/5 sec) = 1, so posx = actual posx...
+			if (perc_run > 1.0) perc_run = 1.0; // 1.0 is "set value"
+			if (perc_run < 1.0 / 10000) perc_run = 1.0 / 10000; // can't be infinitely smooth right? come on
 
-				data.dval[+Constants::io__sprite_double::POSX] = (1.0 - perc_run) * data.dval[+Constants::io__sprite_double::POSX] + perc_run * data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX];
-				data.dval[+Constants::io__sprite_double::POSY] = (1.0 - perc_run) * data.dval[+Constants::io__sprite_double::POSY] + perc_run * data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY];
-				data.dval[+Constants::io__sprite_double::ROTATION] = (1.0 - perc_run) * data.dval[+Constants::io__sprite_double::ROTATION] + perc_run * data.dtarg[+Constants::ro__sprite_target_double::TARG_ROTATION];
+			data.dval[+Constants::io__sprite_double::ROTATION] = (1.0 - perc_run) * data.dval[+Constants::io__sprite_double::ROTATION] + perc_run * data.dtarg[+Constants::ro__sprite_target_double::TARG_ROTATION];
+
+			if (!data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING_FROM_X] || !data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING_FROM_Y]) {
+
+				if (!data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING_FROM_X]) data.dval[+Constants::io__sprite_double::POSX] = (1.0 - perc_run) * data.dval[+Constants::io__sprite_double::POSX] + perc_run * data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX];
+				if (!data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING_FROM_Y]) data.dval[+Constants::io__sprite_double::POSY] = (1.0 - perc_run) * data.dval[+Constants::io__sprite_double::POSY] + perc_run * data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY];
 			}
 
 
@@ -1151,8 +1158,12 @@ namespace LSW {
 			// draw
 			camm.applyNoSave(psf);
 
-			if (data.bval[+Constants::io__sprite_boolean::USE_TINTED_DRAWING])	al_draw_tinted_scaled_rotated_bitmap(rn, data.tint, cx, cy, px, py, dsx, dsy, rot_rad, 0);
-			else																    al_draw_scaled_rotated_bitmap(rn, cx, cy, px, py, dsx, dsy, rot_rad, 0);
+			if (data.bval[+Constants::io__sprite_boolean::USE_TINTED_DRAWING]) {
+				al_draw_tinted_scaled_rotated_bitmap(rn, data.tint, cx, cy, px, py, dsx, dsy, rot_rad, 0);
+			}
+			else {
+				al_draw_scaled_rotated_bitmap(rn, cx, cy, px, py, dsx, dsy, rot_rad, 0);
+			}
 
 			// debug
 
@@ -1160,9 +1171,9 @@ namespace LSW {
 			{
 				ALLEGRO_COLOR colorr = 
 					al_map_rgba(
-						data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] ? 195 : 15,
+						(data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING_FROM_X] || data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING_FROM_Y]) ? 195 : 15,
 						115,
-						data.bval[+Constants::io__sprite_boolean::RO_IS_MOUSE_COLLIDING] ? 195 : 15,
+						(data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING_FROM_X] || data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING_FROM_Y]) ? 195 : 15,
 						195
 					);
 				camera_preset psf = camm.get();
@@ -1193,7 +1204,8 @@ namespace LSW {
 
 		void Sprite::clearUp()
 		{
-			data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = false;
+			data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING_FROM_X] = false;
+			data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING_FROM_Y] = false;
 			data.bval[+Constants::io__sprite_boolean::RO_IS_MOUSE_COLLIDING] = false;
 			data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_ABOUT_TO_COLLIDE] = false;
 			data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X] = 0.0;// 2.0 * data.dval[+Constants::io__sprite_double::SCALEX] * data.dval[+Constants::io__sprite_double::SCALEG];
@@ -1209,7 +1221,7 @@ namespace LSW {
 			//data.where_i_wanna_go
 			psf.set(Constants::io__camera_boolean::READONLY_NOW, false);
 
-			if ((layer != is_layer) &&
+			if ((!isEq(Constants::io__sprite_integer::LAYER, is_layer)) &&
 				(data.collision_mode != Constants::io__sprite_collision_mode::COLLISION_ANY_ELASTIC && data.collision_mode != Constants::io__sprite_collision_mode::COLLISION_ANY_ROUGH) // HERE
 				&& ([&]() {
 					data.layers_colliding_m.lock();
@@ -1272,16 +1284,7 @@ namespace LSW {
 			}
 			mf->get(Constants::io__sprite_string::ID, friendsname);
 			double multiplier = mf->doesThisReflect() ? 1.0 : 1.0;
-
 			
-
-			//if (+data.collision_mode <= +Constants::io__sprite_collision_mode::__COLLISION_HOLD_OR_TRANSPARENT_MAXVAL) return; // all of them before because they are 0, 1, 2 and 3, and this is the 3, so <= 3 = nope
-			//if (is_layer != layer && data.collision_mode != Constants::io__sprite_collision_mode::COLLISION_ANY_ELASTIC && data.collision_mode != Constants::io__sprite_collision_mode::COLLISION_ANY_ROUGH) return;
-			//if (mf == this) return;
-			//if (!mf) return;
-			//if (mf->isEq(Constants::io__sprite_collision_mode::COLLISION_TRANSPARENT)) return;
-			//if (mf->isEq(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY)) return;
-			//if (!(mf->isEq(Constants::io__sprite_collision_mode::COLLISION_ANY_ELASTIC) || mf->isEq(Constants::io__sprite_collision_mode::COLLISION_ANY_ROUGH) || mf->isEq(Constants::io__sprite_integer::LAYER, is_layer))) return;
 
 			// OBRIGATORIAMENTE:
 			// this -> ou é SAMELAYER ou ANYLAYER
@@ -1331,20 +1334,24 @@ namespace LSW {
 					if (dxx > 0.0) { // block on the left of me
 						this_collision.diretion_by_centers_interpreted = +Constants::directions::WEST;
 						__debug_s += "W@" + std::to_string(adapt_dxx) + ":" + std::to_string(adapt_dyy) + ";";
+						data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING_FROM_X] = true;
 					}
 					else {
 						this_collision.diretion_by_centers_interpreted = +Constants::directions::EAST;
 						__debug_s += "E@" + std::to_string(adapt_dxx) + ":" + std::to_string(adapt_dyy) + ";";
+						data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING_FROM_X] = true;
 					}
 				}
 				else { // from vertc
 					if (dyy > 0.0) { // block on top
 						this_collision.diretion_by_centers_interpreted = +Constants::directions::NORTH;
 						__debug_s += "N@" + std::to_string(adapt_dxx) + ":" + std::to_string(adapt_dyy) + ";";
+						data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING_FROM_Y] = true;
 					}
 					else {
 						this_collision.diretion_by_centers_interpreted = +Constants::directions::SOUTH;
 						__debug_s += "S@" + std::to_string(adapt_dxx) + ":" + std::to_string(adapt_dyy) + ";";
+						data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING_FROM_Y] = true;
 					}
 				}
 
@@ -1352,8 +1359,6 @@ namespace LSW {
 				this_collision.expected_walk_distances[1] = fabs(fabs(dyy) - fabs(disty));
 
 				data.col_data.push_back(this_collision);
-
-				data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING] = true;
 			}
 
 			else if (adapt_dxx2 < 1.0 && adapt_dyy2 < 1.0) // is about to collide soon
@@ -1362,8 +1367,8 @@ namespace LSW {
 				//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << sprite_id << " WILL COL W/ " << friendsname << L::EL;
 				data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_ABOUT_TO_COLLIDE] = true;
 			
-				data.dval[+Constants::io__sprite_double::RO_SPEEDX] *= 0.49; // < 0.50 so it won't bypass collision
-				data.dval[+Constants::io__sprite_double::RO_SPEEDY] *= 0.49; // < 0.50 "
+				data.dval[+Constants::io__sprite_double::RO_SPEEDX] *= 0.75; // < 0.50 so it won't bypass collision
+				data.dval[+Constants::io__sprite_double::RO_SPEEDY] *= 0.75; // < 0.50 "
 
 				if (adapt_dxx > adapt_dyy) { // from horiz
 					if (dxx > 0.0)	__debug_s += "w@" + std::to_string(adapt_dxx) + ":" + std::to_string(adapt_dyy) + ";";
@@ -1414,7 +1419,7 @@ namespace LSW {
 
 			// COLLISION
 
-			if (data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING]) {
+			if (data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING_FROM_X] || data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING_FROM_Y]) {
 
 				data.dval[+Constants::io__sprite_double::RO_SPEEDY] = data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 0.0;
 
@@ -1447,17 +1452,38 @@ namespace LSW {
 				}
 
 				else if (b[1] && b[2] && b[3]) { // north is free (smashed horizontally)
-					data.dval[+Constants::io__sprite_double::RO_SPEEDY] = -0.15 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
+
+					if ((data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_ANY_ELASTIC) || (data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC))
+						data.dval[+Constants::io__sprite_double::RO_SPEEDY] = -1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
+					else if ((data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_ANY_ROUGH) || (data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH))
+						data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] -= sum_pos[1];
+
+					//data.dval[+Constants::io__sprite_double::RO_SPEEDY] = -0.15 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
 				}
 				else if (b[0] && b[1] && b[2]) { // west is free (smashed vertically)
-					data.dval[+Constants::io__sprite_double::RO_SPEEDX] = -0.15 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
+					if ((data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_ANY_ELASTIC) || (data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC))
+						data.dval[+Constants::io__sprite_double::RO_SPEEDX] = -1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
+					else if ((data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_ANY_ROUGH) || (data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH))
+						data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] -= sum_pos[0];
+
+					//data.dval[+Constants::io__sprite_double::RO_SPEEDX] = -0.15 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
 				}
 
 				else if (b[0] && b[1]) { // so go east (smashed vertically)
-					data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 0.15 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
+					if ((data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_ANY_ELASTIC) || (data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC))
+						data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
+					else if ((data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_ANY_ROUGH) || (data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH))
+						data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] += sum_pos[0];
+
+					//data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 0.15 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
 				}
 				else if (b[2] && b[3]) { // so go south (smashed horizontally)
-					data.dval[+Constants::io__sprite_double::RO_SPEEDY] = 0.15 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
+					if ((data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_ANY_ELASTIC) || (data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC))
+						data.dval[+Constants::io__sprite_double::RO_SPEEDY] = 1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
+					else if ((data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_ANY_ROUGH) || (data.collision_mode == Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH))
+						data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] += sum_pos[1];
+
+					//data.dval[+Constants::io__sprite_double::RO_SPEEDY] = 0.15 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
 				}
 				
 				else if (b[0]) { // so go south
@@ -1487,280 +1513,8 @@ namespace LSW {
 				else {
 					throw Abort::warn(__FUNCSIG__, "Unexpected collision behaviour!");
 				}
-
-
-
-
-
-				/*if (b[0]) // block on north
-				{
-					if (b[1]) { // there's someone south
-						if (b[2]) { // also east
-							if (b[3]) { // everywhere
-								__debug_s += "SMASHED;";
-							}
-							else { // can go west
-								data.dval[+Constants::io__sprite_double::RO_SPEEDX] = -1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
-							}
-						}
-						else { // can go east
-							data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
-						}
-					}
-					else { // can go south
-						data.dval[+Constants::io__sprite_double::RO_SPEEDY] = 1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
-					}
-				}
-				else if (b[1]) // block on south
-				{
-					if (b[0]) { // there's someone north
-						if (b[2]) { // also east
-							if (b[3]) { // everywhere
-								__debug_s += "SMASHED;";
-							}
-							else { // can go west
-								data.dval[+Constants::io__sprite_double::RO_SPEEDX] = -1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
-							}
-						}
-						else { // can go east
-							data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
-						}
-					}
-					else { // can go north
-						data.dval[+Constants::io__sprite_double::RO_SPEEDY] = -1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
-					}
-				}
-				else if (b[2]) // block on east
-				{
-					if (b[3]) { // there's someone west
-						if (b[0]) { // also north
-							if (b[1]) { // everywhere
-								__debug_s += "SMASHED;";
-							}
-							else { // can go south
-								data.dval[+Constants::io__sprite_double::RO_SPEEDY] = 1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
-							}
-						}
-						else { // can go north
-							data.dval[+Constants::io__sprite_double::RO_SPEEDY] = -1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
-						}
-					}
-					else { // can go west
-						data.dval[+Constants::io__sprite_double::RO_SPEEDX] = -1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
-					}
-				}
-				else if (b[3]) // block on west
-				{
-					if (b[2]) { // there's someone east
-						if (b[0]) { // also north
-							if (b[1]) { // everywhere
-								__debug_s += "SMASHED;";
-							}
-							else { // can go south
-								data.dval[+Constants::io__sprite_double::RO_SPEEDY] = 1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
-							}
-						}
-						else { // can go north
-							data.dval[+Constants::io__sprite_double::RO_SPEEDY] = -1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
-						}
-					}
-					else { // can go east
-						data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 1.0 * data.dval[+Constants::io__sprite_double::ACCELERATION_X];
-					}
-				}*/
-
-
-
-				//switch (data.collision_mode) {
-				//case Constants::io__sprite_collision_mode::COLLISION_ANY_ELASTIC:
-				//case Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC:
-
-					//__debug_s += "COL_ELASTIC;";
-
-					//if (data.direction_col & +Constants::directions::NORTH) { // the block at north, so go down
-					//	data.dval[+Constants::io__sprite_double::RO_SPEEDY] = fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * data.dval[+Constants::io__sprite_double::SMOOTHNESS_Y];
-					//}
-					//if (data.direction_col & +Constants::directions::SOUTH) {
-					//	data.dval[+Constants::io__sprite_double::RO_SPEEDY] = -fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * data.dval[+Constants::io__sprite_double::SMOOTHNESS_Y];
-					//}
-					//if (data.direction_col & +Constants::directions::WEST) {
-					//	data.dval[+Constants::io__sprite_double::RO_SPEEDX] = fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * data.dval[+Constants::io__sprite_double::SMOOTHNESS_X];
-					//}
-					//if (data.direction_col & +Constants::directions::EAST) {
-					//	data.dval[+Constants::io__sprite_double::RO_SPEEDX] = -fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * data.dval[+Constants::io__sprite_double::SMOOTHNESS_X];
-					//}
-
-					/////break;
-				//case Constants::io__sprite_collision_mode::COLLISION_ANY_ROUGH:
-				//case Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH:
-
-					//__debug_s += "COL_ROUGH;";
-					/*data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 0.0;
-					data.dval[+Constants::io__sprite_double::RO_SPEEDY] = 0.0;*/
-
-
-
-					//bool dealt = false;
-
-					//if ((data.direction_col & +Constants::directions::NORTH) && (data.direction_col & +Constants::directions::SOUTH) && (data.direction_col & +Constants::directions::WEST) && (data.direction_col & +Constants::directions::EAST)) // colliding everywhere, so random lmao
-					//{
-					//	int which = rand() % 4;
-					//	switch (which) {
-					//	case 0:
-					//		data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
-					//		break;
-					//	case 1:
-					//		data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
-					//		break;
-					//	case 2:
-					//		data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
-					//		break;
-					//	case 3:
-					//		data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
-					//		break;
-					//	}
-					//	dealt = true;
-					//}
-
-					//if (!dealt) { // colliding on two sides at the same time
-					//	if ((data.direction_col & +Constants::directions::NORTH) && (data.direction_col & +Constants::directions::SOUTH))
-					//	{
-					//		if (data.direction_col & +Constants::directions::WEST) {
-					//			data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
-					//		}
-					//		else if (data.direction_col & +Constants::directions::EAST) {
-					//			data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
-					//		}
-					//		else {
-					//			int which = rand() % 2;
-					//			switch(which){
-					//			case 0:
-					//				data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
-					//				break;
-					//			case 1:
-					//				data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
-					//				break;
-					//			}
-					//		}
-					//		dealt = true;
-					//	}
-
-					//	if ((data.direction_col & +Constants::directions::WEST) && (data.direction_col & +Constants::directions::EAST))
-					//	{
-					//		if (data.direction_col & +Constants::directions::NORTH) { // the block at north, so go down
-					//			data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
-					//		}
-					//		else if (data.direction_col & +Constants::directions::SOUTH) {
-					//			data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
-					//		}
-					//		else {
-					//			int which = rand() % 2;
-					//			switch (which) {
-					//			case 0:
-					//				data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
-					//				break;
-					//			case 1:
-					//				data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
-					//				break;
-					//			}
-					//		}
-					//		dealt = true;
-					//	}
-					//}
-
-					//if (!dealt) { // one side only (easier)
-					//	if (data.direction_col & +Constants::directions::NORTH) { // the block at north, so go down
-					//		data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
-					//	}
-					//	if (data.direction_col & +Constants::directions::SOUTH) {
-					//		data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * Constants::sprite_default_offset_mult;
-					//	}
-					//	if (data.direction_col & +Constants::directions::WEST) {
-					//		data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
-					//	}
-					//	if (data.direction_col & +Constants::directions::EAST) {
-					//		data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * Constants::sprite_default_offset_mult;
-					//	}
-					//}
-
-					//break;
-				//}
 			}
 
-
-			/*if (data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING]) {
-
-				// speed must not be higher than the distance to collision
-				if (fabs(data.dval[+Constants::io__sprite_double::RO_SPEEDX]) > data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) {
-					int mult = (data.dval[+Constants::io__sprite_double::RO_SPEEDX] < 0 ? -1 : 1);
-					data.dval[+Constants::io__sprite_double::RO_SPEEDX] = mult * data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X];
-				}
-				if (fabs(data.dval[+Constants::io__sprite_double::RO_SPEEDY]) > data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) {
-					int mult = (data.dval[+Constants::io__sprite_double::RO_SPEEDY] < 0 ? -1 : 1);
-					data.dval[+Constants::io__sprite_double::RO_SPEEDY] = mult * data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y];
-				}
-
-
-				// limit the maximum power of pos += distance value				
-				if (data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X] > Constants::sprite_default_limit_colision_speed_any)
-					data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X] = Constants::sprite_default_limit_colision_speed_any;
-
-				if (data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y] > Constants::sprite_default_limit_colision_speed_any)
-					data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y] = Constants::sprite_default_limit_colision_speed_any;
-
-
-				auto d_g = resolveDir(data.direction_col);
-
-
-				switch (data.collision_mode) {
-				case Constants::io__sprite_collision_mode::COLLISION_ANY_ELASTIC:
-				case Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ELASTIC:
-					{
-						__debug_s += "COL_ELASTIC;";
-						switch (d_g) {
-						case Constants::cl__sprite_direction_mult::GO_NORTH:
-							data.dval[+Constants::io__sprite_double::RO_SPEEDY] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * data.dval[+Constants::io__sprite_double::SMOOTHNESS_Y];
-							break;
-						case Constants::cl__sprite_direction_mult::GO_SOUTH:
-							data.dval[+Constants::io__sprite_double::RO_SPEEDY] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]) * data.dval[+Constants::io__sprite_double::SMOOTHNESS_Y];
-							break;
-						case Constants::cl__sprite_direction_mult::GO_WEST:
-							data.dval[+Constants::io__sprite_double::RO_SPEEDX] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * data.dval[+Constants::io__sprite_double::SMOOTHNESS_X];
-							break;
-						case Constants::cl__sprite_direction_mult::GO_EAST:
-							data.dval[+Constants::io__sprite_double::RO_SPEEDX] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]) * data.dval[+Constants::io__sprite_double::SMOOTHNESS_X];
-							break;
-						}
-
-						
-						//data.dval[+Constants::io__sprite_double::RO_SPEEDX] += data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X] * data.dval[+Constants::io__sprite_double::SMOOTHNESS_X];
-						//data.dval[+Constants::io__sprite_double::RO_SPEEDY] += data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y] * data.dval[+Constants::io__sprite_double::SMOOTHNESS_Y];
-					}
-				break;
-				case Constants::io__sprite_collision_mode::COLLISION_ANY_ROUGH:
-				case Constants::io__sprite_collision_mode::COLLISION_SAMELAYER_ROUGH:
-					{
-						__debug_s += "COL_ROUGH;";
-						data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 0.0;
-						data.dval[+Constants::io__sprite_double::RO_SPEEDY] = 0.0;
-						switch (d_g) {
-						case Constants::cl__sprite_direction_mult::GO_NORTH:
-							data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]);
-							break;
-						case Constants::cl__sprite_direction_mult::GO_SOUTH:
-							data.dtarg[+Constants::ro__sprite_target_double::TARG_POSY] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_Y]);
-							break;
-						case Constants::cl__sprite_direction_mult::GO_WEST:
-							data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] -= fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]);
-							break;
-						case Constants::cl__sprite_direction_mult::GO_EAST:
-							data.dtarg[+Constants::ro__sprite_target_double::TARG_POSX] += fabs(data.dval[+Constants::io__sprite_double::RO_OTHERS_DISTANCE_X]);
-							break;
-						}
-					}
-				break;
-				}
-			}*/
 
 			if (psf.get(Constants::io__camera_boolean::RESPECT_LIMITS) && !(data.bval[+Constants::io__sprite_boolean::FOLLOWMOUSE] || !data.bval[+Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS])) /* FOLLOWMOUSE may glitch if outside limits, so skip limits then */
 			{
@@ -1780,7 +1534,7 @@ namespace LSW {
 		{
 			if (!data.bval[+Constants::io__sprite_boolean::AFFECTED_BY_CAM]) return false;
 			if (+data.collision_mode <= +Constants::io__sprite_collision_mode::__COLLISION_TRANSPARENT_MAXVAL) return false;
-			if (l != layer) {
+			if (!isEq(Constants::io__sprite_integer::LAYER, l)) {
 				if (+data.collision_mode >= +Constants::io__sprite_collision_mode::__COLLISION_ANYLAYER_MINVAL) return true;
 				return false;
 			}
@@ -1792,12 +1546,78 @@ namespace LSW {
 			return (+data.collision_mode > +Constants::io__sprite_collision_mode::__COLLISION_HOLD_OR_TRANSPARENT_MAXVAL);
 		}
 
+		bool Sprite::isThisEntity()
+		{
+			return !is_this_sprite;
+		}
+
 		std::string Sprite::__debug_str()
 		{
 			return __debug_s;
 		}
 
 
+
+		Entity::Entity()
+		{
+			is_this_sprite = false;
+		}
+
+		bool Entity::isThisEntity()
+		{
+			return !is_this_sprite;
+		}
+
+		void Entity::set(Constants::io__entity_string u, const std::string v)
+		{
+			if (u != Constants::io__entity_string::size) edata.s[+u] = v;
+		}
+
+		void Entity::set(Constants::io__entity_color u, const ALLEGRO_COLOR v)
+		{
+			if (u != Constants::io__entity_color::size) edata.c[+u] = v;
+		}
+
+		void Entity::set(Constants::io__entity_double u, const double v)
+		{
+			if (u != Constants::io__entity_double::size) edata.d[+u] = v;
+		}
+
+		void Entity::get(Constants::io__entity_string u, std::string& v)
+		{
+			if (u != Constants::io__entity_string::size) v = edata.s[+u];
+		}
+
+		void Entity::get(Constants::io__entity_color u, ALLEGRO_COLOR& v)
+		{
+			if (u != Constants::io__entity_color::size) v = edata.c[+u];
+		}
+
+		void Entity::get(Constants::io__entity_double u, double& v)
+		{
+			if (u != Constants::io__entity_double::size) v = edata.d[+u];
+		}
+
+		bool Entity::isEq(Constants::io__entity_string u, const std::string v)
+		{
+			std::string e;
+			get(u, e);
+			return e == v;
+		}
+
+		bool Entity::isEq(Constants::io__entity_color u, const ALLEGRO_COLOR v)
+		{
+			ALLEGRO_COLOR e;
+			get(u, e);
+			return (e.r == v.r) && (e.g == v.g) && (e.b == v.b) && (e.a == v.a);
+		}
+
+		bool Entity::isEq(Constants::io__entity_double u, const double v)
+		{
+			double e;
+			get(u, e);
+			return e == v;
+		}
 
 
 
@@ -2012,10 +1832,6 @@ namespace LSW {
 							conf.get(Constants::ro__db_string::LAST_STRING, str);
 							for (p = 0; p < 128 && p < str.length(); p++) tempstr_c[p] = str[p];
 							if (p < 128) tempstr_c[p] = '\0';
-							/*std::string str;
-							bev.getLastString(str);
-							sprintf_s(tempstr_c, "%s", str.c_str());*/
-							//sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
 						}
 						break;
 						case +Constants::tags_e::T_CURRSTRING:
@@ -2025,16 +1841,6 @@ namespace LSW {
 							conf.get(Constants::ro__db_string::CURRENT_STRING, str);
 							for (p = 0; p < 128 && p < str.length(); p++) tempstr_c[p] = str[p];
 							if (p < 128) tempstr_c[p] = '\0';
-							/*std::string str;
-							bev.getCurrentString(str);
-							int u = (str.length()) / 20;
-							if (u > 3) u = 3;
-							if (u < 0) u = 0;
-
-							for (int p = 0; p < u; p++) tempstr_c[p] = '.';
-
-							sprintf_s(tempstr_c + u, 128 - u, "%s", (str.substr((str.length() >= 20) ? str.length() - 19 - u : 0) + '\0').c_str());*/
-							//sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
 						}
 						break;
 						case +Constants::tags_e::T_SPRITE_SPEEDX:
@@ -2062,35 +1868,28 @@ namespace LSW {
 							else sprintf_s(tempstr_c, "NULL");
 							break;
 						case +Constants::tags_e::T_SPRITE_ENTITY_HEALTH:
-							/*if (follow) {
-								Entities::entity* ent = nullptr;
-								void* trash = nullptr;
-								follow->get(Sprite::ENTITY, trash);
-								ent = (Entities::entity*)trash;
-
-								if (ent) {
-									sprintf_s(tempstr_c, "%.1lf", 10.0 * ent->getMyHealth());
+							if (follow) {
+								if (follow->isThisEntity()) {
+									double health = 0.0;
+									Entity* lmao = (Entity*)follow;
+									lmao->get(Constants::io__entity_double::HEALTH, health);
+									sprintf_s(tempstr_c, "%.0lf%c", 100.0 * health, '%');
 								}
-								else sprintf_s(tempstr_c, "UNDEF");
+								else sprintf_s(tempstr_c, "NULL"); 
 							}
-							else sprintf_s(tempstr_c, "UNDEF");*/
-							sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
+							else sprintf_s(tempstr_c, "NULL");
 							break;
 						case +Constants::tags_e::T_SPRITE_ENTITY_NAME:
-							/*if (follow) {
-
-								Entities::entity* ent = nullptr;
-								void* trash = nullptr;
-								follow->get(Sprite::ENTITY, trash);
-								ent = (Entities::entity*)trash;
-
-								if (ent) {
-									sprintf_s(tempstr_c, "%s", ent->getMyName().c_str());
+							if (follow) {
+								if (follow->isThisEntity()) {
+									std::string nickname;
+									Entity* lmao = (Entity*)follow;
+									lmao->get(Constants::io__entity_string::NICKNAME, nickname);
+									sprintf_s(tempstr_c, "%s", nickname.c_str());
 								}
-								else sprintf_s(tempstr_c, "UNDEF");
+								else sprintf_s(tempstr_c, "NULL");
 							}
-							else sprintf_s(tempstr_c, "UNDEF");*/
-							sprintf_s(tempstr_c, "NOT_IMPLEMENTED");
+							else sprintf_s(tempstr_c, "NULL");
 							break;
 						case +Constants::tags_e::_T_SPRITE_DEBUG:
 							if (follow) {
@@ -2271,12 +2070,52 @@ namespace LSW {
 
 		void Text::set(const Constants::io__text_integer o, const int e)
 		{
-			if (o != Constants::io__text_integer::size) data.i[+o] = e;
+			if (+o < +Constants::io__text_integer::size) data.i[+o] = e;
+			else {
+				switch (o) {
+
+				case Constants::io__text_integer::ADD_ALT_LAYER:
+				{
+					bool has = false;
+					data.layers_colliding_m.lock();
+
+					for (auto& i : data.layers_colliding) {
+						if (i == e) {
+							has = true;
+							break;
+						}
+					}
+					if (!has && e != data.i[+Constants::io__text_integer::LAYER]) data.layers_colliding.push_back(e);
+
+					data.layers_colliding_m.unlock();
+				}
+				break;
+				case Constants::io__text_integer::REMOVE_ALT_LAYER:
+				{
+					data.layers_colliding_m.lock();
+
+					for (size_t p = 0; p < data.layers_colliding.size(); p++) {
+						if (data.layers_colliding[p] == e) {
+							data.layers_colliding.erase(data.layers_colliding.begin() + p);
+							break;
+						}
+					}
+
+					data.layers_colliding_m.unlock();
+				}
+				break;
+				}
+			}
 		}
 
-		void Text::set(const Constants::io__sprite_tie_func_to_state o, const std::function<void(std::string&)> e)
+		void Text::hook(const Constants::io__text_tie_func_to_state o, const std::function<void(std::string&)> e)
 		{
-			if (o != Constants::io__sprite_tie_func_to_state::size) data.pair_tied[+o] = e;
+			if (o != Constants::io__text_tie_func_to_state::size) data.pair_tied[+o] = e;
+		}
+
+		void Text::unhook(const Constants::io__text_tie_func_to_state o)
+		{
+			hook(o, std::function<void(std::string&)>());
 		}
 
 
@@ -2301,35 +2140,47 @@ namespace LSW {
 			e = data.c; // no ::size
 		}
 
-		const bool Text::isEq(const Constants::io__text_color e, const ALLEGRO_COLOR v)
+		bool Text::isEq(const Constants::io__text_color e, const ALLEGRO_COLOR v)
 		{
 			ALLEGRO_COLOR g;
 			get(e, g);
 			return ((g.r == v.r) && (g.g == v.g) && (g.b == v.b) && (g.a == v.a));
 		}
-		const bool Text::isEq(const Constants::io__text_string e, const std::string v)
+		bool Text::isEq(const Constants::io__text_string e, const std::string v)
 		{
 			std::string g;
 			get(e, g);
 			return g == v;
 		}
-		const bool Text::isEq(const Constants::io__text_boolean e, const bool v)
+		bool Text::isEq(const Constants::io__text_boolean e, const bool v)
 		{
 			bool g;
 			get(e, g);
 			return g == v;
 		}
-		const bool Text::isEq(const Constants::io__text_double e, const double v)
+		bool Text::isEq(const Constants::io__text_double e, const double v)
 		{
 			double g;
 			get(e, g);
 			return g == v;
 		}
-		const bool Text::isEq(const Constants::io__text_integer e, const int v)
+		bool Text::isEq(const Constants::io__text_integer e, const int v)
 		{
 			int g;
 			get(e, g);
-			return g == v;
+			return g == v || [&]() {
+				if (e != Constants::io__text_integer::LAYER) return false; // return false forcing anything but LAYER to be TRUE on g == v part
+
+				data.layers_colliding_m.lock();
+				for (auto& i : data.layers_colliding) {
+					if (i == v) {
+						data.layers_colliding_m.unlock();
+						return true;
+					}
+				}
+				data.layers_colliding_m.unlock();
+				return false;
+			}();
 		}
 
 
@@ -2337,27 +2188,36 @@ namespace LSW {
 		{
 			if (!data.b[+Constants::io__text_boolean::SHOW]) return;
 			if (!data.font) return;
-			if (is_layer != data.i[+Constants::io__text_integer::LAYER]) return;
+			if (!isEq(Constants::io__text_integer::LAYER, is_layer)) return;
 
 			if (follow) {
 				if (follow->isEq(Constants::io__sprite_boolean::DRAW, false)) return;
+				if (data.b[+Constants::io__text_boolean::USE_SPRITE_TINT_INSTEAD]) {
+					follow->get(Constants::io__sprite_color::TINT, data.c);
+				}
 			}
 
-			if (al_get_time() - data.d[+Constants::io__text_double::LAST_INTERPRET] > data.d[+Constants::io__text_double::UPDATETIME]) {
-				
-				if (al_get_time() - data.d[+Constants::io__text_double::LAST_INTERPRET] > data.d[+Constants::io__text_double::UPDATETIME] * 3) data.d[+Constants::io__text_double::LAST_INTERPRET] = al_get_time();
-				else data.d[+Constants::io__text_double::LAST_INTERPRET] += data.d[+Constants::io__text_double::UPDATETIME];
-
+			{
 				std::string working_now = data.str[+Constants::io__text_string::STRING];
-				if (follow) {
-					Constants::io__sprite_tie_func_to_state st;
-					follow->get(Constants::ro__sprite_state::STATE, st);
-					if (data.pair_tied[+st]) data.pair_tied[+st](working_now);
+				if (data.pair_tied[+Constants::io__text_tie_func_to_state::ON_DRAW]) data.pair_tied[+Constants::io__text_tie_func_to_state::ON_DRAW](working_now);
+
+				if (al_get_time() - data.d[+Constants::io__text_double::LAST_INTERPRET] > data.d[+Constants::io__text_double::UPDATETIME]) {
+
+					if (al_get_time() - data.d[+Constants::io__text_double::LAST_INTERPRET] > data.d[+Constants::io__text_double::UPDATETIME] * 3) data.d[+Constants::io__text_double::LAST_INTERPRET] = al_get_time();
+					else data.d[+Constants::io__text_double::LAST_INTERPRET] += data.d[+Constants::io__text_double::UPDATETIME];
+					if (follow) {
+						Constants::io__sprite_tie_func_to_state st;
+						follow->get(Constants::ro__sprite_state::STATE, st);
+						if (+st <= +Constants::io__text_tie_func_to_state::__SPRITE_TIED_MAX) {
+							if (data.pair_tied[+st]) data.pair_tied[+st](working_now);
+						}
+					}
+					if (data.pair_tied[+Constants::io__text_tie_func_to_state::ON_UPDATE]) data.pair_tied[+Constants::io__text_tie_func_to_state::ON_UPDATE](working_now);
+
+					std::string b4 = data.str[+Constants::io__text_string::PROCESSED_STRING];
+					data.str[+Constants::io__text_string::PROCESSED_STRING] = working_now;
+					_interpretTags(data.str[+Constants::io__text_string::PROCESSED_STRING]);
 				}
-				
-				std::string b4 = data.str[+Constants::io__text_string::PROCESSED_STRING];
-				data.str[+Constants::io__text_string::PROCESSED_STRING] = working_now;
-				_interpretTags(data.str[+Constants::io__text_string::PROCESSED_STRING]);
 			}
 
 			while (data.d[+Constants::io__text_double::ROTATION] > 360.0) data.d[+Constants::io__text_double::ROTATION] -= 360.0;
@@ -2454,8 +2314,8 @@ namespace LSW {
 				__template_static_vector<Sprite> sprites;
 
 				Database db;
-				db.get(Constants::io__conf_integer::SCREEN_X, siz[0], 1920);
-				db.get(Constants::io__conf_integer::SCREEN_Y, siz[1], 1080);
+				db.get(Constants::io__conf_integer::SCREEN_X, siz[0]);
+				db.get(Constants::io__conf_integer::SCREEN_Y, siz[1]);
 
 				siz[0] *= 0.8;
 				siz[1] *= 0.8;
@@ -2580,8 +2440,8 @@ namespace LSW {
 			__template_static_vector<Sprite> sprites;
 
 			Database db;
-			db.get(Constants::io__conf_integer::SCREEN_X, siz[0], 1920);
-			db.get(Constants::io__conf_integer::SCREEN_Y, siz[1], 1080);
+			db.get(Constants::io__conf_integer::SCREEN_X, siz[0]);
+			db.get(Constants::io__conf_integer::SCREEN_Y, siz[1]);
 			
 			if (siz[0] < 1280) siz[0] = 1280;
 			if (siz[1] < 720) siz[1] = 720;
@@ -2639,5 +2499,5 @@ namespace LSW {
 
 			return true;
 		}
-	}
+}
 }
