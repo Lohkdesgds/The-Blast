@@ -52,6 +52,8 @@ int main(int argc, const char* argv[])
 		BubblesFX bubble;
 		LiningFX lines;
 
+		if (conf.isEq(Constants::io__conf_boolean::ENABLE_SECOND_DEBUGGING_SCREEN, true)) logg.callDebugScreen(); // debugging lmao
+
 		logg << L::SLF << fsr(__FUNCSIG__) << "Setting up dynamic functions..." << L::ELF;
 
 
@@ -258,7 +260,7 @@ int main(int argc, const char* argv[])
 
 		// keybinds
 		const std::function<void(void)> keyb_fullscreen_window					= [&consol, &__assist]() {
-			consol.sendEvent(Constants::ro__my_events::THRDRW_GOT_FORCED_RESIZE, (intptr_t)(__assist[1] = !__assist[1]));
+			consol.sendEvent(Constants::ro__my_events::CUSTOM_EVENT_CALL_FULLSCREEN, (intptr_t)(__assist[1] = !__assist[1]));
 		};
 		const int						keyb_fullscreen_window_key				= ALLEGRO_KEY_F11;
 		const std::function<void(void)> keyb_printscreen						= [&consol]() {
@@ -637,7 +639,7 @@ int main(int argc, const char* argv[])
 					this_is_the_player->set(Constants::io__sprite_double::SCALEG, 0.065);
 					this_is_the_player->set(Constants::io__sprite_double::POSX, 1.0);
 					this_is_the_player->set(Constants::io__sprite_double::POSY, -1.0);
-					this_is_the_player->set(Constants::io__sprite_double::SCALEY, Constants::scale_y_map);
+					this_is_the_player->set(Constants::io__sprite_double::SCALEY, 1.77777778);
 					this_is_the_player->set(Constants::io__sprite_string::ADD, "PLAYER_BMP");
 					this_is_the_player->set(Constants::io__sprite_integer::LAYER, 1);
 					this_is_the_player->set(Constants::io__sprite_integer::ADD_ALT_LAYER, -9);
@@ -656,7 +658,7 @@ int main(int argc, const char* argv[])
 					t->set(Constants::io__text_boolean::USE_SPRITE_TINT_INSTEAD, true);
 					t->set(Constants::io__text_double::SCALEG, 0.041);
 					t->set(Constants::io__text_double::SCALEX, 0.7);
-					t->set(Constants::io__text_double::POSY, -0.105);
+					t->set(Constants::io__text_double::POSY, -0.145);
 					t->set(Constants::io__text_string::FOLLOW_SPRITE, "PLAYER");
 					t->set(Constants::io__text_integer::LAYER, 1); 
 					t->set(Constants::io__text_integer::ADD_ALT_LAYER, -9);
@@ -1679,281 +1681,33 @@ int main(int argc, const char* argv[])
 
 
 
-		bool has_map_gen = false, has_sleeping_sprites = false;
-		World* wd = nullptr;
-
 		const std::function<bool(const main_gamemodes)> isGamingLocally = [](const main_gamemodes u)->bool {return (u == main_gamemodes::PAUSE || u == main_gamemodes::GAMING); };
 
-		const auto refresh_map = [&__assist]() {__assist[2] = false; };
-		const auto update_block = [&sprites,&wd,&logg](const POINT i, Sprite* s = nullptr) {
-			if (!wd) return;
-			if (!s) {
-				std::string thus = "GAMEBOX_" + std::to_string(i.y) + "_" + std::to_string(i.x);
-				if (!sprites.get(thus, s)) {
-					logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Failed to find " << thus << " in the wild (map)" << L::ELF;
-					return;
-				}
-			}
-			if (s) {
-				Constants::io__sprite_collision_mode col_mode = Constants::io__sprite_collision_mode::COLLISION_TRANSPARENT;
-				s->set(Constants::io__sprite_string_vector::REMOVEMULTIPLE, [&](const std::string s)->bool {return true; }); // clean up all
-				std::string to_add;
-				switch (wd->readPos((int)i.x, (int)i.y)) {
-				case +blocks::BLOCK:
-					col_mode = Constants::io__sprite_collision_mode::COLLISION_ANY_HOLD_STATIC;
-					to_add = "BLOCK_00";	// BLOCK
-					break;
-				case +blocks::START_POINT:
-				case +blocks::EMPTY:
-					to_add = "BLOCK_01";	// DIRT
-					break;
-				case +blocks::LIFE:
-					to_add = "BLOCK_02";	// LIFE
-					break;
-				case +blocks::EXIT:
-				case +blocks::FAKE_EXIT:
-					to_add = "BLOCK_03";	// ?
-					break;
-				case +blocks::FAILEDEXIT:
-					to_add = "BLOCK_05";	// X
-					break;
-				case +blocks::BRICKING_0:
-					col_mode = Constants::io__sprite_collision_mode::COLLISION_ANY_HOLD_STATIC;
-					to_add = "BLOCK_06";	// 0
-					break;
-				case +blocks::BRICKING_1:
-					col_mode = Constants::io__sprite_collision_mode::COLLISION_ANY_HOLD_STATIC;
-					to_add = "BLOCK_07";	// 1
-					break;
-				case +blocks::BRICKING_2:
-					col_mode = Constants::io__sprite_collision_mode::COLLISION_ANY_HOLD_STATIC;
-					to_add = "BLOCK_08";	// 2
-					break;
-				case +blocks::BRICKING_3:
-					col_mode = Constants::io__sprite_collision_mode::COLLISION_ANY_HOLD_STATIC;
-					to_add = "BLOCK_09";	// 3
-					break;
-				}
-				s->set(Constants::io__sprite_string::ADD, to_add);
-				s->set(col_mode);
-			}
-		};
+		GamingStorm* game_0 = nullptr;
+
 		
-		const auto regen_map = [&]() {
-			int mult = rand() % 2 + 1;
-
-
-			consol.pauseThread();
-			while (!(consol.hasThreadPaused(Constants::io__thread_ids::DRAWING) && consol.hasThreadPaused(Constants::io__thread_ids::COLLIDING) && consol.hasThreadPaused(Constants::io__thread_ids::USERINPUT))) Sleep(10);
-
-			if (wd) delete wd;
-
-			wd = new World(16 * +mult, 9 * +mult);
-
-			this_is_the_player->set(Constants::io__sprite_double::SCALEG, 0.065 / +mult);
-
-			sprites.rename([](const std::string a)->bool {return a.find("GAMEBOX_") == 0; }, [](const std::string a)->std::string {return "GAMEBOX_DIEING_NOW_" + a.substr(8); });
-
-			// moved to be loaded before, lmao
-
-			double off_x, off_y;
-			off_x = 0.5 * Constants::scale_g_map_default / +mult;
-			off_y = 0.5 * Constants::scale_y_map * Constants::scale_g_map_default / +mult;
-
-			POINT player_start_point = wd->generate(al_get_time() * 20.0);
-
-			for (int y = 0; y < wd->getLen(1); y++) {
-				for (int x = 0; x < wd->getLen(0); x++)
-				{
-					double pss[2];
-
-					pss[0] = off_x + 2.0 * (1.0 * x / (wd->getLen(0)) - 0.5);
-					pss[1] = off_y + 2.0 * (1.0 * y / (wd->getLen(1)) - 0.5);
-
-					Sprite* s = sprites.create("GAMEBOX_DIEING_NOW_" + std::to_string(y) + "_" + std::to_string(x)); // recatch
-					sprites.rename("GAMEBOX_DIEING_NOW_" + std::to_string(y) + "_" + std::to_string(x), "GAMEBOX_" + std::to_string(y) + "_" + std::to_string(x)); // rename
-
-					update_block({ x,y }, s); // set texture and collision
-
-					//if (wd->readPos((int)x, (int)y) == +blocks::BLOCK) {
-					s->set(Constants::io__sprite_string::ID, "GAMEBOX_" + std::to_string(y) + "_" + std::to_string(x));
-					s->set(Constants::io__sprite_boolean::DRAW, false); // no draw for now
-					s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-					s->set(Constants::io__sprite_boolean::SHOWDOT, false);
-					s->set(Constants::io__sprite_boolean::SHOWBOX, false);
-					s->set(Constants::io__sprite_double::SCALEG, Constants::scale_g_map_default / +mult);
-					s->set(Constants::io__sprite_double::SCALEY, Constants::scale_y_map);
-					s->set(Constants::io__sprite_integer::LAYER, 0);
-					s->set(Constants::io__sprite_double::POSX, pss[0]);
-					s->set(Constants::io__sprite_double::POSY, pss[1]);
-
-
-					//}
-				}
-			}
-			{
-				double pss[2];
-				pss[0] = off_x + 2.0 * (1.0 * player_start_point.x / (wd->getLen(0)) - 0.5);
-				pss[1] = off_y + 2.0 * (1.0 * player_start_point.y / (wd->getLen(1)) - 0.5);
-
-				this_is_the_player->set(Constants::io__sprite_double::POSX, pss[0]);
-				this_is_the_player->set(Constants::io__sprite_double::POSY, pss[1]);
-			}
-
-			{
-				textures.customLoad("GAMEBOXMAIN_I", [](ALLEGRO_BITMAP*& b) -> bool {return (b = al_create_bitmap(1600, 900)); });
-
-				Sprite* s = sprites.create("GAMEBOXMAIN");
-				s->set(Constants::io__sprite_string::ID, "GAMEBOX_MAIN");
-				s->set(Constants::io__sprite_boolean::DRAW, true); // no draw for now
-				s->set(Constants::io__sprite_collision_mode::COLLISION_TRANSPARENT);
-				s->set(Constants::io__sprite_boolean::SHOWDOT, false);
-				s->set(Constants::io__sprite_boolean::SHOWBOX, false);
-				s->set(Constants::io__sprite_double::SCALEG, 2.0);
-				s->set(Constants::io__sprite_boolean::TIE_SIZE_TO_DISPLAY, true);
-				s->set(Constants::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY, al_get_time());
-				s->set(Constants::io__sprite_string::ADD, "GAMEBOXMAIN_I");
-				s->set(Constants::io__sprite_integer::LAYER, 0);
-				s->hook(Constants::io__sprite_tie_func_to_state::WHEN_BITMAPS_RESIZED_AUTO, [&__assist]() {
-					__assist[2] = false;
-					});
-				s->hook(Constants::io__sprite_tie_func_to_state::ON_DRAW, [&sprites, &gcam, s, &__assist]() {
-					if (!__assist[2]) {
-						auto vct = sprites.getList([](const std::string a)->bool {return a.find("GAMEBOX_") == 0; });
-						ALLEGRO_BITMAP* trg = nullptr;
-						s->get(trg);
-						ALLEGRO_BITMAP* old_trg = al_get_target_bitmap();
-						al_set_target_bitmap(trg);
-						al_clear_to_color(al_map_rgb(0, 0, 0));
-
-						for (auto& i : vct) {
-							i->set(Constants::io__sprite_boolean::DRAW, true);
-							i->draw(0);
-							i->set(Constants::io__sprite_boolean::DRAW, false);
-						}
-
-						al_set_target_bitmap(old_trg);
-						__assist[2] = true;
-					}
-					});
-			}
-
-			logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Cleaned up " << sprites.remove([](const std::string a)->bool {return a.find("GAMEBOX_DIEING_NOW_") == 0; }) << " sprites" << L::EL;
-			wd->setTime();
-
-			consol.resumeThread();
-			has_map_gen = true;
-		};
-		
-		// ""thread""
-		const auto supercheck_entity_on_block = [&]()->int {
-			if (!wd) return 0;
-			double act_pos[2];
-			this_is_the_player->get(Constants::ro__sprite_target_double::TARG_POSX, act_pos[0]);
-			this_is_the_player->get(Constants::ro__sprite_target_double::TARG_POSY, act_pos[1]);
-			/*double szs[2] = { 0.0,0.0 };
-			// get player size
-			{
-				double scaleg;
-				this_is_the_player->get(Constants::io__sprite_double::SCALEG, scaleg);
-				this_is_the_player->get(Constants::io__sprite_double::SCALEX, szs[0]);
-				this_is_the_player->get(Constants::io__sprite_double::SCALEY, szs[1]);
-				for (auto& i : szs) i *= scaleg;
-			}*/
-			int xy[2];
-			xy[0] = (((act_pos[0] /*+ szs[0]*/) * 1.0 / 2) + 0.5) * (wd->getLen(0));
-			xy[1] = (((act_pos[1] /*+ szs[1]*/) * 1.0 / 2) + 0.5) * (wd->getLen(1));
-
-			int blockid = wd->readPos(xy[0], xy[1]);
-			switch (blockid) {
-			case +blocks::LIFE:
-				{
-					double heal = 1.0;
-					this_is_the_player->get(Constants::io__entity_double::HEALTH, heal);
-					heal += Constants::heal_default;
-					if (heal > Constants::max_health) heal = Constants::max_health;
-					this_is_the_player->set(Constants::io__entity_double::HEALTH, heal);
-				}
-				break;
-			case +blocks::EXIT:
-				regen_map();
-				break;
-			case +blocks::FAKE_EXIT:
-				wd->setPos(xy[0], xy[1], +blocks::FAILEDEXIT);
-				update_block({ xy[0], xy[1] });
-				refresh_map();
-				break;
-			case +blocks::FAILEDEXIT:
-				{
-					double heal = 1.0;
-					this_is_the_player->get(Constants::io__entity_double::HEALTH, heal);
-					heal += Constants::damage_default;
-					if (heal < Constants::min_health) {
-						modern = main_gamemodes::MENU;
-						return 0;
-					}
-					this_is_the_player->set(Constants::io__entity_double::HEALTH, heal);
-				}
-				break;
-			}
-
-			//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "PLAYER POS: " << xy[0] << "x" << xy[1] << L::EL;
-			return 0;
-		};
 
 		while (consol.isRunning()) {// (size_t counttt = 0; consol.isRunning(); counttt++) {
 			Sleep(1000 / 30);
 
 			if (isGamingLocally(modern)) {
-				if (!has_map_gen)
-				{
-					this_is_the_player->set(Constants::io__entity_double::HEALTH, 1.0);
-
-					regen_map();
-					this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, true);
-
-					consol.addCustomTask(supercheck_entity_on_block, +my_custom_funcs::GAMING_PLAYER_EXIT_TASK, 1.0 / 10);
+				if (!game_0) {
+					game_0 = new GamingStorm(&consol, this_is_the_player, +my_custom_funcs::GAMING_PLAYER_EXIT_TASK);
+					game_0->startAutomatically();
 				}
-				else if (modern == main_gamemodes::PAUSE) {
-					this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, false);
-
-					if (!has_sleeping_sprites) 
-						sprites.setEnabled([](const std::string a)->bool {return a.find("GAMEBOX_") == 0; }, [](const std::string a)->bool {return false; });
-					has_sleeping_sprites = true;
-
-					wd->pauseCorrupt();
-				}
-				else {  // map is up n running
-					if (has_sleeping_sprites) sprites.setEnabled([](const std::string a)->bool {return a.find("GAMEBOX_") == 0; }, [](const std::string a)->bool {return true; });
-					has_sleeping_sprites = false;
-
-					this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, true);
-					std::vector<POINT> points;
-					if (wd->corruptWorld(points)) {
-						logg << L::SLF << fsr(__FUNCSIG__) << "World task has run." << L::ELF;
-
-						for (auto& i : points) {
-							update_block(i);
-						}
-
-						refresh_map();
+				else {
+					game_0->pauseTask((modern == main_gamemodes::PAUSE));
+					if (game_0->hasEnded())
+					{
+						modern = main_gamemodes::MENU;
 					}
 				}
 			}
 			else {
-				if (has_map_gen) {
-					consol.pauseThread();
-					while (!consol.hasThreadPaused()) Sleep(10);
-
-					consol.removeCustomTask(+my_custom_funcs::GAMING_PLAYER_EXIT_TASK);
-
-					delete wd;
-					wd = nullptr;
-					sprites.remove([](const std::string a)->bool {return a.find("GAMEBOX_") == 0; });
-					sprites.remove("GAMEBOXMAIN");
-
-					consol.resumeThread();
-					has_map_gen = false;
+				if (game_0) {
+					game_0->stopNow();
+					delete game_0;
+					game_0 = nullptr;
 				}
 			}
 
@@ -1969,13 +1723,11 @@ int main(int argc, const char* argv[])
 		fonts.clear();
 		texts.clear();
 		conf.flush();
+		logg.killDebugScreen();
 	}
 	catch (Abort::abort a)
 	{
 		forceExit("Something went wrong at MAIN!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
 	}
-
-
-
 	return 0;
 }

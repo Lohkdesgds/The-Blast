@@ -194,6 +194,7 @@
     <ClCompile Include="..\LSW\custom_abort\abort.cpp" />
     <ClCompile Include="..\LSW\download_manager\downloader.cpp" />
     <ClCompile Include="..\LSW\drawing\drawing.cpp" />
+    <ClCompile Include="..\LSW\gaming_modes\gaming_storm.cpp" />
     <ClCompile Include="..\LSW\hash\sha256.cpp" />
     <ClCompile Include="..\LSW\map_gen\map.cpp" />
     <ClCompile Include="..\LSW\package_raw\package_raw.cpp" />
@@ -209,6 +210,7 @@
     <ClInclude Include="..\LSW\custom_abort\abort.h" />
     <ClInclude Include="..\LSW\download_manager\downloader.h" />
     <ClInclude Include="..\LSW\drawing\drawing.h" />
+    <ClInclude Include="..\LSW\gaming_modes\gaming_storm.h" />
     <ClInclude Include="..\LSW\hash\sha256.h" />
     <ClInclude Include="..\LSW\logger\logger.h" />
     <ClInclude Include="..\LSW\lsw.h" />

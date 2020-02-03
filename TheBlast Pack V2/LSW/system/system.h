@@ -31,8 +31,8 @@ namespace LSW {
 
 		namespace Constants {
 
-			// actual config (no sense on using size)
-			enum class io__conf_boolean { HAD_ERROR, WAS_OSD_ON, ULTRADEBUG };
+			// actual config (no sense on using size) **** IF CHANGES, CHECK Database::internalCheck ****
+			enum class io__conf_boolean { WAS_OSD_ON, ENABLE_SECOND_DEBUGGING_SCREEN, ULTRADEBUG };
 			enum class io__conf_double { LAST_VOLUME };
 			enum class io__conf_integer { SCREEN_X, SCREEN_Y, SCREEN_FLAGS, SCREEN_PREF_HZ };
 			enum class io__conf_longlong { _TIMES_LIT };
@@ -54,7 +54,7 @@ namespace LSW {
 			// functional
 			enum class io__db_functional_opt {MOUSE_KEY,KEYBOARD_KEY,MOUSE_LEFT,KEYBOARD_LEFT};
 
-			const std::string ro__conf_boolean_str[] = { "had_error", "was_osd_on", "ultradebug" };
+			const std::string ro__conf_boolean_str[] = { "was_osd_on", "second_screen_debug", "ultradebug" };
 			const std::string ro__conf_float_str[] = { "last_volume" };
 			const std::string ro__conf_integer_str[] = { "screen_width","screen_height", "last_display_flags","pref_refresh_rate" };
 			const std::string ro__conf_longlong_str[] = { "times_open" };
@@ -173,6 +173,8 @@ namespace LSW {
 
 			static custom_data data;
 			gfile logg;
+
+			void internalCheck();
 		public:
 			Database();
 
@@ -198,6 +200,14 @@ namespace LSW {
 
 			void set(const Constants::io__db_functional_opt, const int, const std::function<void(void)> = std::function<void(void)>());
 			
+
+			bool check(const Constants::io__conf_boolean);
+			bool check(const Constants::io__conf_double);
+			bool check(const Constants::io__conf_integer);
+			bool check(const Constants::io__conf_longlong);
+			bool check(const Constants::io__conf_string);
+			bool check(const Constants::io__conf_color);
+
 
 			bool get(const std::string, std::string&);
 			bool get(const Constants::io__conf_boolean, bool&);

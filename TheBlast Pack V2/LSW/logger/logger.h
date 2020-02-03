@@ -8,6 +8,7 @@
 #include <memory>
 
 #include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
 
 #include "..\tools\tools.h"
 #include "..\shared_constants\constants.h"
@@ -45,10 +46,24 @@ namespace LSW {
 				//std::vector<std::string> lines;
 				ALLEGRO_EVENT_SOURCE evsrc = ALLEGRO_EVENT_SOURCE();
 				bool started_evsrc = false;
+
+				class dev_display {
+					std::thread* thr = nullptr;
+					bool keep_alive = false;
+
+					void internal_thread(ALLEGRO_EVENT_SOURCE*);
+				public:
+					dev_display();
+					~dev_display();
+				};
+
+				dev_display* displaydev = nullptr;
+				
 				struct lines {
 					char line[Constants::each_line_stored_by_memlog] = { 0 };
 					ALLEGRO_COLOR event_color = al_map_rgb(255, 255, 255);
 				} memline[Constants::max_lines_stored_by_memlog];
+
 				size_t memlinecount = 0;
 			};
 
@@ -57,8 +72,12 @@ namespace LSW {
 			const bool start(const std::string&, const char* = "wb", const bool = true);
 			void printClock(const bool = true);
 		public:
+			gfile();
 			void close();
 			void push(const std::string&, const bool = Constants::_is_on_debug_mode);
+
+			void callDebugScreen(); // don't forget to *kill
+			void killDebugScreen();
 
 			void flush();
 			ALLEGRO_EVENT_SOURCE* getEvent();
@@ -83,15 +102,177 @@ namespace LSW {
 
 		inline gfile::_log gfile::g;
 
-		
-		inline const bool gfile::start(const std::string& orig, const char* mode, const bool autopath) // easier
-		{
+		inline void gfile::_log::dev_display::internal_thread(ALLEGRO_EVENT_SOURCE* reg) {
+			assert(reg);
+			al_init_font_addon();
+			al_install_mouse();
+
+			ALLEGRO_DISPLAY* rawdisp = nullptr;
+			ALLEGRO_BITMAP* buf = nullptr;
+			ALLEGRO_FONT* legacy_font = nullptr;
+			ALLEGRO_EVENT_QUEUE* work_on = nullptr;
+
+			const int expected_pos = 68;
+
+			int window_position[2] = { 0,0 };
+			int window_size[2] = { Constants::log_debug_screen_size[0], Constants::log_debug_screen_size[1] };
+			double last_window_resize = 0;
+			bool is_moving_window = false;
+
+			size_t close_tries = 0;
+			double last_close_try = 0;
+
+			al_set_new_display_flags(Constants::start_logdisp_default_mode);
+
+			rawdisp = al_create_display(Constants::log_debug_screen_size[0], Constants::log_debug_screen_size[1]);
+			al_set_window_title(rawdisp, "DEBUGGING SCREEN");
+			buf = al_create_bitmap(Constants::log_debug_screen_size[0], Constants::log_debug_screen_size[1]);
+			legacy_font = al_create_builtin_font();
+			work_on = al_create_event_queue();
+
+			al_register_event_source(work_on, reg);
+			al_register_event_source(work_on, al_get_display_event_source(rawdisp));
+			al_register_event_source(work_on, al_get_mouse_event_source());
+
+			int delta_y = al_get_font_line_height(legacy_font) + 2;
+
+			auto drawfunc = [&](const std::string whut, ALLEGRO_COLOR colorline) {
+				al_set_target_bitmap(buf);
+				al_clear_to_color(al_map_rgb(0, 0, 0));
+				al_draw_bitmap(al_get_backbuffer(rawdisp), 0, -delta_y, 0);
+				al_draw_text(legacy_font, colorline, 0, al_get_bitmap_height(buf) - delta_y, 0, whut.c_str());
+				al_set_target_backbuffer(rawdisp);
+				al_draw_bitmap(buf, 0, 0, 0);
+				al_flip_display();
+				Sleep(1000 / 120); // hmm is this enough?
+			};
+
+			while (keep_alive) {
+				ALLEGRO_EVENT ev;
+				al_wait_for_event_timed(work_on, &ev, 3);
+
+				if (!this) {
+					keep_alive = false;
+					continue;
+				}
+				// default events
+				{
+					if (ev.type == ALLEGRO_EVENT_DISPLAY_RESIZE) {
+						if (ev.display.source == rawdisp) {
+							last_window_resize = al_get_time() + 1.0;
+							al_acknowledge_resize(rawdisp);
+							window_size[0] = ev.display.width;
+							window_size[1] = ev.display.height;
+						}
+					}
+					if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+						if (ev.display.source == rawdisp) {
+							if (close_tries >= 1)
+							{
+								drawfunc("[HERE] Calling all 19 yo threads around there: Please turn off!", al_map_rgb(255, 255, 0));
+								ALLEGRO_EVENT evv;
+								evv.type = +Constants::ro__my_events::CUSTOM_EVENT_EXTERNAL_EXIT_CALL;
+								al_emit_user_event(&g.evsrc, &evv, NULL);
+							}
+							else {
+								drawfunc("[HERE] Try again and the game will be closed!", al_map_rgb(255, 255, 0));
+							}
+							close_tries++;
+							last_close_try = al_get_time();
+						}
+					}
+					if (ev.type == ALLEGRO_EVENT_MOUSE_AXES) {
+						if (is_moving_window && ev.mouse.display == rawdisp) {
+							window_position[0] += ev.mouse.dx;
+							window_position[1] += ev.mouse.dy;
+						}
+					}
+					if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+						if (ev.mouse.display == rawdisp) {
+							if (ev.mouse.button == 1) {
+								drawfunc("[HERE] You grabbed this screen", al_map_rgb(255, 255, 0));
+								al_get_window_position(rawdisp, &window_position[0], &window_position[1]);
+								is_moving_window = true;
+							}
+							else {
+								al_set_display_flag(rawdisp, ALLEGRO_NOFRAME, !(al_get_display_flags(rawdisp) & ALLEGRO_NOFRAME));
+								drawfunc("[HERE] Switched NOFRAME flag", al_map_rgb(255, 255, 0));
+							}
+						}
+					}
+					if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
+						if (ev.mouse.display == rawdisp) {
+							if (ev.mouse.button == 1) {
+								drawfunc("[HERE] Now ungrabbed", al_map_rgb(255, 255, 0));
+								al_set_window_position(rawdisp, window_position[0], window_position[1]);
+								is_moving_window = false;
+							}
+						}
+					}
+
+					if (ev.type == +Constants::ro__my_events::CUSTOM_EVENT_LOG_STRING)
+					{
+						char* line = (char*)ev.user.data1;
+						ALLEGRO_COLOR colorline = *((ALLEGRO_COLOR*)ev.user.data2);
+
+						if (strlen(line) > expected_pos) {
+							drawfunc(line + expected_pos, colorline);
+						}
+					}
+				}
+				if (last_window_resize && al_get_time() - last_window_resize > 0) {
+					int y_off = window_size[1] - al_get_bitmap_height(buf);
+
+					ALLEGRO_BITMAP* temp = al_create_bitmap(window_size[0], window_size[1]);
+					al_set_target_bitmap(temp);
+					al_draw_bitmap(buf, 0, y_off, 0);
+					al_destroy_bitmap(buf);
+					buf = temp;
+					al_set_target_backbuffer(rawdisp);
+					al_clear_to_color(al_map_rgb(0,0,0));
+					al_draw_bitmap(buf, 0, 0, 0);
+					al_flip_display();
+					drawfunc("[HERE] Resized debug screen successfully.", al_map_rgb(255, 255, 0));
+					last_window_resize = 0;
+				}
+				if (al_get_time() - last_close_try > 5.0) {
+					last_close_try = 0;
+					close_tries = 0;
+				}
+			}
+
+			al_destroy_event_queue(work_on);
+			al_destroy_display(rawdisp);
+			al_destroy_font(legacy_font);
+
+			return;
+		}
+
+		inline gfile::_log::dev_display::dev_display() {
+			if (!thr) {
+				keep_alive = true;
+				thr = new std::thread([&]() {internal_thread(&g.evsrc); });
+			}
+		}
+		inline gfile::_log::dev_display::~dev_display() {
+			if (thr) {
+				keep_alive = false;
+				thr->join();
+				delete thr;
+				thr = nullptr;
+			}
+		}
+
+		inline gfile::gfile() { // force event source to be on since the beginning
 			if (!g.started_evsrc) {
 				if (!al_is_system_installed()) al_init();
 				al_init_user_event_source(&g.evsrc);
 				g.started_evsrc = true;
 			}
+		}
 
+		inline const bool gfile::start(const std::string& orig, const char* mode, const bool autopath) // easier
+		{
 			std::string s = orig;
 
 			Tools::interpretPath(s);
@@ -150,7 +331,7 @@ namespace LSW {
 						
 						evv.user.data1 = (intptr_t)g.memline[g.memlinecount].line;
 						evv.user.data2 = (intptr_t)&g.memline[g.memlinecount].event_color;
-						evv.type = +Constants::ro__my_events::LOG_CLOUDLAUNCH_RAW;
+						evv.type = +Constants::ro__my_events::CUSTOM_EVENT_LOG_STRING;
 						al_emit_user_event(&g.evsrc, &evv, NULL);
 						g.now.clear();
 
@@ -174,7 +355,17 @@ namespace LSW {
 			g.f_m.unlock();
 		}
 
-		
+		inline void gfile::callDebugScreen() {
+			if (!g.displaydev) g.displaydev = new _log::dev_display();
+		}
+
+		inline void gfile::killDebugScreen()
+		{
+			if (g.displaydev) {
+				delete g.displaydev;
+				g.displaydev = nullptr;
+			}
+		}
 		
 		inline void gfile::flush()
 		{

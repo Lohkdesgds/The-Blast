@@ -56,6 +56,9 @@
     <Filter Include="base\hash_gen">
       <UniqueIdentifier>{fd4885cb-c27d-465b-a930-1f16687cf58a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="base\gaming_local">
+      <UniqueIdentifier>{88449532-caa2-4a95-98eb-2bbf07daac3b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\LSW\custom_abort\abort.cpp">
@@ -90,6 +93,9 @@
     </ClCompile>
     <ClCompile Include="..\LSW\hash\sha256.cpp">
       <Filter>base\hash_gen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\LSW\gaming_modes\gaming_storm.cpp">
+      <Filter>base\gaming_local</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -141,6 +147,9 @@
     </ClInclude>
     <ClInclude Include="..\LSW\hash\sha256.h">
       <Filter>base\hash_gen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\LSW\gaming_modes\gaming_storm.h">
+      <Filter>base\gaming_local</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

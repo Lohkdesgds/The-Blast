@@ -24,11 +24,20 @@ __TIME__
 //#define FORCEDEBUG
 
 
+#define Textures __template_static_vector<ALLEGRO_BITMAP>
+#define Fonts __template_static_vector<ALLEGRO_FONT>
+#define Samples __template_static_vector<ALLEGRO_SAMPLE>
+
+#define Tracks __template_static_vector<Track>
+#define Sprites __template_static_vector<Sprite>
+#define Texts __template_static_vector<Text>
+
+
 namespace LSW {
 	namespace v4 {
 		namespace Constants {
 			// this have to be global, come on
-			enum class ro__my_events { LOG_CLOUDLAUNCH_RAW = 512, THRKBM_DISPLAY_SIZE, THRDRW_GOT_FORCED_RESIZE, THRKBM_GETSTRINGINPUT /* <-- TO BE DONE */ }; // THRDRW -> event for the THREAD_DRAW
+			enum class ro__my_events { CUSTOM_EVENT_LOG_STRING = 512, CUSTOM_EVENT_SHARING_NEW_DISPLAY_SIZE, CUSTOM_EVENT_CALL_FULLSCREEN, CUSTOM_EVENT_EXTERNAL_EXIT_CALL /* <-- TO BE DONE */ }; 
 
 			enum class directions {
 				NORTH = 1 << 0,
@@ -53,6 +62,7 @@ namespace LSW {
 
 			// system.h stuff mostly
 			const int start_audio_samples_max = 8;
+			const int start_logdisp_default_mode = ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE;
 			const int start_display_default_mode = ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE | WAY;
 			const int start_display_obligatory_flag_mode = ALLEGRO_RESIZABLE | WAY;
 			const int start_bitmap_default_mode = ALLEGRO_VIDEO_BITMAP | ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR | ALLEGRO_MIPMAP;
@@ -75,6 +85,7 @@ namespace LSW {
 			const size_t len_class = 45;
 			const size_t max_lines_stored_by_memlog = 10;
 			const size_t each_line_stored_by_memlog = 140;
+			const int log_debug_screen_size[2] = { 750,350 };
 
 			// drawing.h stuff
 			const double text_default_sharpness_font = 75.0; // 2500
@@ -121,7 +132,6 @@ namespace LSW {
 			// map
 			const size_t map_size_default_x = 32;
 			const size_t map_size_default_y = 18;
-			const double scale_y_map = 1.77777777778;
 			const double scale_g_map_default = 0.1251;
 
 			// entity

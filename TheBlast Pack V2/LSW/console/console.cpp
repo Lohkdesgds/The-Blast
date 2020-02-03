@@ -71,11 +71,11 @@ namespace LSW {
 				thread_maindisplay.thread_arguments->start();
 
 				{
-					ALLEGRO_EVENT ev;
-					ev.type = +Constants::ro__my_events::THRKBM_DISPLAY_SIZE;
-					ev.user.data1 = al_get_display_width(md->getDisplay());
-					ev.user.data2 = al_get_display_height(md->getDisplay());
-					al_emit_user_event(&evsrc, &ev, NULL);
+					ALLEGRO_EVENT evv;
+					evv.type = +Constants::ro__my_events::CUSTOM_EVENT_SHARING_NEW_DISPLAY_SIZE;
+					evv.user.data1 = al_get_display_width(md->getDisplay());
+					evv.user.data2 = al_get_display_height(md->getDisplay());
+					al_emit_user_event(&evsrc, &evv, NULL);
 				}
 
 				logg << L::SLF << fsr(__FUNCSIG__) << "Creating local stuff..." << L::ELF;
@@ -111,7 +111,7 @@ namespace LSW {
 				while (!thread_kbmouse.am_i_running) Sleep(20);
 				while (!thread_functional.am_i_running) Sleep(20);
 
-				for (bool localb = true; localb;)
+				while (!thr_shared_arg.should_exit)
 				{
 					try {
 						conf.set(Constants::ro__db_statistics_double::INSTANT_FRAMESPERSECOND, thread_maindisplay.thread_arguments->getNumInstantSCallsDefault());
@@ -136,11 +136,6 @@ namespace LSW {
 							{
 								conf.set(Constants::ro__db_statistics_sizet::FRAMESPERSECOND, thread_maindisplay.thread_arguments->getNumCallsDefault());
 							}
-							else if (thread_maindisplay.thread_arguments->isThisThis(+Constants::ro__thread_display_routines_timers::CHECKKEEP))
-							{
-								localb = !thr_shared_arg.should_exit;
-								//logg.debug("[THR_DRW] CHECKKEEP called\n");
-							}
 							else if (thread_maindisplay.thread_arguments->isThisThis(+Constants::ro__thread_display_routines_timers::CHECKMEMORYBITMAP))
 							{
 								//logg.debug("[THR_DRW] CHECKMEMORYBITMAP called\n");
@@ -157,11 +152,13 @@ namespace LSW {
 
 								switch (ev.type) {
 								case ALLEGRO_EVENT_DISPLAY_CLOSE:
-									thr_shared_arg.should_exit = true;
-									logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "DISPLAYCLOSE event got. Set to turn off soon." << L::EL;
+									if (ev.display.source == md->getDisplay()) {
+										thr_shared_arg.should_exit = true;
+										logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "DISPLAYCLOSE event got. Set to turn off soon." << L::EL;
+									}
 									break;
 
-								case +Constants::ro__my_events::LOG_CLOUDLAUNCH_RAW:
+								case +Constants::ro__my_events::CUSTOM_EVENT_LOG_STRING:
 								{
 									mtt_s = (char*)ev.user.data1;
 									ALLEGRO_COLOR* colp = (ALLEGRO_COLOR*)ev.user.data2;
@@ -169,32 +166,40 @@ namespace LSW {
 								}
 								break;
 
-								case +Constants::ro__my_events::THRDRW_GOT_FORCED_RESIZE:
+								case +Constants::ro__my_events::CUSTOM_EVENT_EXTERNAL_EXIT_CALL:
+									thr_shared_arg.should_exit = true;
+									break;
+
+								case +Constants::ro__my_events::CUSTOM_EVENT_CALL_FULLSCREEN:
+
 									al_set_display_flag(md->getDisplay(), ALLEGRO_FULLSCREEN_WINDOW, (bool)ev.user.data1);
+									ev.display.source = md->getDisplay();
+
 									// yes, merge
 								case ALLEGRO_EVENT_DISPLAY_RESIZE:
-									al_acknowledge_resize(md->getDisplay());
+									if (ev.display.source == md->getDisplay()) {
+										al_acknowledge_resize(md->getDisplay());
 
-									gcam.apply();
-									logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "DISPLAYRESIZE got, acknowledged, done." << L::EL;
+										gcam.apply();
+										logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "DISPLAYRESIZE got, acknowledged, done." << L::EL;
 
-									{
-										ALLEGRO_EVENT ev;
-										ev.type = +Constants::ro__my_events::THRKBM_DISPLAY_SIZE;
-										ev.user.data1 = al_get_display_width(md->getDisplay());
-										ev.user.data2 = al_get_display_height(md->getDisplay());
-										al_emit_user_event(&evsrc, &ev, NULL);
+										{
+											ALLEGRO_EVENT evv;
+											evv.type = +Constants::ro__my_events::CUSTOM_EVENT_SHARING_NEW_DISPLAY_SIZE;
+											evv.user.data1 = al_get_display_width(md->getDisplay());
+											evv.user.data2 = al_get_display_height(md->getDisplay());
+											al_emit_user_event(&evsrc, &evv, NULL);
+										}
+
+										conf.set(Constants::io__conf_integer::SCREEN_X, al_get_display_width(md->getDisplay()));
+										conf.set(Constants::io__conf_integer::SCREEN_Y, al_get_display_height(md->getDisplay()));
+										conf.set(Constants::io__conf_integer::SCREEN_FLAGS, al_get_display_flags(md->getDisplay()));
+										conf.flush();
+
+										for (auto& i : sprites) {
+											i->self->set(Constants::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY, al_get_time() + 1.5);
+										}
 									}
-
-									conf.set(Constants::io__conf_integer::SCREEN_X, al_get_display_width(md->getDisplay()));
-									conf.set(Constants::io__conf_integer::SCREEN_Y, al_get_display_height(md->getDisplay()));
-									conf.set(Constants::io__conf_integer::SCREEN_FLAGS, al_get_display_flags(md->getDisplay()));
-									conf.flush();
-
-									for (auto& i : sprites) {
-										i->self->set(Constants::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY, al_get_time() + 1.5);
-									}
-
 									break;
 								}
 							}
@@ -250,7 +255,7 @@ namespace LSW {
 						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal exception at " << thrid << "! {" << oor.what() << "}" << L::ELF;
 						logg.flush();
 						pauseThread();
-						for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+						for (double t = al_get_time(); !hasThreadsButThisOnePaused(Constants::io__thread_ids::DRAWING) && al_get_time() - t < 3.0;) Sleep(10);
 						askForceExit("ERROR!", ("There was an error at " + thrid + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 						resumeThread();
 						if (was_sprites_locked) sprites.unlock();
@@ -260,7 +265,7 @@ namespace LSW {
 						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal UNKNOWN exception at " << thrid << "!" << L::ELF;
 						logg.flush();
 						pauseThread();
-						for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+						for (double t = al_get_time(); !hasThreadsButThisOnePaused(Constants::io__thread_ids::DRAWING) && al_get_time() - t < 3.0;) Sleep(10);
 						askForceExit("FATAL ERROR!", ("There was a fatal error (maybe fixable) at " + thrid + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 						resumeThread();
 						if (was_sprites_locked) sprites.unlock();
@@ -271,17 +276,20 @@ namespace LSW {
 
 				__l_thr_md_run(Constants::io__threads_taskid::END);
 
+				thr_shared_arg.threadcountm.lock();
+				thr_shared_arg.threadcount--;
+				thr_shared_arg.threadcountm.unlock();
+
+				thread_maindisplay.am_i_running = false;
+
+				while (someoneIsRunning()) Sleep(20);
+
 				delete md;
 				md = nullptr;
 
-
-				// should not stop before the others (it is safer to close later)
-				while (thread_collision.thread_arguments) Sleep(50);
-				while (thread_kbmouse.thread_arguments) Sleep(50);
-
 				delete thread_maindisplay.thread_arguments;
-
 				thread_maindisplay.thread_arguments = nullptr;
+				logg << L::SLF << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::ELF;
 			}
 			catch (Abort::warn a)
 			{
@@ -289,7 +297,7 @@ namespace LSW {
 				thr_shared_arg.threadcount--;
 				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
-				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+				for (double t = al_get_time(); !hasThreadsButThisOnePaused(Constants::io__thread_ids::DRAWING) && al_get_time() - t < 3.0;) Sleep(10);
 				forceExit("Something went bad at MDTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
 			}
 			catch (Abort::abort a)
@@ -298,7 +306,7 @@ namespace LSW {
 				thr_shared_arg.threadcount--;
 				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
-				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+				for (double t = al_get_time(); !hasThreadsButThisOnePaused(Constants::io__thread_ids::DRAWING) && al_get_time() - t < 3.0;) Sleep(10);
 				forceExit("Something went wrong at MDTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
 			}
 			catch (...)
@@ -307,18 +315,9 @@ namespace LSW {
 				thr_shared_arg.threadcount--;
 				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
-				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+				for (double t = al_get_time(); !hasThreadsButThisOnePaused(Constants::io__thread_ids::DRAWING) && al_get_time() - t < 3.0;) Sleep(10);
 				forceExit("Something went wrong at MDTHR!", "There was a unknown error! What a sad thing to happen!");
 			}
-
-			thr_shared_arg.threadcountm.lock();
-			thr_shared_arg.threadcount--;
-			thr_shared_arg.threadcountm.unlock();
-
-			//textures.clear();
-
-			thread_maindisplay.am_i_running = false;
-			logg << L::SLF << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::ELF;
 		}
 
 		void Manager::__l_thr_cl()
@@ -351,7 +350,7 @@ namespace LSW {
 
 				thread_collision.am_i_running = true;
 
-				for (bool localb = true; localb;)
+				while (!thr_shared_arg.should_exit)
 				{
 					try {
 						conf.set(Constants::ro__db_statistics_double::INSTANT_COLLISIONSPERSECOND, thread_collision.thread_arguments->getNumInstantSCallsDefault());
@@ -375,11 +374,6 @@ namespace LSW {
 						else if (thread_collision.thread_arguments->isThisThis(+Constants::ro__thread_collision_routines_timers::LOOPTRACK))
 						{
 							conf.set(Constants::ro__db_statistics_sizet::COLLISIONSPERSECOND, thread_collision.thread_arguments->getNumCallsDefault());
-						}
-						else if (thread_collision.thread_arguments->isThisThis(+Constants::ro__thread_collision_routines_timers::CHECKKEEP))
-						{
-							localb = !thr_shared_arg.should_exit;
-							//printf_s("[THR_COL] CHECKKEEP called\n");
 						}
 						else if (thread_collision.thread_arguments->isThisThis(+Constants::ro__thread_collision_routines_timers::COLLISIONWORK))
 						{
@@ -411,6 +405,15 @@ namespace LSW {
 
 							last_loop_had_error = 0;
 						}
+
+						else { // not a timer ///DEBUG NOW
+							auto ev = thread_kbmouse.thread_arguments->getEventRaw();
+
+							if (ev.type == +Constants::ro__my_events::CUSTOM_EVENT_EXTERNAL_EXIT_CALL) {
+								thr_shared_arg.should_exit = true;
+								continue;
+							}
+						}
 					}
 					catch (Abort::warn err)
 					{
@@ -427,7 +430,7 @@ namespace LSW {
 						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal exception at " << thrid << "! {" << oor.what() << "}" << L::ELF;
 						logg.flush();
 						pauseThread();
-						for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+						for (double t = al_get_time(); !hasThreadsButThisOnePaused(Constants::io__thread_ids::COLLIDING) && al_get_time() - t < 3.0;) Sleep(10);
 						askForceExit("ERROR!", ("There was an error at " + thrid + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 						resumeThread();
 					}
@@ -436,7 +439,7 @@ namespace LSW {
 						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal UNKNOWN exception at " << thrid << "!" << L::ELF;
 						logg.flush();
 						pauseThread();
-						for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+						for (double t = al_get_time(); !hasThreadsButThisOnePaused(Constants::io__thread_ids::COLLIDING) && al_get_time() - t < 3.0;) Sleep(10);
 						askForceExit("FATAL ERROR!", ("There was a fatal error (maybe fixable) at " + thrid + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 						resumeThread();
 					}
@@ -445,9 +448,18 @@ namespace LSW {
 
 				__l_thr_cl_run(Constants::io__threads_taskid::END);
 
-				delete thread_collision.thread_arguments;
+				thr_shared_arg.threadcountm.lock();
+				thr_shared_arg.threadcount--;
+				thr_shared_arg.threadcountm.unlock();
 
+				thread_collision.am_i_running = false;
+
+				while (someoneIsRunning()) Sleep(20);
+
+				delete thread_collision.thread_arguments;
 				thread_collision.thread_arguments = nullptr;
+
+				logg << L::SLF << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::ELF;
 			}
 			catch (Abort::warn a)
 			{
@@ -455,7 +467,7 @@ namespace LSW {
 				thr_shared_arg.threadcount--;
 				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
-				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+				for (double t = al_get_time(); !hasThreadsButThisOnePaused(Constants::io__thread_ids::COLLIDING) && al_get_time() - t < 3.0;) Sleep(10);
 				forceExit("Something went bad at CLTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
 			}
 			catch (Abort::abort a)
@@ -464,7 +476,7 @@ namespace LSW {
 				thr_shared_arg.threadcount--;
 				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
-				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+				for (double t = al_get_time(); !hasThreadsButThisOnePaused(Constants::io__thread_ids::COLLIDING) && al_get_time() - t < 3.0;) Sleep(10);
 				forceExit("Something went wrong at CLTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
 			}
 			catch (...)
@@ -473,16 +485,9 @@ namespace LSW {
 				thr_shared_arg.threadcount--;
 				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
-				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+				for (double t = al_get_time(); !hasThreadsButThisOnePaused(Constants::io__thread_ids::COLLIDING) && al_get_time() - t < 3.0;) Sleep(10);
 				forceExit("Something went wrong at CLTHR!", "There was a unknown error! What a sad thing to happen!");
 			}
-
-			thr_shared_arg.threadcountm.lock();
-			thr_shared_arg.threadcount--;
-			thr_shared_arg.threadcountm.unlock();
-
-			thread_collision.am_i_running = false;
-			logg << L::SLF << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::ELF;
 		}
 
 		void Manager::__l_thr_kb()
@@ -528,7 +533,7 @@ namespace LSW {
 
 				thread_kbmouse.am_i_running = true;
 
-				for (bool localb = true; localb;)
+				while (!thr_shared_arg.should_exit)
 				{
 					try {
 						conf.set(Constants::ro__db_statistics_double::INSTANT_USEREVENTSPERSECOND, thread_kbmouse.thread_arguments->getNumInstantSCallsDefault());
@@ -552,10 +557,6 @@ namespace LSW {
 						else if (thread_kbmouse.thread_arguments->isThisThis(+Constants::ro__thread_keyboardm_routines_timers::LOOPTRACK))
 						{
 							conf.set(Constants::ro__db_statistics_sizet::USEREVENTSPERSECOND, thread_kbmouse.thread_arguments->getNumCallsDefault());
-						}
-						else if (thread_kbmouse.thread_arguments->isThisThis(+Constants::ro__thread_keyboardm_routines_timers::CHECKKEEP))
-						{
-							localb = !thr_shared_arg.should_exit;
 						}
 						else if (thread_kbmouse.thread_arguments->isThisThis(+Constants::ro__thread_keyboardm_routines_timers::UPDATEMOUSE))
 						{
@@ -592,67 +593,67 @@ namespace LSW {
 						else { // not a timer ///DEBUG NOW
 							auto ev = thread_kbmouse.thread_arguments->getEventRaw();
 
-							if (ev.type == +Constants::ro__my_events::THRKBM_DISPLAY_SIZE)
+							if (ev.type == +Constants::ro__my_events::CUSTOM_EVENT_EXTERNAL_EXIT_CALL) {
+								thr_shared_arg.should_exit = true;
+								continue;
+							}
+							if (ev.type == +Constants::ro__my_events::CUSTOM_EVENT_SHARING_NEW_DISPLAY_SIZE)
 							{
 								display_x = ev.user.data1;
 								display_y = ev.user.data2;
 							}
 							if (ev.type == ALLEGRO_EVENT_KEY_DOWN) { // USE IN GAME
-								conf.set(ev.keyboard.keycode, true);
+								if (!md || ev.keyboard.display == md->getDisplay()) {
+									conf.set(ev.keyboard.keycode, true);
+								}
 							}
 							if (ev.type == ALLEGRO_EVENT_KEY_UP) { // USE IN GAME
-								conf.set(ev.keyboard.keycode, false);
-
-								/*switch (ev.keyboard.keycode) {
-								case ALLEGRO_KEY_F11:
-								{
-									sendEvent(Constants::ro__my_events::THRDRW_GOT_FORCED_RESIZE, (intptr_t)(isscreenfullscreen = !isscreenfullscreen));
+								if (!md || ev.keyboard.display == md->getDisplay()) {
+									conf.set(ev.keyboard.keycode, false);
 								}
-								break;
-								case ALLEGRO_KEY_F2:
-								{
-									md->print();
-								}
-								break;
-								}*/
 							}
 
 							if (ev.type == ALLEGRO_EVENT_KEY_CHAR) { // keyboard input
-								if (ev.keyboard.unichar >= 32)
-								{
-									char multibyte[5] = { 0, 0, 0, 0, 0 };
+								if (!md || ev.keyboard.display == md->getDisplay()) {
+									if (ev.keyboard.unichar >= 32)
+									{
+										char multibyte[5] = { 0, 0, 0, 0, 0 };
 
-									al_utf8_encode(multibyte, ev.keyboard.unichar <= 32 ? ' ' : ev.keyboard.unichar);
-									char v = (char)strlen(multibyte);
-									if (v > 4) throw Abort::abort(__FUNCSIG__, "Got an exception on user input: invalid key code, couldn't translate to a valid string");
-									conf.set(Constants::ro__db_thread_string::KEY_ADD_SET_LEN, v);
+										al_utf8_encode(multibyte, ev.keyboard.unichar <= 32 ? ' ' : ev.keyboard.unichar);
+										char v = (char)strlen(multibyte);
+										if (v > 4) throw Abort::abort(__FUNCSIG__, "Got an exception on user input: invalid key code, couldn't translate to a valid string");
+										conf.set(Constants::ro__db_thread_string::KEY_ADD_SET_LEN, v);
 
-									for (auto& i : multibyte) {
-										if (i) conf.set(Constants::ro__db_thread_string::KEY_ADD, i);
+										for (auto& i : multibyte) {
+											if (i) conf.set(Constants::ro__db_thread_string::KEY_ADD, i);
+										}
+									}
+									else if (ev.keyboard.keycode == ALLEGRO_KEY_BACKSPACE)
+									{
+										conf.set(Constants::ro__db_thread_string::KEY_ERASE);
+									}
+									else if (ev.keyboard.keycode == ALLEGRO_KEY_ENTER || ev.keyboard.keycode == ALLEGRO_KEY_PAD_ENTER)
+									{
+										conf.set(Constants::ro__db_thread_string::KEY_SET);
 									}
 								}
-								else if (ev.keyboard.keycode == ALLEGRO_KEY_BACKSPACE)
-								{
-									conf.set(Constants::ro__db_thread_string::KEY_ERASE);
-								}
-								else if (ev.keyboard.keycode == ALLEGRO_KEY_ENTER || ev.keyboard.keycode == ALLEGRO_KEY_PAD_ENTER)
-								{
-									conf.set(Constants::ro__db_thread_string::KEY_SET);
-								}
-								//const char* actch = al_keycode_to_name(ev.keyboard.keycode); // prints literally key name KEY26 A B C
-								//if (ev.keyboard.unichar > 32) logg.debug("[THR_KBM] KEYCHAR= %d ~= %c", ev.keyboard.keycode, ev.keyboard.unichar);
-								//else                          logg.debug("[THR_KBM] KEYCHAR= %d", ev.keyboard.keycode);
 							}
 							if (ev.type == ALLEGRO_EVENT_MOUSE_AXES) {
-								conf.set(Constants::ro__db_mouse_double::RAW_MOUSE_X, ev.mouse.x);
-								conf.set(Constants::ro__db_mouse_double::RAW_MOUSE_Y, ev.mouse.y);
+								if (!md || ev.keyboard.display == md->getDisplay()) {
+									conf.set(Constants::ro__db_mouse_double::RAW_MOUSE_X, ev.mouse.x);
+									conf.set(Constants::ro__db_mouse_double::RAW_MOUSE_Y, ev.mouse.y);
+								}
 
 							}
 							if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
-								conf.set(((Constants::ro__db_mouse_boolean)ev.mouse.button), true);
+								if (!md || ev.keyboard.display == md->getDisplay()) {
+									conf.set(((Constants::ro__db_mouse_boolean)ev.mouse.button), true);
+								}
 							}
 							if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
-								conf.set(((Constants::ro__db_mouse_boolean)ev.mouse.button), false);
+								if (!md || ev.keyboard.display == md->getDisplay()) {
+									conf.set(((Constants::ro__db_mouse_boolean)ev.mouse.button), false);
+								}
 							}
 						}
 					}
@@ -671,7 +672,7 @@ namespace LSW {
 						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal exception at " << thrid << "! {" << oor.what() << "}" << L::ELF;
 						logg.flush();
 						pauseThread();
-						for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+						for (double t = al_get_time(); !hasThreadsButThisOnePaused(Constants::io__thread_ids::USERINPUT) && al_get_time() - t < 3.0;) Sleep(10);
 						askForceExit("ERROR!", ("There was an error at " + thrid + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 						resumeThread();
 					}
@@ -680,7 +681,7 @@ namespace LSW {
 						logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Got fatal UNKNOWN exception at " << thrid << "!" << L::ELF;
 						logg.flush();
 						pauseThread();
-						for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+						for (double t = al_get_time(); !hasThreadsButThisOnePaused(Constants::io__thread_ids::USERINPUT) && al_get_time() - t < 3.0;) Sleep(10);
 						askForceExit("FATAL ERROR!", ("There was a fatal error (maybe fixable) at " + thrid + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 						resumeThread();
 					}
@@ -689,9 +690,18 @@ namespace LSW {
 
 				__l_thr_cl_run(Constants::io__threads_taskid::END);
 
-				delete thread_kbmouse.thread_arguments;
+				thr_shared_arg.threadcountm.lock();
+				thr_shared_arg.threadcount--;
+				thr_shared_arg.threadcountm.unlock();
 
+			    thread_kbmouse.am_i_running = false;
+
+				while (someoneIsRunning()) Sleep(20);			
+
+				delete thread_kbmouse.thread_arguments;
 				thread_kbmouse.thread_arguments = nullptr;
+
+				logg << L::SLF << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::ELF;
 			}
 			catch (Abort::warn a)
 			{
@@ -699,7 +709,7 @@ namespace LSW {
 				thr_shared_arg.threadcount--;
 				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
-				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+				for (double t = al_get_time(); !hasThreadsButThisOnePaused(Constants::io__thread_ids::USERINPUT) && al_get_time() - t < 3.0;) Sleep(10);
 				forceExit("Something went bad at KBTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
 			}
 			catch (Abort::abort a)
@@ -708,7 +718,7 @@ namespace LSW {
 				thr_shared_arg.threadcount--;
 				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
-				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+				for (double t = al_get_time(); !hasThreadsButThisOnePaused(Constants::io__thread_ids::USERINPUT) && al_get_time() - t < 3.0;) Sleep(10);
 				forceExit("Something went wrong at KBTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
 			}
 			catch (...)
@@ -717,16 +727,9 @@ namespace LSW {
 				thr_shared_arg.threadcount--;
 				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
-				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+				for (double t = al_get_time(); !hasThreadsButThisOnePaused(Constants::io__thread_ids::USERINPUT) && al_get_time() - t < 3.0;) Sleep(10);
 				forceExit("Something went wrong at KBTHR!", "There was a unknown error! What a sad thing to happen!");
 			}
-
-			thr_shared_arg.threadcountm.lock();
-			thr_shared_arg.threadcount--;
-			thr_shared_arg.threadcountm.unlock();
-
-			thread_kbmouse.am_i_running = false;
-			logg << L::SLF << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::ELF;
 		}
 
 		void Manager::__l_thr_fc()
@@ -808,6 +811,12 @@ namespace LSW {
 
 							ALLEGRO_EVENT cat = thread_functional.thread_arguments->getEventRaw();
 
+
+							if (cat.type == +Constants::ro__my_events::CUSTOM_EVENT_EXTERNAL_EXIT_CALL) {
+								thr_shared_arg.should_exit = true;
+								continue;
+							}
+
 							if (cat.type == ALLEGRO_EVENT_TIMER)
 							{
 								//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Got event to timer P=" << cast_pointer(cat.timer.source) << "." << L::EL;
@@ -856,7 +865,7 @@ namespace LSW {
 						}
 						logg.flush();
 						pauseThread();
-						for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+						for (double t = al_get_time(); !hasThreadsButThisOnePaused(Constants::io__thread_ids::FUNCTIONAL) && al_get_time() - t < 3.0;) Sleep(10);
 						askForceExit("ERROR!", ("There was a error at " + thrid + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 						resumeThread();
 					}
@@ -869,7 +878,7 @@ namespace LSW {
 						}
 						logg.flush();
 						pauseThread();
-						for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+						for (double t = al_get_time(); !hasThreadsButThisOnePaused(Constants::io__thread_ids::FUNCTIONAL) && al_get_time() - t < 3.0;) Sleep(10);
 						askForceExit("FATAL ERROR!", ("There was a fatal error (maybe fixable) at " + thrid + " thread!").c_str(), "You could try to continue if you really want to, but please, report this error! (share the log file located at %appdata%/Lohk's Studios/TheBlast/logs)");
 						resumeThread();
 					}
@@ -881,9 +890,18 @@ namespace LSW {
 				__l_thr_fc_run(Constants::io__threads_taskid::END);
 				//quickmap.clear();
 
-				delete thread_functional.thread_arguments;
+				thr_shared_arg.threadcountm.lock();
+				thr_shared_arg.threadcount--;
+				thr_shared_arg.threadcountm.unlock();
 
+				thread_functional.am_i_running = false;
+
+				while (someoneIsRunning()) Sleep(20);
+
+				delete thread_functional.thread_arguments;
 				thread_functional.thread_arguments = nullptr;
+
+				logg << L::SLF << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::ELF;
 			}
 			catch (Abort::warn a)
 			{
@@ -891,7 +909,7 @@ namespace LSW {
 				thr_shared_arg.threadcount--;
 				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
-				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+				for (double t = al_get_time(); !hasThreadsButThisOnePaused(Constants::io__thread_ids::FUNCTIONAL) && al_get_time() - t < 3.0;) Sleep(10);
 				forceExit("Something went bad at FCTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
 			}
 			catch (Abort::abort a)
@@ -900,7 +918,7 @@ namespace LSW {
 				thr_shared_arg.threadcount--;
 				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
-				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+				for (double t = al_get_time(); !hasThreadsButThisOnePaused(Constants::io__thread_ids::FUNCTIONAL) && al_get_time() - t < 3.0;) Sleep(10);
 				forceExit("Something went wrong at FCTHR!", "Please report the following:", (a.from() + " -> " + a.details()).c_str());
 			}
 			catch (...)
@@ -909,16 +927,9 @@ namespace LSW {
 				thr_shared_arg.threadcount--;
 				thr_shared_arg.threadcountm.unlock();
 				pauseThread();
-				for (double t = al_get_time(); !hasThreadPaused() && al_get_time() - t < 3.0;) Sleep(10);
+				for (double t = al_get_time(); !hasThreadsButThisOnePaused(Constants::io__thread_ids::FUNCTIONAL) && al_get_time() - t < 3.0;) Sleep(10);
 				forceExit("Something went wrong at FCTHR!", "There was a unknown error! What a sad thing to happen!");
 			}
-
-			thr_shared_arg.threadcountm.lock();
-			thr_shared_arg.threadcount--;
-			thr_shared_arg.threadcountm.unlock();
-
-			thread_functional.am_i_running = false;
-			logg << L::SLF << fsr(__FUNCSIG__) << "Ended everything! Bye!" << L::ELF;
 		}
 
 
@@ -958,6 +969,11 @@ namespace LSW {
 				thread_functional.functions[+tid]();
 				Sleep(10);
 			}
+		}
+
+		bool Manager::someoneIsRunning()
+		{
+			return (thread_maindisplay.am_i_running || thread_collision.am_i_running || thread_kbmouse.am_i_running || thread_functional.am_i_running);
 		}
 
 		Manager::Manager()
@@ -1155,6 +1171,16 @@ namespace LSW {
 				thread_functional.pause_thread = true;
 				break;
 			}
+		}
+
+		bool Manager::hasThreadsButThisOnePaused(const Constants::io__thread_ids o)
+		{
+			bool failed_pause = false;
+			for (int a = 0; a < +Constants::io__thread_ids::__THREADS_COUNT; a++)
+			{
+				if (a != +o) failed_pause |= !hasThreadPaused((Constants::io__thread_ids)a);
+			}
+			return !failed_pause;
 		}
 
 		bool Manager::hasThreadPaused(const Constants::io__thread_ids o)

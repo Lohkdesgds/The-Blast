@@ -527,6 +527,27 @@ namespace LSW {
 			return d;
 		}
 
+		void Database::internalCheck()
+		{
+			if (!check(Constants::io__conf_boolean::WAS_OSD_ON))								set(Constants::io__conf_boolean::WAS_OSD_ON, false);
+			if (!check(Constants::io__conf_boolean::ENABLE_SECOND_DEBUGGING_SCREEN))			set(Constants::io__conf_boolean::ENABLE_SECOND_DEBUGGING_SCREEN, false);
+			if (!check(Constants::io__conf_boolean::ULTRADEBUG))								set(Constants::io__conf_boolean::ULTRADEBUG, false);
+
+			if (!check(Constants::io__conf_double::LAST_VOLUME))								set(Constants::io__conf_double::LAST_VOLUME, 0.5);
+
+			if (!check(Constants::io__conf_integer::SCREEN_X))									set(Constants::io__conf_integer::SCREEN_X, 0);
+			if (!check(Constants::io__conf_integer::SCREEN_Y))									set(Constants::io__conf_integer::SCREEN_Y, 0);
+			if (!check(Constants::io__conf_integer::SCREEN_FLAGS))								set(Constants::io__conf_integer::SCREEN_FLAGS, Constants::start_display_default_mode);
+			if (!check(Constants::io__conf_integer::SCREEN_PREF_HZ))							set(Constants::io__conf_integer::SCREEN_PREF_HZ, 0);
+
+			if (!check(Constants::io__conf_longlong::_TIMES_LIT))								set(Constants::io__conf_longlong::_TIMES_LIT, 0LL);
+
+			if (!check(Constants::io__conf_string::LAST_PLAYERNAME))							set(Constants::io__conf_string::LAST_PLAYERNAME, "Player");
+
+																								set(Constants::io__conf_string::LAST_VERSION, Constants::version_app); // just set
+			if (!check(Constants::io__conf_color::LAST_COLOR_TRANSLATE))						set(Constants::io__conf_color::LAST_COLOR_TRANSLATE, data.color);
+		}
+
 		Database::Database()
 		{
 			data.m.lock();
@@ -542,30 +563,21 @@ namespace LSW {
 					if (!data.c) throw Abort::abort(__FUNCSIG__, "Cannot load/create Database file!");
 					logg << L::SLF << fsr(__FUNCSIG__) << "Is this the first time you're opening this game? Registered first Database load." << L::ELF;
 
-					// set or load first values
-					set(Constants::io__conf_boolean::HAD_ERROR, true); // then texture download starts			// USED
-					set(Constants::io__conf_boolean::WAS_OSD_ON, false);										// USED
-					set(Constants::io__conf_boolean::ULTRADEBUG, false);										// USED
-					set(Constants::io__conf_double::LAST_VOLUME, 0.5);											// USED
-					set(Constants::io__conf_string::LAST_PLAYERNAME, "Player");									// USED
-					set(Constants::io__conf_color::LAST_COLOR_TRANSLATE, data.color);
-					set(Constants::io__conf_integer::SCREEN_X, 0);												// USED
-					set(Constants::io__conf_integer::SCREEN_Y, 0);												// USED
-					set(Constants::io__conf_longlong::_TIMES_LIT, 0LL);											// USED
-					set(Constants::io__conf_integer::SCREEN_FLAGS, Constants::start_display_default_mode);		// USED
-					set(Constants::io__conf_integer::SCREEN_PREF_HZ, 0);										// USED
+					internalCheck();
 
 					if (!al_save_config_file(temporary.c_str(), data.c)) {
 						throw Abort::abort(__FUNCSIG__, "Cannot save Database file!");
 					}
 				}
 				else {
+					internalCheck();
+					flush();
+
 					long long ll;
 					get(Constants::io__conf_longlong::_TIMES_LIT, ll);
 					ll++;
 					set(Constants::io__conf_longlong::_TIMES_LIT, ll);
 				}
-				set(Constants::io__conf_string::LAST_VERSION, Constants::version_app);
 
 				/*complicated stuff*/
 				{
@@ -596,7 +608,7 @@ namespace LSW {
 			}
 
 			data.savethrdone = false;
-			data.savethr = new std::thread([=] {
+			data.savethr = new std::thread([&] {
 				if (data.c) {
 					data.m.lock();
 					std::string temporary = Constants::config_default_file;
@@ -771,6 +783,42 @@ namespace LSW {
 				}
 				break;
 			}
+		}
+
+		bool Database::check(const Constants::io__conf_boolean e)
+		{
+			bool t;
+			return get(e, t);
+		}
+
+		bool Database::check(const Constants::io__conf_double e)
+		{
+			double t;
+			return get(e, t);
+		}
+
+		bool Database::check(const Constants::io__conf_integer e)
+		{
+			int t;
+			return get(e, t);
+		}
+
+		bool Database::check(const Constants::io__conf_longlong e)
+		{
+			long long t;
+			return get(e, t);
+		}
+
+		bool Database::check(const Constants::io__conf_string e)
+		{
+			std::string t;
+			return get(e, t);
+		}
+
+		bool Database::check(const Constants::io__conf_color e)
+		{
+			ALLEGRO_COLOR t;
+			return get(e, t);
 		}
 
 		bool Database::get(const std::string e, std::string& v)

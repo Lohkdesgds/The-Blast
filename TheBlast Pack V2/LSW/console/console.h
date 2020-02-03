@@ -1,6 +1,13 @@
 #pragma once
 
-#include "..\organizer\organizer.h"
+#include "..\shared_constants\constants.h"
+#include "..\custom_abort\abort.h"
+#include "..\big_templates\small_templates.h"
+#include "..\logger\logger.h"
+#include "..\big_templates\big_templates.h"
+#include "..\system\system.h"
+#include "..\sound\sound.h"
+#include "..\drawing\drawing.h"
 
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_acodec.h>
@@ -35,20 +42,21 @@ namespace LSW {
 	namespace v4 {
 		namespace Constants {
 
-			enum class ro__thread_display_routines_timers { FUNCTIONALITY_ONCE, FUNCTIONALITY_LOOP, LOOPTRACK, CHECKKEEP, CHECKMEMORYBITMAP, UPDATELOGONSCREEN };
-			enum class ro__thread_collision_routines_timers { FUNCTIONALITY_ONCE, FUNCTIONALITY_LOOP, LOOPTRACK, CHECKKEEP, COLLISIONWORK };
-			enum class ro__thread_keyboardm_routines_timers { FUNCTIONALITY_ONCE, FUNCTIONALITY_LOOP, LOOPTRACK, CHECKKEEP, UPDATEMOUSE };
+			enum class ro__thread_display_routines_timers { FUNCTIONALITY_ONCE, FUNCTIONALITY_LOOP, LOOPTRACK, CHECKMEMORYBITMAP, UPDATELOGONSCREEN };
+			enum class ro__thread_collision_routines_timers { FUNCTIONALITY_ONCE, FUNCTIONALITY_LOOP, LOOPTRACK, COLLISIONWORK };
+			enum class ro__thread_keyboardm_routines_timers { FUNCTIONALITY_ONCE, FUNCTIONALITY_LOOP, LOOPTRACK, UPDATEMOUSE };
 			enum class ro__thread_functional_routines_timers { FUNCTIONALITY_ONCE_AND_CHECKNEWFUNCS, FUNCTIONALITY_LOOP, LOOPTRACK };
 
-			enum class io__thread_ids { ALL = -1, DRAWING, COLLIDING, USERINPUT, FUNCTIONAL };
+			enum class io__thread_ids { ALL = -1, DRAWING, COLLIDING, USERINPUT, FUNCTIONAL,
+										__THREADS_COUNT};
 			enum class io__threads_taskid { START, ONCE, LOOP, END, size };
 
 		}
 
-		typedef __template_multiple_timers<Constants::__i_func_t_once, Constants::__i_thr_loop_timer_0, 1, 2, 2, 5>								    __display_routines;
-		typedef __template_multiple_timers<Constants::__i_func_t_once, Constants::__i_thr_loop_timer_1, 1, 5, Constants::__i_col_pos_t_update>		__collision_routines;
-		typedef __template_multiple_timers<Constants::__i_func_t_once, Constants::__i_thr_loop_timer_2, 1, 5, 60>								    __keyboardmouse_routines;
-		typedef __template_multiple_timers<Constants::__i_func_t_once, Constants::__i_thr_loop_timer_3, 1>											__functional_routines;
+		typedef __template_multiple_timers<Constants::__i_func_t_once, Constants::__i_thr_loop_timer_0, 1, 2, 5>								__display_routines;
+		typedef __template_multiple_timers<Constants::__i_func_t_once, Constants::__i_thr_loop_timer_1, 1, Constants::__i_col_pos_t_update>		__collision_routines;
+		typedef __template_multiple_timers<Constants::__i_func_t_once, Constants::__i_thr_loop_timer_2, 1, 60>								    __keyboardmouse_routines;
+		typedef __template_multiple_timers<Constants::__i_func_t_once, Constants::__i_thr_loop_timer_3, 1>										__functional_routines;
 
 
 
@@ -130,6 +138,8 @@ namespace LSW {
 			void __l_thr_cl_run(const Constants::io__threads_taskid);
 			void __l_thr_kb_run(const Constants::io__threads_taskid);
 			void __l_thr_fc_run(const Constants::io__threads_taskid);
+
+			bool someoneIsRunning();
 		public:
 			Manager();
 			~Manager();
@@ -151,6 +161,7 @@ namespace LSW {
 			double getInstantSCallsOnThread(const Constants::io__thread_ids = Constants::io__thread_ids::ALL);
 
 			void pauseThread(const Constants::io__thread_ids = Constants::io__thread_ids::ALL);
+			bool hasThreadsButThisOnePaused(const Constants::io__thread_ids = Constants::io__thread_ids::ALL);
 			bool hasThreadPaused(const Constants::io__thread_ids = Constants::io__thread_ids::ALL);
 			void resumeThread(const Constants::io__thread_ids = Constants::io__thread_ids::ALL);
 

@@ -1057,14 +1057,12 @@ namespace LSW {
 			return g == v || [&]() {
 				if (w != Constants::io__sprite_integer::LAYER) return false; // return false forcing anything but LAYER to be TRUE on g == v part
 
-				data.layers_colliding_m.lock();
-				for (auto& i : data.layers_colliding) {
+				auto cpy = data.layers_colliding;
+				for (auto& i : cpy) {
 					if (i == v) {
-						data.layers_colliding_m.unlock();
 						return true;
 					}
 				}
-				data.layers_colliding_m.unlock();
 				return false;
 			}();
 		}
@@ -1213,6 +1211,10 @@ namespace LSW {
 			data.new_state = Constants::io__sprite_tie_func_to_state::COLLISION_NONE;
 			data.col_data.clear();
 			//data.direction_col = 0;
+			if (__debug_s.length() > 0) {
+				gfile logg;
+				logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Sprite " << this->sprite_id << " debug: " << __debug_s << L::EL;
+			}
 			__debug_s.clear();
 		}
 
@@ -1224,20 +1226,16 @@ namespace LSW {
 			if ((!isEq(Constants::io__sprite_integer::LAYER, is_layer)) &&
 				(data.collision_mode != Constants::io__sprite_collision_mode::COLLISION_ANY_ELASTIC && data.collision_mode != Constants::io__sprite_collision_mode::COLLISION_ANY_ROUGH) // HERE
 				&& ([&]() {
-					data.layers_colliding_m.lock();
-					for (auto& i : data.layers_colliding) {
+					auto cpy = data.layers_colliding;
+					for (auto& i : cpy) {
 						if (i == is_layer) {
-							data.layers_colliding_m.unlock();
 							return false;
 						}
 					}
-					data.layers_colliding_m.unlock();
 					return true;
-					}())
-
-				)
+					}()))
 			{
-				__debug_s += "SKIP_PROC;";
+				//__debug_s += "SKIP_PROC;";
 				return; // check layers if there's one to collide (ON)
 			}
 
@@ -1367,8 +1365,8 @@ namespace LSW {
 				//logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << sprite_id << " WILL COL W/ " << friendsname << L::EL;
 				data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_ABOUT_TO_COLLIDE] = true;
 			
-				data.dval[+Constants::io__sprite_double::RO_SPEEDX] *= 0.75; // < 0.50 so it won't bypass collision
-				data.dval[+Constants::io__sprite_double::RO_SPEEDY] *= 0.75; // < 0.50 "
+				data.dval[+Constants::io__sprite_double::RO_SPEEDX] *= 0.50; // < 0.50 so it won't bypass collision
+				data.dval[+Constants::io__sprite_double::RO_SPEEDY] *= 0.50; // < 0.50 "
 
 				if (adapt_dxx > adapt_dyy) { // from horiz
 					if (dxx > 0.0)	__debug_s += "w@" + std::to_string(adapt_dxx) + ":" + std::to_string(adapt_dyy) + ";";
@@ -1387,7 +1385,7 @@ namespace LSW {
 
 			if (data.new_state != Constants::io__sprite_tie_func_to_state::size) {
 				if (data.last_state != data.new_state) {
-					__debug_s += "CF_STATE;";
+					if (data.last_state != Constants::io__sprite_tie_func_to_state::size) __debug_s += "CUSTOM_F_STATE->#" + std::to_string(+data.new_state) + ";";
 					if (data.function_pair[+data.new_state]) data.function_pair[+data.new_state]();
 				}
 				else if (data.function_pair_looping[+data.new_state]) data.function_pair[+data.new_state](); // run anyway (if loop)
@@ -1401,19 +1399,19 @@ namespace LSW {
 			// KEYBOARD INPUT
 			if (data.combined_direction_i_wanna_go & +Constants::directions::NORTH) {
 				if (directions_can_go & +Constants::directions::NORTH) data.dval[+Constants::io__sprite_double::RO_SPEEDY] -= data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
-				else __debug_s += "NO_GO_NORTH;";
+				else __debug_s += "NOGO_NORTH;";
 			}
 			if (data.combined_direction_i_wanna_go & +Constants::directions::SOUTH) {
 				if (directions_can_go & +Constants::directions::SOUTH) data.dval[+Constants::io__sprite_double::RO_SPEEDY] += data.dval[+Constants::io__sprite_double::ACCELERATION_Y];
-				else __debug_s += "NO_GO_SOUTH;";
+				else __debug_s += "NOGO_SOUTH;";
 			}
 			if (data.combined_direction_i_wanna_go & +Constants::directions::EAST) {
 				if (directions_can_go & +Constants::directions::EAST) data.dval[+Constants::io__sprite_double::RO_SPEEDX] += data.dval[+Constants::io__sprite_double::ACCELERATION_X];
-				else __debug_s += "NO_GO_EAST;";
+				else __debug_s += "NOGO_EAST;";
 			}
 			if (data.combined_direction_i_wanna_go & +Constants::directions::WEST) {
 				if (directions_can_go & +Constants::directions::WEST) data.dval[+Constants::io__sprite_double::RO_SPEEDX] -= data.dval[+Constants::io__sprite_double::ACCELERATION_X];
-				else __debug_s += "NO_GO_WEST;";
+				else __debug_s += "NOGO_WEST;";
 			}
 
 
@@ -1421,7 +1419,7 @@ namespace LSW {
 
 			if (data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING_FROM_X] || data.bval[+Constants::io__sprite_boolean::RO_IS_OTHERS_COLLIDING_FROM_Y]) {
 
-				data.dval[+Constants::io__sprite_double::RO_SPEEDY] = data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 0.0;
+				//data.dval[+Constants::io__sprite_double::RO_SPEEDY] = data.dval[+Constants::io__sprite_double::RO_SPEEDX] = 0.0;
 
 				int where_are_them_at = 0;
 				double sum_pos[2] = { Constants::sprite_default_min_movement, Constants::sprite_default_min_movement };
@@ -1904,38 +1902,38 @@ namespace LSW {
 							break;
 						case +Constants::tags_e::T_TEXTURES_LOADED:
 						{
-							__template_static_vector<ALLEGRO_BITMAP> Textures;
-							sprintf_s(tempstr_c, "%zu", Textures.size());
+							Textures textures;
+							sprintf_s(tempstr_c, "%zu", textures.size());
 						}
 						break;
 						case +Constants::tags_e::T_FONTS_LOADED:
 						{
-							__template_static_vector<ALLEGRO_FONT> Fonts;
-							sprintf_s(tempstr_c, "%zu", Fonts.size());
+							Fonts fonts;
+							sprintf_s(tempstr_c, "%zu", fonts.size());
 						}
 						break;
 						case +Constants::tags_e::T_SAMPLES_LOADED:
 						{
-							__template_static_vector<ALLEGRO_SAMPLE> Samples;
-							sprintf_s(tempstr_c, "%zu", Samples.size());
+							Samples samples;
+							sprintf_s(tempstr_c, "%zu", samples.size());
 						}
 						break;
 						case +Constants::tags_e::T_SPRITES_LOADED:
 						{
-							__template_static_vector<Sprite> Sprites;
-							sprintf_s(tempstr_c, "%zu", Sprites.size());
+							Sprites sprites;
+							sprintf_s(tempstr_c, "%zu", sprites.size());
 						}
 						break;
 						case +Constants::tags_e::T_TEXTS_LOADED:
 						{
-							__template_static_vector<Text> Texts;
-							sprintf_s(tempstr_c, "%zu", Texts.size());
+							Texts texts;
+							sprintf_s(tempstr_c, "%zu", texts.size());
 						}
 						break;
 						case +Constants::tags_e::T_TRACKS_LOADED:
 						{
-							__template_static_vector<Track> Tracks;
-							sprintf_s(tempstr_c, "%zu", Tracks.size());
+							Tracks tracks;
+							sprintf_s(tempstr_c, "%zu", tracks.size());
 						}
 						break;
 						case +Constants::tags_e::T_SPRITE_STATE:
@@ -2170,15 +2168,12 @@ namespace LSW {
 			get(e, g);
 			return g == v || [&]() {
 				if (e != Constants::io__text_integer::LAYER) return false; // return false forcing anything but LAYER to be TRUE on g == v part
-
-				data.layers_colliding_m.lock();
-				for (auto& i : data.layers_colliding) {
+				auto cpy = data.layers_colliding;
+				for (auto& i : cpy) {
 					if (i == v) {
-						data.layers_colliding_m.unlock();
 						return true;
 					}
 				}
-				data.layers_colliding_m.unlock();
 				return false;
 			}();
 		}
@@ -2199,7 +2194,8 @@ namespace LSW {
 
 			{
 				std::string working_now = data.str[+Constants::io__text_string::STRING];
-				if (data.pair_tied[+Constants::io__text_tie_func_to_state::ON_DRAW]) data.pair_tied[+Constants::io__text_tie_func_to_state::ON_DRAW](working_now);
+				if (data.pair_tied[+Constants::io__text_tie_func_to_state::ON_DRAW])
+					data.pair_tied[+Constants::io__text_tie_func_to_state::ON_DRAW](working_now);
 
 				if (al_get_time() - data.d[+Constants::io__text_double::LAST_INTERPRET] > data.d[+Constants::io__text_double::UPDATETIME]) {
 
