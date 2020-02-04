@@ -308,6 +308,8 @@ __slice("%sprite_state%", +tags_e::T_SPRITE_STATE),__slice("%volume_perc%", +tag
 
 			bool isThisCollidableIn(const int); // related to: shouldThisCalcCollisionIn
 			bool doesThisReflect(); // calls shouldThisCalcCollisionIn
+
+			int isThisMoving(); // aka keyboard input
 			
 			std::string __debug_str();
 
@@ -317,8 +319,8 @@ __slice("%sprite_state%", +tags_e::T_SPRITE_STATE),__slice("%volume_perc%", +tag
 		class Entity : public Sprite {
 			struct __e_custom_data {
 				std::string s[+Constants::io__entity_string::size];
-				ALLEGRO_COLOR c[+Constants::io__entity_color::size];
-				double d[+Constants::io__entity_color::size];
+				ALLEGRO_COLOR c[+Constants::io__entity_color::size] = { al_map_rgb(0,0,0) };
+				double d[+Constants::io__entity_color::size] = { 0.0 };
 			};
 			
 			__e_custom_data edata;

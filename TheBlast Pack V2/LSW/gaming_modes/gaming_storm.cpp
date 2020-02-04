@@ -59,6 +59,10 @@ namespace LSW {
 				}
 				s->set(Constants::io__sprite_string::ADD, to_add);
 				s->set(col_mode);
+
+				refresing_m.lock();
+				refreshing.push_back(s);
+				refresing_m.unlock();
 			}
 		}
 
@@ -81,7 +85,7 @@ namespace LSW {
 
 			wd = new World(map_x, map_y);
 
-			wd->setDelta(pow(2.7 / (level_count + 1), 2.0) * 50);
+			wd->setDelta(current_delta = pow(2.7 / (level_count + 1), 2.0) * 50);
 
 			this_is_the_player->set(Constants::io__sprite_double::SCALEG, 0.065 / +mult);
 			this_is_the_player->set(Constants::io__sprite_double::ACCELERATION_X, Constants::intensity_player_run_max * 5.3 / map_x);
@@ -155,7 +159,10 @@ namespace LSW {
 				s->hook(Constants::io__sprite_tie_func_to_state::ON_DRAW, [&, s]() {
 					if (need_refresh) {
 						//s->set(Constants::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY, al_get_time() + 0.1);
-						auto vct = sprites.getList([](const std::string a)->bool {return a.find("GAMEBOX_") == 0; });
+						refresing_m.lock();
+						auto vct = refreshing; //sprites.getList([](const std::string a)->bool {return a.find("GAMEBOX_") == 0; });
+						refreshing.clear();
+						refresing_m.unlock();
 						ALLEGRO_BITMAP* trg = nullptr;
 						s->get(trg);
 						if (!trg) {
@@ -164,7 +171,8 @@ namespace LSW {
 						}
 						ALLEGRO_BITMAP* bff = al_get_target_bitmap();
 						al_set_target_bitmap(trg);
-						al_clear_to_color(al_map_rgb(0, 0, 0));
+						//al_clear_to_color(al_map_rgb(0, 0, 0)); // if needed (not anymore) to test only the changes in map
+						
 
 						for (auto& i : vct) {
 							i->set(Constants::io__sprite_boolean::DRAW, true);
@@ -192,122 +200,179 @@ namespace LSW {
 		void GamingStorm::threadTasking()
 		{
 			level_count = 0;
+
+			refresing_m.lock();
+			refreshing.clear();
+			refresing_m.unlock();
+
+			dynamic_speed_difft_m = 1.0;
+
+			auto dynamic_speed_track = [&](bool ignore = false) {
+				if (!ignore) {
+					double __t = 0.2 * (al_get_time() - level_fx_text - 5.0) / (1e-50 + 15.0 * fabs(current_delta));
+					if (__t < 1e-50) __t = 1e-50;
+					double diff_t = 1.0 + pow(__t, 1.6);
+					if (diff_t < 1.0) diff_t = 1.0;
+					if (diff_t > 1.55) diff_t = 1.55;
+
+					dynamic_speed_difft_m = (19.0 * dynamic_speed_difft_m + diff_t) / 20.0;
+
+					playtrack->set(Constants::io__track_double::SPEED, dynamic_speed_difft_m);
+				}
+				else {
+					dynamic_speed_difft_m = (19.0 * dynamic_speed_difft_m + 1.0) / 20.0;
+					playtrack->set(Constants::io__track_double::SPEED, dynamic_speed_difft_m);
+				}
+			};
+
+
+			ALLEGRO_EVENT_QUEUE* ev_qu = al_create_event_queue();
+			ALLEGRO_TIMER* timer_sound = al_create_timer(1.0 / 18);
+			ALLEGRO_TIMER* timer_think = al_create_timer(1.0 / 90);
+
+			al_register_event_source(ev_qu, al_get_timer_event_source(timer_sound));
+			al_register_event_source(ev_qu, al_get_timer_event_source(timer_think));
+
+			al_start_timer(timer_sound);
+			al_start_timer(timer_think);
+
+			level_fx_text = al_get_time();
+
 			while (keep_game_going && !has_player_died) {
-				if (!has_map_gen)
-				{
-					consol->pauseThread();
-					while (!consol->hasThreadsButThisOnePaused(Constants::io__thread_ids::FUNCTIONAL)) Sleep(10);
 
-					level_fx_text = al_get_time();
+				ALLEGRO_EVENT ev;
+				al_wait_for_event(ev_qu, &ev);
 
-					this_is_the_player->set(Constants::io__entity_double::HEALTH, 1.0);
-					level_text = texts.create("GAMEBOX_TEXT");
-					level_text->set(Constants::io__text_string::FONT, "DEFAULT");
-					level_text->set(Constants::io__text_string::STRING, "LEVEL UNKNOWN");
-					level_text->set(Constants::io__text_string::ID, "GAMEBOX_TEXT");
-					level_text->set(Constants::io__text_boolean::SHOW, true);
-					level_text->set(Constants::io__text_double::SCALEG, 0.24);
-					level_text->set(Constants::io__text_double::SCALEX, 0.5);
-					level_text->set(Constants::io__text_integer::LAYER, 1);
-					level_text->set(Constants::io__text_double::UPDATETIME, 1.0 / 5);
-					level_text->set(Constants::io__text_color::COLOR, al_map_rgba_f(0.75,0.75,0.75,0.80));
-					level_text->hook(Constants::io__text_tie_func_to_state::ON_DRAW, [&](std::string& str)->void {
-						double coef = 1.0 - 0.2 * (al_get_time() - (level_fx_text + 3.0));
-						if (coef > 1.0) coef = 1.0;
-						if (coef < 0.0) coef = 0.0;
-						level_text->set(Constants::io__text_color::COLOR, al_map_rgba_f(0.75 * pow(coef, 3.0), 0.75 * pow(coef, 3.0), 0.75 * pow(coef, 3.0), 0.80 * pow(coef, 3.0)));
-						level_text->set(Constants::io__text_double::SCALEX, 0.5 / (0.5 + 0.5 * pow(coef, 1.5)));
-						level_text->set(Constants::io__text_double::SCALEY, 1.0 * (0.7 + 0.3 * pow(coef, 2.0)));
-						str = "< LEVEL " + std::to_string(level_count + 1) + " >";
-						});
+				if (ev.type != ALLEGRO_EVENT_TIMER) continue;
 
-					// even if regenMap() call and call again pauseThread and resumeThread(), it is safe to call again outside (just to guarantee no freezing)
-					regenMap();
-					this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, true);
-
+				if (ev.timer.source == timer_sound) {
+					dynamic_speed_track(is_paused);
+				}
+				if (ev.timer.source == timer_think) {
+					if (!has_map_gen)
 					{
-						const auto supercheck_entity_on_block = [&]()->int {
-							if (!wd) return 0;
-							double act_pos[2];
-							this_is_the_player->get(Constants::ro__sprite_target_double::TARG_POSX, act_pos[0]);
-							this_is_the_player->get(Constants::ro__sprite_target_double::TARG_POSY, act_pos[1]);
-							int xy[2];
-							xy[0] = (((act_pos[0] /*+ szs[0]*/) * 1.0 / 2) + 0.5) * (wd->getLen(0));
-							xy[1] = (((act_pos[1] /*+ szs[1]*/) * 1.0 / 2) + 0.5) * (wd->getLen(1));
+						consol->pauseThread();
+						while (!consol->hasThreadsButThisOnePaused(Constants::io__thread_ids::FUNCTIONAL)) Sleep(10);
 
-							int blockid = wd->readPos(xy[0], xy[1]);
-							switch (blockid) {
-							case +blocks::LIFE:
-							{
-								double heal = 1.0;
-								this_is_the_player->get(Constants::io__entity_double::HEALTH, heal);
-								heal += Constants::heal_default;
-								if (heal > Constants::max_health) heal = Constants::max_health;
-								this_is_the_player->set(Constants::io__entity_double::HEALTH, heal);
-							}
-							break;
-							case +blocks::EXIT:
-								regenMap();
-								level_count++;
-								level_fx_text = al_get_time();
-								break;
-							case +blocks::FAKE_EXIT:
-								wd->setPos(xy[0], xy[1], +blocks::FAILEDEXIT);
-								updateBlock({ xy[0], xy[1] }, nullptr);
-								refreshMap();
-								break;
-							case +blocks::FAILEDEXIT:
-							{
-								double heal = 1.0;
-								this_is_the_player->get(Constants::io__entity_double::HEALTH, heal);
-								heal += Constants::damage_default;
-								if (heal < Constants::min_health) {
-									has_player_died = true;
-									return 0;
+						level_fx_text = al_get_time();
+
+						this_is_the_player->set(Constants::io__entity_double::HEALTH, 1.0);
+						level_text = texts.create("GAMEBOX_TEXT");
+						level_text->set(Constants::io__text_string::FONT, "DEFAULT");
+						level_text->set(Constants::io__text_string::STRING, "LEVEL UNKNOWN");
+						level_text->set(Constants::io__text_string::ID, "GAMEBOX_TEXT");
+						level_text->set(Constants::io__text_boolean::SHOW, true);
+						level_text->set(Constants::io__text_double::SCALEG, 0.24);
+						level_text->set(Constants::io__text_double::SCALEX, 0.5);
+						level_text->set(Constants::io__text_integer::LAYER, 1);
+						level_text->set(Constants::io__text_double::UPDATETIME, 1.0 / 5);
+						level_text->set(Constants::io__text_color::COLOR, al_map_rgba_f(0.75, 0.75, 0.75, 0.80));
+						level_text->hook(Constants::io__text_tie_func_to_state::ON_DRAW, [&](std::string& str)->void {
+							double coef = 1.0 - 0.2 * (al_get_time() - (level_fx_text + 3.0));
+							if (coef > 1.0) coef = 1.0;
+							if (coef < 0.0) coef = 0.0;
+							level_text->set(Constants::io__text_color::COLOR, al_map_rgba_f(0.75 * pow(coef, 3.0), 0.75 * pow(coef, 3.0), 0.75 * pow(coef, 3.0), 0.80 * pow(coef, 3.0)));
+							level_text->set(Constants::io__text_double::SCALEX, 0.5 / (0.5 + 0.5 * pow(coef, 1.5)));
+							level_text->set(Constants::io__text_double::SCALEY, 1.0 * (0.7 + 0.3 * pow(coef, 2.0)));
+							str = "< LEVEL " + std::to_string(level_count + 1) + " >";
+							});
+
+						// even if regenMap() call and call again pauseThread and resumeThread(), it is safe to call again outside (just to guarantee no freezing)
+						regenMap();
+						this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, true);
+
+						{
+							const auto supercheck_entity_on_block = [&]()->int {
+								if (!wd) return 0;
+								double act_pos[2];
+								this_is_the_player->get(Constants::ro__sprite_target_double::TARG_POSX, act_pos[0]);
+								this_is_the_player->get(Constants::ro__sprite_target_double::TARG_POSY, act_pos[1]);
+								int xy[2];
+								xy[0] = (((act_pos[0] /*+ szs[0]*/) * 1.0 / 2) + 0.5) * (wd->getLen(0));
+								xy[1] = (((act_pos[1] /*+ szs[1]*/) * 1.0 / 2) + 0.5) * (wd->getLen(1));
+
+								int blockid = wd->readPos(xy[0], xy[1]);
+								switch (blockid) {
+								case +blocks::LIFE:
+								{
+									double heal = 1.0;
+									this_is_the_player->get(Constants::io__entity_double::HEALTH, heal);
+									heal += Constants::heal_default;
+									if (heal > Constants::max_health) heal = Constants::max_health;
+									this_is_the_player->set(Constants::io__entity_double::HEALTH, heal);
 								}
-								this_is_the_player->set(Constants::io__entity_double::HEALTH, heal);
-							}
-							break;
-							}
-							return 0;
-						};
+								break;
+								case +blocks::EXIT:
+									regenMap();
+									level_count++;
+									level_fx_text = al_get_time();
+									break;
+								case +blocks::FAKE_EXIT:
+									wd->setPos(xy[0], xy[1], +blocks::FAILEDEXIT);
+									updateBlock({ xy[0], xy[1] }, nullptr);
+									refreshMap();
+									break;
+								case +blocks::FAILEDEXIT:
+								{
+									double heal = 1.0;
+									this_is_the_player->get(Constants::io__entity_double::HEALTH, heal);
+									heal += Constants::damage_default;
+									if (heal < Constants::min_health) {
+										has_player_died = true;
+										return 0;
+									}
+									this_is_the_player->set(Constants::io__entity_double::HEALTH, heal);
+								}
+								break;
+								}
+								return 0;
+							};
 
-						consol->addCustomTask(supercheck_entity_on_block, task_id, 1.0 / 10);
-					}
-
-					consol->resumeThread();
-				}
-				else if (is_paused) {
-					this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, false);
-
-					if (!has_sleeping_sprites)
-						sprites.setEnabled([](const std::string a)->bool {return a.find("GAMEBOX_") == 0; }, [](const std::string a)->bool {return false; });
-					has_sleeping_sprites = true;
-
-					wd->pauseCorrupt();
-				}
-				else {  // map is up n running
-					if (has_sleeping_sprites) sprites.setEnabled([](const std::string a)->bool {return a.find("GAMEBOX_") == 0; }, [](const std::string a)->bool {return true; });
-					has_sleeping_sprites = false;
-
-					this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, true);
-					std::vector<POINT> points;
-					if (level_count / 5) {
-						if (wd->corruptWorld(points)) {
-							logg << L::SLF << fsr(__FUNCSIG__) << "World task has run." << L::ELF;
-
-							for (auto& i : points) {
-								updateBlock(i, nullptr);
-							}
-
-							refreshMap();
+							consol->addCustomTask(supercheck_entity_on_block, task_id, 1.0 / 10);
 						}
+
+						consol->resumeThread();
 					}
-					else {
+					else if (is_paused) {
+						this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, false);
+
+						if (!has_sleeping_sprites)
+							sprites.setEnabled([](const std::string a)->bool {return a.find("GAMEBOX_") == 0; }, [](const std::string a)->bool {return false; });
+						has_sleeping_sprites = true;
+
 						wd->pauseCorrupt();
+					}
+					else {  // map is up n running
+						if (has_sleeping_sprites) sprites.setEnabled([](const std::string a)->bool {return a.find("GAMEBOX_") == 0; }, [](const std::string a)->bool {return true; });
+						has_sleeping_sprites = false;
+
+						this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, true);
+						std::vector<POINT> points;
+						if (level_count / 5) {
+							if (wd->corruptWorld(points)) {
+								logg << L::SLF << fsr(__FUNCSIG__) << "World task has run." << L::ELF;
+
+								for (auto& i : points) {
+									updateBlock(i, nullptr);
+								}
+
+								refreshMap();
+							}
+						}
+						else {
+							wd->pauseCorrupt();
+						}
 					}
 				}
 			}
+
+			refresing_m.lock();
+			refreshing.clear();
+			refresing_m.unlock();
+
+			al_destroy_event_queue(ev_qu);
+			al_destroy_timer(timer_sound);
+			al_destroy_timer(timer_think);
 
 			if (has_map_gen) {
 				consol->pauseThread();
@@ -328,13 +393,15 @@ namespace LSW {
 		}
 
 
-		GamingStorm::GamingStorm(Manager* mng, Entity* plr, const int tid)
+		GamingStorm::GamingStorm(Manager* mng, Entity* plr, Track* trk, const int tid)
 		{
 			if (!mng) throw Abort::abort(__FUNCSIG__, "Invalid Manager! Cannot start without it!");
 			if (!plr) throw Abort::abort(__FUNCSIG__, "Invalid Entity! Cannot start without it!");
+			if (!trk) throw Abort::abort(__FUNCSIG__, "Invalid Track! Cannot start without it!");
 			task_id = tid;
 			consol = mng;
 			this_is_the_player = plr;
+			playtrack = trk;
 		}
 
 		GamingStorm::~GamingStorm()

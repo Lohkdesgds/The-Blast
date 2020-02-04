@@ -55,6 +55,7 @@ namespace LSW {
 				public:
 					dev_display();
 					~dev_display();
+					void safelyKill();
 				};
 
 				dev_display* displaydev = nullptr;
@@ -255,6 +256,9 @@ namespace LSW {
 			}
 		}
 		inline gfile::_log::dev_display::~dev_display() {
+			safelyKill();
+		}
+		inline void gfile::_log::dev_display::safelyKill() {
 			if (thr) {
 				keep_alive = false;
 				thr->join();
@@ -362,6 +366,7 @@ namespace LSW {
 		inline void gfile::killDebugScreen()
 		{
 			if (g.displaydev) {
+				g.displaydev->safelyKill();
 				delete g.displaydev;
 				g.displaydev = nullptr;
 			}
@@ -410,7 +415,7 @@ namespace LSW {
 					throw Abort::abort(__FUNCSIG__, "FATAL ERROR MUTEX SHOULDN'T BE UNLOCKED IF IT WASN'T PREVIOUSLY!");
 				}
 				g.eachcall_safety_locked = false;
-				g.eachcall.unlock();
+				g.eachcall.unlock();	/// yes, visual studio thinks this is an epic WARN, but it will never fail if you use gfile << L::SL(F) << fsr(__FUNCSIG__) << ... << L::EL(F)
 				break;
 			case L::SLF: // START LINE AND SAVE ON FILE
 				g.eachcall.lock();
@@ -426,7 +431,7 @@ namespace LSW {
 					throw Abort::abort(__FUNCSIG__, "FATAL ERROR MUTEX SHOULDN'T BE UNLOCKED IF IT WASN'T PREVIOUSLY!");
 				}
 				g.eachcall_safety_locked = false;
-				g.eachcall.unlock();
+				g.eachcall.unlock();	/// yes, visual studio thinks this is an epic WARN, but it will never fail if you use gfile << L::SL(F) << fsr(__FUNCSIG__) << ... << L::EL(F)
 				flush();
 				break;
 			}

@@ -38,7 +38,7 @@ namespace LSW {
 		namespace Constants {
 
 			enum class io__track_boolean { PLAYING };
-			enum class io__track_float { VOLUME, SPEED };
+			enum class io__track_double { VOLUME, SPEED };
 			enum class io__track_string { LOADID, ID };
 			enum class io__track_integer { PLAYMODE };
 			enum class io__track_integer_modes { ONCE = ALLEGRO_PLAYMODE_ONCE, LOOP = ALLEGRO_PLAYMODE_LOOP, BIDIR = ALLEGRO_PLAYMODE_BIDIR };
@@ -71,12 +71,12 @@ namespace LSW {
 			void unload();
 
 			void set(const Constants::io__track_boolean, const bool);
-			void set(const Constants::io__track_float, const double);
+			void set(const Constants::io__track_double, const double);
 			void set(const Constants::io__track_integer, const Constants::io__track_integer_modes);
 			void set(const Constants::io__track_string, const std::string);
 
 			void get(const Constants::io__track_boolean, bool&);
-			void get(const Constants::io__track_float, double&);
+			void get(const Constants::io__track_double, double&);
 			void get(const Constants::io__track_integer, int&);
 			void get(const Constants::io__track_string, std::string&);
 		};

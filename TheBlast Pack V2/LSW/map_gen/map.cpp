@@ -215,7 +215,7 @@ namespace LSW {
 			}
 
 			if (readPos(posx, posy) <= +blocks::__CORROSION_UNTIL) {
-				if (readPos(posx, posy) == +blocks::EMPTY) get(pt(posx, posy)) = +blocks::FAKE_EXIT; // empty should not become block like that
+				if (readPos(posx, posy) == +blocks::EMPTY || readPos(posx, posy) == +blocks::LIFE) get(pt(posx, posy)) = +blocks::FAKE_EXIT; // empty/life should not become block like that (collision behaviour)
 				else get(pt(posx, posy)) = to;
 				if (p) {
 					p->x = posx;

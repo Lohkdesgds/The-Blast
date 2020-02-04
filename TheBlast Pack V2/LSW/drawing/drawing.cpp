@@ -1032,6 +1032,7 @@ namespace LSW {
 		}
 
 
+
 		bool Sprite::isEq(const Constants::io__sprite_string w, const std::string v)
 		{
 			std::string g;
@@ -1098,6 +1099,7 @@ namespace LSW {
 			get(g);
 			return g == v;
 		}
+
 
 		void Sprite::draw(const int is_layer)
 		{
@@ -1542,6 +1544,11 @@ namespace LSW {
 		bool Sprite::doesThisReflect()
 		{
 			return (+data.collision_mode > +Constants::io__sprite_collision_mode::__COLLISION_HOLD_OR_TRANSPARENT_MAXVAL);
+		}
+
+		int Sprite::isThisMoving()
+		{
+			return data.combined_direction_i_wanna_go;
 		}
 
 		bool Sprite::isThisEntity()
@@ -2480,11 +2487,15 @@ namespace LSW {
 			Camera cam;
 			cam.applyNoSave(imglw);
 
+			auto nowarn = [&](float a, float b, float c, float d, float e, ALLEGRO_COLOR f) {
+				return ALLEGRO_VERTEX({ a, b, c, d, e, f });
+			};
+
 			for (float radd = 0; radd < ALLEGRO_PI * 2; radd += precision) {
 				ALLEGRO_VERTEX v[] = {
-				  { +(2.0 * cos(radd + timerr * 0.2)), +(2.0 * sin(radd + timerr * 0.2)), 0, 0, 0, using_rn},   //top left
-				  { +(2.0 * cos(radd + (precision * 0.5) + timerr * 0.2)), +(2.0 * sin(radd + (precision * 0.5) + timerr * 0.2)), 0, 0, 0, using_rn},   //top right
-				  { 0.0, 0.0, 0, 0, 0, using_rn}//,							  //center
+				  { nowarn ((2.0 * cos(radd + timerr * 0.2)), (2.0 * sin(radd + timerr * 0.2)), 0, 0, 0, using_rn)},   //top left
+				  { nowarn ((2.0 * cos(radd + (precision * 0.5) + timerr * 0.2)), (2.0 * sin(radd + (precision * 0.5) + timerr * 0.2)), 0, 0, 0, using_rn)},   //top right
+				  { nowarn (0.0, 0.0, 0, 0, 0, using_rn)}//,							  //center
 				  //{ corner_rightdn[0], corner_rightdn[1], 0, 0, 0, using_rn}, //bottom left
 				  //{ corner_rightup[0], corner_rightup[1], 0, 0, 0, using_rn}  //bottom right
 				};

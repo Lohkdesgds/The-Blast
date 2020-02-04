@@ -87,18 +87,18 @@ namespace LSW {
 				break;
 			}
 		}
-		void Track::set(const Constants::io__track_float e, const double v)
+		void Track::set(const Constants::io__track_double e, const double v)
 		{
 			switch (e)
 			{
-			case Constants::io__track_float::VOLUME:
+			case Constants::io__track_double::VOLUME:
 				if (!instance) {
 					throw Abort::abort(__FUNCSIG__, "Failed to set VOLUME because there was no instance loaded.", 1);
 					return;
 				}
 				al_set_sample_instance_gain(instance, +v);
 				break;
-			case Constants::io__track_float::SPEED:
+			case Constants::io__track_double::SPEED:
 				if (!instance) {
 					throw Abort::abort(__FUNCSIG__, "Failed to set SPEED because there was no instance loaded.", 1);
 					return;
@@ -148,18 +148,18 @@ namespace LSW {
 				break;
 			}
 		}
-		void Track::get(const Constants::io__track_float e, double& v)
+		void Track::get(const Constants::io__track_double e, double& v)
 		{
 			switch (e)
 			{
-			case Constants::io__track_float::VOLUME:
+			case Constants::io__track_double::VOLUME:
 				if (!instance) {
 					throw Abort::abort(__FUNCSIG__, "Failed to get VOLUME because there was no instance loaded.", 1);
 					return;
 				}
 				v = +al_get_sample_instance_gain(instance);
 				break;
-			case Constants::io__track_float::SPEED:
+			case Constants::io__track_double::SPEED:
 				if (!instance) {
 					throw Abort::abort(__FUNCSIG__, "Failed to get SPEED because there was no instance loaded.", 1);
 					return;

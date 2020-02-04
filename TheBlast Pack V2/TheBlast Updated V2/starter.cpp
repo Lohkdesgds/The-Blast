@@ -9,7 +9,7 @@ using namespace LSW::v4;
 
 
 enum class main_gamemodes { HASNT_STARTED_YET = -2, LOADING, MENU, OPTIONS, PAUSE, GAMING, MULTIPLAYER };
-enum class my_custom_funcs { LOADING_ANIMATION/*at: setup_animation_functional (starter.cpp)*/, BUBBLE_TASK/*at: set_consol_mainthread_start*/, GAMING_PLAYER_EXIT_TASK };
+enum class my_custom_funcs { LOADING_ANIMATION/*at: setup_animation_functional (starter.cpp)*/, BUBBLE_TASK/*at: set_consol_mainthread_start*/, GAMING_PLAYER_EXIT_TASK, WALK_TASK };
 
 int main(int argc, const char* argv[])
 {
@@ -64,6 +64,9 @@ int main(int argc, const char* argv[])
 			__assist[1] = (__s & ALLEGRO_FULLSCREEN_WINDOW) || (__s & ALLEGRO_FULLSCREEN);
 		}
 
+		// here quick test
+		const std::function<bool(const main_gamemodes)> isGamingLocally = [](const main_gamemodes u)->bool {return (u == main_gamemodes::PAUSE || u == main_gamemodes::GAMING); };
+
 		// functional-only lambdas
 		const std::function< int(void)> reapply_cam_settings					= [&gcam, &modern] {
 			gcam.apply(+modern);
@@ -82,6 +85,27 @@ int main(int argc, const char* argv[])
 				if (!hasdone[1]) hasdone[1] |= lines.draw(o);
 				if (hasdone[0] && hasdone[1]) break;
 			}
+			return 0;
+		};
+		const std::function< int(void)> guarantee_walk_task						= [&modern, &isGamingLocally, &sprites, &tracks]{
+			Track* t;
+			if (!tracks.get("WALK", t)) {
+				return 0;
+			}
+			if (isGamingLocally(modern)) {
+				for (auto& i : sprites) {
+					double vel[2];
+					i->self->get(Constants::io__sprite_double::RO_SPEEDX, vel[0]);
+					i->self->get(Constants::io__sprite_double::RO_SPEEDY, vel[1]);
+
+					if (fabs(vel[0]) > 0.002 || fabs(vel[1]) > 0.002) {
+
+						t->set(Constants::io__track_boolean::PLAYING, true);
+						return 0;
+					}
+				}
+			}
+			t->set(Constants::io__track_boolean::PLAYING, false);
 			return 0;
 		};
 
@@ -131,10 +155,11 @@ int main(int argc, const char* argv[])
 
 
 			// need this to draw progress bar
-			auto __introtrack = tracks.create("INTRO0");
+			auto __introtrack = tracks.create("LOADING_MUSIC");
+			__introtrack->set(Constants::io__track_string::ID, "LOADING_MUSIC");
 			__introtrack->set(Constants::io__track_string::LOADID, "LOADING");
-			__introtrack->set(Constants::io__track_boolean::PLAYING, true);
 			__introtrack->set(Constants::io__track_integer::PLAYMODE, Constants::io__track_integer_modes::LOOP);
+			__introtrack->set(Constants::io__track_boolean::PLAYING, true);
 
 
 			logg << L::SLF << fsr(__FUNCSIG__) << "Initializing display, events and stuff..." << L::ELF;
@@ -202,6 +227,37 @@ int main(int argc, const char* argv[])
 			samples.load("MUSIC_2", "musics/music_03.ogg");
 			draw_simple_bar(0.95, al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Loading walk...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
 			samples.load("WALK", "musics/walk_01.wav");
+
+			draw_simple_txt(ff, "Preparing soundtrack...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
+
+			// already loaded: LOADING_MUSIC
+			// loaded later: JUMP, MUSIC_0, MUSIC_1, MUSIC_GAMING, WALK
+
+			Track* tr = tracks.create("JUMP");
+			tr->set(Constants::io__track_string::LOADID, "JUMP");
+			tr->set(Constants::io__track_string::ID, "JUMP");
+
+			tr = tracks.create("MUSIC_0");
+			tr->set(Constants::io__track_string::LOADID, "MUSIC_0");
+			tr->set(Constants::io__track_string::ID, "MUSIC_0");
+			tr->set(Constants::io__track_integer::PLAYMODE, Constants::io__track_integer_modes::LOOP);
+
+			tr = tracks.create("MUSIC_1");
+			tr->set(Constants::io__track_string::LOADID, "MUSIC_1");
+			tr->set(Constants::io__track_string::ID, "MUSIC_1");
+			tr->set(Constants::io__track_integer::PLAYMODE, Constants::io__track_integer_modes::LOOP);
+
+			tr = tracks.create("MUSIC_GAMING");
+			tr->set(Constants::io__track_string::LOADID, "MUSIC_2");
+			tr->set(Constants::io__track_string::ID, "MUSIC_GAMING");
+			tr->set(Constants::io__track_integer::PLAYMODE, Constants::io__track_integer_modes::LOOP);
+
+			tr = tracks.create("WALK");
+			tr->set(Constants::io__track_string::LOADID, "WALK");
+			tr->set(Constants::io__track_string::ID, "WALK");
+			tr->set(Constants::io__track_integer::PLAYMODE, Constants::io__track_integer_modes::LOOP);
+			tr->set(Constants::io__track_double::VOLUME, 1.4);
+
 
 
 			draw_simple_bar(0.98, al_map_rgb(0, 0, 0), animsize[0], animsize[1]); draw_simple_txt(ff, "Verifying self existance...", al_map_rgb(255, 255, 255), 1, 0.04); al_flip_display();
@@ -408,6 +464,7 @@ int main(int argc, const char* argv[])
 		consol.setSimpleTask(Constants::io__thread_ids::DRAWING, Constants::io__threads_taskid::END, set_consol_mainthread_end);
 		consol.setSimpleTask(Constants::io__thread_ids::DRAWING, Constants::io__threads_taskid::START, set_consol_mainthread_start);
 		consol.setSimpleTask(Constants::io__thread_ids::DRAWING, Constants::io__threads_taskid::LOOP, [&reapply_cam_settings, &fxs_draw_task]() {reapply_cam_settings(); fxs_draw_task(); });
+		consol.addCustomTask(guarantee_walk_task, +my_custom_funcs::WALK_TASK, 1.0 / 20);
 		//consol.addCustomTask(reapply_cam_settings, +my_custom_funcs::UPDATE_CAMERA, 1.0 / 20);
 
 		reapply_cam_settings(); // apply once to just not blink
@@ -426,15 +483,15 @@ int main(int argc, const char* argv[])
 
 		consol.start();
 
-		logg << L::SLF << fsr(__FUNCSIG__) << "Want some tea? It's tea time (waiting game launch)" << L::ELF;
+		logg << L::SLF << fsr(__FUNCSIG__) << "Waiting Manager to start..." << L::ELF;
 		logg.flush();
 
 		while (!consol.isOpen()) Sleep(20);
 		if (!consol.isRunning()) return -1;
 
-		logg << L::SLF << fsr(__FUNCSIG__) << "The tea time continues until all textures and stuff are loaded..." << L::ELF;
+		logg << L::SLF << fsr(__FUNCSIG__) << "Got OPENGL version " << al_get_new_display_option(ALLEGRO_OPENGL_MAJOR_VERSION, 0) << "." << al_get_new_display_option(ALLEGRO_OPENGL_MINOR_VERSION, 0) << L::ELF;
 		while (consol.hasTasked(Constants::io__thread_ids::DRAWING, Constants::io__threads_taskid::START)) Sleep(20);
-		logg << L::SLF << fsr(__FUNCSIG__) << "Done drinking tea. Time to work on Sprites, Texts and stuff." << L::ELF;
+		logg << L::SLF << fsr(__FUNCSIG__) << "Time to work on Sprites, Texts and stuff." << L::ELF;
 
 
 		/*************************************************************************************
@@ -1656,8 +1713,6 @@ int main(int argc, const char* argv[])
 		temporary_fun_text->set(Constants::io__text_double::UPDATETIME, 1.0 / 10);*/
 
 
-		auto mytrack = tracks.create("randomtrack");
-		mytrack->set(Constants::io__track_string::LOADID, "MUSIC_0");
 
 
 
@@ -1681,26 +1736,59 @@ int main(int argc, const char* argv[])
 
 
 
-		const std::function<bool(const main_gamemodes)> isGamingLocally = [](const main_gamemodes u)->bool {return (u == main_gamemodes::PAUSE || u == main_gamemodes::GAMING); };
 
 		GamingStorm* game_0 = nullptr;
 
-		
+		// already loaded: LOADING_MUSIC
+		// loaded later: JUMP, MUSIC_0, MUSIC_1, MUSIC_GAMING, WALK
+
+		Track *loading_music, *music_0, *music_1, *music_gaming;
+
+		if (!tracks.get("LOADING_MUSIC", loading_music)) throw Abort::abort(__FUNCSIG__, "Failed to get track later on");
+		if (!tracks.get("MUSIC_0", music_0)) throw Abort::abort(__FUNCSIG__, "Failed to get track later on");
+		if (!tracks.get("MUSIC_1", music_1)) throw Abort::abort(__FUNCSIG__, "Failed to get track later on");
+		if (!tracks.get("MUSIC_GAMING", music_gaming)) throw Abort::abort(__FUNCSIG__, "Failed to get track later on");
+
+
+
+		main_gamemodes last_modern = main_gamemodes::HASNT_STARTED_YET;
 
 		while (consol.isRunning()) {// (size_t counttt = 0; consol.isRunning(); counttt++) {
-			Sleep(1000 / 30);
+
+			if (last_modern != modern) {
+				switch (modern) {
+				case main_gamemodes::MENU:
+				case main_gamemodes::OPTIONS:
+				{
+					loading_music->set(Constants::io__track_boolean::PLAYING, false);
+					if (!(last_modern == main_gamemodes::MENU || last_modern == main_gamemodes::OPTIONS)) {
+						bool switched = rand() % 2;
+						music_0->set(Constants::io__track_boolean::PLAYING, switched);
+						music_1->set(Constants::io__track_boolean::PLAYING, !switched);
+					}
+					music_gaming->set(Constants::io__track_boolean::PLAYING, false);
+				}
+					break;
+				case main_gamemodes::GAMING:
+				{
+					loading_music->set(Constants::io__track_boolean::PLAYING, false);
+					music_0->set(Constants::io__track_boolean::PLAYING, false);
+					music_1->set(Constants::io__track_boolean::PLAYING, false);
+					music_gaming->set(Constants::io__track_boolean::PLAYING, true);
+				}
+					break;
+				}
+				last_modern = modern;
+			}
 
 			if (isGamingLocally(modern)) {
 				if (!game_0) {
-					game_0 = new GamingStorm(&consol, this_is_the_player, +my_custom_funcs::GAMING_PLAYER_EXIT_TASK);
+					game_0 = new GamingStorm(&consol, this_is_the_player, music_gaming, +my_custom_funcs::GAMING_PLAYER_EXIT_TASK);
 					game_0->startAutomatically();
 				}
 				else {
 					game_0->pauseTask((modern == main_gamemodes::PAUSE));
-					if (game_0->hasEnded())
-					{
-						modern = main_gamemodes::MENU;
-					}
+					if (game_0->hasEnded()) modern = main_gamemodes::MENU;
 				}
 			}
 			else {
@@ -1711,19 +1799,18 @@ int main(int argc, const char* argv[])
 				}
 			}
 
-			//if (modern == main_gamemodes::MENU) temporary_fun_text->set(Constants::io__text_string::STRING, "Counting here lmao " + std::to_string(counttt) + "!");
-			
+			Sleep(1000 / 30);			
 		}
 
 
 		logg << L::SLF << fsr(__FUNCSIG__) << "Closing game..." << L::ELF;
 
+		logg.killDebugScreen();
 		textures.clear();
 		sprites.clear();
 		fonts.clear();
 		texts.clear();
 		conf.flush();
-		logg.killDebugScreen();
 	}
 	catch (Abort::abort a)
 	{
