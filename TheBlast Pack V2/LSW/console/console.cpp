@@ -49,6 +49,7 @@ namespace LSW {
 				logg << L::SLF << fsr(__FUNCSIG__) << "Creating display..." << L::ELF;
 
 				md = new Display();
+				md->setToCheckBufferResConfig(); // update from config
 				Sprites sprites;
 				Texts texts;
 				bool was_sprites_locked = false;
@@ -94,7 +95,7 @@ namespace LSW {
 					mtt->set(Constants::io__text_double::SCALEX, 0.55);
 					mtt->set(Constants::io__text_double::POSY, 0.965); // 0.935
 					mtt->set(Constants::io__text_double::POSX, -1.0);
-					mtt->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
+					mtt->set(Constants::io__text_integer::MODE, +Constants::io__text_alignment::ALIGN_LEFT);
 					mtt->set(Constants::io__text_double::UPDATETIME, 1.0 / 5);
 					mtt->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
 					mtt->set(Constants::io__text_integer::LAYER, 100);
@@ -178,7 +179,8 @@ namespace LSW {
 									// yes, merge
 								case ALLEGRO_EVENT_DISPLAY_RESIZE:
 									if (ev.display.source == md->getDisplay()) {
-										al_acknowledge_resize(md->getDisplay());
+										//al_acknowledge_resize(md->getDisplay());
+										md->acknowledgeResize();
 
 										gcam.apply();
 										logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "DISPLAYRESIZE got, acknowledged, done." << L::EL;
@@ -575,7 +577,9 @@ namespace LSW {
 							al_invert_transform(&untransf);
 							al_transform_coordinates(&untransf, &m[0], &m[1]);
 
-							for (short p = 0; p < 2; p++) md[p] = +m[p];
+							for (short p = 0; p < 2; p++) {
+								md[p] = +m[p];
+							}
 
 							conf.set(Constants::ro__db_mouse_double::MOUSE_X, md[0]);
 							conf.set(Constants::ro__db_mouse_double::MOUSE_Y, md[1]);
@@ -602,19 +606,37 @@ namespace LSW {
 								display_x = ev.user.data1;
 								display_y = ev.user.data2;
 							}
+							if (ev.type == +Constants::ro__my_events::CUSTOM_EVENT_DISPLAY_UPDATE_RESOLUTION_SCALE)
+							{
+								double scale = ev.user.data1 * 1.0 / 100;
+								bool is_enabled = ev.user.data2;
+
+								conf.set(Constants::io__conf_double::RESOLUTION_BUFFER_PROPORTION, scale);
+								conf.set(Constants::io__conf_boolean::DOUBLEBUFFERING, is_enabled);
+
+								md->setToCheckBufferResConfig();
+							}
+							if (ev.type == +Constants::ro__my_events::CUSTOM_EVENT_DISPLAY_CHROMA_FX)
+							{
+								double fx_amount = ev.user.data1 * 1.0 / 1000;
+
+								conf.set(Constants::io__conf_double::FX_AMOUNT, fx_amount);
+
+								md->setToCheckBufferResConfig();
+							}
 							if (ev.type == ALLEGRO_EVENT_KEY_DOWN) { // USE IN GAME
-								if (!md || ev.keyboard.display == md->getDisplay()) {
+								if (md && ev.keyboard.display == md->getDisplay()) {
 									conf.set(ev.keyboard.keycode, true);
 								}
 							}
 							if (ev.type == ALLEGRO_EVENT_KEY_UP) { // USE IN GAME
-								if (!md || ev.keyboard.display == md->getDisplay()) {
+								if (md && ev.keyboard.display == md->getDisplay()) {
 									conf.set(ev.keyboard.keycode, false);
 								}
 							}
 
 							if (ev.type == ALLEGRO_EVENT_KEY_CHAR) { // keyboard input
-								if (!md || ev.keyboard.display == md->getDisplay()) {
+								if (md && ev.keyboard.display == md->getDisplay()) {
 									if (ev.keyboard.unichar >= 32)
 									{
 										char multibyte[5] = { 0, 0, 0, 0, 0 };
@@ -639,19 +661,20 @@ namespace LSW {
 								}
 							}
 							if (ev.type == ALLEGRO_EVENT_MOUSE_AXES) {
-								if (!md || ev.keyboard.display == md->getDisplay()) {
-									conf.set(Constants::ro__db_mouse_double::RAW_MOUSE_X, ev.mouse.x);
-									conf.set(Constants::ro__db_mouse_double::RAW_MOUSE_Y, ev.mouse.y);
+								if (md && ev.keyboard.display == md->getDisplay()) {
+									double prop = md->getAppliedProportion();
+									conf.set(Constants::ro__db_mouse_double::RAW_MOUSE_X, ev.mouse.x * prop);
+									conf.set(Constants::ro__db_mouse_double::RAW_MOUSE_Y, ev.mouse.y * prop);
 								}
 
 							}
 							if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
-								if (!md || ev.keyboard.display == md->getDisplay()) {
+								if (md && ev.keyboard.display == md->getDisplay()) {
 									conf.set(((Constants::ro__db_mouse_boolean)ev.mouse.button), true);
 								}
 							}
 							if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
-								if (!md || ev.keyboard.display == md->getDisplay()) {
+								if (md && ev.keyboard.display == md->getDisplay()) {
 									conf.set(((Constants::ro__db_mouse_boolean)ev.mouse.button), false);
 								}
 							}

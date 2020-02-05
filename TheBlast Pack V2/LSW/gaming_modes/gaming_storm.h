@@ -12,14 +12,15 @@ namespace LSW {
 			bool has_map_gen = false;
 			bool has_sleeping_sprites = false;
 			size_t level_count = 0;
-			double level_fx_text = 0;
+			double level_time_rn = 0;
 			int task_id = 0;
 			double current_delta = 1.0;
+			double last_pause = 0.0;
 			double dynamic_speed_difft_m = 1.0;
+			double whole_gameplay_time = 0.0;
 
 			Manager* consol = nullptr;
 			Entity* this_is_the_player = nullptr;
-			Text* level_text = nullptr;
 			Track* playtrack = nullptr;
 
 			bool need_refresh = false;

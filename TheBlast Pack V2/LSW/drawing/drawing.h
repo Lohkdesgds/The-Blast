@@ -74,11 +74,11 @@ namespace LSW {
 
 			enum class io__text_string  { STRING, PROCESSED_STRING, ID, FOLLOW_SPRITE, FONT, size };
 			enum class io__text_boolean { SHOW, AFFECTED_BY_CAM, USE_SPRITE_TINT_INSTEAD, DEBUG_ITSELF, size };
-			enum class io__text_double  { POSX, POSY, LAST_FOLLOW_POSX, LAST_FOLLOW_POSY, LAST_INTERPRET, SCALEX, SCALEY, SCALEG, ROTATION, UPDATETIME, size };
+			enum class io__text_double  { POSX, POSY, LAST_FOLLOW_POSX, LAST_FOLLOW_POSY, LAST_INTERPRET, SCALEX, SCALEY, SCALEG, ROTATION, UPDATETIME, SHADOW_DIST_X, SHADOW_DIST_Y, size };
 			enum class io__text_integer { MODE, LAYER, size, ADD_ALT_LAYER, REMOVE_ALT_LAYER };
-			enum class io__text_color   { COLOR };
+			enum class io__text_color   { COLOR, SHADOW_COLOR, size };
 
-			enum class io__alignment_text { ALIGN_LEFT = ALLEGRO_ALIGN_LEFT, ALIGN_CENTER = ALLEGRO_ALIGN_CENTER, ALIGN_RIGHT = ALLEGRO_ALIGN_RIGHT };
+			enum class io__text_alignment { ALIGN_LEFT = ALLEGRO_ALIGN_LEFT, ALIGN_CENTER = ALLEGRO_ALIGN_CENTER, ALIGN_RIGHT = ALLEGRO_ALIGN_RIGHT }; // Constants::io__text_integer::MODE
 			// 2
 
 			class __slice {
@@ -91,7 +91,7 @@ namespace LSW {
 			};
 			enum class tags_e {T_POSX,T_POSY,T_SCREEN_POSX,T_SCREEN_POSY,T_ISFOLLOWING,T_COLOR_R,T_COLOR_G,T_COLOR_B,T_COLOR_A,T_MODE,T_TIME,T_ISUSINGBUF,T_GB_RESX,T_GB_RESY,T_REFRESHRATE,T_FPS,T_TPS,T_UPS,T_APS,T_I_FPS,T_I_TPS,T_I_UPS,T_I_APS,T_MS_FPS,T_MS_TPS,T_MS_UPS,T_MS_APS,
 				T_SPRITE_FRAME,T_CAM_X,T_CAM_Y,T_CAM_ZOOM, T_CAM_ZOOMG,T_CAM_ZOOMX,T_CAM_ZOOMY, T_CURRSTRING,T_LASTSTRING,T_MOUSE_X,T_MOUSE_Y,T_SPRITE_SPEEDX,T_SPRITE_SPEEDY,T_SPRITE_NAME,T_SPRITE_ENTITY_NAME,T_SPRITE_ENTITY_HEALTH,_T_SPRITE_DEBUG,T_TEXTURES_LOADED,T_FONTS_LOADED,
-				T_SAMPLES_LOADED,T_SPRITES_LOADED,T_TEXTS_LOADED, T_TRACKS_LOADED,T_SPRITE_STATE,T_VOLUME,T_VERSION, size };
+				T_SAMPLES_LOADED,T_SPRITES_LOADED,T_TEXTS_LOADED, T_TRACKS_LOADED,T_SPRITE_STATE,T_VOLUME,T_VERSION,T_RESOLUTION_PROPORTION,T_CHROMA_FX, size };
 			const __slice tags[] = { __slice("%pos_x%", +tags_e::T_POSX),  __slice("%pos_y%", +tags_e::T_POSY), __slice("%screen_pos_x%", +tags_e::T_SCREEN_POSX), __slice("%screen_pos_y%", +tags_e::T_SCREEN_POSY), __slice("%is_following%", +tags_e::T_ISFOLLOWING),
 __slice("%color_r%", +tags_e::T_COLOR_R), __slice("%color_g%", +tags_e::T_COLOR_G), __slice("%color_b%", +tags_e::T_COLOR_B), __slice("%color_a%", +tags_e::T_COLOR_A), __slice("%mode%", +tags_e::T_MODE), __slice("%time%", +tags_e::T_TIME), __slice("%is_using_buf%", +tags_e::T_ISUSINGBUF),
 __slice("%curr_res_x%", +tags_e::T_GB_RESX), __slice("%curr_res_y%", +tags_e::T_GB_RESY), __slice("%curr_refresh_rate%", +tags_e::T_REFRESHRATE), __slice("%int_fps%", +tags_e::T_FPS), __slice("%int_tps%", +tags_e::T_TPS), __slice("%int_ups%", +tags_e::T_UPS),
@@ -101,7 +101,7 @@ __slice("%cam_zoom_combined%", +tags_e::T_CAM_ZOOM), __slice("%cam_zoom_g%", +ta
 __slice("%last_string%", +tags_e::T_LASTSTRING), __slice("%mouse_x%", +tags_e::T_MOUSE_X), __slice("%mouse_y%", +tags_e::T_MOUSE_Y), __slice("%sprite_speed_x%", +tags_e::T_SPRITE_SPEEDX),__slice("%sprite_speed_y%", +tags_e::T_SPRITE_SPEEDY),
 __slice("%sprite_name%", +tags_e::T_SPRITE_NAME), __slice("%entity_name%", +tags_e::T_SPRITE_ENTITY_NAME), __slice("%entity_health%", +tags_e::T_SPRITE_ENTITY_HEALTH), __slice("%sprite_debug%", +tags_e::_T_SPRITE_DEBUG), __slice("%num_images%", +tags_e::T_TEXTURES_LOADED),
 __slice("%num_fonts%", +tags_e::T_FONTS_LOADED),__slice("%num_samples%", +tags_e::T_SAMPLES_LOADED), __slice("%num_sprites%", +tags_e::T_SPRITES_LOADED), __slice("%num_texts%", +tags_e::T_TEXTS_LOADED), __slice("%num_tracks%", +tags_e::T_TRACKS_LOADED),
-__slice("%sprite_state%", +tags_e::T_SPRITE_STATE),__slice("%volume_perc%", +tags_e::T_VOLUME),__slice("%version%", +tags_e::T_VERSION) };
+__slice("%sprite_state%", +tags_e::T_SPRITE_STATE),__slice("%volume_perc%", +tags_e::T_VOLUME),__slice("%version%", +tags_e::T_VERSION),__slice("%screen_buf_proportion%", +tags_e::T_RESOLUTION_PROPORTION),__slice("%screen_chroma_fx%", +tags_e::T_CHROMA_FX) };
 		}
 
 
@@ -356,8 +356,9 @@ __slice("%sprite_state%", +tags_e::T_SPRITE_STATE),__slice("%volume_perc%", +tag
 				bool b[+Constants::io__text_boolean::size] = { false };
 				double d[+Constants::io__text_double::size] = { 0 };
 				int i[+Constants::io__text_integer::size] = { 0 };
-				ALLEGRO_COLOR c;
+				ALLEGRO_COLOR c[+Constants::io__text_color::size] = { al_map_rgb(0,0,0) };
 				ALLEGRO_FONT* font = nullptr;
+				Constants::io__text_alignment align = Constants::io__text_alignment::ALIGN_LEFT;
 				std::string __internal_debug_flag;
 
 				std::vector<int> layers_colliding;
@@ -368,7 +369,7 @@ __slice("%sprite_state%", +tags_e::T_SPRITE_STATE),__slice("%volume_perc%", +tag
 
 			__custom_data data;		
 			
-			void _draw(const double[2]);
+			void _draw(const double[2], const double[2]);
 			void _interpretTags(std::string&);
 
 			void setFollow(const std::string);

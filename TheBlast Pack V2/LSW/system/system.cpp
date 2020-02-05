@@ -316,224 +316,16 @@ namespace LSW {
 			return l->options;
 		}
 
-		void Display::_init(const int x, const int y, const int flag, int hz)
-		{
-			if (d) {
-				al_destroy_display(d);
-				d = nullptr;
-			}
-
-			if (flag > 0) __g_sys.setNewDisplayMode(flag);
-
-			auto u = __g_sys.getAvailableResolutions();
-
-			int tx, ty;
-			tx = x;
-			ty = y;
-
-			if (hz < 0) {
-				hz = 0;
-				for (auto& i : u) {
-					bool higher = ((i.x > tx && i.y >= ty) || (i.x >= tx && i.y > ty));
-					bool equall = (i.x == tx && i.y == ty);
-					bool faster = i.hz > hz;
-
-					if (higher) {
-						hz = i.hz;
-						tx = i.x;
-						ty = i.y;
-					}
-					if (equall && faster) {
-						hz = i.hz;
-					}
-				}
-			}
-
-			if (__g_sys.checkResolutionExistance(x, y, hz) || (flag & ALLEGRO_WINDOWED)) {
-				al_set_new_bitmap_flags(Constants::start_bitmap_default_mode);
-				al_set_new_display_refresh_rate(hz);
-				al_set_new_display_option(ALLEGRO_VSYNC, 2, ALLEGRO_SUGGEST);
-				if (d = al_create_display(x, y)) {
-					gfile logg;
-					logg << L::SLF << fsr(__FUNCSIG__) << "Created display successfully: " << x << "x" << y << "@" << (hz == 0 ? "auto" : std::to_string(hz)) << ";flags=" << flag << L::ELF;
-				}
-				else {
-					throw Abort::abort(__FUNCSIG__, "Could not create display!");
-				}
-				al_convert_bitmaps();
-				al_hide_mouse_cursor(d);
-
-				this->x = x;
-				this->y = y;
-				this->f = flag;
-				this->h = al_get_display_refresh_rate(d);
-			}
-			else {
-				throw Abort::abort(__FUNCSIG__, "Invalid resolution, sorry!");
-			}
-		}
-		
-		void Display::_print()
-		{
-			auto u = al_get_backbuffer(d);
-			std::string path = Constants::default_print_path;
-			Tools::interpretPath(path);
-			Tools::createPath(path);
-
-			auto rt = time(NULL);
-			tm tt;
-			auto v = localtime_s(&tt, &rt);
-
-			if (v != 0) throw Abort::abort(__FUNCSIG__, "Can't set a proper name to save the screenshot!");
-
-			path = path + std::to_string(tt.tm_year + 1900) + "_" + std::to_string(tt.tm_mon + 1) + "_" + std::to_string(tt.tm_mday) + "-" + std::to_string(tt.tm_hour) + "_" + std::to_string(tt.tm_min) + "_" + std::to_string(tt.tm_sec) + "-" + std::to_string((int)(GetTickCount64()%1000)) + ".jpg";
-			
-			int savv = al_get_new_bitmap_flags();
-			al_set_new_bitmap_flags(ALLEGRO_MEMORY_BITMAP);
-			auto cpy = al_clone_bitmap(u);
-			al_set_new_bitmap_flags(savv);			
-
-			if (printthr) {
-				if (!printthrdone) return;
-
-				printthr->join();
-				delete printthr;
-				printthr = nullptr;
-			}
-
-			printthrdone = false;
-			printthr = new std::thread([=] {__print_thr_autodel(cpy, path); });
-
-			printing = false;
-		}
-
-		void Display::__print_thr_autodel(ALLEGRO_BITMAP* u, const std::string path)
-		{
-			al_save_bitmap(path.c_str(), u);
-			al_destroy_bitmap(u);
-			printthrdone = true;
-		}
-
-		Display::Display() // automatic from config
-		{
-			gfile logg;
-			logg << L::SLF << fsr(__FUNCSIG__) << "Creating new display (blank)" << L::ELF;
-
-			int flag = 0;
-
-			Constants::display_mode md;
-
-			Database config;
-			config.get(Constants::io__conf_integer::SCREEN_X, md.x);
-			config.get(Constants::io__conf_integer::SCREEN_Y, md.y);
-			config.get(Constants::io__conf_integer::SCREEN_PREF_HZ, md.hz);
-			config.get(Constants::io__conf_integer::SCREEN_FLAGS, flag);
-			flag |= Constants::start_display_obligatory_flag_mode; // obligatory flags like OpenGL and Resizable
-
-			__g_sys.setNewDisplayMode(flag);
-			auto u = __g_sys.getAvailableResolutions();
-
-			
-			if (md.x > 16 && md.y > 9) {
-				logg << L::SLF << fsr(__FUNCSIG__) << "Found config from config file." << (md.hz != 0 ? " Got refresh rate set!" : "Getting automatic refresh rate information...") << L::ELF;
-
-				if (md.hz == 0) {
-					for (auto& i : u) {
-						if ((i.x == md.x && i.y == md.y)) {
-							if (i.hz > md.hz) {
-								md.hz = i.hz;
-								config.set(Constants::io__conf_integer::SCREEN_PREF_HZ, md.hz);
-							}
-						}
-					}
-				}
-			}
-			else if (Constants::start_force_720p)
-			{
-				logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "No config file found  or invalid one. 720P is set to default, so, searching available refresh rates..." << L::ELF;
-				md.x = 1280;
-				md.y = 720;
-				md.hz = 0;
-				config.set(Constants::io__conf_integer::SCREEN_X, md.x);
-				config.set(Constants::io__conf_integer::SCREEN_Y, md.y);
-				for (auto& i : u) {
-					if ((i.x == md.x && i.y == md.y)) {
-						if (i.hz > md.hz) {
-							md.hz = i.hz;
-							config.set(Constants::io__conf_integer::SCREEN_PREF_HZ, md.hz);
-						}
-					}
-				}
-			}
-			if (md.hz == 0){ // both before failed, search for another option afaik
-				logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Failed to find a exact value for refresh rate. Trying automatic instead." << L::ELF;
-				md.hz = 0;
-			}
-
-
-			_init(md.x, md.y, -1, md.hz);
-
-			if (d) config.flush();
-		}
-
-		Display::Display(const int x, const int y, const int flag, int hz)
-		{
-			gfile logg;
-			logg << L::SLF << fsr(__FUNCSIG__) << "Creating new custom display [" << x << "x" << y << "@" << hz << " w/ " << flag << "]" << L::ELF;
-			_init(x, y, flag, hz);
-		}
-		Display::~Display()
-		{
-			close();
-		}
-		void Display::restart()
-		{
-			close();
-			_init(this->x, this->y, this->f, this->h);
-		}
-		void Display::flip()
-		{
-			al_flip_display();
-			if (printing) _print();
-			al_set_target_backbuffer(d);
-		}
-		void Display::clearTo(const ALLEGRO_COLOR v)
-		{
-			al_clear_to_color(v);
-		}
-		void Display::close()
-		{
-			gfile logg;
-			logg << L::SLF << fsr(__FUNCSIG__) << "Deleting display..." << L::ELF;
-
-			d_try.lock();
-			if (d) {
-				al_set_target_backbuffer(d);
-				al_destroy_display(d);
-				d = nullptr;
-			}
-			d_try.unlock();
-		}
-		bool Display::exist()
-		{
-			return (d);
-		}
-		void Display::print()
-		{
-			printing = true;
-		}
-		ALLEGRO_DISPLAY*& Display::getDisplay()
-		{
-			return d;
-		}
-
 		void Database::internalCheck()
 		{
 			if (!check(Constants::io__conf_boolean::WAS_OSD_ON))								set(Constants::io__conf_boolean::WAS_OSD_ON, false);
 			if (!check(Constants::io__conf_boolean::ENABLE_SECOND_DEBUGGING_SCREEN))			set(Constants::io__conf_boolean::ENABLE_SECOND_DEBUGGING_SCREEN, false);
 			if (!check(Constants::io__conf_boolean::ULTRADEBUG))								set(Constants::io__conf_boolean::ULTRADEBUG, false);
+			if (!check(Constants::io__conf_boolean::DOUBLEBUFFERING))							set(Constants::io__conf_boolean::DOUBLEBUFFERING, false);
 
 			if (!check(Constants::io__conf_double::LAST_VOLUME))								set(Constants::io__conf_double::LAST_VOLUME, 0.5);
+			if (!check(Constants::io__conf_double::RESOLUTION_BUFFER_PROPORTION))				set(Constants::io__conf_double::RESOLUTION_BUFFER_PROPORTION, 1.0);
+			if (!check(Constants::io__conf_double::FX_AMOUNT))									set(Constants::io__conf_double::FX_AMOUNT, 1.0);
 
 			if (!check(Constants::io__conf_integer::SCREEN_X))									set(Constants::io__conf_integer::SCREEN_X, 0);
 			if (!check(Constants::io__conf_integer::SCREEN_Y))									set(Constants::io__conf_integer::SCREEN_Y, 0);
@@ -634,7 +426,7 @@ namespace LSW {
 		}
 		void Database::set(const Constants::io__conf_double e, const double v)
 		{
-			set(Constants::ro__conf_float_str[+e], std::to_string(v));
+			set(Constants::ro__conf_double_str[+e], std::to_string(v));
 		}
 		void Database::set(const Constants::io__conf_integer e, const int v)
 		{
@@ -839,8 +631,21 @@ namespace LSW {
 		bool Database::get(const Constants::io__conf_double e, double& v)
 		{
 			std::string output;
-			bool b = get(Constants::ro__conf_float_str[+e], output);
-			v = atof(output.c_str());
+			bool b = get(Constants::ro__conf_double_str[+e], output);
+			v = 0.0;
+			size_t div = 0;
+			bool nowdiv = false;
+			for (auto& i : output) {
+				if (i >= '0' && i <= '9') {
+					v *= 10.0;
+					v += i - '0';
+					if (nowdiv) div++;
+				}
+				else {
+					nowdiv = true;
+				}
+			}
+			v /= (pow(10.0, div));
 			return b;
 		}
 		bool Database::get(const Constants::io__conf_integer e, int& v)
@@ -1053,6 +858,330 @@ namespace LSW {
 			double oth;
 			get(e, oth);
 			return oth == v;
+		}
+
+
+
+		void Display::_init(const int x, const int y, const int flag, int hz)
+		{
+			if (d) {
+				al_destroy_display(d);
+				d = nullptr;
+			}
+
+			if (flag > 0) __g_sys.setNewDisplayMode(flag);
+
+			auto u = __g_sys.getAvailableResolutions();
+
+			int tx, ty;
+			tx = x;
+			ty = y;
+
+			if (hz < 0) {
+				hz = 0;
+				for (auto& i : u) {
+					bool higher = ((i.x > tx&& i.y >= ty) || (i.x >= tx && i.y > ty));
+					bool equall = (i.x == tx && i.y == ty);
+					bool faster = i.hz > hz;
+
+					if (higher) {
+						hz = i.hz;
+						tx = i.x;
+						ty = i.y;
+					}
+					if (equall && faster) {
+						hz = i.hz;
+					}
+				}
+			}
+
+			if (__g_sys.checkResolutionExistance(x, y, hz) || (flag & ALLEGRO_WINDOWED)) {
+				al_set_new_bitmap_flags(Constants::start_bitmap_default_mode);
+				al_set_new_display_refresh_rate(hz);
+				al_set_new_display_option(ALLEGRO_VSYNC, 2, ALLEGRO_SUGGEST);
+				if (d = al_create_display(x, y)) {
+					gfile logg;
+					logg << L::SLF << fsr(__FUNCSIG__) << "Created display successfully: " << x << "x" << y << "@" << (hz == 0 ? "auto" : std::to_string(hz)) << ";flags=" << flag << L::ELF;
+				}
+				else {
+					throw Abort::abort(__FUNCSIG__, "Could not create display!");
+				}
+				al_convert_bitmaps();
+				al_hide_mouse_cursor(d);
+
+				this->x = x;
+				this->y = y;
+				this->f = flag;
+				this->h = al_get_display_refresh_rate(d);
+			}
+			else {
+				throw Abort::abort(__FUNCSIG__, "Invalid resolution, sorry!");
+			}
+		}
+
+		void Display::_print()
+		{
+			auto u = al_get_target_bitmap();
+			std::string path = Constants::default_print_path;
+			Tools::interpretPath(path);
+			Tools::createPath(path);
+
+			auto rt = time(NULL);
+			tm tt;
+			auto v = localtime_s(&tt, &rt);
+
+			if (v != 0) throw Abort::abort(__FUNCSIG__, "Can't set a proper name to save the screenshot!");
+
+			path = path + std::to_string(tt.tm_year + 1900) + "_" + std::to_string(tt.tm_mon + 1) + "_" + std::to_string(tt.tm_mday) + "-" + std::to_string(tt.tm_hour) + "_" + std::to_string(tt.tm_min) + "_" + std::to_string(tt.tm_sec) + "-" + std::to_string((int)(GetTickCount64() % 1000)) + ".jpg";
+
+			int savv = al_get_new_bitmap_flags();
+			al_set_new_bitmap_flags(ALLEGRO_MEMORY_BITMAP);
+			auto cpy = al_clone_bitmap(u);
+			al_set_new_bitmap_flags(savv);
+
+			if (printthr) {
+				if (!printthrdone) return;
+
+				printthr->join();
+				delete printthr;
+				printthr = nullptr;
+			}
+
+			printthrdone = false;
+			printthr = new std::thread([=] {__print_thr_autodel(cpy, path); });
+
+			printing = false;
+		}
+
+		void Display::__print_thr_autodel(ALLEGRO_BITMAP* u, const std::string path)
+		{
+			al_save_bitmap(path.c_str(), u);
+			al_destroy_bitmap(u);
+			printthrdone = true;
+		}
+
+		void Display::__check_acknowledge_n_buf()
+		{
+			gfile logg;
+			logg << L::SLF << fsr(__FUNCSIG__) << "Acknowledge and updated internally buffer and screen." << L::ELF;
+
+			al_acknowledge_resize(d);
+
+			Database db;
+
+			db.get(Constants::io__conf_double::FX_AMOUNT, quick_fx);
+
+			if (db.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, true)) {
+
+				double prop = 1.0;
+				db.get(Constants::io__conf_double::RESOLUTION_BUFFER_PROPORTION, prop);
+
+				ALLEGRO_BITMAP* newbmp = al_create_bitmap(al_get_display_width(d) * prop, al_get_display_height(d) * prop);
+				al_set_target_bitmap(newbmp);
+				if (buf_) {
+					al_draw_scaled_bitmap(buf_, 0, 0, al_get_bitmap_width(buf_), al_get_bitmap_height(buf_), 0, 0, al_get_bitmap_width(newbmp), al_get_bitmap_height(newbmp), 0);
+					al_destroy_bitmap(buf_);
+				}
+				buf_ = newbmp;
+
+				logg << L::SLF << fsr(__FUNCSIG__) << "Double buffering is now " << (buf_ ? "ENABLED SUCCESSFULLY" : "NOT ENABLED, FAILED") << L::ELF;
+			}
+			else if (buf_) {
+				al_destroy_bitmap(buf_);
+				buf_ = nullptr;
+
+				logg << L::SLF << fsr(__FUNCSIG__) << "Double buffering disabled" << L::ELF;
+			}
+		}
+
+		Display::Display() // automatic from config
+		{
+			gfile logg;
+			logg << L::SLF << fsr(__FUNCSIG__) << "Creating new display (blank)" << L::ELF;
+
+			int flag = 0;
+
+			Constants::display_mode md;
+
+			Database config;
+			config.get(Constants::io__conf_integer::SCREEN_X, md.x);
+			config.get(Constants::io__conf_integer::SCREEN_Y, md.y);
+			config.get(Constants::io__conf_integer::SCREEN_PREF_HZ, md.hz);
+			config.get(Constants::io__conf_integer::SCREEN_FLAGS, flag);
+			flag |= Constants::start_display_obligatory_flag_mode; // obligatory flags like OpenGL and Resizable
+
+			__g_sys.setNewDisplayMode(flag);
+			auto u = __g_sys.getAvailableResolutions();
+
+
+			if (md.x > 16 && md.y > 9) {
+				logg << L::SLF << fsr(__FUNCSIG__) << "Found config from config file." << (md.hz != 0 ? " Got refresh rate set!" : "Getting automatic refresh rate information...") << L::ELF;
+
+				if (md.hz == 0) {
+					for (auto& i : u) {
+						if ((i.x == md.x && i.y == md.y)) {
+							if (i.hz > md.hz) {
+								md.hz = i.hz;
+								config.set(Constants::io__conf_integer::SCREEN_PREF_HZ, md.hz);
+							}
+						}
+					}
+				}
+			}
+			else if (Constants::start_force_720p)
+			{
+				logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "No config file found  or invalid one. 720P is set to default, so, searching available refresh rates..." << L::ELF;
+				md.x = 1280;
+				md.y = 720;
+				md.hz = 0;
+				config.set(Constants::io__conf_integer::SCREEN_X, md.x);
+				config.set(Constants::io__conf_integer::SCREEN_Y, md.y);
+				for (auto& i : u) {
+					if ((i.x == md.x && i.y == md.y)) {
+						if (i.hz > md.hz) {
+							md.hz = i.hz;
+							config.set(Constants::io__conf_integer::SCREEN_PREF_HZ, md.hz);
+						}
+					}
+				}
+			}
+			if (md.hz == 0) { // both before failed, search for another option afaik
+				logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Failed to find a exact value for refresh rate. Trying automatic instead." << L::ELF;
+				md.hz = 0;
+			}
+
+
+			_init(md.x, md.y, -1, md.hz);
+
+			if (d) config.flush();
+
+			should_check_acknowledge_and_prop_buf = al_get_time() + 0.5;
+		}
+
+		Display::Display(const int x, const int y, const int flag, int hz)
+		{
+			gfile logg;
+			logg << L::SLF << fsr(__FUNCSIG__) << "Creating new custom display [" << x << "x" << y << "@" << hz << " w/ " << flag << "]" << L::ELF;
+			_init(x, y, flag, hz);
+
+			should_check_acknowledge_and_prop_buf = al_get_time() + 0.5;
+		}
+		Display::~Display()
+		{
+			close();
+		}
+		void Display::restart()
+		{
+			close();
+			_init(this->x, this->y, this->f, this->h);
+		}
+		void Display::flip()
+		{
+			if (buf_) {
+				al_set_target_backbuffer(d);
+
+				ALLEGRO_TRANSFORM defaul;
+				al_identity_transform(&defaul);
+				al_use_transform(&defaul);
+
+				if (quick_fx == 0.0) {
+					al_clear_to_color(al_map_rgb(0, 0, 0));
+					al_draw_scaled_bitmap(buf_, 0, 0, al_get_bitmap_width(buf_), al_get_bitmap_height(buf_), 0, 0, al_get_display_width(d), al_get_display_height(d), 0);
+				}
+				else {
+					double conv_quick_fx = pow(quick_fx, 2.5);
+					double conv_quick_fx2 = pow(quick_fx, 0.8);
+					double offsets[3];
+					double scl = 10.0 * sqrt(al_get_bitmap_width(buf_) * al_get_bitmap_height(buf_)) / sqrt(Constants::conf_default_screen_siz[0] * Constants::conf_default_screen_siz[1]);
+					offsets[0] = cos(al_get_time() * 0.40)       * scl * conv_quick_fx;
+					offsets[1] = sin(al_get_time() * 0.32)       * scl * conv_quick_fx;
+					offsets[2] = cos(al_get_time() * 0.29 + 0.5) * scl * conv_quick_fx;
+
+					al_draw_filled_rectangle(0, 0, al_get_display_width(d), al_get_display_height(d), al_map_rgba_f(0.0, 0.0, 0.0, 1.0 - 0.952 * conv_quick_fx2));
+
+					al_set_blender(ALLEGRO_ADD, ALLEGRO_ONE, ALLEGRO_ONE);
+
+					double qfbl = 1.0 - 0.95 * conv_quick_fx2;
+
+					al_draw_tinted_scaled_bitmap(buf_, al_map_rgba_f(qfbl, 0.000,0.000,qfbl ), 0, 0, al_get_bitmap_width(buf_), al_get_bitmap_height(buf_), offsets[0], offsets[1], al_get_display_width(d) + offsets[1], al_get_display_height(d) + offsets[2], 0);
+					al_draw_tinted_scaled_bitmap(buf_, al_map_rgba_f(0.000,qfbl, 0.000,qfbl ), 0, 0, al_get_bitmap_width(buf_), al_get_bitmap_height(buf_), offsets[1], offsets[2], al_get_display_width(d) + offsets[2], al_get_display_height(d) + offsets[0], 0);
+					al_draw_tinted_scaled_bitmap(buf_, al_map_rgba_f(0.000,0.000,qfbl, qfbl ), 0, 0, al_get_bitmap_width(buf_), al_get_bitmap_height(buf_), offsets[2], offsets[0], al_get_display_width(d) + offsets[0], al_get_display_height(d) + offsets[1], 0);
+					al_draw_tinted_scaled_bitmap(buf_, al_map_rgba_f(0.015,0.015,0.015,0.015), 0, 0, al_get_bitmap_width(buf_), al_get_bitmap_height(buf_), 0, 0, al_get_display_width(d), al_get_display_height(d), 0);
+
+					al_set_blender(ALLEGRO_ADD, ALLEGRO_ONE, ALLEGRO_INVERSE_ALPHA);
+				}
+
+				// COMING
+				/*quick_fx*/
+			}
+
+			if (printing) _print();
+
+			al_flip_display();
+
+			if (should_check_acknowledge_and_prop_buf != 0.0 && al_get_time() - should_check_acknowledge_and_prop_buf > 0.0) {
+				__check_acknowledge_n_buf();
+				should_check_acknowledge_and_prop_buf = 0.0;
+			}
+
+			if (buf_) al_set_target_bitmap(buf_);
+			else al_set_target_backbuffer(d);
+		}
+		void Display::clearTo(ALLEGRO_COLOR v)
+		{
+			al_clear_to_color(v);
+		}
+		void Display::close()
+		{
+			gfile logg;
+			logg << L::SLF << fsr(__FUNCSIG__) << "Deleting display..." << L::ELF;
+
+			d_try.lock();
+			if (d) {
+				al_set_target_backbuffer(d);
+				al_destroy_display(d);
+				d = nullptr;
+			}
+			d_try.unlock();
+		}
+		bool Display::exist()
+		{
+			return (d);
+		}
+		void Display::setToCheckBufferResConfig()
+		{
+			should_check_acknowledge_and_prop_buf = al_get_time() + 1.0;
+		}
+		double Display::getAppliedProportion()
+		{
+			if (buf_) {
+				return al_get_bitmap_width(buf_) * 1.0 / al_get_display_width(d);
+			}
+			else return 1.0;
+		}
+		void Display::print()
+		{
+			printing = true;
+		}
+		ALLEGRO_DISPLAY*& Display::getDisplay()
+		{
+			return d;
+		}
+
+		void Display::acknowledgeResize()
+		{
+			if (d) {
+				Database db;
+
+				double prop = 1.0;
+				db.get(Constants::io__conf_double::RESOLUTION_BUFFER_PROPORTION, prop);
+				if (prop < 0.3) prop = 0.3;
+				if (prop > 2.0) prop = 2.0;
+				db.set(Constants::io__conf_double::RESOLUTION_BUFFER_PROPORTION, prop);
+				db.set(Constants::io__conf_boolean::DOUBLEBUFFERING, prop != 1.0 || db.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, true));
+
+				should_check_acknowledge_and_prop_buf = al_get_time() + 0.5;
+			}
 		}
 
 

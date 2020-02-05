@@ -183,7 +183,7 @@ namespace LSW {
 
 		void camera_preset::refresh()
 		{
-			ALLEGRO_DISPLAY* d = al_get_current_display();
+			ALLEGRO_BITMAP* d = al_get_target_bitmap();
 			if (!d) return;
 
 			latest = easyTransform(d,
@@ -360,7 +360,7 @@ namespace LSW {
 
 		ALLEGRO_TRANSFORM Camera::applyNoSave(camera_preset lastTransf)
 		{
-			ALLEGRO_DISPLAY* d = al_get_current_display();
+			ALLEGRO_BITMAP* d = al_get_target_bitmap();
 
 			if (!d) return ALLEGRO_TRANSFORM();
 
@@ -1213,7 +1213,9 @@ namespace LSW {
 			data.new_state = Constants::io__sprite_tie_func_to_state::COLLISION_NONE;
 			data.col_data.clear();
 			//data.direction_col = 0;
-			if (__debug_s.length() > 0) {
+
+			Database conf;
+			if (__debug_s.length() > 0 && conf.isEq(Constants::io__conf_boolean::ENABLE_SECOND_DEBUGGING_SCREEN, true)) {
 				gfile logg;
 				logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "Sprite " << this->sprite_id << " debug: " << __debug_s << L::EL;
 			}
@@ -1629,9 +1631,12 @@ namespace LSW {
 
 
 
-		void Text::_draw(const double targ_draw_xy[2])
+		void Text::_draw(const double targ_draw_xy[2], const double targ_draw_xy_shadow[2])
 		{
-			al_draw_text(data.font, data.c, 1.0 * targ_draw_xy[0] / (data.d[+Constants::io__text_double::SCALEG]), 1.0 * targ_draw_xy[1] / (data.d[+Constants::io__text_double::SCALEG]), data.i[+Constants::io__text_integer::MODE], data.str[+Constants::io__text_string::PROCESSED_STRING].c_str());
+			if (data.d[+Constants::io__text_double::SHADOW_DIST_X] != 0.0 || data.d[+Constants::io__text_double::SHADOW_DIST_Y] != 0.0) {
+				al_draw_text(data.font, data.c[+Constants::io__text_color::SHADOW_COLOR], 1.0 * targ_draw_xy_shadow[0] / (data.d[+Constants::io__text_double::SCALEG]), 1.0 * targ_draw_xy_shadow[1] / (data.d[+Constants::io__text_double::SCALEG]), data.i[+Constants::io__text_integer::MODE], data.str[+Constants::io__text_string::PROCESSED_STRING].c_str());
+			}
+			al_draw_text(data.font, data.c[+Constants::io__text_color::COLOR], 1.0 * targ_draw_xy[0] / (data.d[+Constants::io__text_double::SCALEG]), 1.0 * targ_draw_xy[1] / (data.d[+Constants::io__text_double::SCALEG]), data.i[+Constants::io__text_integer::MODE], data.str[+Constants::io__text_string::PROCESSED_STRING].c_str());
 		}
 		void Text::_interpretTags(std::string& s)
 		{
@@ -1691,16 +1696,16 @@ namespace LSW {
 							sprintf_s(tempstr_c, "%s", (follow ? "Y" : "N"));
 							break;
 						case +Constants::tags_e::T_COLOR_R:
-							sprintf_s(tempstr_c, "%.3f", data.c.r);
+							sprintf_s(tempstr_c, "%.3f", data.c[+Constants::io__text_color::COLOR].r);
 							break;
 						case +Constants::tags_e::T_COLOR_G:
-							sprintf_s(tempstr_c, "%.3f", data.c.g);
+							sprintf_s(tempstr_c, "%.3f", data.c[+Constants::io__text_color::COLOR].g);
 							break;
 						case +Constants::tags_e::T_COLOR_B:
-							sprintf_s(tempstr_c, "%.3f", data.c.b);
+							sprintf_s(tempstr_c, "%.3f", data.c[+Constants::io__text_color::COLOR].b);
 							break;
 						case +Constants::tags_e::T_COLOR_A:
-							sprintf_s(tempstr_c, "%.3f", data.c.a);
+							sprintf_s(tempstr_c, "%.3f", data.c[+Constants::io__text_color::COLOR].a);
 							break;
 						case +Constants::tags_e::T_MODE:
 							sprintf_s(tempstr_c, "%d", data.i[+Constants::io__text_integer::MODE]);
@@ -1967,13 +1972,31 @@ namespace LSW {
 						case +Constants::tags_e::T_VOLUME:
 						{
 							Mixer mixer;
-							sprintf_s(tempstr_c, "%.0lf%c", mixer.getVolume() * 100.0, '%');
+							sprintf_s(tempstr_c, "%.0lf", mixer.getVolume() * 100.0);
 						}
 						break;
 						case +Constants::tags_e::T_VERSION:
 						{
 							Mixer mixer;
 							sprintf_s(tempstr_c, "%s", Constants::version_app.c_str());
+						}
+						break;
+						case +Constants::tags_e::T_RESOLUTION_PROPORTION:
+						{
+							double d = 1.0;
+							conf.get(Constants::io__conf_double::RESOLUTION_BUFFER_PROPORTION, d);
+							d *= 100.0;
+							if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, true)) sprintf_s(tempstr_c, "%.2lf", d);
+							else sprintf_s(tempstr_c, "Disabled");
+						}
+						break;
+						case +Constants::tags_e::T_CHROMA_FX:
+						{
+							double d = 1.0;
+							conf.get(Constants::io__conf_double::FX_AMOUNT, d);
+							d *= 100.0;
+							if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, true)) sprintf_s(tempstr_c, "%.2lf", d);
+							else sprintf_s(tempstr_c, "Disabled");
 						}
 						break;
 						}
@@ -2033,7 +2056,8 @@ namespace LSW {
 			data.b[+Constants::io__text_boolean::SHOW] = true;
 
 			data.font = nullptr;
-			data.c = al_map_rgb(255, 255, 255);
+			data.c[+Constants::io__text_color::COLOR] = al_map_rgb(255, 255, 255);
+			data.c[+Constants::io__text_color::SHADOW_COLOR] = al_map_rgb(0, 0, 0);
 		}
 
 		/*Text::~Text()
@@ -2070,7 +2094,7 @@ namespace LSW {
 
 		void Text::set(const Constants::io__text_color o, const ALLEGRO_COLOR e)
 		{
-			data.c = e; // no ::size
+			if (o != Constants::io__text_color::size) data.c[+o] = e;
 		}
 
 		void Text::set(const Constants::io__text_integer o, const int e)
@@ -2113,6 +2137,7 @@ namespace LSW {
 			}
 		}
 
+
 		void Text::hook(const Constants::io__text_tie_func_to_state o, const std::function<void(std::string&)> e)
 		{
 			if (o != Constants::io__text_tie_func_to_state::size) data.pair_tied[+o] = e;
@@ -2142,7 +2167,7 @@ namespace LSW {
 		}
 		void Text::get(const Constants::io__text_color o, ALLEGRO_COLOR& e)
 		{
-			e = data.c; // no ::size
+			if (o != Constants::io__text_color::size) e = data.c[+o]; // no ::size
 		}
 
 		bool Text::isEq(const Constants::io__text_color e, const ALLEGRO_COLOR v)
@@ -2186,6 +2211,7 @@ namespace LSW {
 		}
 
 
+
 		void Text::draw(const int is_layer)
 		{
 			if (!data.b[+Constants::io__text_boolean::SHOW]) return;
@@ -2195,14 +2221,12 @@ namespace LSW {
 			if (follow) {
 				if (follow->isEq(Constants::io__sprite_boolean::DRAW, false)) return;
 				if (data.b[+Constants::io__text_boolean::USE_SPRITE_TINT_INSTEAD]) {
-					follow->get(Constants::io__sprite_color::TINT, data.c);
+					follow->get(Constants::io__sprite_color::TINT, data.c[+Constants::io__text_color::COLOR]);
 				}
 			}
 
 			{
 				std::string working_now = data.str[+Constants::io__text_string::STRING];
-				if (data.pair_tied[+Constants::io__text_tie_func_to_state::ON_DRAW])
-					data.pair_tied[+Constants::io__text_tie_func_to_state::ON_DRAW](working_now);
 
 				if (al_get_time() - data.d[+Constants::io__text_double::LAST_INTERPRET] > data.d[+Constants::io__text_double::UPDATETIME]) {
 
@@ -2215,12 +2239,19 @@ namespace LSW {
 							if (data.pair_tied[+st]) data.pair_tied[+st](working_now);
 						}
 					}
-					if (data.pair_tied[+Constants::io__text_tie_func_to_state::ON_UPDATE]) data.pair_tied[+Constants::io__text_tie_func_to_state::ON_UPDATE](working_now);
 
 					std::string b4 = data.str[+Constants::io__text_string::PROCESSED_STRING];
 					data.str[+Constants::io__text_string::PROCESSED_STRING] = working_now;
 					_interpretTags(data.str[+Constants::io__text_string::PROCESSED_STRING]);
+
+					if (data.pair_tied[+Constants::io__text_tie_func_to_state::ON_UPDATE]) {
+						data.pair_tied[+Constants::io__text_tie_func_to_state::ON_UPDATE](data.str[+Constants::io__text_string::PROCESSED_STRING]);
+						_interpretTags(data.str[+Constants::io__text_string::PROCESSED_STRING]);
+					}
 				}
+
+				if (data.pair_tied[+Constants::io__text_tie_func_to_state::ON_DRAW])
+					data.pair_tied[+Constants::io__text_tie_func_to_state::ON_DRAW](data.str[+Constants::io__text_string::PROCESSED_STRING]);
 			}
 
 			while (data.d[+Constants::io__text_double::ROTATION] > 360.0) data.d[+Constants::io__text_double::ROTATION] -= 360.0;
@@ -2253,6 +2284,8 @@ namespace LSW {
 			if (rotation_rad > ALLEGRO_PI * 2) rotation_rad -= ALLEGRO_PI * 2;
 			if (rotation_rad < 0) rotation_rad += ALLEGRO_PI * 2;
 
+			bool should_care_about_shadow = (data.d[+Constants::io__text_double::SHADOW_DIST_X] != 0.0 || data.d[+Constants::io__text_double::SHADOW_DIST_Y] != 0.0);
+
 			double pos_now[2];
 
 			pos_now[0] = 1.0 * Constants::text_default_sharpness_font * 
@@ -2266,11 +2299,36 @@ namespace LSW {
 					+ data.d[+Constants::io__text_double::LAST_FOLLOW_POSY]);
 
 
+			double pos_shadow_now[2] = { 0,0 };
+
+			if (should_care_about_shadow) {
+				pos_shadow_now[0] = 1.0 * Constants::text_default_sharpness_font *
+					(((data.d[+Constants::io__text_double::POSX] + data.d[+Constants::io__text_double::SHADOW_DIST_X]) * cos(p_rotation_rad))
+						- ((data.d[+Constants::io__text_double::POSY] + data.d[+Constants::io__text_double::SHADOW_DIST_Y]) * sin(p_rotation_rad))
+						+ data.d[+Constants::io__text_double::LAST_FOLLOW_POSX]);
+
+				pos_shadow_now[1] = 1.0 * Constants::text_default_sharpness_font *
+					(((data.d[+Constants::io__text_double::POSY] + data.d[+Constants::io__text_double::SHADOW_DIST_Y]) * cos(p_rotation_rad))
+						- ((data.d[+Constants::io__text_double::POSX] + data.d[+Constants::io__text_double::SHADOW_DIST_X]) * sin(p_rotation_rad))
+						+ data.d[+Constants::io__text_double::LAST_FOLLOW_POSY]);
+			}
+
+
 			double targ_draw_xy[2];
 			targ_draw_xy[0] = pos_now[0] * cos(rotation_rad) + pos_now[1] * sin(rotation_rad);
 			targ_draw_xy[1] = pos_now[1] * cos(rotation_rad) - pos_now[0] * sin(rotation_rad);
 			targ_draw_xy[0] /= data.d[+Constants::io__text_double::SCALEX];
 			targ_draw_xy[1] /= data.d[+Constants::io__text_double::SCALEY];
+			
+
+			double targ_draw_xy_shadow[2] = { 0,0 };
+
+			if (should_care_about_shadow) {
+				targ_draw_xy_shadow[0] = pos_shadow_now[0] * cos(rotation_rad) + pos_shadow_now[1] * sin(rotation_rad);
+				targ_draw_xy_shadow[1] = pos_shadow_now[1] * cos(rotation_rad) - pos_shadow_now[0] * sin(rotation_rad);
+				targ_draw_xy_shadow[0] /= data.d[+Constants::io__text_double::SCALEX];
+				targ_draw_xy_shadow[1] /= data.d[+Constants::io__text_double::SCALEY];
+			}
 
 
 			if (!data.b[+Constants::io__text_boolean::AFFECTED_BY_CAM]) preset.reset();
@@ -2284,7 +2342,7 @@ namespace LSW {
 			preset.set(Constants::io__camera_double::ROTATION_RAD, preset.get(Constants::io__camera_double::ROTATION_RAD) + rotation_rad);
 			cam.applyNoSave(preset);
 
-			_draw(targ_draw_xy);
+			_draw(targ_draw_xy, targ_draw_xy_shadow);
 
 			al_set_target_bitmap(d);
 			cam.apply();
@@ -2333,6 +2391,7 @@ namespace LSW {
 				disguy->set(Constants::io__sprite_string::ADD, "BKG_NULL");
 				disguy->set(Constants::io__sprite_double::ANIMATION_FPS, 0);
 				disguy->set(Constants::io__sprite_boolean::DRAW, true);
+				disguy->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
 				disguy->set(Constants::io__sprite_boolean::TIE_SIZE_TO_DISPLAY, true);
 				disguy->set(Constants::io__sprite_string::ID, "BKG_NULL");
 				disguy->set(Constants::io__sprite_integer::LAYER, layer);
@@ -2456,6 +2515,7 @@ namespace LSW {
 			disguy->set(Constants::io__sprite_string::ADD, "LINES_NULL");
 			disguy->set(Constants::io__sprite_double::ANIMATION_FPS, 0);
 			disguy->set(Constants::io__sprite_boolean::DRAW, true);
+			disguy->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
 			disguy->set(Constants::io__sprite_boolean::TIE_SIZE_TO_DISPLAY, true);
 			disguy->set(Constants::io__sprite_string::ID, "LINES_NULL");
 			disguy->set(Constants::io__sprite_integer::LAYER, layer);

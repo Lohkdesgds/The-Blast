@@ -92,7 +92,7 @@ int main(int argc, const char* argv[])
 			if (!tracks.get("WALK", t)) {
 				return 0;
 			}
-			if (isGamingLocally(modern)) {
+			if (isGamingLocally(modern) && modern != main_gamemodes::PAUSE) {
 				for (auto& i : sprites) {
 					double vel[2];
 					i->self->get(Constants::io__sprite_double::RO_SPEEDX, vel[0]);
@@ -566,16 +566,16 @@ int main(int argc, const char* argv[])
 					cp.setLayer(100, true); // DEBUG LINE
 					cp.set(Constants::io__camera_boolean::RESPECT_LIMITS, true);
 					cp.set(Constants::io__camera_double::LIMIT_MIN_X, -0.51);
-					cp.set(Constants::io__camera_double::LIMIT_MIN_Y, -0.148);
+					cp.set(Constants::io__camera_double::LIMIT_MIN_Y, 0.052);
 					cp.set(Constants::io__camera_double::LIMIT_MAX_X, 0.51);
-					cp.set(Constants::io__camera_double::LIMIT_MAX_Y, 0.342);
+					cp.set(Constants::io__camera_double::LIMIT_MAX_Y, 0.542);
 					cp.set(Constants::io__camera_boolean::READONLY_NOW, true);
 					gcam.set(cp, +main_gamemodes::OPTIONS, [&conf,&this_is_the_player](camera_preset& mee)->void {
 						double dy = 0;
 						conf.get(Constants::ro__db_mouse_double::MOUSE_Y, dy);
 						camera_preset cpy = mee;
 						cpy.set(Constants::io__camera_boolean::READONLY_NOW, false); // override
-						cpy.set(Constants::io__camera_double::OFFSET_Y, 0.4 * dy - 0.45);
+						cpy.set(Constants::io__camera_double::OFFSET_Y, 0.45 * dy - 0.35);
 						cpy.set(Constants::io__camera_boolean::READONLY_NOW, true);
 						mee = cpy; // always locked
 						if (this_is_the_player) {
@@ -713,6 +713,8 @@ int main(int argc, const char* argv[])
 					t->set(Constants::io__text_string::ID, "PLAYER_T");
 					t->set(Constants::io__text_boolean::SHOW, true);
 					t->set(Constants::io__text_boolean::USE_SPRITE_TINT_INSTEAD, true);
+					t->set(Constants::io__text_double::SHADOW_DIST_X, 0.00175);
+					t->set(Constants::io__text_double::SHADOW_DIST_Y, 0.0025);
 					t->set(Constants::io__text_double::SCALEG, 0.041);
 					t->set(Constants::io__text_double::SCALEX, 0.7);
 					t->set(Constants::io__text_double::POSY, -0.145);
@@ -916,7 +918,7 @@ int main(int argc, const char* argv[])
 			{ // -09
 				{
 					size_t counter = 0;
-					double _posy = -1.75;
+					double _posy = -1.95;
 
 					// > > > > > |[}-----> OSD SWITCH
 					{
@@ -1029,7 +1031,7 @@ int main(int argc, const char* argv[])
 
 							Text* t = texts.create("BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
 							t->set(Constants::io__text_string::FONT, "DEFAULT");
-							t->set(Constants::io__text_string::STRING, "Volume: %volume_perc%");
+							t->set(Constants::io__text_string::STRING, "Volume: %volume_perc%%");
 							t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
 							t->set(Constants::io__text_boolean::SHOW, true);
 							t->set(Constants::io__text_double::SCALEG, 0.07);
@@ -1040,7 +1042,7 @@ int main(int argc, const char* argv[])
 							t->set(Constants::io__text_double::UPDATETIME, 1.0 / 10);
 							t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
 							t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_CLICK, [t, &mixer](std::string& str) {
-								str = "%volume_perc%";
+								str = "%volume_perc%%";
 								t->set(Constants::io__text_double::POSX, mixer.getVolume() * (0.342 * 2.0) - 0.342);
 								});
 							t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_ON, [t](std::string& str) {
@@ -1067,6 +1069,203 @@ int main(int argc, const char* argv[])
 							s->set(Constants::io__sprite_integer::LAYER, -9);
 							s->set(Constants::io__sprite_double::POSY, _posy);
 							s->set(Constants::io__sprite_double::POSX, mixer.getVolume() * (0.342 * 2.0) - 0.342);
+						}
+					}
+
+					_posy += 0.2;
+					// > > > > > |[}-----> FX CONTROL
+					{
+						// lower
+						{
+							Sprite* s = sprites.create("BUTTON_OPTIONS_" + std::to_string(counter));
+							s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
+							s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
+							s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.05, 1.0, 0.45, 1.0));
+							s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter));
+							s->set(Constants::io__sprite_boolean::DRAW, true);
+							s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
+							s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
+							s->set(Constants::io__sprite_double::SCALEG, 0.16);
+							s->set(Constants::io__sprite_double::SCALEX, 5.5);
+							s->set(Constants::io__sprite_integer::LAYER, -9);
+							s->set(Constants::io__sprite_double::POSY, _posy);
+							s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&conf, &consol, s]() {
+								double dx = 0;
+								conf.get(Constants::ro__db_mouse_double::MOUSE_X, dx);
+								if (dx > 0.342) dx = 0.342;
+								if (dx < -0.342) dx = -0.342;
+								double vol = (dx + 0.342) / (0.342 * 2.0);
+								if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, false)) vol = 0.0; // has to have doublebuffer
+								consol.sendEvent(Constants::ro__my_events::CUSTOM_EVENT_DISPLAY_CHROMA_FX, +(vol * 1000));
+								//conf.set(Constants::io__conf_double::FX_AMOUNT, vol);
+								}, true);
+
+							Text* t = texts.create("BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
+							t->set(Constants::io__text_string::FONT, "DEFAULT");
+							t->set(Constants::io__text_string::STRING, "Chroma failure FX: %screen_chroma_fx%");
+							t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
+							t->set(Constants::io__text_boolean::SHOW, true);
+							t->set(Constants::io__text_double::SCALEG, 0.07);
+							t->set(Constants::io__text_double::SCALEX, 0.7);
+							t->set(Constants::io__text_double::POSY, -0.055);
+							t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_" + std::to_string(counter++));
+							t->set(Constants::io__text_integer::LAYER, -9);
+							t->set(Constants::io__text_double::UPDATETIME, 1.0 / 10);
+							t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
+							t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_CLICK, [t, &conf](std::string& str) {
+								double dd = 1.0;
+								conf.get(Constants::io__conf_double::FX_AMOUNT, dd);
+								double tx = (dd * (0.342 * 2.0) - 0.342);
+								dd *= 100.0;
+								if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, false)) {
+									tx = -0.342;		/// TIED WITH UP VAL
+									dd = -0.1;
+								}
+
+								char perc[32];
+								if (dd >= 0.0) sprintf_s(perc, "%03.2lf%c", dd, '%');
+								else sprintf_s(perc, "Needs Double Buffering!");
+								str = perc;
+								t->set(Constants::io__text_double::POSX, tx);
+								});
+							t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_ON, [t](std::string& str) {
+								t->set(Constants::io__text_double::POSX, 0.0);
+								});
+							t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_NONE, [t](std::string& str) {
+								t->set(Constants::io__text_double::POSX, 0.0);
+								});
+
+						}
+						// higher (dot)
+						{
+							Sprite* s = sprites.create("BUTTON_OPTIONS_" + std::to_string(counter));
+							s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
+							s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
+							s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.05, 1.0, 0.45, 1.0));
+							s->hook(Constants::io__sprite_tie_func_to_state::ON_DRAW, [s, &conf]() {
+								double dd = 1.0;
+								conf.get(Constants::io__conf_double::FX_AMOUNT, dd);
+								double tx = (dd * (0.342 * 2.0) - 0.342);
+								dd *= 100.0;
+								if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, false)) tx = -0.342;		/// TIED WITH UP VAL
+								s->set(Constants::io__sprite_double::POSX, tx);
+								});
+							s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter++));
+							s->set(Constants::io__sprite_boolean::DRAW, true);
+							s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
+							s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
+							s->set(Constants::io__sprite_double::SCALEG, 0.16);
+							s->set(Constants::io__sprite_double::SCALEX, 1.2);
+							s->set(Constants::io__sprite_integer::LAYER, -9);
+							s->set(Constants::io__sprite_double::POSY, _posy);
+							s->set(Constants::io__sprite_double::POSX, [&conf]()->double{
+								double dd = 1.0;
+								conf.get(Constants::io__conf_double::FX_AMOUNT, dd);
+								double tx = (dd * (0.342 * 2.0) - 0.342);
+								dd *= 100.0;
+								if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, false)) tx = -0.342;		/// TIED WITH UP VAL
+								return tx;
+								}());
+						}
+					}
+
+					_posy += 0.2;
+					// > > > > > |[}-----> RESOLUTION CONTROL
+					{
+						// lower
+						{
+							Sprite* s = sprites.create("BUTTON_OPTIONS_" + std::to_string(counter));
+							s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
+							s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
+							s->set(Constants::io__sprite_color::TINT, [&conf]() {if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, true)) return  al_map_rgba_f(0.05, 1.0, 0.75, 1.0); else return al_map_rgba_f(0.85, 0.85, 0.05, 0.85); }()); // tied BELOW*
+							s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter));
+							s->set(Constants::io__sprite_boolean::DRAW, true);
+							s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
+							s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
+							s->set(Constants::io__sprite_double::SCALEG, 0.16);
+							s->set(Constants::io__sprite_double::SCALEX, 5.5);
+							s->set(Constants::io__sprite_integer::LAYER, -9);
+							s->set(Constants::io__sprite_double::POSY, _posy);
+							s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&conf, &consol, s]() {
+
+								double dx = 0;
+								conf.get(Constants::ro__db_mouse_double::MOUSE_X, dx);
+								if (dx > 0.342) dx = 0.342;
+								if (dx < -0.242) dx = -0.342;  /// TIED TO DOWN BELOW
+								double vol = 0.2 + 1.8 * (dx + 0.242) / (0.342 + 0.242);
+								bool is_enabled = (vol > 0.2);
+								if (!is_enabled) vol = 1.0;
+
+								consol.sendEvent(Constants::ro__my_events::CUSTOM_EVENT_DISPLAY_UPDATE_RESOLUTION_SCALE, +(vol * 100), is_enabled);
+								if (is_enabled) s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.05, 1.0, 0.75, 1.0));  /// *
+								else s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.85, 0.85, 0.05, 0.85));  /// *
+
+								}, true);
+
+							Text* t = texts.create("BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
+							t->set(Constants::io__text_string::FONT, "DEFAULT");
+							t->set(Constants::io__text_string::STRING, "Render scale: %screen_buf_proportion%");
+							t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
+							t->set(Constants::io__text_boolean::SHOW, true);
+							t->set(Constants::io__text_double::SCALEG, 0.07);
+							t->set(Constants::io__text_double::SCALEX, 0.7);
+							t->set(Constants::io__text_double::POSY, -0.055);
+							t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_" + std::to_string(counter++));
+							t->set(Constants::io__text_integer::LAYER, -9);
+							t->set(Constants::io__text_double::UPDATETIME, 1.0 / 10);
+							t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
+							t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_CLICK, [t, &conf](std::string& str) {
+								double dd = 1.0;
+								conf.get(Constants::io__conf_double::RESOLUTION_BUFFER_PROPORTION, dd);
+								double tx = ((dd - 0.2) / 1.8) * (0.342 + 0.242) - 0.242;
+								dd *= 100.0;
+								if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, false)) {
+									tx = -0.342;		/// TIED WITH UP VAL
+									dd = 0.0;
+								}
+
+								char perc[32];
+								if (dd > 0.0) sprintf_s(perc, "%03.2lf%c", dd, '%');
+								else sprintf_s(perc, "Disabled");
+								str = perc;
+								t->set(Constants::io__text_double::POSX, tx);
+								});
+							t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_ON, [t](std::string& str) {
+								t->set(Constants::io__text_double::POSX, 0.0);
+								});
+							t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_NONE, [t](std::string& str) {
+								t->set(Constants::io__text_double::POSX, 0.0);
+								});
+
+						}
+						// higher (dot)
+						{
+							Sprite* s = sprites.create("BUTTON_OPTIONS_" + std::to_string(counter));
+							s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
+							s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
+							s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.05, 1.0, 0.45, 1.0));
+							s->hook(Constants::io__sprite_tie_func_to_state::ON_DRAW, [s, &conf]() {
+								double dd = 1.0;
+								conf.get(Constants::io__conf_double::RESOLUTION_BUFFER_PROPORTION, dd);
+								double tx = ((dd - 0.2) / 1.8) * (0.342 + 0.242) - 0.242;
+								if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, false)) tx = -0.342;		/// TIED WITH UP VAL
+								s->set(Constants::io__sprite_double::POSX, tx);
+								});
+							s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter++));
+							s->set(Constants::io__sprite_boolean::DRAW, true);
+							s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
+							s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
+							s->set(Constants::io__sprite_double::SCALEG, 0.16);
+							s->set(Constants::io__sprite_double::SCALEX, 1.2);
+							s->set(Constants::io__sprite_integer::LAYER, -9);
+							s->set(Constants::io__sprite_double::POSY, _posy);
+							s->set(Constants::io__sprite_double::POSX, [&conf]()->double{
+								double dd = 1.0;
+								conf.get(Constants::io__conf_double::RESOLUTION_BUFFER_PROPORTION, dd);
+								double tx = ((dd - 0.2) / 1.8) * (0.342 + 0.242) - 0.242;
+								if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, false)) tx = -0.342;		/// TIED WITH UP VAL
+								return tx;
+								}());
 						}
 					}
 
@@ -1610,7 +1809,7 @@ int main(int argc, const char* argv[])
 					t->set(Constants::io__text_double::SCALEX, 0.6);
 					t->set(Constants::io__text_double::POSY, -1.00);
 					t->set(Constants::io__text_double::POSX, -1.0);
-					t->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
+					t->set(Constants::io__text_integer::MODE, +Constants::io__text_alignment::ALIGN_LEFT);
 					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 4);
 					t->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
 					t->set(Constants::io__text_integer::LAYER, 100);
@@ -1625,7 +1824,7 @@ int main(int argc, const char* argv[])
 					t->set(Constants::io__text_double::SCALEX, 0.6);
 					t->set(Constants::io__text_double::POSY, -0.97);
 					t->set(Constants::io__text_double::POSX, -1.0);
-					t->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
+					t->set(Constants::io__text_integer::MODE, +Constants::io__text_alignment::ALIGN_LEFT);
 					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 30);
 					t->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
 					t->set(Constants::io__text_integer::LAYER, 100);
@@ -1640,7 +1839,7 @@ int main(int argc, const char* argv[])
 					t->set(Constants::io__text_double::SCALEX, 0.6);
 					t->set(Constants::io__text_double::POSY, -0.94);
 					t->set(Constants::io__text_double::POSX, -1.0);
-					t->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
+					t->set(Constants::io__text_integer::MODE, +Constants::io__text_alignment::ALIGN_LEFT);
 					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 3);
 					t->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
 					t->set(Constants::io__text_integer::LAYER, 100);
@@ -1655,7 +1854,7 @@ int main(int argc, const char* argv[])
 					t->set(Constants::io__text_double::SCALEX, 0.6);
 					t->set(Constants::io__text_double::POSY, -0.91);
 					t->set(Constants::io__text_double::POSX, -1.0);
-					t->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
+					t->set(Constants::io__text_integer::MODE, +Constants::io__text_alignment::ALIGN_LEFT);
 					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 4);
 					t->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
 					t->set(Constants::io__text_integer::LAYER, 100);
@@ -1670,7 +1869,7 @@ int main(int argc, const char* argv[])
 					t->set(Constants::io__text_double::SCALEX, 0.6);
 					t->set(Constants::io__text_double::POSY, -0.88);
 					t->set(Constants::io__text_double::POSX, -1.0);
-					t->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
+					t->set(Constants::io__text_integer::MODE, +Constants::io__text_alignment::ALIGN_LEFT);
 					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 6);
 					t->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
 					t->set(Constants::io__text_integer::LAYER, 100);
@@ -1685,7 +1884,7 @@ int main(int argc, const char* argv[])
 					t->set(Constants::io__text_double::SCALEX, 0.6);
 					t->set(Constants::io__text_double::POSY, -0.85);
 					t->set(Constants::io__text_double::POSX, -1.0);
-					t->set(Constants::io__text_integer::MODE, +Constants::io__alignment_text::ALIGN_LEFT);
+					t->set(Constants::io__text_integer::MODE, +Constants::io__text_alignment::ALIGN_LEFT);
 					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 3);
 					t->set(Constants::io__text_boolean::AFFECTED_BY_CAM, false);
 					t->set(Constants::io__text_integer::LAYER, 100);

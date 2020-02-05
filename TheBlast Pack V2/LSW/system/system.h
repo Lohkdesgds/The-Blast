@@ -32,8 +32,8 @@ namespace LSW {
 		namespace Constants {
 
 			// actual config (no sense on using size) **** IF CHANGES, CHECK Database::internalCheck ****
-			enum class io__conf_boolean { WAS_OSD_ON, ENABLE_SECOND_DEBUGGING_SCREEN, ULTRADEBUG };
-			enum class io__conf_double { LAST_VOLUME };
+			enum class io__conf_boolean { WAS_OSD_ON, ENABLE_SECOND_DEBUGGING_SCREEN, ULTRADEBUG, DOUBLEBUFFERING };
+			enum class io__conf_double { LAST_VOLUME, RESOLUTION_BUFFER_PROPORTION, FX_AMOUNT };
 			enum class io__conf_integer { SCREEN_X, SCREEN_Y, SCREEN_FLAGS, SCREEN_PREF_HZ };
 			enum class io__conf_longlong { _TIMES_LIT };
 			enum class io__conf_string { LAST_VERSION, LAST_PLAYERNAME };
@@ -54,8 +54,8 @@ namespace LSW {
 			// functional
 			enum class io__db_functional_opt {MOUSE_KEY,KEYBOARD_KEY,MOUSE_LEFT,KEYBOARD_LEFT};
 
-			const std::string ro__conf_boolean_str[] = { "was_osd_on", "second_screen_debug", "ultradebug" };
-			const std::string ro__conf_float_str[] = { "last_volume" };
+			const std::string ro__conf_boolean_str[] = { "was_osd_on", "second_screen_debug", "ultradebug", "double_buffering_screen" };
+			const std::string ro__conf_double_str[] = { "last_volume", "resolution_proportion", "fx_amount" };
 			const std::string ro__conf_integer_str[] = { "screen_width","screen_height", "last_display_flags","pref_refresh_rate" };
 			const std::string ro__conf_longlong_str[] = { "times_open" };
 			const std::string ro__conf_string_str[] = { "last_version","playername" };
@@ -103,34 +103,6 @@ namespace LSW {
 		static __systematic __g_sys; // startup
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> some raw stuff
-
-		class Display {
-			ALLEGRO_DISPLAY* d = nullptr;
-			std::mutex d_try;
-			int x, y, f, h;
-			bool printing = false;
-
-			std::thread* printthr = nullptr;
-			bool printthrdone = true;
-
-			void _init(const int, const int, const int, int); // x, y, flags, hz
-			void _print();
-			void __print_thr_autodel(ALLEGRO_BITMAP*, const std::string);
-		public:
-			Display();
-			Display(const int, const int, const int = Constants::start_display_default_mode, int = 0); // x, y, flags, hz
-			~Display();
-
-			void restart();
-			void flip();
-			void clearTo(const ALLEGRO_COLOR);
-			void close();
-			bool exist();
-
-			void print();
-
-			ALLEGRO_DISPLAY*& getDisplay();
-		};
 
 
 		
@@ -245,6 +217,45 @@ namespace LSW {
 			bool isEq(const Constants::ro__db_mouse_double, const double);
 			bool isEq(const Constants::ro__db_statistics_sizet, const size_t);
 			bool isEq(const Constants::ro__db_statistics_double, const double);
+		};
+
+
+
+		class Display {
+			ALLEGRO_DISPLAY* d = nullptr;
+			ALLEGRO_BITMAP* buf_ = nullptr;
+			double quick_fx = 0.0;
+			double should_check_acknowledge_and_prop_buf = 0.0;
+
+			std::mutex d_try;
+			int x, y, f, h;
+			bool printing = false;
+
+			std::thread* printthr = nullptr;
+			bool printthrdone = true;
+
+			void _init(const int, const int, const int, int); // x, y, flags, hz
+			void _print();
+			void __print_thr_autodel(ALLEGRO_BITMAP*, const std::string);
+			void __check_acknowledge_n_buf();
+		public:
+			Display();
+			Display(const int, const int, const int = Constants::start_display_default_mode, int = 0); // x, y, flags, hz
+			~Display();
+
+			void restart();
+			void flip();
+			void clearTo(ALLEGRO_COLOR);
+			void close();
+			bool exist();
+
+			void setToCheckBufferResConfig();
+			double getAppliedProportion();
+
+			void print();
+
+			ALLEGRO_DISPLAY*& getDisplay();
+			void acknowledgeResize();
 		};
 		
 

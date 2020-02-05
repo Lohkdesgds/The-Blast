@@ -209,7 +209,7 @@ namespace LSW {
 
 			auto dynamic_speed_track = [&](bool ignore = false) {
 				if (!ignore) {
-					double __t = 0.2 * (al_get_time() - level_fx_text - 5.0) / (1e-50 + 15.0 * fabs(current_delta));
+					double __t = 0.2 * (al_get_time() - level_time_rn - 5.0) / (1e-50 + 15.0 * fabs(current_delta));
 					if (__t < 1e-50) __t = 1e-50;
 					double diff_t = 1.0 + pow(__t, 1.6);
 					if (diff_t < 1.0) diff_t = 1.0;
@@ -236,7 +236,75 @@ namespace LSW {
 			al_start_timer(timer_sound);
 			al_start_timer(timer_think);
 
-			level_fx_text = al_get_time();
+			level_time_rn = al_get_time();
+
+			// LOADING CERTAIN THINGS
+
+			consol->pauseThread();
+			while (!consol->hasThreadPaused()) Sleep(10);
+
+			{
+				Text* t = texts.create("GAMEBOX_TEXT");
+				t->set(Constants::io__text_string::FONT, "DEFAULT");
+				t->set(Constants::io__text_string::STRING, "LEVEL UNKNOWN");
+				t->set(Constants::io__text_string::ID, "GAMEBOX_TEXT");
+				t->set(Constants::io__text_boolean::SHOW, true);
+				t->set(Constants::io__text_double::SCALEG, 0.24);
+				t->set(Constants::io__text_double::SCALEX, 0.5);
+				t->set(Constants::io__text_integer::LAYER, 1);
+				t->set(Constants::io__text_double::UPDATETIME, 1.0 / 5);
+				t->set(Constants::io__text_color::COLOR, al_map_rgba_f(0.75, 0.75, 0.75, 0.80));
+				t->hook(Constants::io__text_tie_func_to_state::ON_DRAW, [&](std::string& str)->void {
+					double coef = 1.0 - 0.2 * (al_get_time() - (level_time_rn + 3.0));
+					if (coef > 1.0) coef = 1.0;
+					if (coef < 0.0) coef = 0.0;
+					t->set(Constants::io__text_color::COLOR, al_map_rgba_f(0.75 * pow(coef, 3.0), 0.75 * pow(coef, 3.0), 0.75 * pow(coef, 3.0), 0.80 * pow(coef, 3.0)));
+					t->set(Constants::io__text_double::SCALEX, 0.5 / (0.5 + 0.5 * pow(coef, 1.5)));
+					t->set(Constants::io__text_double::SCALEY, 1.0 * (0.7 + 0.3 * pow(coef, 2.0)));
+					str = "< LEVEL " + std::to_string(level_count + 1) + " >";
+					});
+			}
+			{
+				Text* t = texts.create("GAMEBOX_TEXT_TIMER");
+				t->set(Constants::io__text_string::FONT, "DEFAULT");
+				t->set(Constants::io__text_string::STRING, "00'00''000'''");
+				t->set(Constants::io__text_string::ID, "GAMEBOX_TEXT_TIMER");
+				t->set(Constants::io__text_boolean::SHOW, true);
+				t->set(Constants::io__text_double::SCALEG, 0.06);
+				t->set(Constants::io__text_double::SCALEX, 0.50);
+				t->set(Constants::io__text_double::SHADOW_DIST_X, 0.002);
+				t->set(Constants::io__text_double::SHADOW_DIST_Y, 0.004);
+				t->set(Constants::io__text_double::POSX, 0.99);
+				t->set(Constants::io__text_double::POSY, -0.99);
+				t->set(Constants::io__text_integer::LAYER, 1);
+				t->set(Constants::io__text_integer::MODE, +Constants::io__text_alignment::ALIGN_RIGHT);
+				t->set(Constants::io__text_double::UPDATETIME, 1.0 / 20);
+				t->set(Constants::io__text_color::COLOR, al_map_rgba_f(1.00, 1.00, 1.00, 1.00));
+				t->hook(Constants::io__text_tie_func_to_state::ON_UPDATE, [&](std::string& str)->void {
+					char tempu[96];
+
+					// full timer
+					double difu = 1000 * (al_get_time() - whole_gameplay_time);
+					if (difu <= 0.0) difu = 1e-50;
+					int microssec = (int)difu % 1000;
+					int sec = (int)(difu / 1000) % 60;
+					int min = (int)(difu / (60000));
+
+					// partial timer
+					double difu2 = 1000 * (al_get_time() - level_time_rn);
+					if (difu2 <= 0.0) difu2 = 1e-50;
+					int microssec2 = (int)difu2 % 1000;
+					int sec2 = (int)(difu2 / 1000) % 60;
+					int min2 = (int)(difu2 / (60000));
+
+					// text
+					sprintf_s(tempu, "LEVEL %zu | NOW: %03d' %02d'' %03d''' | TOTAL: %03d' %02d'' %03d'''", level_count + 1, min2, sec2, microssec2, min, sec, microssec);
+					str = tempu;
+					});
+			}
+
+			consol->resumeThread();
+
 
 			while (keep_game_going && !has_player_died) {
 
@@ -254,28 +322,10 @@ namespace LSW {
 						consol->pauseThread();
 						while (!consol->hasThreadsButThisOnePaused(Constants::io__thread_ids::FUNCTIONAL)) Sleep(10);
 
-						level_fx_text = al_get_time();
+						level_time_rn = al_get_time();
+						whole_gameplay_time = al_get_time();
 
 						this_is_the_player->set(Constants::io__entity_double::HEALTH, 1.0);
-						level_text = texts.create("GAMEBOX_TEXT");
-						level_text->set(Constants::io__text_string::FONT, "DEFAULT");
-						level_text->set(Constants::io__text_string::STRING, "LEVEL UNKNOWN");
-						level_text->set(Constants::io__text_string::ID, "GAMEBOX_TEXT");
-						level_text->set(Constants::io__text_boolean::SHOW, true);
-						level_text->set(Constants::io__text_double::SCALEG, 0.24);
-						level_text->set(Constants::io__text_double::SCALEX, 0.5);
-						level_text->set(Constants::io__text_integer::LAYER, 1);
-						level_text->set(Constants::io__text_double::UPDATETIME, 1.0 / 5);
-						level_text->set(Constants::io__text_color::COLOR, al_map_rgba_f(0.75, 0.75, 0.75, 0.80));
-						level_text->hook(Constants::io__text_tie_func_to_state::ON_DRAW, [&](std::string& str)->void {
-							double coef = 1.0 - 0.2 * (al_get_time() - (level_fx_text + 3.0));
-							if (coef > 1.0) coef = 1.0;
-							if (coef < 0.0) coef = 0.0;
-							level_text->set(Constants::io__text_color::COLOR, al_map_rgba_f(0.75 * pow(coef, 3.0), 0.75 * pow(coef, 3.0), 0.75 * pow(coef, 3.0), 0.80 * pow(coef, 3.0)));
-							level_text->set(Constants::io__text_double::SCALEX, 0.5 / (0.5 + 0.5 * pow(coef, 1.5)));
-							level_text->set(Constants::io__text_double::SCALEY, 1.0 * (0.7 + 0.3 * pow(coef, 2.0)));
-							str = "< LEVEL " + std::to_string(level_count + 1) + " >";
-							});
 
 						// even if regenMap() call and call again pauseThread and resumeThread(), it is safe to call again outside (just to guarantee no freezing)
 						regenMap();
@@ -305,7 +355,7 @@ namespace LSW {
 								case +blocks::EXIT:
 									regenMap();
 									level_count++;
-									level_fx_text = al_get_time();
+									level_time_rn = al_get_time();
 									break;
 								case +blocks::FAKE_EXIT:
 									wd->setPos(xy[0], xy[1], +blocks::FAILEDEXIT);
@@ -332,8 +382,10 @@ namespace LSW {
 						}
 
 						consol->resumeThread();
+						last_pause = 0.0;
 					}
 					else if (is_paused) {
+						if (last_pause == 0.0) last_pause = al_get_time();
 						this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, false);
 
 						if (!has_sleeping_sprites)
@@ -343,6 +395,12 @@ namespace LSW {
 						wd->pauseCorrupt();
 					}
 					else {  // map is up n running
+						if (last_pause > 0.0) {
+							level_time_rn += al_get_time() - last_pause;
+							whole_gameplay_time += al_get_time() - last_pause;
+							last_pause = 0.0;
+						}
+
 						if (has_sleeping_sprites) sprites.setEnabled([](const std::string a)->bool {return a.find("GAMEBOX_") == 0; }, [](const std::string a)->bool {return true; });
 						has_sleeping_sprites = false;
 
@@ -370,26 +428,28 @@ namespace LSW {
 			refreshing.clear();
 			refresing_m.unlock();
 
+
 			al_destroy_event_queue(ev_qu);
 			al_destroy_timer(timer_sound);
 			al_destroy_timer(timer_think);
 
-			if (has_map_gen) {
-				consol->pauseThread();
-				while (!consol->hasThreadPaused()) Sleep(10);
+			consol->pauseThread();
+			while (!consol->hasThreadPaused()) Sleep(10);
 
+			if (has_map_gen) {
 				consol->removeCustomTask(task_id);
 
-				delete wd;
-				wd = nullptr;
+				texts.remove([](const std::string a)->bool {return a.find("GAMEBOX_TEXT") == 0; });
 				sprites.remove([](const std::string a)->bool {return a.find("GAMEBOX_") == 0; });
 				sprites.remove("GAMEBOXMAIN");
 				textures.remove("GAMEBOXMAIN_I");
-				texts.remove("GAMEBOX_TEXT");
 
-				consol->resumeThread();
-				has_map_gen = false;
+				delete wd;
+				wd = nullptr;
 			}
+
+			consol->resumeThread();
+			has_map_gen = false;
 		}
 
 

@@ -36,8 +36,8 @@ __TIME__
 namespace LSW {
 	namespace v4 {
 		namespace Constants {
-			// this have to be global, come on
-			enum class ro__my_events { CUSTOM_EVENT_LOG_STRING = 512, CUSTOM_EVENT_SHARING_NEW_DISPLAY_SIZE, CUSTOM_EVENT_CALL_FULLSCREEN, CUSTOM_EVENT_EXTERNAL_EXIT_CALL /* <-- TO BE DONE */ }; 
+			// this have to be global, come on																																* 100 eq 1.0							      * 1000 eq 1.0
+			enum class ro__my_events { CUSTOM_EVENT_LOG_STRING = 512, CUSTOM_EVENT_SHARING_NEW_DISPLAY_SIZE, CUSTOM_EVENT_CALL_FULLSCREEN, CUSTOM_EVENT_EXTERNAL_EXIT_CALL, CUSTOM_EVENT_DISPLAY_UPDATE_RESOLUTION_SCALE, CUSTOM_EVENT_DISPLAY_CHROMA_FX /* <-- TO BE DONE */ }; 
 
 			enum class directions {
 				NORTH = 1 << 0,
