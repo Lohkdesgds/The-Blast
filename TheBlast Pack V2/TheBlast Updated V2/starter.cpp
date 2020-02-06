@@ -4,7 +4,6 @@
 #include <string>
 #include <Windows.h>
 
-
 using namespace LSW::v4;
 
 
@@ -14,6 +13,27 @@ enum class my_custom_funcs { LOADING_ANIMATION/*at: setup_animation_functional (
 int main(int argc, const char* argv[])
 {
 	try {
+		// this has to be like the first one
+		gfile logg;
+		DiscordConnection* connection = nullptr;
+
+		try {
+			connection = new DiscordConnection();
+			connection->lock();
+			connection->getActivity().GetAssets().SetLargeImage("icon_large");
+			connection->getActivity().GetAssets().SetSmallImage("icon_large");
+			connection->getActivity().GetAssets().SetLargeText("The Blast V2");
+			connection->getActivity().GetAssets().SetSmallText("by LSW");
+			connection->getActivity().SetName("Loading");
+			connection->getActivity().SetDetails("");
+			connection->unlock();
+		}
+		catch (Abort::warn w) {
+			logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Got Discord integration error: " << w.from() << " -> " << w.details() << "; errID: " << w.getErrN() << L::ELF;
+		}
+		catch (Abort::abort a) {
+			throw a; // must close the game, so throw to main try
+		}
 
 		/*************************************************************************************
 
@@ -28,9 +48,6 @@ int main(int argc, const char* argv[])
 		bool __assist[3] = { false, false, false }; // 1: LOADING_ANIMATION, 2: FULLSCREEN/WINDOW TOGGLE, 3: GAMEBOXMAIN Sprite down below on loop
 		main_gamemodes __assist_g = modern;
 		double __assist_t_button = 0;
-
-		// this has to be like the first one
-		gfile logg;
 
 
 		// needed initialization
@@ -128,6 +145,8 @@ int main(int argc, const char* argv[])
 			Tracks tracks;
 
 			gfile logg;
+
+			logg << L::SLF << fsr(__FUNCSIG__) << "Got OPENGL version " << al_get_new_display_option(ALLEGRO_OPENGL_MAJOR_VERSION, 0) << "." << al_get_new_display_option(ALLEGRO_OPENGL_MINOR_VERSION, 0) << L::ELF;
 
 			logg << L::SLF << fsr(__FUNCSIG__) << "Loading resources (lambda after function)" << L::ELF;
 
@@ -489,7 +508,8 @@ int main(int argc, const char* argv[])
 		while (!consol.isOpen()) Sleep(20);
 		if (!consol.isRunning()) return -1;
 
-		logg << L::SLF << fsr(__FUNCSIG__) << "Got OPENGL version " << al_get_new_display_option(ALLEGRO_OPENGL_MAJOR_VERSION, 0) << "." << al_get_new_display_option(ALLEGRO_OPENGL_MINOR_VERSION, 0) << L::ELF;
+		al_set_window_title(consol._display_handle()->getDisplay(), "The Blast V2.0");
+
 		while (consol.hasTasked(Constants::io__thread_ids::DRAWING, Constants::io__threads_taskid::START)) Sleep(20);
 		logg << L::SLF << fsr(__FUNCSIG__) << "Time to work on Sprites, Texts and stuff." << L::ELF;
 
@@ -531,8 +551,13 @@ int main(int argc, const char* argv[])
 					cp.set(Constants::io__camera_double::LIMIT_MAX_X, 0.95);
 					cp.set(Constants::io__camera_double::LIMIT_MAX_Y, 0.95);
 					cp.set(Constants::io__camera_boolean::READONLY_NOW, true);
-					gcam.set(cp, +main_gamemodes::LOADING);
 					gcam.set(cp, +main_gamemodes::HASNT_STARTED_YET); // same
+					gcam.set(cp, +main_gamemodes::LOADING, [&connection](camera_preset& mee)->void {
+						connection->lock();
+						connection->getActivity().SetDetails("on Menu");
+						connection->getActivity().GetTimestamps().SetStart(0);
+						connection->unlock();
+						});
 				}
 				{
 					// menu
@@ -549,10 +574,14 @@ int main(int argc, const char* argv[])
 					cp.set(Constants::io__camera_double::LIMIT_MAX_X, 0.95);
 					cp.set(Constants::io__camera_double::LIMIT_MAX_Y, 0.95);
 					cp.set(Constants::io__camera_boolean::READONLY_NOW, true);
-					gcam.set(cp, +main_gamemodes::MENU, [&this_is_the_player](camera_preset& mee)->void {
+					gcam.set(cp, +main_gamemodes::MENU, [&this_is_the_player,&connection](camera_preset& mee)->void {
 						if (this_is_the_player) {
 							this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, false);
 						}
+						connection->lock();
+						connection->getActivity().SetDetails("on Menu");
+						connection->getActivity().GetTimestamps().SetStart(0);
+						connection->unlock();
 						});
 				}
 				{
@@ -570,7 +599,7 @@ int main(int argc, const char* argv[])
 					cp.set(Constants::io__camera_double::LIMIT_MAX_X, 0.51);
 					cp.set(Constants::io__camera_double::LIMIT_MAX_Y, 0.542);
 					cp.set(Constants::io__camera_boolean::READONLY_NOW, true);
-					gcam.set(cp, +main_gamemodes::OPTIONS, [&conf,&this_is_the_player](camera_preset& mee)->void {
+					gcam.set(cp, +main_gamemodes::OPTIONS, [&conf,&this_is_the_player,&connection](camera_preset& mee)->void {
 						double dy = 0;
 						conf.get(Constants::ro__db_mouse_double::MOUSE_Y, dy);
 						camera_preset cpy = mee;
@@ -582,6 +611,10 @@ int main(int argc, const char* argv[])
 							this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, true);
 							this_is_the_player->set(Constants::io__sprite_double::SCALEG, 0.068);
 						}
+						connection->lock();
+						connection->getActivity().SetDetails("on Options");
+						connection->getActivity().GetTimestamps().SetStart(0);
+						connection->unlock();
 						});
 				}
 				{
@@ -599,10 +632,13 @@ int main(int argc, const char* argv[])
 					cp.set(Constants::io__camera_double::LIMIT_MAX_X, 0.95);
 					cp.set(Constants::io__camera_double::LIMIT_MAX_Y, 0.95);
 					cp.set(Constants::io__camera_boolean::READONLY_NOW, true);
-					gcam.set(cp, +main_gamemodes::PAUSE, [&this_is_the_player](camera_preset& mee)->void {
+					gcam.set(cp, +main_gamemodes::PAUSE, [&this_is_the_player,&connection](camera_preset& mee)->void {
 						if (this_is_the_player) {
 							this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, false);
 						}
+						connection->lock();
+						connection->getActivity().SetDetails("Paused the game");
+						connection->unlock();
 						});
 				}
 				{
@@ -621,10 +657,13 @@ int main(int argc, const char* argv[])
 					//cp.set(Constants::io__camera_double::SCALE_G, 0.95);
 					//cp.set(Constants::io__camera_double::SCALE_X, 1.0175);
 					cp.set(Constants::io__camera_boolean::READONLY_NOW, true);
-					gcam.set(cp, +main_gamemodes::GAMING, [&this_is_the_player](camera_preset& mee)->void {
+					gcam.set(cp, +main_gamemodes::GAMING, [&this_is_the_player,&connection](camera_preset& mee)->void {
 						if (this_is_the_player) {
 							this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, true);
 						}
+						connection->lock();
+						connection->getActivity().SetDetails("Singleplayer");
+						connection->unlock();
 						});
 				}
 				{
@@ -643,10 +682,13 @@ int main(int argc, const char* argv[])
 					//cp.set(Constants::io__camera_double::SCALE_G, 0.95);
 					//cp.set(Constants::io__camera_double::SCALE_X, 1.0175);
 					cp.set(Constants::io__camera_boolean::READONLY_NOW, true);
-					gcam.set(cp, +main_gamemodes::MULTIPLAYER, [&this_is_the_player](camera_preset& mee)->void {
+					gcam.set(cp, +main_gamemodes::MULTIPLAYER, [&this_is_the_player,&connection](camera_preset& mee)->void {
 						if (this_is_the_player) {
 							this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, true);
 						}
+						connection->lock();
+						connection->getActivity().SetDetails("Multiplayer");
+						connection->unlock();
 						});
 				}
 			}
@@ -1983,6 +2025,8 @@ int main(int argc, const char* argv[])
 			if (isGamingLocally(modern)) {
 				if (!game_0) {
 					game_0 = new GamingStorm(&consol, this_is_the_player, music_gaming, +my_custom_funcs::GAMING_PLAYER_EXIT_TASK);
+					game_0->tieToGamingTime([&connection](const std::chrono::milliseconds ms) { connection->getActivity().GetTimestamps().SetStart(ms.count()); });
+					game_0->tieToLevelName([&connection](const std::string lv) { connection->getActivity().SetDetails(lv.c_str()); });
 					game_0->startAutomatically();
 				}
 				else {
@@ -1995,6 +2039,7 @@ int main(int argc, const char* argv[])
 					game_0->stopNow();
 					delete game_0;
 					game_0 = nullptr;
+					connection->getActivity().GetTimestamps().SetStart(0);
 				}
 			}
 
@@ -2010,6 +2055,8 @@ int main(int argc, const char* argv[])
 		fonts.clear();
 		texts.clear();
 		conf.flush();
+
+		if (connection) delete connection;
 	}
 	catch (Abort::abort a)
 	{

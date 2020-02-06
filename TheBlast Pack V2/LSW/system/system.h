@@ -171,7 +171,6 @@ namespace LSW {
 			void set(const Constants::ro__db_thread_string, const char = 0);
 
 			void set(const Constants::io__db_functional_opt, const int, const std::function<void(void)> = std::function<void(void)>());
-			
 
 			bool check(const Constants::io__conf_boolean);
 			bool check(const Constants::io__conf_double);

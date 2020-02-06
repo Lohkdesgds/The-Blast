@@ -59,6 +59,18 @@
     <Filter Include="base\gaming_local">
       <UniqueIdentifier>{88449532-caa2-4a95-98eb-2bbf07daac3b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="imported">
+      <UniqueIdentifier>{f595fe7f-d6f6-4b5c-bbb0-f61fdceb9ec4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="imported\Discord SDK">
+      <UniqueIdentifier>{18154638-c228-4994-87c7-1ed892e052d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\discord_thread">
+      <UniqueIdentifier>{244865f4-1a46-4f18-a3f5-13f5a2e32935}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="hidden">
+      <UniqueIdentifier>{dcb3542a-0131-4b0b-a73c-a0d987fc4ef9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\LSW\custom_abort\abort.cpp">
@@ -96,6 +108,51 @@
     </ClCompile>
     <ClCompile Include="..\LSW\gaming_modes\gaming_storm.cpp">
       <Filter>base\gaming_local</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imported\source\application_manager.cpp">
+      <Filter>imported\Discord SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imported\source\core.cpp">
+      <Filter>imported\Discord SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imported\source\image_manager.cpp">
+      <Filter>imported\Discord SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imported\source\lobby_manager.cpp">
+      <Filter>imported\Discord SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imported\source\network_manager.cpp">
+      <Filter>imported\Discord SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imported\source\overlay_manager.cpp">
+      <Filter>imported\Discord SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imported\source\relationship_manager.cpp">
+      <Filter>imported\Discord SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imported\source\storage_manager.cpp">
+      <Filter>imported\Discord SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imported\source\store_manager.cpp">
+      <Filter>imported\Discord SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imported\source\types.cpp">
+      <Filter>imported\Discord SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imported\source\user_manager.cpp">
+      <Filter>imported\Discord SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imported\source\voice_manager.cpp">
+      <Filter>imported\Discord SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imported\source\achievement_manager.cpp">
+      <Filter>imported\Discord SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imported\source\activity_manager.cpp">
+      <Filter>imported\Discord SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\LSW\discord_thread\discord_thread.cpp">
+      <Filter>base\discord_thread</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -150,6 +207,63 @@
     </ClInclude>
     <ClInclude Include="..\LSW\gaming_modes\gaming_storm.h">
       <Filter>base\gaming_local</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imported\source\activity_manager.h">
+      <Filter>imported\Discord SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imported\source\application_manager.h">
+      <Filter>imported\Discord SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imported\source\core.h">
+      <Filter>imported\Discord SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imported\source\discord.h">
+      <Filter>imported\Discord SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imported\source\event.h">
+      <Filter>imported\Discord SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imported\source\ffi.h">
+      <Filter>imported\Discord SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imported\source\image_manager.h">
+      <Filter>imported\Discord SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imported\source\lobby_manager.h">
+      <Filter>imported\Discord SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imported\source\network_manager.h">
+      <Filter>imported\Discord SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imported\source\overlay_manager.h">
+      <Filter>imported\Discord SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imported\source\relationship_manager.h">
+      <Filter>imported\Discord SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imported\source\storage_manager.h">
+      <Filter>imported\Discord SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imported\source\store_manager.h">
+      <Filter>imported\Discord SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imported\source\types.h">
+      <Filter>imported\Discord SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imported\source\user_manager.h">
+      <Filter>imported\Discord SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imported\source\voice_manager.h">
+      <Filter>imported\Discord SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imported\source\achievement_manager.h">
+      <Filter>imported\Discord SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\LSW\discord_thread\discord_thread.h">
+      <Filter>base\discord_thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\LSW\hidden\hidden.h">
+      <Filter>hidden</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

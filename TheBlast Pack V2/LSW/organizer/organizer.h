@@ -2,6 +2,7 @@
 
 // HAS TO BE FIRST
 #include "..\package_raw\package_raw.h"				// SOLO
+#include "..\hidden\hidden.h"						// SOLO
 
 // barebones (each)
 #include "..\shared_constants\constants.h"			// SOLO
@@ -24,5 +25,9 @@
 
 // the big thing
 #include "..\console\console.h"						// DEP: @everyone (this) (THIS IS THE MANAGER ITSELF, DON'T NEED TO SELF INCLUDE, IT IS THE MAIN .H)
+
+// Discord integration
+#include "..\discord_thread\discord_thread.h"		// DEP: (discord), SMALLTEMP, ABORT, LOGG
+
 
 #include "..\gaming_modes\gaming_storm.h"

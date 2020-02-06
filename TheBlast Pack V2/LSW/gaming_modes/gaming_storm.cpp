@@ -209,7 +209,9 @@ namespace LSW {
 
 			auto dynamic_speed_track = [&](bool ignore = false) {
 				if (!ignore) {
-					double __t = 0.2 * (al_get_time() - level_time_rn - 5.0) / (1e-50 + 15.0 * fabs(current_delta));
+					std::chrono::duration<double, std::milli> diff = 1000 * (MILI_NOW - level_started);
+					double assist = (diff.count() + 5000.0) / 1000.0;
+					double __t = 0.03 * assist / (1e-50 + 250.0 * fabs(current_delta));
 					if (__t < 1e-50) __t = 1e-50;
 					double diff_t = 1.0 + pow(__t, 1.6);
 					if (diff_t < 1.0) diff_t = 1.0;
@@ -229,14 +231,17 @@ namespace LSW {
 			ALLEGRO_EVENT_QUEUE* ev_qu = al_create_event_queue();
 			ALLEGRO_TIMER* timer_sound = al_create_timer(1.0 / 18);
 			ALLEGRO_TIMER* timer_think = al_create_timer(1.0 / 90);
+			ALLEGRO_TIMER* timer_funcs = al_create_timer(1.0 / 5);
 
 			al_register_event_source(ev_qu, al_get_timer_event_source(timer_sound));
 			al_register_event_source(ev_qu, al_get_timer_event_source(timer_think));
+			al_register_event_source(ev_qu, al_get_timer_event_source(timer_funcs));
 
 			al_start_timer(timer_sound);
 			al_start_timer(timer_think);
+			al_start_timer(timer_funcs);
 
-			level_time_rn = al_get_time();
+			level_started = MILI_NOW;
 
 			// LOADING CERTAIN THINGS
 
@@ -255,7 +260,9 @@ namespace LSW {
 				t->set(Constants::io__text_double::UPDATETIME, 1.0 / 5);
 				t->set(Constants::io__text_color::COLOR, al_map_rgba_f(0.75, 0.75, 0.75, 0.80));
 				t->hook(Constants::io__text_tie_func_to_state::ON_DRAW, [&](std::string& str)->void {
-					double coef = 1.0 - 0.2 * (al_get_time() - (level_time_rn + 3.0));
+					std::chrono::duration<double, std::milli> diff = 1000 * (MILI_NOW - level_started);
+					double assist = (diff.count() + 3000.0) / 1000.0;
+					double coef = 1.0 - 0.2 * assist;
 					if (coef > 1.0) coef = 1.0;
 					if (coef < 0.0) coef = 0.0;
 					t->set(Constants::io__text_color::COLOR, al_map_rgba_f(0.75 * pow(coef, 3.0), 0.75 * pow(coef, 3.0), 0.75 * pow(coef, 3.0), 0.80 * pow(coef, 3.0)));
@@ -284,14 +291,17 @@ namespace LSW {
 					char tempu[96];
 
 					// full timer
-					double difu = 1000 * (al_get_time() - whole_gameplay_time);
+
+					std::chrono::duration<double, std::milli> difu_raw = 1000 * (MILI_NOW - game_started);
+					double difu = difu_raw.count() / 1000.0;
 					if (difu <= 0.0) difu = 1e-50;
 					int microssec = (int)difu % 1000;
 					int sec = (int)(difu / 1000) % 60;
 					int min = (int)(difu / (60000));
 
 					// partial timer
-					double difu2 = 1000 * (al_get_time() - level_time_rn);
+					std::chrono::duration<double, std::milli> difu_raw2 = 1000 * (MILI_NOW - level_started);
+					double difu2 = difu_raw2.count() / 1000.0;
 					if (difu2 <= 0.0) difu2 = 1e-50;
 					int microssec2 = (int)difu2 % 1000;
 					int sec2 = (int)(difu2 / 1000) % 60;
@@ -316,14 +326,27 @@ namespace LSW {
 				if (ev.timer.source == timer_sound) {
 					dynamic_speed_track(is_paused);
 				}
+				if (ev.timer.source == timer_funcs) { // exists because pause can pause the timer lmao
+					if (function_tied_gaming) {
+						if (paused_when == MILI_ZERO) function_tied_gaming(game_started); // not paused
+						else						  function_tied_gaming(MILI_ZERO);	  // paused
+					}
+					if (function_tied_level) {
+						if (paused_when == MILI_ZERO) function_tied_level(level_started);  // not paused
+						else						  function_tied_level(MILI_ZERO);	   // paused
+					}
+					if (function_tied_level_name) {
+						function_tied_level_name("Level " + std::to_string(level_count + 1));
+					}
+				}
 				if (ev.timer.source == timer_think) {
 					if (!has_map_gen)
 					{
 						consol->pauseThread();
 						while (!consol->hasThreadsButThisOnePaused(Constants::io__thread_ids::FUNCTIONAL)) Sleep(10);
-
-						level_time_rn = al_get_time();
-						whole_gameplay_time = al_get_time();
+						
+						level_started = MILI_NOW;
+						game_started = MILI_NOW;
 
 						this_is_the_player->set(Constants::io__entity_double::HEALTH, 1.0);
 
@@ -355,7 +378,7 @@ namespace LSW {
 								case +blocks::EXIT:
 									regenMap();
 									level_count++;
-									level_time_rn = al_get_time();
+									level_started = MILI_NOW;
 									break;
 								case +blocks::FAKE_EXIT:
 									wd->setPos(xy[0], xy[1], +blocks::FAILEDEXIT);
@@ -382,10 +405,11 @@ namespace LSW {
 						}
 
 						consol->resumeThread();
-						last_pause = 0.0;
+						paused_when = std::chrono::milliseconds::zero();
 					}
 					else if (is_paused) {
-						if (last_pause == 0.0) last_pause = al_get_time();
+						if (paused_when == MILI_ZERO) paused_when = MILI_NOW;
+
 						this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, false);
 
 						if (!has_sleeping_sprites)
@@ -395,11 +419,13 @@ namespace LSW {
 						wd->pauseCorrupt();
 					}
 					else {  // map is up n running
-						if (last_pause > 0.0) {
-							level_time_rn += al_get_time() - last_pause;
-							whole_gameplay_time += al_get_time() - last_pause;
-							last_pause = 0.0;
+
+						if (paused_when != MILI_ZERO) {
+							level_started += MILI_NOW - paused_when;
+							game_started += MILI_NOW - paused_when;
+							paused_when = MILI_ZERO;
 						}
+
 
 						if (has_sleeping_sprites) sprites.setEnabled([](const std::string a)->bool {return a.find("GAMEBOX_") == 0; }, [](const std::string a)->bool {return true; });
 						has_sleeping_sprites = false;
@@ -490,6 +516,21 @@ namespace LSW {
 				delete thr_taskin;
 				thr_taskin = nullptr;
 			}
+		}
+
+		void GamingStorm::tieToGamingTime(const std::function<void(const std::chrono::milliseconds)> f)
+		{
+			function_tied_gaming = f;
+		}
+
+		void GamingStorm::tieToLevelTime(const std::function<void(const std::chrono::milliseconds)> f)
+		{
+			function_tied_level = f;
+		}
+
+		void GamingStorm::tieToLevelName(const std::function<void(const std::string)> f)
+		{
+			function_tied_level_name = f;
 		}
 
 		bool GamingStorm::hasEnded()
