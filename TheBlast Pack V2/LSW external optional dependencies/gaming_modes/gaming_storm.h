@@ -1,8 +1,8 @@
 #pragma once
 
-#include "..\console\console.h"
-#include "..\drawing\drawing.h"
-#include "..\map_gen\map.h"
+#include "..\..\LSW\console\console.h"
+#include "..\..\LSW\drawing\drawing.h"
+#include "..\..\LSW\map_gen\map.h"
 
 #include <chrono>
 

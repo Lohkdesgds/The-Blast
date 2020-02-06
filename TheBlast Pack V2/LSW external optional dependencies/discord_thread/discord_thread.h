@@ -1,8 +1,8 @@
 #pragma once
 
-#include "..\custom_abort\abort.h"
-#include "..\big_templates\small_templates.h"
-#include "..\logger\logger.h"
+#include "..\..\LSW\custom_abort\abort.h"
+#include "..\..\LSW\big_templates\small_templates.h"
+#include "..\..\LSW\logger\logger.h"
 
 #include <Windows.h>
 #include <string>
@@ -11,7 +11,7 @@
 #include <chrono>
 
 #include "..\..\imported\source\discord.h"
-#include "..\hidden\hidden.h"
+#include "..\..\hidden\hidden.h"
 
 namespace LSW {
 	namespace v4 {

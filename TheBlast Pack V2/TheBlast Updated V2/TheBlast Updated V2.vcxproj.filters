@@ -5,109 +5,103 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="base">
-      <UniqueIdentifier>{3607aa8a-373a-4f0b-87ab-b1c368b4433e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="base\tools">
-      <UniqueIdentifier>{5f1144ce-f0d1-432f-8883-8202e776813d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="base\system">
-      <UniqueIdentifier>{669ce889-547d-4fe4-b8b9-b3dcae8b284f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="base\sound">
-      <UniqueIdentifier>{fd2b2c31-040b-4e19-aa91-f16eabff867e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="base\shared_constants">
-      <UniqueIdentifier>{55ba1b81-6ca2-4f2d-87d8-0bf608a2c5ad}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="base\organizer">
-      <UniqueIdentifier>{9adb8b70-e2b7-40f7-9971-25ebd55cbcf5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="base\log">
-      <UniqueIdentifier>{8ea53e9f-1584-4bb3-8a24-6191433d5f9a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="base\drawing">
-      <UniqueIdentifier>{d61599ae-3ecc-448a-9871-b23b08ceb76c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="base\custom_abort">
-      <UniqueIdentifier>{cd6e2afa-e14a-427f-8e14-7257f884de13}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="base\console">
-      <UniqueIdentifier>{b2b97a5f-37dd-4066-8c96-c09c6035eba0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="base\big_templates">
-      <UniqueIdentifier>{d74dd886-e576-4079-9e68-9e74dd47425d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="gaming">
-      <UniqueIdentifier>{32d7dcfa-abc8-4724-9510-c8856c072cf0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="gaming\map_gen">
-      <UniqueIdentifier>{88b38599-36f6-4dbf-b78d-21b5dfb8ee71}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="base\_include_all">
-      <UniqueIdentifier>{50698a0a-9d2d-45f4-bae3-6e71ea63e61c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="gaming\packet_raw">
-      <UniqueIdentifier>{8894e2d5-cd59-43f7-b7cd-09071c0cc2fa}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="base\downloader">
-      <UniqueIdentifier>{563cd6bf-b759-4636-8fc9-3dfa438f4f8d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="base\hash_gen">
-      <UniqueIdentifier>{fd4885cb-c27d-465b-a930-1f16687cf58a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="base\gaming_local">
-      <UniqueIdentifier>{88449532-caa2-4a95-98eb-2bbf07daac3b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="imported">
       <UniqueIdentifier>{f595fe7f-d6f6-4b5c-bbb0-f61fdceb9ec4}</UniqueIdentifier>
     </Filter>
     <Filter Include="imported\Discord SDK">
       <UniqueIdentifier>{18154638-c228-4994-87c7-1ed892e052d4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="base\discord_thread">
-      <UniqueIdentifier>{244865f4-1a46-4f18-a3f5-13f5a2e32935}</UniqueIdentifier>
-    </Filter>
     <Filter Include="hidden">
       <UniqueIdentifier>{dcb3542a-0131-4b0b-a73c-a0d987fc4ef9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external LSW">
+      <UniqueIdentifier>{32d7dcfa-abc8-4724-9510-c8856c072cf0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external LSW\map_gen">
+      <UniqueIdentifier>{88b38599-36f6-4dbf-b78d-21b5dfb8ee71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external LSW\packet_raw">
+      <UniqueIdentifier>{8894e2d5-cd59-43f7-b7cd-09071c0cc2fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external LSW\gaming modes">
+      <UniqueIdentifier>{16a9b1a4-d29a-477d-b199-a79a8fd0f632}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external LSW\discord_thread">
+      <UniqueIdentifier>{244865f4-1a46-4f18-a3f5-13f5a2e32935}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base LSW">
+      <UniqueIdentifier>{3607aa8a-373a-4f0b-87ab-b1c368b4433e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base LSW\tools">
+      <UniqueIdentifier>{5f1144ce-f0d1-432f-8883-8202e776813d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base LSW\system">
+      <UniqueIdentifier>{669ce889-547d-4fe4-b8b9-b3dcae8b284f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base LSW\sound">
+      <UniqueIdentifier>{fd2b2c31-040b-4e19-aa91-f16eabff867e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base LSW\shared_constants">
+      <UniqueIdentifier>{55ba1b81-6ca2-4f2d-87d8-0bf608a2c5ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base LSW\organizer">
+      <UniqueIdentifier>{9adb8b70-e2b7-40f7-9971-25ebd55cbcf5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base LSW\log">
+      <UniqueIdentifier>{8ea53e9f-1584-4bb3-8a24-6191433d5f9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base LSW\drawing">
+      <UniqueIdentifier>{d61599ae-3ecc-448a-9871-b23b08ceb76c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base LSW\custom_abort">
+      <UniqueIdentifier>{cd6e2afa-e14a-427f-8e14-7257f884de13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base LSW\console">
+      <UniqueIdentifier>{b2b97a5f-37dd-4066-8c96-c09c6035eba0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base LSW\big_templates">
+      <UniqueIdentifier>{d74dd886-e576-4079-9e68-9e74dd47425d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base LSW\downloader">
+      <UniqueIdentifier>{563cd6bf-b759-4636-8fc9-3dfa438f4f8d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base LSW\hash_gen">
+      <UniqueIdentifier>{fd4885cb-c27d-465b-a930-1f16687cf58a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\LSW\custom_abort\abort.cpp">
-      <Filter>base\custom_abort</Filter>
+      <Filter>base LSW\custom_abort</Filter>
     </ClCompile>
     <ClCompile Include="..\LSW\tools\tools.cpp">
-      <Filter>base\tools</Filter>
+      <Filter>base LSW\tools</Filter>
     </ClCompile>
     <ClCompile Include="..\LSW\system\system.cpp">
-      <Filter>base\system</Filter>
+      <Filter>base LSW\system</Filter>
     </ClCompile>
     <ClCompile Include="..\LSW\drawing\drawing.cpp">
-      <Filter>base\drawing</Filter>
+      <Filter>base LSW\drawing</Filter>
     </ClCompile>
     <ClCompile Include="..\LSW\console\console.cpp">
-      <Filter>base\console</Filter>
+      <Filter>base LSW\console</Filter>
     </ClCompile>
     <ClCompile Include="..\LSW\sound\sound.cpp">
-      <Filter>base\sound</Filter>
+      <Filter>base LSW\sound</Filter>
     </ClCompile>
     <ClCompile Include="..\LSW\map_gen\map.cpp">
-      <Filter>gaming\map_gen</Filter>
+      <Filter>external LSW\map_gen</Filter>
     </ClCompile>
     <ClCompile Include="starter.cpp">
       <Filter>main</Filter>
     </ClCompile>
     <ClCompile Include="..\LSW\package_raw\package_raw.cpp">
-      <Filter>gaming\packet_raw</Filter>
+      <Filter>external LSW\packet_raw</Filter>
     </ClCompile>
     <ClCompile Include="..\LSW\download_manager\downloader.cpp">
-      <Filter>base\downloader</Filter>
+      <Filter>base LSW\downloader</Filter>
     </ClCompile>
     <ClCompile Include="..\LSW\hash\sha256.cpp">
-      <Filter>base\hash_gen</Filter>
-    </ClCompile>
-    <ClCompile Include="..\LSW\gaming_modes\gaming_storm.cpp">
-      <Filter>base\gaming_local</Filter>
+      <Filter>base LSW\hash_gen</Filter>
     </ClCompile>
     <ClCompile Include="..\imported\source\application_manager.cpp">
       <Filter>imported\Discord SDK</Filter>
@@ -151,62 +145,62 @@
     <ClCompile Include="..\imported\source\activity_manager.cpp">
       <Filter>imported\Discord SDK</Filter>
     </ClCompile>
-    <ClCompile Include="..\LSW\discord_thread\discord_thread.cpp">
-      <Filter>base\discord_thread</Filter>
+    <ClCompile Include="self_only.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\LSW external optional dependencies\gaming_modes\gaming_storm.cpp">
+      <Filter>external LSW\gaming modes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\LSW external optional dependencies\discord_thread\discord_thread.cpp">
+      <Filter>external LSW\discord_thread</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\LSW\custom_abort\abort.h">
-      <Filter>base\custom_abort</Filter>
+      <Filter>base LSW\custom_abort</Filter>
     </ClInclude>
     <ClInclude Include="..\LSW\tools\tools.h">
-      <Filter>base\tools</Filter>
+      <Filter>base LSW\tools</Filter>
     </ClInclude>
     <ClInclude Include="..\LSW\system\system.h">
-      <Filter>base\system</Filter>
+      <Filter>base LSW\system</Filter>
     </ClInclude>
     <ClInclude Include="..\LSW\drawing\drawing.h">
-      <Filter>base\drawing</Filter>
+      <Filter>base LSW\drawing</Filter>
     </ClInclude>
     <ClInclude Include="..\LSW\organizer\organizer.h">
-      <Filter>base\organizer</Filter>
+      <Filter>base LSW\organizer</Filter>
     </ClInclude>
     <ClInclude Include="..\LSW\console\console.h">
-      <Filter>base\console</Filter>
+      <Filter>base LSW\console</Filter>
     </ClInclude>
     <ClInclude Include="..\LSW\big_templates\big_templates.h">
-      <Filter>base\big_templates</Filter>
+      <Filter>base LSW\big_templates</Filter>
     </ClInclude>
     <ClInclude Include="..\LSW\logger\logger.h">
-      <Filter>base\log</Filter>
+      <Filter>base LSW\log</Filter>
     </ClInclude>
     <ClInclude Include="..\LSW\sound\sound.h">
-      <Filter>base\sound</Filter>
+      <Filter>base LSW\sound</Filter>
     </ClInclude>
     <ClInclude Include="..\LSW\shared_constants\constants.h">
-      <Filter>base\shared_constants</Filter>
+      <Filter>base LSW\shared_constants</Filter>
     </ClInclude>
     <ClInclude Include="resource.h" />
     <ClInclude Include="..\LSW\big_templates\small_templates.h">
-      <Filter>base\big_templates</Filter>
+      <Filter>base LSW\big_templates</Filter>
     </ClInclude>
     <ClInclude Include="..\LSW\map_gen\map.h">
-      <Filter>gaming\map_gen</Filter>
-    </ClInclude>
-    <ClInclude Include="..\LSW\lsw.h">
-      <Filter>base\_include_all</Filter>
+      <Filter>external LSW\map_gen</Filter>
     </ClInclude>
     <ClInclude Include="..\LSW\package_raw\package_raw.h">
-      <Filter>gaming\packet_raw</Filter>
+      <Filter>external LSW\packet_raw</Filter>
     </ClInclude>
     <ClInclude Include="..\LSW\download_manager\downloader.h">
-      <Filter>base\downloader</Filter>
+      <Filter>base LSW\downloader</Filter>
     </ClInclude>
     <ClInclude Include="..\LSW\hash\sha256.h">
-      <Filter>base\hash_gen</Filter>
-    </ClInclude>
-    <ClInclude Include="..\LSW\gaming_modes\gaming_storm.h">
-      <Filter>base\gaming_local</Filter>
+      <Filter>base LSW\hash_gen</Filter>
     </ClInclude>
     <ClInclude Include="..\imported\source\activity_manager.h">
       <Filter>imported\Discord SDK</Filter>
@@ -259,10 +253,16 @@
     <ClInclude Include="..\imported\source\achievement_manager.h">
       <Filter>imported\Discord SDK</Filter>
     </ClInclude>
-    <ClInclude Include="..\LSW\discord_thread\discord_thread.h">
-      <Filter>base\discord_thread</Filter>
+    <ClInclude Include="self_only.h">
+      <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="..\LSW\hidden\hidden.h">
+    <ClInclude Include="..\LSW external optional dependencies\gaming_modes\gaming_storm.h">
+      <Filter>external LSW\gaming modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\LSW external optional dependencies\discord_thread\discord_thread.h">
+      <Filter>external LSW\discord_thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hidden\hidden.h">
       <Filter>hidden</Filter>
     </ClInclude>
   </ItemGroup>

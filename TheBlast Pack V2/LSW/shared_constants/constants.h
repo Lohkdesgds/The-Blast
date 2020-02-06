@@ -48,8 +48,7 @@ namespace LSW {
 
 			/* VERSIONING */
 			const std::string __interpret_date();
-			const std::string version_app = std::string("V2.0.0#") + __interpret_date();
-			const std::string default_hash_check_url = "https://www.dropbox.com/s/o811cb6jpymicc1/latest_game_hash.hash?dl=1";
+			const std::string version_app = std::string("B") + __interpret_date();
 
 		
 #ifdef _DEBUG
@@ -71,17 +70,12 @@ namespace LSW {
 			const std::string __match_unmatch = "_DATA";
 			const std::string _match_extract = std::string("%LSW") + __match_unmatch;
 
-			const std::string start_zip_default_extract_path = "%appdata%/Lohk's Studios/TheBlast/data/data.zip";
-			const std::string start_zip_warning_file_txt = "%appdata%/Lohk's Studios/TheBlast/data/README.txt";
-			const std::string start_zip_warning_default_text = "Hey,\nThe data.zip file will be replaced everytime you open the game. Just don't change it, because it won't be saved in this version, ok?\nThanks.";
-			const std::string default_print_path = "%win_photos_path%/Lohk's Studios/TheBlast/Screenshots/"; // + YYYY_MM_DD-HH_MM.jpg
-			const std::string config_default_file = "%appdata%/Lohk's Studios/TheBlast/config/config.lohk";
+			const std::string default_print_path = "%win_photos_path%/Lohk's Studios Screenshots/"; // + YYYY_MM_DD-HH_MM.jpg
 			
 			const std::string conf_string_default_txt = "config";
 			const int conf_default_screen_siz[2] = { 1280,720 }; // not sure
 
 			// loggger.h stuff
-			const std::string default_file_global_path = "%appdata%/Lohk's Studios/TheBlast/logs/latest.log";
 			const size_t len_class = 45;
 			const size_t max_lines_stored_by_memlog = 10;
 			const size_t each_line_stored_by_memlog = 140;
@@ -104,11 +98,7 @@ namespace LSW {
 			const double amountofblur_bubbles = 85.0;
 			const unsigned amountof_linesperline_draw = 20;
 			const double precision_rotation_draw = 0.6 * ALLEGRO_PI / 360.0;
-
-			// downloader
-			const std::string default_data_path = "%appdata%/Lohk's Studios/TheBlast/data/";
-
-
+					   
 
 			// sound.h stuff
 			const double start_default_global_volume = 0.5;

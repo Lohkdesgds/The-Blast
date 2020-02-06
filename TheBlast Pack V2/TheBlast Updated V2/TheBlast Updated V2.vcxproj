@@ -214,21 +214,23 @@
     <ClCompile Include="..\imported\source\types.cpp" />
     <ClCompile Include="..\imported\source\user_manager.cpp" />
     <ClCompile Include="..\imported\source\voice_manager.cpp" />
+    <ClCompile Include="..\LSW external optional dependencies\discord_thread\discord_thread.cpp" />
+    <ClCompile Include="..\LSW external optional dependencies\gaming_modes\gaming_storm.cpp" />
     <ClCompile Include="..\LSW\console\console.cpp" />
     <ClCompile Include="..\LSW\custom_abort\abort.cpp" />
-    <ClCompile Include="..\LSW\discord_thread\discord_thread.cpp" />
     <ClCompile Include="..\LSW\download_manager\downloader.cpp" />
     <ClCompile Include="..\LSW\drawing\drawing.cpp" />
-    <ClCompile Include="..\LSW\gaming_modes\gaming_storm.cpp" />
     <ClCompile Include="..\LSW\hash\sha256.cpp" />
     <ClCompile Include="..\LSW\map_gen\map.cpp" />
     <ClCompile Include="..\LSW\package_raw\package_raw.cpp" />
     <ClCompile Include="..\LSW\sound\sound.cpp" />
     <ClCompile Include="..\LSW\system\system.cpp" />
     <ClCompile Include="..\LSW\tools\tools.cpp" />
+    <ClCompile Include="self_only.cpp" />
     <ClCompile Include="starter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\hidden\hidden.h" />
     <ClInclude Include="..\imported\source\achievement_manager.h" />
     <ClInclude Include="..\imported\source\activity_manager.h" />
     <ClInclude Include="..\imported\source\application_manager.h" />
@@ -246,18 +248,16 @@
     <ClInclude Include="..\imported\source\types.h" />
     <ClInclude Include="..\imported\source\user_manager.h" />
     <ClInclude Include="..\imported\source\voice_manager.h" />
+    <ClInclude Include="..\LSW external optional dependencies\discord_thread\discord_thread.h" />
+    <ClInclude Include="..\LSW external optional dependencies\gaming_modes\gaming_storm.h" />
     <ClInclude Include="..\LSW\big_templates\big_templates.h" />
     <ClInclude Include="..\LSW\big_templates\small_templates.h" />
     <ClInclude Include="..\LSW\console\console.h" />
     <ClInclude Include="..\LSW\custom_abort\abort.h" />
-    <ClInclude Include="..\LSW\discord_thread\discord_thread.h" />
     <ClInclude Include="..\LSW\download_manager\downloader.h" />
     <ClInclude Include="..\LSW\drawing\drawing.h" />
-    <ClInclude Include="..\LSW\gaming_modes\gaming_storm.h" />
     <ClInclude Include="..\LSW\hash\sha256.h" />
-    <ClInclude Include="..\LSW\hidden\hidden.h" />
     <ClInclude Include="..\LSW\logger\logger.h" />
-    <ClInclude Include="..\LSW\lsw.h" />
     <ClInclude Include="..\LSW\map_gen\map.h" />
     <ClInclude Include="..\LSW\organizer\organizer.h" />
     <ClInclude Include="..\LSW\package_raw\package_raw.h" />
@@ -266,6 +266,7 @@
     <ClInclude Include="..\LSW\system\system.h" />
     <ClInclude Include="..\LSW\tools\tools.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="self_only.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TheBlast Updated V2.rc" />

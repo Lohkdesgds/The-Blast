@@ -1,8 +1,15 @@
-#include "../LSW/lsw.h"
+#define GAME_THEBLAST_CLIENT
+#include "self_only.h"
 
 #include <iostream>
 #include <string>
 #include <Windows.h>
+
+// nvidia stuff
+extern "C" {
+	_declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+}
+
 
 using namespace LSW::v4;
 
@@ -1166,7 +1173,7 @@ int main(int argc, const char* argv[])
 
 								char perc[32];
 								if (dd >= 0.0) sprintf_s(perc, "%03.2lf%c", dd, '%');
-								else sprintf_s(perc, "Needs Double Buffering!");
+								else sprintf_s(perc, "Needs Double Render!");
 								str = perc;
 								t->set(Constants::io__text_double::POSX, tx);
 								});
@@ -1246,7 +1253,7 @@ int main(int argc, const char* argv[])
 
 							Text* t = texts.create("BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
 							t->set(Constants::io__text_string::FONT, "DEFAULT");
-							t->set(Constants::io__text_string::STRING, "Render scale: %screen_buf_proportion%");
+							t->set(Constants::io__text_string::STRING, "Double render scale: %screen_buf_proportion%");
 							t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
 							t->set(Constants::io__text_boolean::SHOW, true);
 							t->set(Constants::io__text_double::SCALEG, 0.07);

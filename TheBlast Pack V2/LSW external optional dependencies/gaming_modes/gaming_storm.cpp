@@ -1,6 +1,5 @@
 #include "gaming_storm.h"
 
-
 namespace LSW {
 	namespace v4 {
 

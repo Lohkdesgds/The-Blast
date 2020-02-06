@@ -36,7 +36,7 @@ namespace LSW {
 			enum class io__conf_double { LAST_VOLUME, RESOLUTION_BUFFER_PROPORTION, FX_AMOUNT };
 			enum class io__conf_integer { SCREEN_X, SCREEN_Y, SCREEN_FLAGS, SCREEN_PREF_HZ };
 			enum class io__conf_longlong { _TIMES_LIT };
-			enum class io__conf_string { LAST_VERSION, LAST_PLAYERNAME };
+			enum class io__conf_string { LAST_VERSION, LAST_PLAYERNAME, PRINT_PATH };
 			enum class io__conf_color{ LAST_COLOR_TRANSLATE };
 
 			// internal configuration not from file but not automatically set or functional
@@ -58,7 +58,7 @@ namespace LSW {
 			const std::string ro__conf_double_str[] = { "last_volume", "resolution_proportion", "fx_amount" };
 			const std::string ro__conf_integer_str[] = { "screen_width","screen_height", "last_display_flags","pref_refresh_rate" };
 			const std::string ro__conf_longlong_str[] = { "times_open" };
-			const std::string ro__conf_string_str[] = { "last_version","playername" };
+			const std::string ro__conf_string_str[] = { "last_version","playername", "prints_path" };
 			const std::string ro__conf_color_str[] = { "playercolor" };
 
 			const std::string ro__conf_truefalse_str[] = { "false", "true" };
@@ -77,20 +77,22 @@ namespace LSW {
 				int lastmode = Constants::start_display_default_mode;
 			} *l = nullptr;
 
-			std::string extracted_zip_at;
+			std::string extracted_zip_at,
+						expect_zip_at;
 			bool initialized = false;
 			bool already_set_physfs_root = false;
 
 			void __extract_package(float* = nullptr);
 			void __nointernalzip_extract_package();
-			void __ensure_warn_package();
 			bool __loadPackage();
 			bool __nointernalzip_loadPackage();
 		public:
 			~__systematic();
 
-			void initSystem();
-			void forceInitWithNoZipAnyway();
+			void setZipLocation(const std::string);
+
+			void initSystem(const bool = true);
+			void posInit_forceWithNoZipAnyway();
 
 			void setInterface();
 
@@ -100,7 +102,7 @@ namespace LSW {
 		};
 
 
-		static __systematic __g_sys; // startup
+		inline __systematic __g_sys; // startup
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> some raw stuff
 
@@ -141,6 +143,8 @@ namespace LSW {
 				
 				std::thread* savethr = nullptr;
 				bool savethrdone = true;
+
+				std::string config_raw_path;
 			};
 
 			static custom_data data;
@@ -148,7 +152,7 @@ namespace LSW {
 
 			void internalCheck();
 		public:
-			Database();
+			void load(std::string); // please set a path ONCE
 
 			void flush();
 
@@ -256,12 +260,8 @@ namespace LSW {
 			ALLEGRO_DISPLAY*& getDisplay();
 			void acknowledgeResize();
 		};
-		
 
 
-
-
-		void lswInit(); // init everything
 		void forceExit(const char* = nullptr, const char* = nullptr, const char* = nullptr);
 		void askForceExit(const char*, const char*, const char*);
 		void alert(const char*, const char*, const char*);

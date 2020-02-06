@@ -25,9 +25,3 @@
 
 // the big thing
 #include "..\console\console.h"						// DEP: @everyone (this) (THIS IS THE MANAGER ITSELF, DON'T NEED TO SELF INCLUDE, IT IS THE MAIN .H)
-
-// Discord integration
-#include "..\discord_thread\discord_thread.h"		// DEP: (discord), SMALLTEMP, ABORT, LOGG
-
-
-#include "..\gaming_modes\gaming_storm.h"

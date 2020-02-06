@@ -9,7 +9,8 @@ namespace LSW {
 			if (perc) *perc = 0.00;
 
 			FILE* me;
-			std::string work = Constants::start_zip_default_extract_path;
+			std::string work = expect_zip_at;
+			if (work.length() < 0) throw Abort::abort(__FUNCSIG__, "Datapack path not set!", 2);
 			char myself[1024];
 			GetModuleFileNameA(NULL, myself, 1024);
 
@@ -17,8 +18,6 @@ namespace LSW {
 			Tools::createPath(work);
 
 			auto err0 = fopen_s(&me, myself, "rb");
-
-			__ensure_warn_package();
 
 			LONGLONG totalsiz = Tools::getFileSize(myself) - 2; // adjust
 			LONGLONG nowstep = 0;
@@ -86,14 +85,13 @@ namespace LSW {
 		void __systematic::__nointernalzip_extract_package()
 		{
 			FILE* fi;
-			std::string work = Constants::start_zip_default_extract_path;
+			std::string work = expect_zip_at;
+			if (work.length() < 0) throw Abort::abort(__FUNCSIG__, "Datapack path not set!", 2);
 			char myself[1024];
 			GetModuleFileNameA(NULL, myself, 1024);
 
 			Tools::interpretPath(work);
 			Tools::createPath(work);
-
-			__ensure_warn_package();
 
 			auto err1 = fopen_s(&fi, work.c_str(), "rb");
 
@@ -104,25 +102,6 @@ namespace LSW {
 			}
 
 			extracted_zip_at = work;
-		}
-
-		void __systematic::__ensure_warn_package()
-		{
-			std::string work = Constants::start_zip_warning_file_txt;
-
-			Tools::interpretPath(work);
-			Tools::createPath(work);
-
-			FILE* fp = nullptr;
-			auto err = fopen_s(&fp, work.c_str(), "wb");
-
-			if (err == 0 && fp) {
-				fprintf_s(fp, Constants::start_zip_warning_default_text.c_str());
-				fclose(fp);
-			}
-			else {
-				throw Abort::abort(__FUNCSIG__, "Could not create the warning file (zip)");
-			}
 		}
 		bool __systematic::__loadPackage()
 		{
@@ -173,7 +152,12 @@ namespace LSW {
 			exit(EXIT_SUCCESS);
 		}
 
-		void __systematic::initSystem()
+		void __systematic::setZipLocation(const std::string a)
+		{
+			expect_zip_at = a;
+		}
+
+		void __systematic::initSystem(const bool with_zip)
 		{
 
 			if (!al_init())
@@ -217,12 +201,13 @@ namespace LSW {
 
 			setNewDisplayMode(Constants::start_display_default_mode);
 
-			__loadPackage(); // extract and set zip on physfs
+			if (with_zip) __loadPackage(); // extract and set zip on physfs
+			else __nointernalzip_loadPackage(); // ignore zips
 
 			al_set_physfs_file_interface();
 		}
 
-		void __systematic::forceInitWithNoZipAnyway()
+		void __systematic::posInit_forceWithNoZipAnyway()
 		{
 			__nointernalzip_loadPackage();
 			al_set_physfs_file_interface();
@@ -335,18 +320,20 @@ namespace LSW {
 			if (!check(Constants::io__conf_longlong::_TIMES_LIT))								set(Constants::io__conf_longlong::_TIMES_LIT, 0LL);
 
 			if (!check(Constants::io__conf_string::LAST_PLAYERNAME))							set(Constants::io__conf_string::LAST_PLAYERNAME, "Player");
+			if (!check(Constants::io__conf_string::PRINT_PATH))									set(Constants::io__conf_string::PRINT_PATH, Constants::default_print_path);
 
 																								set(Constants::io__conf_string::LAST_VERSION, Constants::version_app); // just set
 			if (!check(Constants::io__conf_color::LAST_COLOR_TRANSLATE))						set(Constants::io__conf_color::LAST_COLOR_TRANSLATE, data.color);
 		}
-
-		Database::Database()
+		
+		void Database::load(std::string temporary)
 		{
 			data.m.lock();
-			if (!data.c) {
-				std::string temporary = Constants::config_default_file;
+			if (!data.c && temporary.length() > 0) {
 				Tools::interpretPath(temporary);
 				Tools::createPath(temporary);
+
+				data.config_raw_path = temporary;
 
 				logg << L::SLF << fsr(__FUNCSIG__) << "Registered loading of Database file (global)" << L::ELF;
 				if (!(data.c = al_load_config_file(temporary.c_str())))
@@ -403,7 +390,7 @@ namespace LSW {
 			data.savethr = new std::thread([&] {
 				if (data.c) {
 					data.m.lock();
-					std::string temporary = Constants::config_default_file;
+					std::string temporary = data.config_raw_path;
 					Tools::interpretPath(temporary);
 					Tools::createPath(temporary);
 					al_save_config_file(temporary.c_str(), data.c);
@@ -877,7 +864,7 @@ namespace LSW {
 			tx = x;
 			ty = y;
 
-			if (hz < 0) {
+			if (hz <= 0) {
 				hz = 0;
 				for (auto& i : u) {
 					bool higher = ((i.x > tx&& i.y >= ty) || (i.x >= tx && i.y > ty));
@@ -922,7 +909,9 @@ namespace LSW {
 		void Display::_print()
 		{
 			auto u = al_get_target_bitmap();
-			std::string path = Constants::default_print_path;
+			std::string path;
+			Database db;
+			db.get(Constants::io__conf_string::PRINT_PATH, path);
 			Tools::interpretPath(path);
 			Tools::createPath(path);
 
@@ -930,7 +919,7 @@ namespace LSW {
 			tm tt;
 			auto v = localtime_s(&tt, &rt);
 
-			if (v != 0) throw Abort::abort(__FUNCSIG__, "Can't set a proper name to save the screenshot!");
+			if (v != 0 || path.length() == 0) throw Abort::abort(__FUNCSIG__, "Can't set a proper name to save the screenshot!");
 
 			path = path + std::to_string(tt.tm_year + 1900) + "_" + std::to_string(tt.tm_mon + 1) + "_" + std::to_string(tt.tm_mday) + "-" + std::to_string(tt.tm_hour) + "_" + std::to_string(tt.tm_min) + "_" + std::to_string(tt.tm_sec) + "-" + std::to_string((int)(GetTickCount64() % 1000)) + ".jpg";
 
@@ -1015,7 +1004,7 @@ namespace LSW {
 
 
 			if (md.x > 16 && md.y > 9) {
-				logg << L::SLF << fsr(__FUNCSIG__) << "Found config from config file." << (md.hz != 0 ? " Got refresh rate set!" : "Getting automatic refresh rate information...") << L::ELF;
+				logg << L::SLF << fsr(__FUNCSIG__) << "Found config from config file." << (md.hz > 0 ? " Got refresh rate set!" : "Getting automatic refresh rate information...") << L::ELF;
 
 				if (md.hz == 0) {
 					for (auto& i : u) {
@@ -1186,62 +1175,6 @@ namespace LSW {
 
 
 
-
-		void lswInit()
-		{
-			gfile logg;
-			Database conf;
-
-			try {
-				__g_sys.initSystem();
-			}
-			catch (Abort::abort a) {
-				if (a.getErrN() == 1) {
-
-					logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Internal datapack wasn't found." << L::ELF;
-					logg.flush();
-
-					int res = al_show_native_message_box(
-						nullptr,
-						"Internal datapack not found!",
-						"Your file may be incomplete!",
-						"You can still run the game, but there will be no verification about the resource pack. Click OK if you want to continue anyway.",
-						NULL,
-						ALLEGRO_MESSAGEBOX_OK_CANCEL);
-
-					if (res == 1) {
-						try {
-							__g_sys.forceInitWithNoZipAnyway();
-						}
-						catch (Abort::abort a) {
-
-							std::string ext_exp = std::string("Function gone wrong: " + a.from() + "\n\nExplanation: " + a.details());
-
-							logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "User tried to continue, but something went wrong anyway." << L::ELF;
-							logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << ext_exp << L::ELF;
-							logg.flush();
-
-							forceExit("Something went wrong anyway!", "Please report the following:", ext_exp.c_str());
-						}
-					}
-					else {
-						logg << L::SLF << fsr(__FUNCSIG__) << "User abort." << L::ELF;
-						logg.flush();
-
-						forceExit();
-					}
-				}
-				else {
-					std::string ext_exp = std::string("Function gone wrong: " + a.from() + "\n\nExplanation: " + a.details());
-
-					logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Something went wrong opening the game." << L::ELF;
-					logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << ext_exp << L::ELF;
-					logg.flush();
-
-					forceExit("Something went wrong anyway!", "Please report the following:", ext_exp.c_str());
-				}
-			}
-		}
 		void forceExit(const char* windw, const char* title, const char* ext)
 		{
 			gfile logg;

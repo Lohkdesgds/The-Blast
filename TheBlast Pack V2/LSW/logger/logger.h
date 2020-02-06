@@ -66,6 +66,8 @@ namespace LSW {
 				} memline[Constants::max_lines_stored_by_memlog];
 
 				size_t memlinecount = 0;
+
+				std::string file_path;
 			};
 
 			static _log g;
@@ -74,6 +76,8 @@ namespace LSW {
 			void printClock(const bool = true);
 		public:
 			gfile();
+
+			void setPath(const std::string);
 			void close();
 			void push(const std::string&, const bool = Constants::_is_on_debug_mode);
 
@@ -274,6 +278,10 @@ namespace LSW {
 				g.started_evsrc = true;
 			}
 		}
+		inline void LSW::v4::gfile::setPath(const std::string path)
+		{
+			g.file_path = path;
+		}
 
 		inline const bool gfile::start(const std::string& orig, const char* mode, const bool autopath) // easier
 		{
@@ -348,7 +356,7 @@ namespace LSW {
 			if (!g.do_save_on_file) return;
 
 			if (!g.f)
-				if (!start(Constants::default_file_global_path)) return;
+				if (!start(g.file_path)) return;
 
 			g.f_m.lock();
 			//fprintf_s(g.f, "%s", temp.c_str());
@@ -360,7 +368,7 @@ namespace LSW {
 		}
 
 		inline void gfile::callDebugScreen() {
-			if (!g.displaydev) g.displaydev = new _log::dev_display();
+			if (!g.displaydev) g.displaydev = new gfile::_log::dev_display();
 		}
 
 		inline void gfile::killDebugScreen()
