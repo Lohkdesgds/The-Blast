@@ -63,7 +63,7 @@ namespace LSW {
 		class Manager {
 			Display* md = nullptr; // HANDLED INTERNALLY ON THREAD
 
-			Textures gimg;
+			ResourceOf<ALLEGRO_BITMAP> gimg;
 			Camera gcam = Camera();
 
 			struct __shared_routines {

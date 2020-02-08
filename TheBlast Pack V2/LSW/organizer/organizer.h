@@ -2,7 +2,6 @@
 
 // HAS TO BE FIRST
 #include "..\package_raw\package_raw.h"				// SOLO
-#include "..\hidden\hidden.h"						// SOLO
 
 // barebones (each)
 #include "..\shared_constants\constants.h"			// SOLO
@@ -11,14 +10,14 @@
 #include "..\big_templates\small_templates.h"       // SOLO
 #include "..\hash\sha256.h"						    // SOLO
 #include "..\logger\logger.h"						// DEP: CONST, TOOLS, SMALLTEMP
-#include "..\big_templates\big_templates.h"			// DEP: ABORT, SMALLTEMP
+#include "..\big_templates\big_templates.h"			// DEP: CONST, ABORT, SMALLTEMP
 #include "..\download_manager\downloader.h"			// DEP: CONST, TOOLS
 
 // default
 #include "..\system\system.h"						// DEP: CONST, TOOLS, ABORT, LOGG
 #include "..\sound\sound.h"							// DEP: ABORT, SMALLTEMP, TEMPLATE, LOGG, SYSTEM
 #include "..\drawing\drawing.h"						// DEP: ABORT, TOOLS, ABORT, SMALLTEMP, TEMPLATE, LOGG, SYSTEM, SOUND
-
+#include "..\menutton\menutton.h"					// DEP: ABORT, TOOLS, ABORT, SMALLTEMP, TEMPLATE, LOGG, SYSTEM, SOUND, DRAWING (DRAWING + "drawing")
 
 // gaming
 #include "..\map_gen\map.h"							// DEP: CONST, ABORT, SMALLTEMP

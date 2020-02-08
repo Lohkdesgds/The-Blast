@@ -24,6 +24,7 @@
 
 #include "..\custom_abort\abort.h"
 #include "small_templates.h"
+#include "..\shared_constants\constants.h"
 //#include "..\logger\logger.h"
 
 
@@ -412,18 +413,18 @@ namespace LSW {
 				bool enabled = true;
 			};
 			template<typename Q> struct _i {
+				std::function<bool(std::string&, Q*&)>	load; // cast void if different
+				std::function<void(Q*&)>				unload;
 				std::vector< _d<Q>* >					db;
 				std::mutex                              dbm;
 				bool                                    dbmv = false; // verifier
-				std::function<bool(const char*, Q*&)>	load; // cast void if different
-				std::function<void(Q*&)>				unload;
 			};
 
 			static _i<T> data;
 		public:
 			//~__template_static_vector() { clear(); }
 
-			void set(const std::function <bool(const char*, T*&)> hl, const std::function <void(T*&)> hd) {
+			void set(const std::function <bool(std::string&, T*&)> hl, const std::function <void(T*&)> hd) {
 				assert(hl);
 				assert(hd);
 				data.load = hl;
@@ -513,8 +514,10 @@ namespace LSW {
 				}
 				return b;
 			}
-			T* create(const std::string id, const std::string path = "") { return load(id, path); }
-			T* load(const std::string id, const std::string path = "") {
+			T* create(std::string id, std::string path = "") { return load(id, path); }
+			T* load(std::string id, std::string path = "") {
+				if (!data.load) throw Abort::abort(__FUNCSIG__, "You have to setup load/unload lambdas before using dynamic resource");
+
 				T* b = nullptr;
 				bool r = get(id, b, true);
 
@@ -522,7 +525,9 @@ namespace LSW {
 					_d<T>* dt = new _d<T>();
 					dt->id = id;
 
-					r = data.load(path.c_str(), dt->self);
+					if (path.length() > 0) r = data.load(path, dt->self);
+					else r = data.load(dt->id, dt->self);
+
 					if (!r || !dt->self) throw Abort::abort(__FUNCSIG__, "Can't load a resource! id=" + id + ";path=" + path);
 					b = dt->self;
 
@@ -540,6 +545,7 @@ namespace LSW {
 				for (size_t p = 0; p < n.size(); p++)
 				{
 					if (perc) *perc = 1.0f * p / n.size();
+
 					load(n[p], q[p]);
 				}
 				if (perc) *perc = 1.00;
@@ -557,6 +563,8 @@ namespace LSW {
 				return false;
 			}
 			bool remove(const std::string id) {
+				if (!data.unload) throw Abort::abort(__FUNCSIG__, "You have to setup load/unload lambdas before using dynamic resource");
+
 				data.dbm.lock();
 				for (size_t p = 0; p < data.db.size(); p++)
 				{
@@ -572,6 +580,8 @@ namespace LSW {
 			}
 			size_t remove(const std::function<bool(const std::string)> f)
 			{
+				if (!data.unload) throw Abort::abort(__FUNCSIG__, "You have to setup load/unload lambdas before using dynamic resource");
+
 				size_t __ic = 0;
 				data.dbm.lock();
 				for (size_t p = 0; p < data.db.size(); p++)
@@ -611,6 +621,7 @@ namespace LSW {
 				return false;
 			}
 			void clear() {
+				if (!data.unload) throw Abort::abort(__FUNCSIG__, "You have to setup load/unload lambdas before using dynamic resource");
 				data.dbm.lock();
 				for (auto& i : data.db)
 				{
@@ -621,6 +632,18 @@ namespace LSW {
 			}
 		};
 
-		template<typename T> __template_static_vector<T>::_i<T> __template_static_vector<T>::data;
+		template<typename T> __template_static_vector<T>::_i<T> __template_static_vector<T>::data = { Constants::lambda_default_load<T>, Constants::lambda_default_unload<T> };
+		
+		// type specific
+		template <> __template_static_vector<ALLEGRO_BITMAP>::_i<ALLEGRO_BITMAP> __template_static_vector<ALLEGRO_BITMAP>::data = { Constants::lambda_bitmap_load, Constants::lambda_bitmap_unload };
+		template <> __template_static_vector<ALLEGRO_FONT>::_i<ALLEGRO_FONT> __template_static_vector<ALLEGRO_FONT>::data = { Constants::lambda_font_load, Constants::lambda_font_unload };
+		template <> __template_static_vector<ALLEGRO_SAMPLE>::_i<ALLEGRO_SAMPLE> __template_static_vector<ALLEGRO_SAMPLE>::data = { Constants::lambda_sample_load, Constants::lambda_sample_unload };
+
+		// more type specific on each file (like drawing.h and stuff)
+
+
+		template <typename T>							using ResourceOf = __template_static_vector<T>;
+		template <size_t... Args>						using SmartTimer = __template_multiple_timers<Args...>;
+		template <typename A, typename B, typename C>	using TripeMap = __map<A,B,C>;
 	}
 }

@@ -50,8 +50,8 @@ namespace LSW {
 
 				md = new Display();
 				md->setToCheckBufferResConfig(); // update from config
-				Sprites sprites;
-				Texts texts;
+				ResourceOf<Sprite> sprites;
+				ResourceOf<Text> texts;
 				bool was_sprites_locked = false;
 
 				al_set_target_backbuffer(md->getDisplay());
@@ -327,7 +327,7 @@ namespace LSW {
 			gfile logg;
 
 			try {
-				Sprites sprites;
+				ResourceOf<Sprite> sprites;
 				Database conf;
 				std::string& thrid = thread_collision.threadid_str;
 
@@ -497,7 +497,7 @@ namespace LSW {
 			gfile logg;
 
 			try {
-				Sprites sprites;
+				ResourceOf<Sprite> sprites;
 				Database conf;
 				std::string& thrid = thread_kbmouse.threadid_str;
 

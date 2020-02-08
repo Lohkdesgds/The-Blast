@@ -172,6 +172,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -190,6 +191,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -205,6 +207,7 @@
     <ClCompile Include="..\LSW\download_manager\downloader.cpp" />
     <ClCompile Include="..\LSW\drawing\drawing.cpp" />
     <ClCompile Include="..\LSW\hash\sha256.cpp" />
+    <ClCompile Include="..\LSW\menutton\menutton.cpp" />
     <ClCompile Include="..\LSW\sound\sound.cpp" />
     <ClCompile Include="..\LSW\system\system.cpp" />
     <ClCompile Include="..\LSW\tools\tools.cpp" />
@@ -223,6 +226,7 @@
     <ClInclude Include="..\LSW\drawing\drawing.h" />
     <ClInclude Include="..\LSW\hash\sha256.h" />
     <ClInclude Include="..\LSW\logger\logger.h" />
+    <ClInclude Include="..\LSW\menutton\menutton.h" />
     <ClInclude Include="..\LSW\organizer\organizer.h" />
     <ClInclude Include="..\LSW\shared_constants\constants.h" />
     <ClInclude Include="..\LSW\sound\sound.h" />

@@ -68,6 +68,9 @@
     <Filter Include="base LSW\hash_gen">
       <UniqueIdentifier>{fd4885cb-c27d-465b-a930-1f16687cf58a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="base LSW\menutton">
+      <UniqueIdentifier>{e8b9bf64-60fa-4c48-b633-11a47d396dbc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\LSW\custom_abort\abort.cpp">
@@ -153,6 +156,9 @@
     </ClCompile>
     <ClCompile Include="..\LSW external optional dependencies\discord_thread\discord_thread.cpp">
       <Filter>external LSW\discord_thread</Filter>
+    </ClCompile>
+    <ClCompile Include="..\LSW\menutton\menutton.cpp">
+      <Filter>base LSW\menutton</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -264,6 +270,9 @@
     </ClInclude>
     <ClInclude Include="..\hidden\hidden.h">
       <Filter>hidden</Filter>
+    </ClInclude>
+    <ClInclude Include="..\LSW\menutton\menutton.h">
+      <Filter>base LSW\menutton</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

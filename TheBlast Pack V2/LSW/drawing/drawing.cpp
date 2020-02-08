@@ -448,7 +448,7 @@ namespace LSW {
 		}
 		ALLEGRO_BITMAP* Sprite::__sprite_smart_images::load(const std::string id)
 		{
-			__template_static_vector<ALLEGRO_BITMAP> imgs; // Textures
+			ResourceOf<ALLEGRO_BITMAP> imgs; // Textures
 
 
 			__custom_data* cd = new __custom_data();
@@ -535,7 +535,7 @@ namespace LSW {
 
 		void Sprite::__sprite_smart_images::checkAllReferences()
 		{
-			__template_static_vector<ALLEGRO_BITMAP> imgs; // Textures
+			ResourceOf<ALLEGRO_BITMAP> imgs; // Textures
 
 			for (auto& i : copies)
 			{
@@ -551,7 +551,7 @@ namespace LSW {
 					if (al_get_bitmap_width(tmp) == x && al_get_bitmap_height(tmp) == y) return true;
 				}
 
-				__template_static_vector<ALLEGRO_BITMAP> imgs; // Textures
+				ResourceOf<ALLEGRO_BITMAP> imgs; // Textures
 
 				ALLEGRO_BITMAP* trg = al_get_target_bitmap();
 				if (!trg) return true; // just keep going, no error, but no job
@@ -761,7 +761,7 @@ namespace LSW {
 
 		void Sprite::set(const Constants::io__sprite_string_vector u, const std::function<bool(const std::string)> f)
 		{
-			__template_static_vector<ALLEGRO_BITMAP> v;
+			ResourceOf<ALLEGRO_BITMAP> v;
 			switch (u) {
 			case Constants::io__sprite_string_vector::ADDMULTIPLE:
 				for (auto& i : v) {
@@ -1914,37 +1914,31 @@ namespace LSW {
 							break;
 						case +Constants::tags_e::T_TEXTURES_LOADED:
 						{
-							Textures textures;
+							ResourceOf<Text> textures;
 							sprintf_s(tempstr_c, "%zu", textures.size());
 						}
 						break;
 						case +Constants::tags_e::T_FONTS_LOADED:
 						{
-							Fonts fonts;
+							ResourceOf<ALLEGRO_FONT> fonts;
 							sprintf_s(tempstr_c, "%zu", fonts.size());
-						}
-						break;
-						case +Constants::tags_e::T_SAMPLES_LOADED:
-						{
-							Samples samples;
-							sprintf_s(tempstr_c, "%zu", samples.size());
 						}
 						break;
 						case +Constants::tags_e::T_SPRITES_LOADED:
 						{
-							Sprites sprites;
+							ResourceOf<Sprite> sprites;
 							sprintf_s(tempstr_c, "%zu", sprites.size());
 						}
 						break;
 						case +Constants::tags_e::T_TEXTS_LOADED:
 						{
-							Texts texts;
+							ResourceOf<Text> texts;
 							sprintf_s(tempstr_c, "%zu", texts.size());
 						}
 						break;
 						case +Constants::tags_e::T_TRACKS_LOADED:
 						{
-							Tracks tracks;
+							ResourceOf<Track> tracks;
 							sprintf_s(tempstr_c, "%zu", tracks.size());
 						}
 						break;
@@ -1999,6 +1993,14 @@ namespace LSW {
 							else sprintf_s(tempstr_c, "Disabled");
 						}
 						break;
+						case +Constants::tags_e::T_FPS_CAP:
+						{
+							int fpp;
+							conf.get(Constants::io__conf_integer::LIMIT_FPS, fpp);
+							if (fpp > 0) sprintf_s(tempstr_c, "%d", fpp);
+							else sprintf_s(tempstr_c, "Unlimited");
+						}
+						break;
 						}
 
 
@@ -2016,7 +2018,7 @@ namespace LSW {
 
 		void Text::setFollow(const std::string u)
 		{
-			__template_static_vector<Sprite> spr_data;
+			ResourceOf<Sprite> spr_data;
 			Sprite* spr;
 			if (spr_data.get(u, spr))
 			{
@@ -2076,7 +2078,7 @@ namespace LSW {
 				setFollow(e);
 				break;
 			case Constants::io__text_string::FONT:
-				__template_static_vector<ALLEGRO_FONT> fonts;
+				ResourceOf<ALLEGRO_FONT> fonts;
 				fonts.get(e, data.font);
 				break;
 			}
@@ -2371,8 +2373,8 @@ namespace LSW {
 		{
 			if (firstcall) {
 
-				__template_static_vector<ALLEGRO_BITMAP> textures;
-				__template_static_vector<Sprite> sprites;
+				ResourceOf<ALLEGRO_BITMAP> textures;
+				ResourceOf<Sprite> sprites;
 
 				Database db;
 				db.get(Constants::io__conf_integer::SCREEN_X, siz[0]);
@@ -2498,8 +2500,8 @@ namespace LSW {
 
 		void LiningFX::init(const int layer)
 		{
-			__template_static_vector<ALLEGRO_BITMAP> textures;
-			__template_static_vector<Sprite> sprites;
+			ResourceOf<ALLEGRO_BITMAP> textures;
+			ResourceOf<Sprite> sprites;
 
 			Database db;
 			db.get(Constants::io__conf_integer::SCREEN_X, siz[0]);

@@ -24,15 +24,6 @@ __TIME__
 //#define FORCEDEBUG
 
 
-#define Textures __template_static_vector<ALLEGRO_BITMAP>
-#define Fonts __template_static_vector<ALLEGRO_FONT>
-#define Samples __template_static_vector<ALLEGRO_SAMPLE>
-
-#define Tracks __template_static_vector<Track>
-#define Sprites __template_static_vector<Sprite>
-#define Texts __template_static_vector<Text>
-
-
 namespace LSW {
 	namespace v4 {
 		namespace Constants {
@@ -74,6 +65,8 @@ namespace LSW {
 			
 			const std::string conf_string_default_txt = "config";
 			const int conf_default_screen_siz[2] = { 1280,720 }; // not sure
+
+			const double default_time_verification_limit_fps_config = 5.0; // sec
 
 			// loggger.h stuff
 			const size_t len_class = 45;
@@ -133,26 +126,40 @@ namespace LSW {
 
 
 
-			/* PRETTY USEFUL LAMBDA STUFF */
-			const auto lambda_bitmap_load = [](const char* p, ALLEGRO_BITMAP*& b) -> bool {
-				return ((b = al_load_bitmap(p)));
+			/* PRETTY USEFUL LAMBDA STUFF FOR BIG_TEMPLATES */
+			template<typename H>
+			const auto lambda_null_load = [](std::string& p, H*& r) -> bool { return false; };
+
+			template<typename H>
+			const auto lambda_null_unload = [](H*& b) -> void { b = nullptr;  return; };
+
+
+			template<typename K>
+			const auto lambda_default_load = [](std::string& p, K*& r) -> bool { return (r = new K()); };
+
+			template<typename K>
+			const auto lambda_default_unload = [](K*& b) -> void { if (b) delete b; b = nullptr; };
+
+
+			const auto lambda_bitmap_load = [](std::string& p, ALLEGRO_BITMAP*& b) -> bool {
+				return ((b = al_load_bitmap(p.c_str())));
 			};
 			const auto lambda_bitmap_unload = [](ALLEGRO_BITMAP*& b) -> void {
-				if (al_is_system_installed() && b) { al_destroy_bitmap(b); }
+				if (al_is_system_installed() && b) { al_destroy_bitmap(b); b = nullptr; }
 			};
 
-			const auto lambda_font_load = [](const char* p, ALLEGRO_FONT*& b) -> bool {
-				return ((b = al_load_ttf_font(p, text_default_sharpness_font, 0)));
+			const auto lambda_font_load = [](std::string& p, ALLEGRO_FONT*& b) -> bool {
+				return ((b = al_load_ttf_font(p.c_str(), text_default_sharpness_font, 0)));
 			};
 			const auto lambda_font_unload = [](ALLEGRO_FONT*& b) -> void {
-				if (al_is_system_installed() && b) { al_destroy_font(b); }
+				if (al_is_system_installed() && b) { al_destroy_font(b); b = nullptr; }
 			};
-
-			const auto lambda_sample_load = [](const char* p, ALLEGRO_SAMPLE*& b) -> bool {
-				return ((b = al_load_sample(p)));
+			
+			const auto lambda_sample_load = [](std::string& p, ALLEGRO_SAMPLE*& b) -> bool {
+				return ((b = al_load_sample(p.c_str())));
 			};
 			const auto lambda_sample_unload = [](ALLEGRO_SAMPLE*& b) -> void {
-				if (al_is_system_installed() && b) { al_destroy_sample(b); }
+				if (al_is_system_installed() && b) { al_destroy_sample(b); b = nullptr; }
 			};
 
 

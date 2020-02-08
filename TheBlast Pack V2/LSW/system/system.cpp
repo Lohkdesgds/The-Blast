@@ -60,6 +60,10 @@ namespace LSW {
 			if (found) {
 				FILE *fi;
 				auto err1 = fopen_s(&fi, work.c_str(), "wb");
+				if (err1) {
+					if (me) fclose(me);
+					throw Abort::abort(__FUNCSIG__, "Cannot open data path to download!", 1);
+				}
 				char buf[512];
 				for (size_t s = 0;;) {
 					s = fread_s(buf, sizeof(buf), sizeof(char), 512, me);
@@ -101,6 +105,8 @@ namespace LSW {
 				return;
 			}
 
+			if (fi) fclose(fi);
+
 			extracted_zip_at = work;
 		}
 		bool __systematic::__loadPackage()
@@ -111,8 +117,8 @@ namespace LSW {
 			if (extracted_zip_at.length() == 0) {
 				__extract_package();
 			}
-
-			if (!PHYSFS_addToSearchPath(extracted_zip_at.c_str(), 1)) throw Abort::abort(__FUNCSIG__, "Can't add datapack to internal search");
+						
+			addPathFile(extracted_zip_at.c_str());
 
 			return true;
 		}
@@ -126,7 +132,7 @@ namespace LSW {
 				__nointernalzip_extract_package();
 			}
 
-			if (!PHYSFS_addToSearchPath(extracted_zip_at.c_str(), 1)) throw Abort::abort(__FUNCSIG__, "Can't add datapack to internal search");
+			addPathFile(extracted_zip_at.c_str());
 
 			return true;
 		}
@@ -157,7 +163,57 @@ namespace LSW {
 			expect_zip_at = a;
 		}
 
-		void __systematic::initSystem(const bool with_zip)
+		void __systematic::setupPhysfs()
+		{
+			if (!already_set_physfs_root) {
+				char myself[1024];
+				GetModuleFileNameA(NULL, myself, 1024);
+
+				if (!PHYSFS_init(myself)) throw Abort::abort(__FUNCSIG__, "Failed to setup physfs!", 1);
+				already_set_physfs_root = true;
+			}
+			else setInterface();
+		}
+
+		void __systematic::initSystemNoZip()
+		{
+
+			if (!al_init())
+				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#01]");
+			if (!al_init_acodec_addon())
+				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#02]");
+			if (!al_init_font_addon())
+				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#03]");
+			if (!al_init_image_addon())
+				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#04]");
+			if (!al_init_primitives_addon())
+				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#05]");
+			if (!al_init_ttf_addon())
+				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#06]");
+			if (!al_install_keyboard())
+				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#07]");
+			if (!al_install_mouse())
+				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#08]");
+			if (!al_install_audio())
+				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#09]");
+			if (!al_reserve_samples(Constants::start_audio_samples_max))
+				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#10]");
+			
+			setupPhysfs();
+
+			if (l) {
+				delete l;
+				l = nullptr;
+			}
+
+			l = new modes();
+
+			initialized = true;
+
+			setNewDisplayMode(Constants::start_display_default_mode);
+		}
+
+		void __systematic::initSystem(const bool check_zip_first) // even false will fail if zip is not found
 		{
 
 			if (!al_init())
@@ -182,13 +238,7 @@ namespace LSW {
 				throw Abort::abort(__FUNCSIG__, "Failed to open the game [E#10]");
 
 
-			char myself[1024];
-			GetModuleFileNameA(NULL, myself, 1024);
-
-			if (!already_set_physfs_root) {
-				if (!PHYSFS_init(myself)) throw Abort::abort(__FUNCSIG__, "Failed to set the datapack to run", 1);
-				already_set_physfs_root = true;
-			}
+			setupPhysfs();
 
 			if (l) {
 				delete l;
@@ -201,7 +251,7 @@ namespace LSW {
 
 			setNewDisplayMode(Constants::start_display_default_mode);
 
-			if (with_zip) __loadPackage(); // extract and set zip on physfs
+			if (check_zip_first) __loadPackage(); // extract and set zip on physfs
 			else __nointernalzip_loadPackage(); // ignore zips
 
 			al_set_physfs_file_interface();
@@ -216,6 +266,23 @@ namespace LSW {
 		void __systematic::setInterface()
 		{
 			al_set_physfs_file_interface();
+		}
+
+		void __systematic::unsetInterface()
+		{
+			al_set_standard_file_interface();
+		}
+
+		void __systematic::addPathFile(const char* c)
+		{
+			if (!c) return;
+			if (PHYSFS_mount(c, nullptr, 1) == 0) throw Abort::warn(__FUNCSIG__, "Couldn't add " + std::string(c) + " to search paths.");
+		}
+
+		void __systematic::delPathFile(const char* c)
+		{
+			if (!c) return;
+			if (PHYSFS_unmount(c) == 0) throw Abort::warn(__FUNCSIG__, "Couldn't remove " + std::string(c) + " from search paths.");
 		}
 
 		void __systematic::setNewDisplayMode(const int mds)
@@ -307,6 +374,7 @@ namespace LSW {
 			if (!check(Constants::io__conf_boolean::ENABLE_SECOND_DEBUGGING_SCREEN))			set(Constants::io__conf_boolean::ENABLE_SECOND_DEBUGGING_SCREEN, false);
 			if (!check(Constants::io__conf_boolean::ULTRADEBUG))								set(Constants::io__conf_boolean::ULTRADEBUG, false);
 			if (!check(Constants::io__conf_boolean::DOUBLEBUFFERING))							set(Constants::io__conf_boolean::DOUBLEBUFFERING, false);
+			if (!check(Constants::io__conf_boolean::HIDEMOUSE))									set(Constants::io__conf_boolean::HIDEMOUSE, true);
 
 			if (!check(Constants::io__conf_double::LAST_VOLUME))								set(Constants::io__conf_double::LAST_VOLUME, 0.5);
 			if (!check(Constants::io__conf_double::RESOLUTION_BUFFER_PROPORTION))				set(Constants::io__conf_double::RESOLUTION_BUFFER_PROPORTION, 1.0);
@@ -316,6 +384,7 @@ namespace LSW {
 			if (!check(Constants::io__conf_integer::SCREEN_Y))									set(Constants::io__conf_integer::SCREEN_Y, 0);
 			if (!check(Constants::io__conf_integer::SCREEN_FLAGS))								set(Constants::io__conf_integer::SCREEN_FLAGS, Constants::start_display_default_mode);
 			if (!check(Constants::io__conf_integer::SCREEN_PREF_HZ))							set(Constants::io__conf_integer::SCREEN_PREF_HZ, 0);
+			if (!check(Constants::io__conf_integer::LIMIT_FPS))									set(Constants::io__conf_integer::LIMIT_FPS, 0);
 
 			if (!check(Constants::io__conf_longlong::_TIMES_LIT))								set(Constants::io__conf_longlong::_TIMES_LIT, 0LL);
 
@@ -894,7 +963,11 @@ namespace LSW {
 					throw Abort::abort(__FUNCSIG__, "Could not create display!");
 				}
 				al_convert_bitmaps();
-				al_hide_mouse_cursor(d);
+				
+				{
+					Database db;
+					if (db.isEq(Constants::io__conf_boolean::HIDEMOUSE, true)) al_hide_mouse_cursor(d);
+				}
 
 				this->x = x;
 				this->y = y;
@@ -1066,6 +1139,7 @@ namespace LSW {
 		}
 		void Display::flip()
 		{
+
 			if (buf_) {
 				al_set_target_backbuffer(d);
 
@@ -1106,7 +1180,27 @@ namespace LSW {
 
 			if (printing) _print();
 
-			al_flip_display();
+			if (limit_fps > 1.0) {
+				if (last_draw == 0.0) last_draw = al_get_time() - 1.0 / limit_fps;
+								
+				al_flip_display();
+
+				while (al_get_time() - last_draw < 1.0 / limit_fps);
+				last_draw += 1.0 / limit_fps;
+			}
+			else al_flip_display();
+
+			if (al_get_time() - last_config_check > Constants::default_time_verification_limit_fps_config) {
+				last_config_check = al_get_time();
+
+				int tpl;
+				Database db;
+				db.get(Constants::io__conf_integer::LIMIT_FPS, tpl);
+				if (tpl != limit_fps) {
+					last_draw = al_get_time();
+					limit_fps = tpl;
+				}
+			}
 
 			if (should_check_acknowledge_and_prop_buf != 0.0 && al_get_time() - should_check_acknowledge_and_prop_buf > 0.0) {
 				__check_acknowledge_n_buf();

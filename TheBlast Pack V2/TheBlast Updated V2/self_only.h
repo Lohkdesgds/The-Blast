@@ -27,24 +27,20 @@ using namespace LSW::v4;
 class __auto_initializer_do_not_touch {
 	gfile logg;
 
-	struct all {
-		Textures textures;
-		Fonts fonts;
-		Samples samples;
-		Sprites sprites;
-		Texts texts;
-		Tracks tracks;
-		Camera gcam = Camera();
-		Mixer mixer;
-		Manager consol;
+	struct prelaunch {
+		Mixer mixer; // has to be initialized once
 		Database conf;
 	};
 
-	all* init = nullptr;
+	static prelaunch* init;
+	static size_t counter;
 
 	void _init();
 public:
 	__auto_initializer_do_not_touch();
 };
 
-static const __auto_initializer_do_not_touch __i_auto_init; // static can only be accessed here lmao
+inline __auto_initializer_do_not_touch::prelaunch* __auto_initializer_do_not_touch::init = nullptr;
+inline size_t __auto_initializer_do_not_touch::counter = 0;
+
+static inline const __auto_initializer_do_not_touch __i_auto_init; // static can only be accessed here lmao

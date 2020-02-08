@@ -19,14 +19,5 @@ namespace LSW {
 			return static_cast<std::underlying_type_t<T>>(e);
 		}
 
-		namespace Constants {
-
-			template<typename H> const auto lambda_null_load = [](const char* p, H*& r) -> bool { return false; };
-			template<typename H> const auto lambda_null_unload = [](H*& b) -> void { return; };
-
-			template<typename K> const auto lambda_default_load = [](const char* p, K*& r) -> bool { return (r = new K()); };
-			template<typename K> const auto lambda_default_unload = [](K*& b) -> void { if (b) delete b; b = nullptr; };
-		}
-
 	}
 }

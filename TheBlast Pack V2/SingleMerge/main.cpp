@@ -15,6 +15,36 @@ void pause() {
 
 int main(int argc, char* argv[])
 {
+	if (argc == 2) {
+		std::cout << "Generating hash for " << argv[1] << "..." << std::endl;
+
+		FILE* a = nullptr;
+		auto err = fopen_s(&a, argv[1], "rb");
+
+		if (err) {
+			std::cout << "Couldn't open the file to check hash. Please try again later or somewhere else" << std::endl;
+
+			pause();
+			return 0;
+		}
+
+		std::string content;
+
+		while (!feof(a)) {
+			char ubuf;
+			fread_s(&ubuf, 1, sizeof(char), 1, a);
+			content += ubuf;
+		}
+
+		std::string sha = imported::sha256(content);
+
+		printf_s("Your SHA256 code is: %s", sha.c_str());
+
+		if (a) fclose(a);
+
+		pause();
+		return 0;
+	}
 	if (argc != 3) {
 		std::cout << "Please drop the .exe file with the data.zip pack so I can merge them." << std::endl;
 		Sleep(10000);

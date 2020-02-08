@@ -41,9 +41,9 @@ namespace LSW {
 			bool keep_game_going = false, is_paused = false;
 			bool has_player_died = false;
 
-			Sprites sprites;
-			Textures textures;
-			Texts texts;
+			ResourceOf<Sprite> sprites;
+			ResourceOf<ALLEGRO_BITMAP> textures;
+			ResourceOf<Text> texts;
 			gfile logg;
 
 			std::thread* thr_taskin = nullptr;

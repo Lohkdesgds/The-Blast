@@ -32,9 +32,9 @@ namespace LSW {
 		namespace Constants {
 
 			// actual config (no sense on using size) **** IF CHANGES, CHECK Database::internalCheck ****
-			enum class io__conf_boolean { WAS_OSD_ON, ENABLE_SECOND_DEBUGGING_SCREEN, ULTRADEBUG, DOUBLEBUFFERING };
+			enum class io__conf_boolean { WAS_OSD_ON, ENABLE_SECOND_DEBUGGING_SCREEN, ULTRADEBUG, DOUBLEBUFFERING, HIDEMOUSE };
 			enum class io__conf_double { LAST_VOLUME, RESOLUTION_BUFFER_PROPORTION, FX_AMOUNT };
-			enum class io__conf_integer { SCREEN_X, SCREEN_Y, SCREEN_FLAGS, SCREEN_PREF_HZ };
+			enum class io__conf_integer { SCREEN_X, SCREEN_Y, SCREEN_FLAGS, SCREEN_PREF_HZ, LIMIT_FPS };
 			enum class io__conf_longlong { _TIMES_LIT };
 			enum class io__conf_string { LAST_VERSION, LAST_PLAYERNAME, PRINT_PATH };
 			enum class io__conf_color{ LAST_COLOR_TRANSLATE };
@@ -54,9 +54,9 @@ namespace LSW {
 			// functional
 			enum class io__db_functional_opt {MOUSE_KEY,KEYBOARD_KEY,MOUSE_LEFT,KEYBOARD_LEFT};
 
-			const std::string ro__conf_boolean_str[] = { "was_osd_on", "second_screen_debug", "ultradebug", "double_buffering_screen" };
+			const std::string ro__conf_boolean_str[] = { "was_osd_on", "second_screen_debug", "ultradebug", "double_buffering_screen", "hidemouse" };
 			const std::string ro__conf_double_str[] = { "last_volume", "resolution_proportion", "fx_amount" };
-			const std::string ro__conf_integer_str[] = { "screen_width","screen_height", "last_display_flags","pref_refresh_rate" };
+			const std::string ro__conf_integer_str[] = { "screen_width","screen_height", "last_display_flags","pref_refresh_rate","limit_framerate_to" };
 			const std::string ro__conf_longlong_str[] = { "times_open" };
 			const std::string ro__conf_string_str[] = { "last_version","playername", "prints_path" };
 			const std::string ro__conf_color_str[] = { "playercolor" };
@@ -90,11 +90,17 @@ namespace LSW {
 			~__systematic();
 
 			void setZipLocation(const std::string);
+			void setupPhysfs();
 
+			void initSystemNoZip(); // no zip verification or setup
 			void initSystem(const bool = true);
 			void posInit_forceWithNoZipAnyway();
 
-			void setInterface();
+			void setInterface(); // enable PHYSFS interface
+			void unsetInterface(); // undo PHYSFS interface
+
+			void addPathFile(const char*);
+			void delPathFile(const char*);
 
 			void setNewDisplayMode(const int);
 			bool checkResolutionExistance(const int, const int, const int) const;
@@ -229,6 +235,11 @@ namespace LSW {
 			ALLEGRO_BITMAP* buf_ = nullptr;
 			double quick_fx = 0.0;
 			double should_check_acknowledge_and_prop_buf = 0.0;
+
+			double last_draw = 0;
+			int limit_fps = 0;
+
+			double last_config_check = 0;
 
 			std::mutex d_try;
 			int x, y, f, h;

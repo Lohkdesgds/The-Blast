@@ -62,12 +62,13 @@ int main(int argc, const char* argv[])
 
 
 		// things being used
-		Textures textures;
-		Fonts fonts;
-		//Samples samples;
-		Sprites sprites;
-		Texts texts;
-		Tracks tracks;
+		ResourceOf<ALLEGRO_BITMAP> textures;
+		ResourceOf<ALLEGRO_FONT> fonts;
+		ResourceOf<Sprite> sprites;
+		ResourceOf<Text> texts;
+		ResourceOf<Track> tracks;
+		ResourceOf<Button> buttons;
+		ResourceOf<SliderX> sliderxs;
 		Camera gcam;
 		Mixer mixer;
 		Manager consol;
@@ -144,12 +145,12 @@ int main(int argc, const char* argv[])
 			const double animsize[2] = { 0.35, 0.07 };
 
 			// raw allegro stuff
-			Textures textures;
-			Fonts fonts;
-			Samples samples;
+			ResourceOf<ALLEGRO_BITMAP> textures;
+			ResourceOf<ALLEGRO_FONT> fonts;
+			ResourceOf<ALLEGRO_SAMPLE> samples;
 
 			// controllers
-			Tracks tracks;
+			ResourceOf<Track> tracks;
 
 			gfile logg;
 
@@ -668,9 +669,6 @@ int main(int argc, const char* argv[])
 						if (this_is_the_player) {
 							this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, true);
 						}
-						connection->lock();
-						connection->getActivity().SetDetails("Singleplayer");
-						connection->unlock();
 						});
 				}
 				{
@@ -693,9 +691,6 @@ int main(int argc, const char* argv[])
 						if (this_is_the_player) {
 							this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, true);
 						}
-						connection->lock();
-						connection->getActivity().SetDetails("Multiplayer");
-						connection->unlock();
 						});
 				}
 			}
@@ -860,106 +855,37 @@ int main(int argc, const char* argv[])
 					s->set(Constants::io__sprite_integer::LAYER, -10);
 				}
 				{
-					Sprite* s = sprites.create("BUTTON_MENU_0");
-					s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
-					s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
-					s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-					s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-					s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.05,1.0,0.45,1.0));
-					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
-					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
-					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
-					s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&versatile_select]() {versatile_select(main_gamemodes::GAMING); }); // [&modern]()->void {modern = main_gamemodes::GAMING; });
-					s->set(Constants::io__sprite_string::ID, "BUTTON_MENU_0");
-					s->set(Constants::io__sprite_boolean::DRAW, true);
-					s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-					s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-					s->set(Constants::io__sprite_double::SCALEG, 0.18);
-					s->set(Constants::io__sprite_double::SCALEX, 5.5);
-					s->set(Constants::io__sprite_double::POSY, 0.25);
-					s->set(Constants::io__sprite_integer::LAYER, -10);
-
-					Text* t = texts.create("BUTTON_MENU_0_T");
-					t->set(Constants::io__text_string::FONT, "DEFAULT");
-					t->set(Constants::io__text_string::STRING, "Start Game");
-					t->set(Constants::io__text_string::ID, "BUTTON_MENU_0_T");
-					t->set(Constants::io__text_boolean::SHOW, true);
-					t->set(Constants::io__text_double::SCALEG, 0.08);
-					t->set(Constants::io__text_double::SCALEX, 0.7);
-					t->set(Constants::io__text_double::POSY, -0.055);
-					t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_MENU_0");
-					t->set(Constants::io__text_integer::LAYER, -10);
-					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 20);
-					t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
-					t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_ON, [](std::string& str) {std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
+					Button* but = buttons.create("");
+					but->setText("Start Game");
+					but->setLayers({ -10 });
+					but->hook(Constants::io__buttons_shared_tie_func::MOUSE_CLICK, [&versatile_select](Sprite* sp, Text* tp, std::string& str) { if (sp) versatile_select(main_gamemodes::GAMING); });
+					but->hook(Constants::io__buttons_shared_tie_func::MOUSE_ON, [&conf](Sprite* sp, Text* tp, std::string& str) { if (tp) std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
+					but->setPosY(0.25);
+					but->addBitmaps(true, { "BAR_OFF", "BAR_ON" });
+					but->setLinks({ { Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0 },{ Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1 },{ Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1 } });
+					but->setPropBasedScale(1.125);
 				}
 				{
-					Sprite* s = sprites.create("BUTTON_MENU_1");
-					s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
-					s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
-					s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-					s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-					s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.05, 1.0, 0.45, 1.0));
-					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
-					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
-					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
-					s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&versatile_select]() {versatile_select(main_gamemodes::OPTIONS); }); // setup_animation_functional);
-					s->set(Constants::io__sprite_string::ID, "BUTTON_MENU_1");
-					s->set(Constants::io__sprite_boolean::DRAW, true);
-					s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-					s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-					s->set(Constants::io__sprite_double::SCALEG, 0.18);
-					s->set(Constants::io__sprite_double::SCALEX, 5.5);
-					s->set(Constants::io__sprite_double::POSY, 0.45);
-					s->set(Constants::io__sprite_integer::LAYER, -10);
-
-					Text* t = texts.create("BUTTON_MENU_1_T");
-					t->set(Constants::io__text_string::FONT, "DEFAULT");
-					t->set(Constants::io__text_string::STRING, "Options & About");
-					t->set(Constants::io__text_string::ID, "BUTTON_MENU_1_T");
-					t->set(Constants::io__text_boolean::SHOW, true);
-					t->set(Constants::io__text_double::SCALEG, 0.08);
-					t->set(Constants::io__text_double::SCALEX, 0.7);
-					t->set(Constants::io__text_double::POSY, -0.055);
-					t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_MENU_1");
-					t->set(Constants::io__text_integer::LAYER, -10);
-					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 20);
-					t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
-					t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_ON, [](std::string& str) {std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
+					Button* but = buttons.create("");
+					but->setText("Options & About");
+					but->setLayers({ -10 });
+					but->hook(Constants::io__buttons_shared_tie_func::MOUSE_CLICK, [&versatile_select](Sprite* sp, Text* tp, std::string& str) { if (sp) versatile_select(main_gamemodes::OPTIONS); });
+					but->hook(Constants::io__buttons_shared_tie_func::MOUSE_ON, [&conf](Sprite* sp, Text* tp, std::string& str) { if (tp) std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
+					but->setPosY(0.45);
+					but->addBitmaps(true, { "BAR_OFF", "BAR_ON" });
+					but->setLinks({ { Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0 },{ Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1 },{ Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1 } });
+					but->setPropBasedScale(1.125);
 				}
 				{
-					Sprite* s = sprites.create("BUTTON_MENU_2");
-					s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
-					s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
-					s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-					s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-					s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.05, 1.0, 0.45, 1.0));
-					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
-					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
-					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
-					s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, exit_game_versatile);
-					s->set(Constants::io__sprite_string::ID, "BUTTON_MENU_2");
-					s->set(Constants::io__sprite_boolean::DRAW, true);
-					s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-					s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-					s->set(Constants::io__sprite_double::SCALEG, 0.18);
-					s->set(Constants::io__sprite_double::SCALEX, 5.5);
-					s->set(Constants::io__sprite_double::POSY, 0.65);
-					s->set(Constants::io__sprite_integer::LAYER, -10);
-
-					Text* t = texts.create("BUTTON_MENU_2_T");
-					t->set(Constants::io__text_string::FONT, "DEFAULT");
-					t->set(Constants::io__text_string::STRING, "Exit Game");
-					t->set(Constants::io__text_string::ID, "BUTTON_MENU_2_T");
-					t->set(Constants::io__text_boolean::SHOW, true);
-					t->set(Constants::io__text_double::SCALEG, 0.08);
-					t->set(Constants::io__text_double::SCALEX, 0.7);
-					t->set(Constants::io__text_double::POSY, -0.055);
-					t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_MENU_2");
-					t->set(Constants::io__text_integer::LAYER, -10);
-					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 20);
-					t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
-					t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_ON, [](std::string& str) {std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
+					Button* but = buttons.create("");
+					but->setText("Exit Game");
+					but->setLayers({ -10 });
+					but->hook(Constants::io__buttons_shared_tie_func::MOUSE_CLICK, [&exit_game_versatile](Sprite* sp, Text* tp, std::string& str) { if (sp) exit_game_versatile(); });
+					but->hook(Constants::io__buttons_shared_tie_func::MOUSE_ON, [&conf](Sprite* sp, Text* tp, std::string& str) { if (tp) std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
+					but->setPosY(0.65);
+					but->addBitmaps(true, { "BAR_OFF", "BAR_ON" });
+					but->setLinks({ { Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0 },{ Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1 },{ Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1 } });
+					but->setPropBasedScale(1.125);
 				}
 			}
 
@@ -967,419 +893,196 @@ int main(int argc, const char* argv[])
 			{ // -09
 				{
 					size_t counter = 0;
-					double _posy = -1.95;
+					double _posy = -2.15;
 
 					// > > > > > |[}-----> OSD SWITCH
 					{
-						Sprite* s = sprites.create("BUTTON_OPTIONS_" + std::to_string(counter));
-						s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
-						s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
-						s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-						s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-						s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.05, 1.0, 0.45, 1.0));
-						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
-						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
-						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
-						s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&keyb_kbf_osd_switch]() { keyb_kbf_osd_switch(); }); // [&modern,&__assist_g]()->void {modern = __assist_g; });
-						s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter));
-						s->set(Constants::io__sprite_boolean::DRAW, true);
-						s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-						s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-						s->set(Constants::io__sprite_double::SCALEG, 0.16);
-						s->set(Constants::io__sprite_double::SCALEX, 5.5);
-						s->set(Constants::io__sprite_integer::LAYER, -9);
-						s->set(Constants::io__sprite_double::POSY, _posy);
-
-						Text* t = texts.create("BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
-						t->set(Constants::io__text_string::FONT, "DEFAULT");
-						t->set(Constants::io__text_string::STRING, "Switch OSD");
-						t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
-						t->set(Constants::io__text_boolean::SHOW, true);
-						t->set(Constants::io__text_double::SCALEG, 0.07);
-						t->set(Constants::io__text_double::SCALEX, 0.7);
-						t->set(Constants::io__text_double::POSY, -0.055);
-						t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_" + std::to_string(counter++));
-						t->set(Constants::io__text_integer::LAYER, -9);
-						t->set(Constants::io__text_double::UPDATETIME, 1.0 / 10);
-						t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
-						t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_ON, [&conf](std::string& str) {
-							bool is_osd_enabled = true;
-							conf.get(Constants::io__conf_boolean::WAS_OSD_ON, is_osd_enabled);
-							str = std::string("Right now it is: ") + (is_osd_enabled ? "enabled" : "disabled");
-							});
-						t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_CLICK, [](std::string& str) { str = "Switched!"; });
+						Button* but = buttons.create("");
+						but->setText("Switch OSD");
+						but->setLayers({ -9 });
+						but->hook(Constants::io__buttons_shared_tie_func::MOUSE_CLICK, [&keyb_kbf_osd_switch](Sprite* sp, Text* tp, std::string& str) { if (sp) keyb_kbf_osd_switch(); if(tp) str = "Switched!"; });
+						but->hook(Constants::io__buttons_shared_tie_func::MOUSE_ON, [&conf](Sprite* sp, Text* tp, std::string& str) { if (tp) str = std::string("Right now it is: ") + (conf.isEq(Constants::io__conf_boolean::WAS_OSD_ON, true) ? "enabled" : "disabled"); });
+						but->setPosY(_posy);
+						but->addBitmaps(true, { "BAR_OFF", "BAR_ON" });
+						but->setLinks({ { Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0 },{ Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1 },{ Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1 } });
 					}
+
 
 					_posy += 0.2;
 					// > > > > > |[}-----> FULLSCREEN SWITCH
 					{
-						Sprite* s = sprites.create("BUTTON_OPTIONS_" + std::to_string(counter));
-						s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
-						s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
-						s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-						s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-						s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.05, 1.0, 0.45, 1.0));
-						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
-						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
-						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
-						s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&keyb_fullscreen_window]() {keyb_fullscreen_window(); }); // [&modern,&__assist_g]()->void {modern = __assist_g; });
-						s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter));
-						s->set(Constants::io__sprite_boolean::DRAW, true);
-						s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-						s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-						s->set(Constants::io__sprite_double::SCALEG, 0.16);
-						s->set(Constants::io__sprite_double::SCALEX, 5.5);
-						s->set(Constants::io__sprite_integer::LAYER, -9);
-						s->set(Constants::io__sprite_double::POSY, _posy);
-
-						Text* t = texts.create("BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
-						t->set(Constants::io__text_string::FONT, "DEFAULT");
-						t->set(Constants::io__text_string::STRING, "Toggle Fullscreen");
-						t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
-						t->set(Constants::io__text_boolean::SHOW, true);
-						t->set(Constants::io__text_double::SCALEG, 0.07);
-						t->set(Constants::io__text_double::SCALEX, 0.7);
-						t->set(Constants::io__text_double::POSY, -0.055);
-						t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_" + std::to_string(counter++));
-						t->set(Constants::io__text_integer::LAYER, -9);
-						t->set(Constants::io__text_double::UPDATETIME, 1.0 / 10);
-						t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
-						t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_ON, [&conf, &__assist](std::string& str) {
-							bool is_osd_enabled = true;
-							conf.get(Constants::io__conf_boolean::WAS_OSD_ON, is_osd_enabled);
-							str = std::string("Right now it is: ") + (__assist[1] ? "Fullscreen" : "Windowed");
-							});
-						t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_CLICK, [](std::string& str) { str = "Switched!"; });
+						Button* but = buttons.create("");
+						but->setText("Toggle Fullscreen");
+						but->setLayers({ -9 });
+						but->hook(Constants::io__buttons_shared_tie_func::MOUSE_CLICK, [&keyb_fullscreen_window](Sprite* sp, Text* tp, std::string& str) { if (sp) keyb_fullscreen_window(); if (tp) str = "Switched!"; });
+						but->hook(Constants::io__buttons_shared_tie_func::MOUSE_ON, [&conf](Sprite* sp, Text* tp, std::string& str) { if (tp) { int flags; conf.get(Constants::io__conf_integer::SCREEN_FLAGS, flags); str = std::string("Right now it is: ") + (((flags & ALLEGRO_FULLSCREEN_WINDOW) || (flags & ALLEGRO_FULLSCREEN)) ? "Fullscreen" : "Windowed"); } });
+						but->setPosY(_posy);
+						but->addBitmaps(true, { "BAR_OFF", "BAR_ON" });
+						but->setLinks({ { Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0 },{ Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1 },{ Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1 } });
 					}
+
+
+					_posy += 0.2;
+					// > > > > > |[}-----> FPS LIMITER
+					{
+						SliderX* but = sliderxs.create("");
+						but->setText("FPS Limiter: %fps_cap%");
+						but->setLayers({ -9 });
+						//but->getOverSprite().hook(Constants::io__sprite_tie_func_to_state::ON_DRAW, [&logg, but]() {double x, y; auto& me = but->getOverSprite(); me.get(Constants::io__sprite_double::POSX, x); me.get(Constants::io__sprite_double::POSY, y); logg << L::SL << fsr(__FUNCSIG__, E::DEBUG) << "I am on X=" << x << " Y=" << y << L::EL; });
+						but->hook(Constants::io__buttons_shared_tie_func::MOUSE_CLICK, [&conf, but](const double dir_perc, Sprite* a, Sprite* b, Text* tp, std::string& str) {
+							but->setPercPos(dir_perc);
+							int fps = ((int)(dir_perc * 50)) * 5;
+							conf.set(Constants::io__conf_integer::LIMIT_FPS, fps);
+							if (tp) {
+								str = "%fps_cap%";
+								int fpp;
+								conf.get(Constants::io__conf_integer::LIMIT_FPS, fpp);
+								double halfmm = but->getHalfMinMax();
+								tp->set(Constants::io__text_double::POSX, (fpp * 1.0 / 250) * (halfmm * 2.0) - halfmm); // there's no verification about offset in X
+							}
+							});
+						but->hook(Constants::io__buttons_shared_tie_func::MOUSE_ON, [&conf](const double d, Sprite* a, Sprite* sp, Text* tp, std::string& str) { if (tp) tp->set(Constants::io__text_double::POSX, 0.0); });
+						but->hook(Constants::io__buttons_shared_tie_func::NO_COLLISION, [&conf](const double d, Sprite* a, Sprite* sp, Text* tp, std::string& str) { if (tp) tp->set(Constants::io__text_double::POSX, 0.0); });
+						but->setPosY(_posy);
+						but->setPercPos([&conf]() {int fps; conf.get(Constants::io__conf_integer::LIMIT_FPS, fps); return (fps * 1.0 / 250); }());
+						but->addBitmaps(false, {});
+						but->getSprite().set(Constants::io__sprite_string::ADD, "BAR_OFF");
+						but->getOverSprite().set(Constants::io__sprite_string::ADD, "BAR_ON");
+					}
+					
 
 					_posy += 0.2;
 					// > > > > > |[}-----> VOLUME CONTROL
 					{
-						// lower
-						{
-							Sprite* s = sprites.create("BUTTON_OPTIONS_" + std::to_string(counter));
-							s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
-							s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-							s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.05, 1.0, 0.45, 1.0));
-							s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter));
-							s->set(Constants::io__sprite_boolean::DRAW, true);
-							s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-							s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-							s->set(Constants::io__sprite_double::SCALEG, 0.16);
-							s->set(Constants::io__sprite_double::SCALEX, 5.5);
-							s->set(Constants::io__sprite_integer::LAYER, -9);
-							s->set(Constants::io__sprite_double::POSY, _posy);
-							s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&conf, &mixer]() {
-								double dx = 0;
-								conf.get(Constants::ro__db_mouse_double::MOUSE_X, dx);
-								if (dx > 0.342) dx = 0.342;
-								if (dx < -0.342) dx = -0.342;
-								double vol = (dx + 0.342) / (0.342 * 2.0);
-								mixer.volume(vol);
-								}, true);
-
-							Text* t = texts.create("BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
-							t->set(Constants::io__text_string::FONT, "DEFAULT");
-							t->set(Constants::io__text_string::STRING, "Volume: %volume_perc%%");
-							t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
-							t->set(Constants::io__text_boolean::SHOW, true);
-							t->set(Constants::io__text_double::SCALEG, 0.07);
-							t->set(Constants::io__text_double::SCALEX, 0.7);
-							t->set(Constants::io__text_double::POSY, -0.055);
-							t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_" + std::to_string(counter++));
-							t->set(Constants::io__text_integer::LAYER, -9);
-							t->set(Constants::io__text_double::UPDATETIME, 1.0 / 10);
-							t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
-							t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_CLICK, [t, &mixer](std::string& str) {
+						SliderX* but = sliderxs.create("");
+						but->setText("Volume: %volume_perc%%");
+						but->setLayers({ -9 });
+						but->hook(Constants::io__buttons_shared_tie_func::MOUSE_CLICK, [&mixer, but](const double dir_perc, Sprite* a, Sprite* b, Text* tp, std::string& str) {
+							but->setPercPos(dir_perc);
+							mixer.volume(dir_perc);
+							if (tp) {
+								double halfmm = but->getHalfMinMax();
 								str = "%volume_perc%%";
-								t->set(Constants::io__text_double::POSX, mixer.getVolume() * (0.342 * 2.0) - 0.342);
-								});
-							t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_ON, [t](std::string& str) {
-								t->set(Constants::io__text_double::POSX, 0.0);
-								});
-							t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_NONE, [t](std::string& str) {
-								t->set(Constants::io__text_double::POSX, 0.0);
-								});
-
-						}
-						// higher (dot)
-						{
-							Sprite* s = sprites.create("BUTTON_OPTIONS_" + std::to_string(counter));
-							s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-							s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-							s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.05, 1.0, 0.45, 1.0));
-							s->hook(Constants::io__sprite_tie_func_to_state::ON_DRAW, [s, &mixer]() {	s->set(Constants::io__sprite_double::POSX, mixer.getVolume() * (0.342 * 2.0) - 0.342); }); // [&modern,&__assist_g]()->void {modern = __assist_g; });
-							s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter++));
-							s->set(Constants::io__sprite_boolean::DRAW, true);
-							s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-							s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-							s->set(Constants::io__sprite_double::SCALEG, 0.16);
-							s->set(Constants::io__sprite_double::SCALEX, 1.2);
-							s->set(Constants::io__sprite_integer::LAYER, -9);
-							s->set(Constants::io__sprite_double::POSY, _posy);
-							s->set(Constants::io__sprite_double::POSX, mixer.getVolume() * (0.342 * 2.0) - 0.342);
-						}
+								tp->set(Constants::io__text_double::POSX, mixer.getVolume() * (halfmm * 2.0) - halfmm);
+							}
+							});
+						but->hook(Constants::io__buttons_shared_tie_func::MOUSE_ON, [&conf](const double d, Sprite* a, Sprite* sp, Text* tp, std::string& str) { if (tp) tp->set(Constants::io__text_double::POSX, 0.0); });
+						but->hook(Constants::io__buttons_shared_tie_func::NO_COLLISION, [&conf](const double d, Sprite* a, Sprite* sp, Text* tp, std::string& str) { if (tp) tp->set(Constants::io__text_double::POSX, 0.0); });
+						but->setPosY(_posy);
+						but->setPercPos([&mixer]() {return mixer.getVolume(); }());
+						but->addBitmaps(false, {});
+						but->getSprite().set(Constants::io__sprite_string::ADD, "BAR_OFF");
+						but->getOverSprite().set(Constants::io__sprite_string::ADD, "BAR_ON");
 					}
+
+
 
 					_posy += 0.2;
 					// > > > > > |[}-----> FX CONTROL
 					{
-						// lower
-						{
-							Sprite* s = sprites.create("BUTTON_OPTIONS_" + std::to_string(counter));
-							s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
-							s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-							s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.05, 1.0, 0.45, 1.0));
-							s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter));
-							s->set(Constants::io__sprite_boolean::DRAW, true);
-							s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-							s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-							s->set(Constants::io__sprite_double::SCALEG, 0.16);
-							s->set(Constants::io__sprite_double::SCALEX, 5.5);
-							s->set(Constants::io__sprite_integer::LAYER, -9);
-							s->set(Constants::io__sprite_double::POSY, _posy);
-							s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&conf, &consol, s]() {
-								double dx = 0;
-								conf.get(Constants::ro__db_mouse_double::MOUSE_X, dx);
-								if (dx > 0.342) dx = 0.342;
-								if (dx < -0.342) dx = -0.342;
-								double vol = (dx + 0.342) / (0.342 * 2.0);
-								if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, false)) vol = 0.0; // has to have doublebuffer
-								consol.sendEvent(Constants::ro__my_events::CUSTOM_EVENT_DISPLAY_CHROMA_FX, +(vol * 1000));
-								//conf.set(Constants::io__conf_double::FX_AMOUNT, vol);
-								}, true);
-
-							Text* t = texts.create("BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
-							t->set(Constants::io__text_string::FONT, "DEFAULT");
-							t->set(Constants::io__text_string::STRING, "Chroma failure FX: %screen_chroma_fx%");
-							t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
-							t->set(Constants::io__text_boolean::SHOW, true);
-							t->set(Constants::io__text_double::SCALEG, 0.07);
-							t->set(Constants::io__text_double::SCALEX, 0.7);
-							t->set(Constants::io__text_double::POSY, -0.055);
-							t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_" + std::to_string(counter++));
-							t->set(Constants::io__text_integer::LAYER, -9);
-							t->set(Constants::io__text_double::UPDATETIME, 1.0 / 10);
-							t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
-							t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_CLICK, [t, &conf](std::string& str) {
-								double dd = 1.0;
-								conf.get(Constants::io__conf_double::FX_AMOUNT, dd);
-								double tx = (dd * (0.342 * 2.0) - 0.342);
-								dd *= 100.0;
-								if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, false)) {
-									tx = -0.342;		/// TIED WITH UP VAL
-									dd = -0.1;
-								}
-
+						SliderX* but = sliderxs.create("");
+						but->setText("Chroma failure FX: %screen_chroma_fx%");
+						but->setLayers({ -9 });
+						but->hook(Constants::io__buttons_shared_tie_func::MOUSE_CLICK, [&conf, &consol, but](const double dir_perc, Sprite* a, Sprite* b, Text* tp, std::string& str) {
+							double cpy = dir_perc + 1e-50; // != 0.0
+							if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, false)) cpy = 0.0; // has to have doublebuffer
+							but->setPercPos(cpy);
+							consol.sendEvent(Constants::ro__my_events::CUSTOM_EVENT_DISPLAY_CHROMA_FX, +(cpy * 1000));
+							if (tp) {
 								char perc[32];
-								if (dd >= 0.0) sprintf_s(perc, "%03.2lf%c", dd, '%');
+								if (cpy > 0.0) sprintf_s(perc, "%03.2lf%c", cpy * 100.0, '%');
 								else sprintf_s(perc, "Needs Double Render!");
 								str = perc;
-								t->set(Constants::io__text_double::POSX, tx);
-								});
-							t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_ON, [t](std::string& str) {
-								t->set(Constants::io__text_double::POSX, 0.0);
-								});
-							t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_NONE, [t](std::string& str) {
-								t->set(Constants::io__text_double::POSX, 0.0);
-								});
-
-						}
-						// higher (dot)
-						{
-							Sprite* s = sprites.create("BUTTON_OPTIONS_" + std::to_string(counter));
-							s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-							s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-							s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.05, 1.0, 0.45, 1.0));
-							s->hook(Constants::io__sprite_tie_func_to_state::ON_DRAW, [s, &conf]() {
-								double dd = 1.0;
-								conf.get(Constants::io__conf_double::FX_AMOUNT, dd);
-								double tx = (dd * (0.342 * 2.0) - 0.342);
-								dd *= 100.0;
-								if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, false)) tx = -0.342;		/// TIED WITH UP VAL
-								s->set(Constants::io__sprite_double::POSX, tx);
-								});
-							s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter++));
-							s->set(Constants::io__sprite_boolean::DRAW, true);
-							s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-							s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-							s->set(Constants::io__sprite_double::SCALEG, 0.16);
-							s->set(Constants::io__sprite_double::SCALEX, 1.2);
-							s->set(Constants::io__sprite_integer::LAYER, -9);
-							s->set(Constants::io__sprite_double::POSY, _posy);
-							s->set(Constants::io__sprite_double::POSX, [&conf]()->double{
-								double dd = 1.0;
-								conf.get(Constants::io__conf_double::FX_AMOUNT, dd);
-								double tx = (dd * (0.342 * 2.0) - 0.342);
-								dd *= 100.0;
-								if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, false)) tx = -0.342;		/// TIED WITH UP VAL
-								return tx;
-								}());
-						}
+								double halfmm = but->getHalfMinMax();
+								tp->set(Constants::io__text_double::POSX, (cpy * (halfmm * 2.0) - halfmm));
+							}
+							});
+						but->hook(Constants::io__buttons_shared_tie_func::MOUSE_ON, [&conf](const double d, Sprite* a, Sprite* sp, Text* tp, std::string& str) { if (tp) tp->set(Constants::io__text_double::POSX, 0.0); });
+						but->hook(Constants::io__buttons_shared_tie_func::NO_COLLISION, [&conf](const double d, Sprite* a, Sprite* sp, Text* tp, std::string& str) { if (tp) tp->set(Constants::io__text_double::POSX, 0.0); });
+						but->setPosY(_posy);
+						but->setPercPos([&conf]()->double { double tx = 1.0; conf.get(Constants::io__conf_double::FX_AMOUNT, tx); if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, false)) tx = 0.0; return tx; }());
+						but->addBitmaps(false, {});
+						but->getSprite().set(Constants::io__sprite_string::ADD, "BAR_OFF");
+						but->getOverSprite().set(Constants::io__sprite_string::ADD, "BAR_ON");
 					}
 
 					_posy += 0.2;
 					// > > > > > |[}-----> RESOLUTION CONTROL
 					{
-						// lower
-						{
-							Sprite* s = sprites.create("BUTTON_OPTIONS_" + std::to_string(counter));
-							s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
-							s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-							s->set(Constants::io__sprite_color::TINT, [&conf]() {if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, true)) return  al_map_rgba_f(0.05, 1.0, 0.75, 1.0); else return al_map_rgba_f(0.85, 0.85, 0.05, 0.85); }()); // tied BELOW*
-							s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter));
-							s->set(Constants::io__sprite_boolean::DRAW, true);
-							s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-							s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-							s->set(Constants::io__sprite_double::SCALEG, 0.16);
-							s->set(Constants::io__sprite_double::SCALEX, 5.5);
-							s->set(Constants::io__sprite_integer::LAYER, -9);
-							s->set(Constants::io__sprite_double::POSY, _posy);
-							s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&conf, &consol, s]() {
+						SliderX* but = sliderxs.create("");
+						but->setText("Double render scale: %screen_buf_proportion%");
+						but->setLayers({ -9 });
+						but->hook(Constants::io__buttons_shared_tie_func::MOUSE_CLICK, [&conf, &consol, but](const double dir_perc, Sprite* a, Sprite* lw, Text* tp, std::string& str) {
+							but->setPercPos(dir_perc);
+							double vol = dir_perc + 1e-50; // != 0.0
+							double real_prop = dir_perc * 2.3 + 0.2; // 20% to 250%
+							consol.sendEvent(Constants::ro__my_events::CUSTOM_EVENT_DISPLAY_UPDATE_RESOLUTION_SCALE, +(real_prop * 100), dir_perc > 1e-5); // is enabled?
+							if (dir_perc > 1e-5) lw->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.05, 1.00, 0.75, 1.00));  /// *
+							else				 lw->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.85, 0.85, 0.05, 0.85));  /// *
 
-								double dx = 0;
-								conf.get(Constants::ro__db_mouse_double::MOUSE_X, dx);
-								if (dx > 0.342) dx = 0.342;
-								if (dx < -0.242) dx = -0.342;  /// TIED TO DOWN BELOW
-								double vol = 0.2 + 1.8 * (dx + 0.242) / (0.342 + 0.242);
-								bool is_enabled = (vol > 0.2);
-								if (!is_enabled) vol = 1.0;
-
-								consol.sendEvent(Constants::ro__my_events::CUSTOM_EVENT_DISPLAY_UPDATE_RESOLUTION_SCALE, +(vol * 100), is_enabled);
-								if (is_enabled) s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.05, 1.0, 0.75, 1.0));  /// *
-								else s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.85, 0.85, 0.05, 0.85));  /// *
-
-								}, true);
-
-							Text* t = texts.create("BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
-							t->set(Constants::io__text_string::FONT, "DEFAULT");
-							t->set(Constants::io__text_string::STRING, "Double render scale: %screen_buf_proportion%");
-							t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
-							t->set(Constants::io__text_boolean::SHOW, true);
-							t->set(Constants::io__text_double::SCALEG, 0.07);
-							t->set(Constants::io__text_double::SCALEX, 0.7);
-							t->set(Constants::io__text_double::POSY, -0.055);
-							t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_" + std::to_string(counter++));
-							t->set(Constants::io__text_integer::LAYER, -9);
-							t->set(Constants::io__text_double::UPDATETIME, 1.0 / 10);
-							t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
-							t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_CLICK, [t, &conf](std::string& str) {
-								double dd = 1.0;
-								conf.get(Constants::io__conf_double::RESOLUTION_BUFFER_PROPORTION, dd);
-								double tx = ((dd - 0.2) / 1.8) * (0.342 + 0.242) - 0.242;
-								dd *= 100.0;
-								if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, false)) {
-									tx = -0.342;		/// TIED WITH UP VAL
-									dd = 0.0;
-								}
-
+							if (tp) {
 								char perc[32];
-								if (dd > 0.0) sprintf_s(perc, "%03.2lf%c", dd, '%');
+								if (dir_perc > 1e-5) sprintf_s(perc, "%03d%c", static_cast<int>(real_prop * 100), '%');
 								else sprintf_s(perc, "Disabled");
 								str = perc;
-								t->set(Constants::io__text_double::POSX, tx);
-								});
-							t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_ON, [t](std::string& str) {
-								t->set(Constants::io__text_double::POSX, 0.0);
-								});
-							t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_NONE, [t](std::string& str) {
-								t->set(Constants::io__text_double::POSX, 0.0);
-								});
+								double halfmm = but->getHalfMinMax();
+								tp->set(Constants::io__text_double::POSX, (vol * (halfmm * 2.0) - halfmm));
+							}
+							});
+						but->hook(Constants::io__buttons_shared_tie_func::MOUSE_ON, [&conf](const double d, Sprite* a, Sprite* sp, Text* tp, std::string& str) { if (tp) tp->set(Constants::io__text_double::POSX, 0.0); });
+						but->hook(Constants::io__buttons_shared_tie_func::NO_COLLISION, [&conf](const double d, Sprite* a, Sprite* sp, Text* tp, std::string& str) { if (tp) tp->set(Constants::io__text_double::POSX, 0.0); });
+						but->setPosY(_posy);
+						but->setPercPos([&conf]()->double { double tx = 1.0; conf.get(Constants::io__conf_double::RESOLUTION_BUFFER_PROPORTION, tx); if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, false)) tx = 0.0; return ((tx - 0.2) / 2.3); }());
+						but->addBitmaps(false, {});
+						but->getSprite().set(Constants::io__sprite_string::ADD, "BAR_OFF");
+						but->getSprite().set(Constants::io__sprite_color::TINT, [&conf]() {if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, true)) return al_map_rgba_f(0.05, 1.0, 0.75, 1.0); else return al_map_rgba_f(0.85, 0.85, 0.05, 0.85);}());
+						but->getOverSprite().set(Constants::io__sprite_string::ADD, "BAR_ON");
 
-						}
-						// higher (dot)
-						{
-							Sprite* s = sprites.create("BUTTON_OPTIONS_" + std::to_string(counter));
-							s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-							s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-							s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.05, 1.0, 0.45, 1.0));
-							s->hook(Constants::io__sprite_tie_func_to_state::ON_DRAW, [s, &conf]() {
-								double dd = 1.0;
-								conf.get(Constants::io__conf_double::RESOLUTION_BUFFER_PROPORTION, dd);
-								double tx = ((dd - 0.2) / 1.8) * (0.342 + 0.242) - 0.242;
-								if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, false)) tx = -0.342;		/// TIED WITH UP VAL
-								s->set(Constants::io__sprite_double::POSX, tx);
-								});
-							s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter++));
-							s->set(Constants::io__sprite_boolean::DRAW, true);
-							s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-							s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-							s->set(Constants::io__sprite_double::SCALEG, 0.16);
-							s->set(Constants::io__sprite_double::SCALEX, 1.2);
-							s->set(Constants::io__sprite_integer::LAYER, -9);
-							s->set(Constants::io__sprite_double::POSY, _posy);
-							s->set(Constants::io__sprite_double::POSX, [&conf]()->double{
-								double dd = 1.0;
-								conf.get(Constants::io__conf_double::RESOLUTION_BUFFER_PROPORTION, dd);
-								double tx = ((dd - 0.2) / 1.8) * (0.342 + 0.242) - 0.242;
-								if (conf.isEq(Constants::io__conf_boolean::DOUBLEBUFFERING, false)) tx = -0.342;		/// TIED WITH UP VAL
-								return tx;
-								}());
-						}
 					}
 
 					_posy += 0.2;
 					// > > > > > |[}-----> PLAYER NAMING
 					{
-						Sprite* s = sprites.create("BUTTON_OPTIONS_" + std::to_string(counter));
-						s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
-						s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
-						s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-						s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-						s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.05, 1.0, 0.45, 1.0));
-						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
-						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
-						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
-						s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&conf]() {
-							bool ua = false;
-							conf.get(Constants::io__db_boolean::SAVING_STRING_INPUT, ua);
-							conf.set(Constants::io__db_boolean::SAVING_STRING_INPUT, !ua);
-							if (!ua) conf.set(Constants::io__db_sizet::MAXIMUM_STRING_INPUT_LEN, 15);
-							}); // switch string input
-						s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter));
-						s->set(Constants::io__sprite_boolean::DRAW, true);
-						s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-						s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-						s->set(Constants::io__sprite_double::SCALEG, 0.16);
-						s->set(Constants::io__sprite_double::SCALEX, 5.5);
-						s->set(Constants::io__sprite_integer::LAYER, -9);
-						s->set(Constants::io__sprite_double::POSY, _posy);
-
-						Text* t = texts.create("BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
-						t->set(Constants::io__text_string::FONT, "DEFAULT");
-						t->set(Constants::io__text_string::STRING, "Nickname: ...");
-						t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
-						t->set(Constants::io__text_boolean::SHOW, true);
-						t->set(Constants::io__text_double::SCALEG, 0.07);
-						t->set(Constants::io__text_double::SCALEX, 0.7);
-						t->set(Constants::io__text_double::POSY, -0.055);
-						t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_" + std::to_string(counter++));
-						t->set(Constants::io__text_integer::LAYER, -9);
-						t->set(Constants::io__text_double::UPDATETIME, 1.0 / 10);
-						t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
-						t->hook(Constants::io__text_tie_func_to_state::ON_UPDATE, [&conf, &sprites, this_is_the_player](std::string& str) {
-							bool ua = false;
-							conf.get(Constants::io__db_boolean::SAVING_STRING_INPUT, ua);
-
-							if (ua) {
-								std::string has_enter;
-								conf.get(Constants::ro__db_string::LAST_STRING, has_enter);
-								if (has_enter.length() == 0) {
-									str = "New nickname: %curr_string%";
-								}
-								else {
-									str = "Saving...";
-									this_is_the_player->set(Constants::io__entity_string::NICKNAME, has_enter);
-									conf.set(Constants::io__db_boolean::SAVING_STRING_INPUT, false);
-									conf.set(Constants::io__conf_string::LAST_PLAYERNAME, has_enter);
-								}
-							}
-							else {
-								std::string ent_str;
-								this_is_the_player->get(Constants::io__entity_string::NICKNAME, ent_str);
-								str = "Nickname: " + (ent_str);
+						Button* but = buttons.create("");
+						but->setText("Nickname: ...");
+						but->setLayers({ -9 });
+						but->hook(Constants::io__buttons_shared_tie_func::MOUSE_CLICK, [&conf](Sprite* sp, Text* tp, std::string& str) {
+							if (sp) {
+								bool ua = false;
+								conf.get(Constants::io__db_boolean::SAVING_STRING_INPUT, ua);
+								conf.set(Constants::io__db_boolean::SAVING_STRING_INPUT, !ua);
+								if (!ua) conf.set(Constants::io__db_sizet::MAXIMUM_STRING_INPUT_LEN, 15);
 							}
 							});
+						but->hook(Constants::io__buttons_shared_tie_func::ON_UPDATE, [&conf,&sprites,this_is_the_player](Sprite* sp, Text* tp, std::string& str) {
+							if (tp) {
+								bool ua = false;
+								conf.get(Constants::io__db_boolean::SAVING_STRING_INPUT, ua);
+								if (ua) {
+									std::string has_enter;
+									conf.get(Constants::ro__db_string::LAST_STRING, has_enter);
+									if (has_enter.length() == 0) {
+										str = "New nickname: %curr_string%";
+									}
+									else {
+										str = "Saving...";
+										this_is_the_player->set(Constants::io__entity_string::NICKNAME, has_enter);
+										conf.set(Constants::io__db_boolean::SAVING_STRING_INPUT, false);
+										conf.set(Constants::io__conf_string::LAST_PLAYERNAME, has_enter);
+									}
+								}
+								else {
+									std::string ent_str;
+									this_is_the_player->get(Constants::io__entity_string::NICKNAME, ent_str);
+									str = "Nickname: " + (ent_str);
+								}
+							}
+							});
+						but->setPosY(_posy);
+						but->addBitmaps(true, { "BAR_OFF", "BAR_ON" });
+						but->setLinks({ { Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0 },{ Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1 },{ Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1 } });
+
+						
 					}
 
 					// RGB
@@ -1390,271 +1093,102 @@ int main(int argc, const char* argv[])
 						_posy += 0.2;
 						// > > > > > |[}-----> PLAYER COLOR R
 						{
-							// lower
-							{
-								Sprite* s = sprites.create("BUTTON_OPTIONS_" + std::to_string(counter));
-								s->set(Constants::io__sprite_string::ADD, "BAR_ON"); // clearly 0
-								s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter));
-								s->set(Constants::io__sprite_boolean::DRAW, true);
-								s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-								s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-								s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-								s->set(Constants::io__sprite_double::SCALEG, 0.16);
-								s->set(Constants::io__sprite_double::SCALEX, 5.5);
-								s->set(Constants::io__sprite_integer::LAYER, -9);
-								s->set(Constants::io__sprite_double::POSY, _posy);
+							SliderX* but = sliderxs.create("");
+							but->setText("Red: " + std::to_string((int)(initclr.r * 100)) + std::string("%"));
+							but->setLayers({ -9 });
+							but->hook(Constants::io__buttons_shared_tie_func::MOUSE_CLICK, [&conf, this_is_the_player, but](const double dir_perc, Sprite* a, Sprite* b, Text* tp, std::string& str) {
+								but->setPercPos(dir_perc);
 
+								ALLEGRO_COLOR cl;
+								conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
+								cl.r = dir_perc;
+								conf.set(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
+								this_is_the_player->set(Constants::io__sprite_color::TINT, cl);
 
-								s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&conf, s, this_is_the_player]() {
-									double dx = 0;
-									conf.get(Constants::ro__db_mouse_double::MOUSE_X, dx);
-									if (dx > 0.342) dx = 0.342;
-									if (dx < -0.342) dx = -0.342;
-									ALLEGRO_COLOR cl;
-									conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
-									cl.r = (dx + 0.342) / (0.342 * 2.0);																							// R
-									conf.set(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
-									this_is_the_player->set(Constants::io__sprite_color::TINT, cl);  // R
-								}, true);
-								s->hook(Constants::io__sprite_tie_func_to_state::ON_DRAW, [&conf, s]() {
-									ALLEGRO_COLOR cl;
-									conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
-									s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.25f + 0.45f * cl.r, 0.1f + 0.12f * cl.r, 0.1f + 0.12f * cl.r, 1.0));
-									});
-
-
-
-								Text* t = texts.create("BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
-								t->set(Constants::io__text_string::FONT, "DEFAULT");
-								t->set(Constants::io__text_string::STRING, "RED");
-								t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
-								t->set(Constants::io__text_boolean::SHOW, true);
-								t->set(Constants::io__text_double::SCALEG, 0.07);
-								t->set(Constants::io__text_double::SCALEX, 0.7);
-								t->set(Constants::io__text_double::POSY, -0.055);
-								t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_" + std::to_string(counter++));
-								t->set(Constants::io__text_integer::LAYER, -9);
-								t->set(Constants::io__text_double::UPDATETIME, 1.0 / 10);
-								t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
-								t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_CLICK, [t, &conf](std::string& str) {
-									ALLEGRO_COLOR cl;
-									conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
-									t->set(Constants::io__text_double::POSX, cl.r * (0.342 * 2.0) - 0.342);															// R
-									});
-								t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_ON, [t](std::string& str) {
-									t->set(Constants::io__text_double::POSX, 0.0);
-									});
-								t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_NONE, [t](std::string& str) {
-									t->set(Constants::io__text_double::POSX, 0.0);
-									});
-								t->hook(Constants::io__text_tie_func_to_state::ON_UPDATE, [&conf](std::string& str) {
-									ALLEGRO_COLOR cl;
-									conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
-									str = "RED: " + std::to_string((int)(cl.r * 100)) + std::string("%");															// R
-									});
-
-							}
-							// higher (dot)
-							{
-								Sprite* s = sprites.create("BUTTON_OPTIONS_" + std::to_string(counter));
-								s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-								s->hook(Constants::io__sprite_tie_func_to_state::ON_DRAW, [s, &conf]() {
-									ALLEGRO_COLOR cl;
-									conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
-									s->set(Constants::io__sprite_double::POSX, cl.r * (0.342 * 2.0) - 0.342);														// R						
-									}); // [&modern,&__assist_g]()->void {modern = __assist_g; });
-								s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter++));
-								s->set(Constants::io__sprite_boolean::DRAW, true);
-								s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-								s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(1.0, 0.2, 0.2, 1.0));
-								s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-								s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-								s->set(Constants::io__sprite_double::SCALEG, 0.16);
-								s->set(Constants::io__sprite_double::SCALEX, 1.2);
-								s->set(Constants::io__sprite_integer::LAYER, -9);
-								s->set(Constants::io__sprite_double::POSY, _posy);
-								s->set(Constants::io__sprite_double::POSX, initclr.r * (0.342 * 2.0) - 0.342);
-							}
+								double halfmm = but->getHalfMinMax();
+								tp->set(Constants::io__text_double::POSX, dir_perc * (halfmm * 2.0) - halfmm);
+								but->setText("Red: " + std::to_string((int)(dir_perc * 100)) + std::string("%"));
+								});
+							but->hook(Constants::io__buttons_shared_tie_func::ON_DRAW, [&conf](const double d, Sprite* a, Sprite* sp, Text* tp, std::string& str) { 
+								ALLEGRO_COLOR cl;
+								conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
+								sp->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.25f + 0.45f * cl.r, 0.1f + 0.12f * cl.r, 0.1f + 0.12f * cl.r, 1.0));
+								});
+							but->hook(Constants::io__buttons_shared_tie_func::NO_COLLISION, [&conf](const double d, Sprite* a, Sprite* sp, Text* tp, std::string& str) { if (tp) tp->set(Constants::io__text_double::POSX, 0.0); });
+							but->setPosY(_posy);
+							but->addBitmaps(false, {});
+							but->getSprite().set(Constants::io__sprite_string::ADD, "BAR_OFF");
+							but->getOverSprite().set(Constants::io__sprite_string::ADD, "BAR_ON");
+							but->setPercPos(initclr.r);
 						}
 
 						_posy += 0.2;
 						// > > > > > |[}-----> PLAYER COLOR G
 						{
-							// lower
-							{
-								Sprite* s = sprites.create("BUTTON_OPTIONS_" + std::to_string(counter));
-								s->set(Constants::io__sprite_string::ADD, "BAR_ON"); // clearly 0
-								s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter));
-								s->set(Constants::io__sprite_boolean::DRAW, true);
-								s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-								s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-								s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-								s->set(Constants::io__sprite_double::SCALEG, 0.16);
-								s->set(Constants::io__sprite_double::SCALEX, 5.5);
-								s->set(Constants::io__sprite_integer::LAYER, -9);
-								s->set(Constants::io__sprite_double::POSY, _posy);
+							SliderX* but = sliderxs.create("");
+							but->setText("Green: " + std::to_string((int)(initclr.g * 100)) + std::string("%"));
+							but->setLayers({ -9 });
+							but->hook(Constants::io__buttons_shared_tie_func::MOUSE_CLICK, [&conf, this_is_the_player, but](const double dir_perc, Sprite* a, Sprite* b, Text* tp, std::string& str) {
+								but->setPercPos(dir_perc);
 
-								s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&conf, s, this_is_the_player]() {
-									double dx = 0;
-									conf.get(Constants::ro__db_mouse_double::MOUSE_X, dx);
-									if (dx > 0.342) dx = 0.342;
-									if (dx < -0.342) dx = -0.342;
-									ALLEGRO_COLOR cl;
-									conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
-									cl.g = (dx + 0.342) / (0.342 * 2.0);																							// R
-									conf.set(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
-									this_is_the_player->set(Constants::io__sprite_color::TINT, cl);  // R
-								}, true);
-								s->hook(Constants::io__sprite_tie_func_to_state::ON_DRAW, [&conf, s]() {
-									ALLEGRO_COLOR cl;
-									conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
-									s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.1f + 0.12f * cl.g, 0.25f + 0.45f * cl.g, 0.1f + 0.12f * cl.g, 1.0));
-									});
+								ALLEGRO_COLOR cl;
+								conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
+								cl.g = dir_perc;
+								conf.set(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
+								this_is_the_player->set(Constants::io__sprite_color::TINT, cl);
 
-								Text* t = texts.create("BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
-								t->set(Constants::io__text_string::FONT, "DEFAULT");
-								t->set(Constants::io__text_string::STRING, "GREEN");
-								t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
-								t->set(Constants::io__text_boolean::SHOW, true);
-								t->set(Constants::io__text_double::SCALEG, 0.07);
-								t->set(Constants::io__text_double::SCALEX, 0.7);
-								t->set(Constants::io__text_double::POSY, -0.055);
-								t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_" + std::to_string(counter++));
-								t->set(Constants::io__text_integer::LAYER, -9);
-								t->set(Constants::io__text_double::UPDATETIME, 1.0 / 10);
-								t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
-								t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_CLICK, [t, &conf](std::string& str) {
-									ALLEGRO_COLOR cl;
-									conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
-									t->set(Constants::io__text_double::POSX, cl.g * (0.342 * 2.0) - 0.342);															// R
-									});
-								t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_ON, [t](std::string& str) {
-									t->set(Constants::io__text_double::POSX, 0.0);
-									});
-								t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_NONE, [t](std::string& str) {
-									t->set(Constants::io__text_double::POSX, 0.0);
-									});
-								t->hook(Constants::io__text_tie_func_to_state::ON_UPDATE, [&conf](std::string& str) {
-									ALLEGRO_COLOR cl;
-									conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
-									str = "GREEN: " + std::to_string((int)(cl.g * 100)) + std::string("%");															// R
-									});
-
-							}
-							// higher (dot)
-							{
-								Sprite* s = sprites.create("BUTTON_OPTIONS_" + std::to_string(counter));
-								s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-								s->hook(Constants::io__sprite_tie_func_to_state::ON_DRAW, [s, &conf]() {
-									ALLEGRO_COLOR cl;
-									conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
-									s->set(Constants::io__sprite_double::POSX, cl.g * (0.342 * 2.0) - 0.342);														// R						
-									}); // [&modern,&__assist_g]()->void {modern = __assist_g; });
-								s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter++));
-								s->set(Constants::io__sprite_boolean::DRAW, true);
-								s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-								s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.2, 1.0, 0.2, 1.0));
-								s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-								s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-								s->set(Constants::io__sprite_double::SCALEG, 0.16);
-								s->set(Constants::io__sprite_double::SCALEX, 1.2);
-								s->set(Constants::io__sprite_integer::LAYER, -9);
-								s->set(Constants::io__sprite_double::POSY, _posy);
-								s->set(Constants::io__sprite_double::POSX, initclr.g* (0.342 * 2.0) - 0.342);
-							}
+								double halfmm = but->getHalfMinMax();
+								tp->set(Constants::io__text_double::POSX, dir_perc * (halfmm * 2.0) - halfmm);
+								but->setText("Green: " + std::to_string((int)(dir_perc * 100)) + std::string("%"));
+								});
+							but->hook(Constants::io__buttons_shared_tie_func::ON_DRAW, [&conf](const double d, Sprite* a, Sprite* sp, Text* tp, std::string& str) {
+								ALLEGRO_COLOR cl;
+								conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
+								sp->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.1f + 0.12f * cl.g, 0.25f + 0.45f * cl.g, 0.1f + 0.12f * cl.g, 1.0));
+								});
+							but->hook(Constants::io__buttons_shared_tie_func::NO_COLLISION, [&conf](const double d, Sprite* a, Sprite* sp, Text* tp, std::string& str) { if (tp) tp->set(Constants::io__text_double::POSX, 0.0); });
+							but->setPosY(_posy);
+							but->addBitmaps(false, {});
+							but->getSprite().set(Constants::io__sprite_string::ADD, "BAR_OFF");
+							but->getOverSprite().set(Constants::io__sprite_string::ADD, "BAR_ON");
+							but->setPercPos(initclr.g);
 						}
 
 						_posy += 0.2;
 						// > > > > > |[}-----> PLAYER COLOR B
 						{
-							// lower
-							{
-								Sprite* s = sprites.create("BUTTON_OPTIONS_" + std::to_string(counter));
-								s->set(Constants::io__sprite_string::ADD, "BAR_ON"); // clearly 0
-								s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter));
-								s->set(Constants::io__sprite_boolean::DRAW, true);
-								s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-								s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-								s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-								s->set(Constants::io__sprite_double::SCALEG, 0.16);
-								s->set(Constants::io__sprite_double::SCALEX, 5.5);
-								s->set(Constants::io__sprite_integer::LAYER, -9);
-								s->set(Constants::io__sprite_double::POSY, _posy);
+							SliderX* but = sliderxs.create("");
+							but->setText("Blue: " + std::to_string((int)(initclr.b * 100)) + std::string("%"));
+							but->setLayers({ -9 });
+							but->hook(Constants::io__buttons_shared_tie_func::MOUSE_CLICK, [&conf, this_is_the_player, but](const double dir_perc, Sprite* a, Sprite* b, Text* tp, std::string& str) {
+								but->setPercPos(dir_perc);
 
-								s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&conf, s, this_is_the_player]() {
-									double dx = 0;
-									conf.get(Constants::ro__db_mouse_double::MOUSE_X, dx);
-									if (dx > 0.342) dx = 0.342;
-									if (dx < -0.342) dx = -0.342;
-									ALLEGRO_COLOR cl;
-									conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
-									cl.b = (dx + 0.342) / (0.342 * 2.0);																							// R
-									conf.set(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
-									this_is_the_player->set(Constants::io__sprite_color::TINT, cl);  // R
-									}, true);
-								s->hook(Constants::io__sprite_tie_func_to_state::ON_DRAW, [&conf, s]() {
-									ALLEGRO_COLOR cl;
-									conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
-									s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.1f + 0.12f * cl.b, 0.1f + 0.12f * cl.b, 0.25f + 0.45f * cl.b, 1.0));
-									});
+								ALLEGRO_COLOR cl;
+								conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
+								cl.b = dir_perc;
+								conf.set(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
+								this_is_the_player->set(Constants::io__sprite_color::TINT, cl);
 
-
-								Text* t = texts.create("BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
-								t->set(Constants::io__text_string::FONT, "DEFAULT");
-								t->set(Constants::io__text_string::STRING, "BLUE");
-								t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
-								t->set(Constants::io__text_boolean::SHOW, true);
-								t->set(Constants::io__text_double::SCALEG, 0.07);
-								t->set(Constants::io__text_double::SCALEX, 0.7);
-								t->set(Constants::io__text_double::POSY, -0.055);
-								t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_" + std::to_string(counter++));
-								t->set(Constants::io__text_integer::LAYER, -9);
-								t->set(Constants::io__text_double::UPDATETIME, 1.0 / 10);
-								t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
-								t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_CLICK, [t, &conf](std::string& str) {
-									ALLEGRO_COLOR cl;
-									conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
-									t->set(Constants::io__text_double::POSX, cl.b * (0.342 * 2.0) - 0.342);															// R
-									});
-								t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_ON, [t](std::string& str) {
-									t->set(Constants::io__text_double::POSX, 0.0);
-									});
-								t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_NONE, [t](std::string& str) {
-									t->set(Constants::io__text_double::POSX, 0.0);
-									});
-								t->hook(Constants::io__text_tie_func_to_state::ON_UPDATE, [&conf](std::string& str) {
-									ALLEGRO_COLOR cl;
-									conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
-									str = "BLUE: " + std::to_string((int)(cl.b * 100)) + std::string("%");															// R
-									});
-
-							}
-							// higher (dot)
-							{
-								Sprite* s = sprites.create("BUTTON_OPTIONS_" + std::to_string(counter));
-								s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-								s->hook(Constants::io__sprite_tie_func_to_state::ON_DRAW, [s, &conf]() {
-									ALLEGRO_COLOR cl;
-									conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
-									s->set(Constants::io__sprite_double::POSX, cl.b * (0.342 * 2.0) - 0.342);														// R						
-									}); // [&modern,&__assist_g]()->void {modern = __assist_g; });
-								s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter++));
-								s->set(Constants::io__sprite_boolean::DRAW, true);
-								s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-								s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.2, 0.2, 1.0, 1.0));
-								s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-								s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-								s->set(Constants::io__sprite_double::SCALEG, 0.16);
-								s->set(Constants::io__sprite_double::SCALEX, 1.2);
-								s->set(Constants::io__sprite_integer::LAYER, -9);
-								s->set(Constants::io__sprite_double::POSY, _posy);
-								s->set(Constants::io__sprite_double::POSX, initclr.b* (0.342 * 2.0) - 0.342);
-							}
+								double halfmm = but->getHalfMinMax();
+								tp->set(Constants::io__text_double::POSX, dir_perc * (halfmm * 2.0) - halfmm);
+								but->setText("Blue: " + std::to_string((int)(dir_perc * 100)) + std::string("%"));
+								});
+							but->hook(Constants::io__buttons_shared_tie_func::ON_DRAW, [&conf](const double d, Sprite* a, Sprite* sp, Text* tp, std::string& str) {
+								ALLEGRO_COLOR cl;
+								conf.get(Constants::io__conf_color::LAST_COLOR_TRANSLATE, cl);
+								sp->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.1f + 0.12f * cl.b, 0.1f + 0.12f * cl.b, 0.25f + 0.45f * cl.b, 1.0));
+								});
+							but->hook(Constants::io__buttons_shared_tie_func::NO_COLLISION, [&conf](const double d, Sprite* a, Sprite* sp, Text* tp, std::string& str) { if (tp) tp->set(Constants::io__text_double::POSX, 0.0); });
+							but->setPosY(_posy);
+							but->addBitmaps(false, {});
+							but->getSprite().set(Constants::io__sprite_string::ADD, "BAR_OFF");
+							but->getOverSprite().set(Constants::io__sprite_string::ADD, "BAR_ON");
+							but->setPercPos(initclr.b);
 						}
 					}
 
 					_posy += 0.65;
-					// > > > > > |[}-----> CREDITS AND STUFF
+					// > > > > > |[}-----> CREDITS AND STUFF (rawly done)
 					{
 						ALLEGRO_BITMAP* lmao = textures.customLoad("BUTTON_OPTIONS_IMG_" + std::to_string(counter), [](ALLEGRO_BITMAP*& b)->bool {return (b = al_create_bitmap(720, 480)); });
 						{
@@ -1713,39 +1247,14 @@ int main(int argc, const char* argv[])
 					_posy += 0.55;
 					// > > > > > |[}-----> GO BACK TO MENU (lower part)
 					{
-						Sprite* s = sprites.create("BUTTON_OPTIONS_" + std::to_string(counter));
-						s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
-						s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
-						s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-						s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-						s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.05, 1.0, 0.45, 1.0));
-						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
-						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
-						s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
-						s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&__assist_g, &versatile_select]() {versatile_select(main_gamemodes::MENU); }); // [&modern,&__assist_g]()->void {modern = __assist_g; });
-						s->set(Constants::io__sprite_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter));
-						s->set(Constants::io__sprite_boolean::DRAW, true);
-						s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-						s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-						s->set(Constants::io__sprite_double::SCALEG, 0.16);
-						s->set(Constants::io__sprite_double::SCALEX, 3.5);
-						s->set(Constants::io__sprite_integer::LAYER, -9);
-						//s->set(Constants::io__sprite_double::POSX, -0.7);
-						s->set(Constants::io__sprite_double::POSY, _posy);
-
-						Text* t = texts.create("BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
-						t->set(Constants::io__text_string::FONT, "DEFAULT");
-						t->set(Constants::io__text_string::STRING, "Go back to Menu");
-						t->set(Constants::io__text_string::ID, "BUTTON_OPTIONS_" + std::to_string(counter) + std::string("_T"));
-						t->set(Constants::io__text_boolean::SHOW, true);
-						t->set(Constants::io__text_double::SCALEG, 0.07);
-						t->set(Constants::io__text_double::SCALEX, 0.7);
-						t->set(Constants::io__text_double::POSY, -0.055);
-						t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_OPTIONS_" + std::to_string(counter++));
-						t->set(Constants::io__text_integer::LAYER, -9);
-						t->set(Constants::io__text_double::UPDATETIME, 1.0 / 10);
-						t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
-						t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_ON, [](std::string& str) {std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
+						Button* but = buttons.create("");
+						but->setText("Go back to Menu");
+						but->setLayers({ -9 });
+						but->hook(Constants::io__buttons_shared_tie_func::MOUSE_CLICK, [&versatile_select](Sprite* sp, Text* tp, std::string& str) { if (sp) versatile_select(main_gamemodes::MENU); });
+						but->hook(Constants::io__buttons_shared_tie_func::MOUSE_ON, [&conf](Sprite* sp, Text* tp, std::string& str) { if (tp) std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
+						but->setPosY(_posy);
+						but->addBitmaps(true, { "BAR_OFF", "BAR_ON" });
+						but->setLinks({ { Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0 },{ Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1 },{ Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1 } });
 					}
 				}
 			}
@@ -1767,73 +1276,25 @@ int main(int argc, const char* argv[])
 				}
 
 				{
-					Sprite* s = sprites.create("BUTTON_GAMING_3");
-					s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
-					s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
-					s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-					s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-					s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.05, 1.0, 0.45, 1.0));
-					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
-					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
-					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
-					s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&__assist_g, &versatile_select]() {versatile_select(__assist_g); }); // [&modern,&__assist_g]()->void {modern = __assist_g; });
-					s->set(Constants::io__sprite_string::ID, "BUTTON_GAMING_3");
-					s->set(Constants::io__sprite_boolean::DRAW, true);
-					s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-					s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-					s->set(Constants::io__sprite_double::SCALEG, 0.17);
-					s->set(Constants::io__sprite_double::SCALEX, 4.8);
-					s->set(Constants::io__sprite_double::POSY, 0.4);
-					s->set(Constants::io__sprite_integer::LAYER, -1);
-
-					Text* t = texts.create("BUTTON_GAMING_3_T");
-					t->set(Constants::io__text_string::FONT, "DEFAULT");
-					t->set(Constants::io__text_string::STRING, "Continue");
-					t->set(Constants::io__text_string::ID, "BUTTON_GAMING_3_T");
-					t->set(Constants::io__text_boolean::SHOW, true);
-					t->set(Constants::io__text_double::SCALEG, 0.07);
-					t->set(Constants::io__text_double::SCALEX, 0.7);
-					t->set(Constants::io__text_double::POSY, -0.055);
-					t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_GAMING_3");
-					t->set(Constants::io__text_integer::LAYER, -1);
-					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 2);
-					t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
-					t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_ON, [](std::string& str) {std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
+					Button* but = buttons.create("");
+					but->setText("Continue the game");
+					but->setLayers({ -1 });
+					but->hook(Constants::io__buttons_shared_tie_func::MOUSE_CLICK, [&__assist_g, &versatile_select](Sprite* sp, Text* tp, std::string& str) { if (sp) versatile_select(__assist_g); });
+					but->hook(Constants::io__buttons_shared_tie_func::MOUSE_ON, [&conf](Sprite* sp, Text* tp, std::string& str) { if (tp) std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
+					but->setPosY(0.4);
+					but->addBitmaps(true, { "BAR_OFF", "BAR_ON" });
+					but->setLinks({ { Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0 },{ Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1 },{ Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1 } });
 				}
 
 				{
-					Sprite* s = sprites.create("BUTTON_GAMING_4");
-					s->set(Constants::io__sprite_boolean::USE_STATE_AS_BITMAP, true);
-					s->set(Constants::io__sprite_string::ADD, "BAR_OFF"); // clearly 0
-					s->set(Constants::io__sprite_string::ADD, "BAR_ON");  // clearly 1
-					s->set(Constants::io__sprite_boolean::USE_TINTED_DRAWING, true);
-					s->set(Constants::io__sprite_color::TINT, al_map_rgba_f(0.05, 1.0, 0.45, 1.0));
-					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0);
-					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1);
-					s->set(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1);
-					s->hook(Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, [&versatile_select]() {versatile_select(main_gamemodes::MENU); }); //  [&modern]()->void {modern = main_gamemodes::MENU; });
-					s->set(Constants::io__sprite_string::ID, "BUTTON_GAMING_4");
-					s->set(Constants::io__sprite_boolean::DRAW, true);
-					s->set(Constants::io__sprite_boolean::RESPECT_CAMERA_LIMITS, false);
-					s->set(Constants::io__sprite_collision_mode::COLLISION_MOUSEONLY);
-					s->set(Constants::io__sprite_double::SCALEG, 0.17);
-					s->set(Constants::io__sprite_double::SCALEX, 4.8);
-					s->set(Constants::io__sprite_double::POSY, 0.6);
-					s->set(Constants::io__sprite_integer::LAYER, -1);
-
-					Text* t = texts.create("BUTTON_GAMING_4_T");
-					t->set(Constants::io__text_string::FONT, "DEFAULT");
-					t->set(Constants::io__text_string::STRING, "Go back to Menu");
-					t->set(Constants::io__text_string::ID, "BUTTON_GAMING_4_T");
-					t->set(Constants::io__text_boolean::SHOW, true);
-					t->set(Constants::io__text_double::SCALEG, 0.07);
-					t->set(Constants::io__text_double::SCALEX, 0.7);
-					t->set(Constants::io__text_double::POSY, -0.055);
-					t->set(Constants::io__text_string::FOLLOW_SPRITE, "BUTTON_GAMING_4");
-					t->set(Constants::io__text_integer::LAYER, -1);
-					t->set(Constants::io__text_double::UPDATETIME, 1.0 / 2);
-					t->set(Constants::io__text_color::COLOR, al_map_rgb(180, 255, 225));
-					t->hook(Constants::io__text_tie_func_to_state::SPRITE_COLLISION_MOUSE_ON, [](std::string& str) {std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
+					Button* but = buttons.create("");
+					but->setText("Go back to Menu");
+					but->setLayers({ -1 });
+					but->hook(Constants::io__buttons_shared_tie_func::MOUSE_CLICK, [&versatile_select](Sprite* sp, Text* tp, std::string& str) { if (sp) versatile_select(main_gamemodes::MENU); });
+					but->hook(Constants::io__buttons_shared_tie_func::MOUSE_ON, [&conf](Sprite* sp, Text* tp, std::string& str) { if (tp) std::transform(str.begin(), str.end(), str.begin(), ::toupper); });
+					but->setPosY(0.6);
+					but->addBitmaps(true, { "BAR_OFF", "BAR_ON" });
+					but->setLinks({ { Constants::io__sprite_tie_func_to_state::COLLISION_NONE, 0 },{ Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_ON, 1 },{ Constants::io__sprite_tie_func_to_state::COLLISION_MOUSE_CLICK, 1 } });
 				}
 			}
 

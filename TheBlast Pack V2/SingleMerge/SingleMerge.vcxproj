@@ -23,6 +23,7 @@
     <ProjectGuid>{9DB3E7B1-20E6-4EC3-9F5B-C7421A22CAD3}</ProjectGuid>
     <RootNamespace>SingleMerge</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>SimpleMergeHash</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

@@ -16,9 +16,6 @@
     <Filter Include="base\sound">
       <UniqueIdentifier>{fe4e1cca-90eb-4160-a2ca-475d303596d7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="base\shared_constants">
-      <UniqueIdentifier>{45780051-7938-4d66-b5c2-cead87eb59eb}</UniqueIdentifier>
-    </Filter>
     <Filter Include="base\organizer">
       <UniqueIdentifier>{e4a1a629-f979-40f7-a1ff-f1bf14142ab8}</UniqueIdentifier>
     </Filter>
@@ -42,6 +39,12 @@
     </Filter>
     <Filter Include="base\hash_gen">
       <UniqueIdentifier>{27a1b42b-84d8-4744-abef-bdd938893164}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\constants">
+      <UniqueIdentifier>{45780051-7938-4d66-b5c2-cead87eb59eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base\menutton">
+      <UniqueIdentifier>{bc93b7b8-65f0-4d62-a454-bdc7cc70c5c0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -75,6 +78,9 @@
     <ClCompile Include="self_only.cpp">
       <Filter>main</Filter>
     </ClCompile>
+    <ClCompile Include="..\LSW\menutton\menutton.cpp">
+      <Filter>base\menutton</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -90,7 +96,7 @@
       <Filter>base\sound</Filter>
     </ClInclude>
     <ClInclude Include="..\LSW\shared_constants\constants.h">
-      <Filter>base\shared_constants</Filter>
+      <Filter>base\constants</Filter>
     </ClInclude>
     <ClInclude Include="..\LSW\organizer\organizer.h">
       <Filter>base\organizer</Filter>
@@ -121,6 +127,9 @@
     </ClInclude>
     <ClInclude Include="self_only.h">
       <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\LSW\menutton\menutton.h">
+      <Filter>base\menutton</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

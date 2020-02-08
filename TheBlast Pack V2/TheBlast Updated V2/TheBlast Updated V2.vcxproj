@@ -222,6 +222,7 @@
     <ClCompile Include="..\LSW\drawing\drawing.cpp" />
     <ClCompile Include="..\LSW\hash\sha256.cpp" />
     <ClCompile Include="..\LSW\map_gen\map.cpp" />
+    <ClCompile Include="..\LSW\menutton\menutton.cpp" />
     <ClCompile Include="..\LSW\package_raw\package_raw.cpp" />
     <ClCompile Include="..\LSW\sound\sound.cpp" />
     <ClCompile Include="..\LSW\system\system.cpp" />
@@ -259,6 +260,7 @@
     <ClInclude Include="..\LSW\hash\sha256.h" />
     <ClInclude Include="..\LSW\logger\logger.h" />
     <ClInclude Include="..\LSW\map_gen\map.h" />
+    <ClInclude Include="..\LSW\menutton\menutton.h" />
     <ClInclude Include="..\LSW\organizer\organizer.h" />
     <ClInclude Include="..\LSW\package_raw\package_raw.h" />
     <ClInclude Include="..\LSW\shared_constants\constants.h" />

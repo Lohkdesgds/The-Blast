@@ -14,21 +14,54 @@ void __auto_initializer_do_not_touch::_init()
 
 	try {
 		conf.load(config_default_file);
+		conf.set(Constants::io__conf_boolean::HIDEMOUSE, false); // not in this one
+
 		__g_sys.setZipLocation(start_zip_default_extract_path);
-		__g_sys.initSystem(false);
+		__g_sys.initSystem();
 	}
 	catch (Abort::abort a) {
-		std::string ext_exp = std::string("Function gone wrong: " + a.from() + "\n\nExplanation: " + a.details());
+#ifdef _DEBUG
 
-		logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Something went wrong opening the game." << L::ELF;
-		logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << ext_exp << L::ELF;
-		logg.flush();
+		if (a.getErrN() == 1) {
 
-		forceExit("Something went wrong anyway!", "Please report the following:", ext_exp.c_str());
+			logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Internal datapack wasn't found. Skipping because it's DEBUG version..." << L::ELF;
+			logg.flush();
+
+			try {
+				__g_sys.posInit_forceWithNoZipAnyway();
+			}
+			catch (Abort::abort a) {
+
+				std::string ext_exp = std::string("Function gone wrong: " + a.from() + "\n\nExplanation: " + a.details());
+
+				logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "The Launcher was never properly installed." << L::ELF;
+				logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << ext_exp << L::ELF;
+				logg.flush();
+
+				forceExit("Something went wrong anyway!", "Please report the following:", ext_exp.c_str());
+			}
+		}
+		else {
+#endif
+
+			std::string ext_exp = std::string("Something went wrong: " + a.from() + "\n\nExplanation: " + a.details());
+
+			logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Something went wrong opening the game." << L::ELF;
+			logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << ext_exp << L::ELF;
+			logg.flush();
+
+			forceExit("Something went wrong anyway!", "Please report the following:", ext_exp.c_str());
+
+#ifdef _DEBUG
+		}
+#endif
 	}
 }
 
 __auto_initializer_do_not_touch::__auto_initializer_do_not_touch() {
+
+	if (counter++ != 0) return;
+
 	logg.setPath(default_file_global_path);
 
 	logg << L::SLF << fsr(__FUNCSIG__) << "[>~v~~~~~~~~~~v~ PRE-INIT ~v~~~~~~~~~~v~<]" << L::ELF;
@@ -90,20 +123,8 @@ __auto_initializer_do_not_touch::__auto_initializer_do_not_touch() {
 
 #endif // !_DEBUG
 
-
-
 	logg << L::SLF << fsr(__FUNCSIG__) << "Initializing variables..." << L::ELF;
-	init = new all;
-
-	logg << L::SLF << fsr(__FUNCSIG__) << "Setting up custom vector behaviours..." << L::ELF;
-
-	init->textures.set(Constants::lambda_bitmap_load, Constants::lambda_bitmap_unload);
-	init->fonts.set(Constants::lambda_font_load, Constants::lambda_font_unload);
-	init->samples.set(Constants::lambda_sample_load, Constants::lambda_sample_unload);
-
-	init->sprites.set(Constants::lambda_default_load<Sprite>, Constants::lambda_default_unload<Sprite>);
-	init->texts.set(Constants::lambda_default_load<Text>, Constants::lambda_default_unload<Text>);
-	init->tracks.set(Constants::lambda_default_load<Track>, Constants::lambda_default_unload<Track>);
+	init = new prelaunch;
 
 	logg << L::SLF << fsr(__FUNCSIG__) << "[>~^~~~~~~~~~~^~ PRE-INIT ~^~~~~~~~~~~^~<]" << L::ELF;
 }

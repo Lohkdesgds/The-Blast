@@ -65,6 +65,9 @@ void __auto_initializer_do_not_touch::_init()
 }
 
 __auto_initializer_do_not_touch::__auto_initializer_do_not_touch() {
+
+	if (counter++ != 0) return;
+
 	logg.setPath(default_file_global_path);
 
 	logg << L::SLF << fsr(__FUNCSIG__) << "[>~v~~~~~~~~~~v~ PRE-INIT ~v~~~~~~~~~~v~<]" << L::ELF;
@@ -126,20 +129,8 @@ __auto_initializer_do_not_touch::__auto_initializer_do_not_touch() {
 
 #endif // !_DEBUG
 
-
-
 	logg << L::SLF << fsr(__FUNCSIG__) << "Initializing variables..." << L::ELF;
-	init = new all;
-
-	logg << L::SLF << fsr(__FUNCSIG__) << "Setting up custom vector behaviours..." << L::ELF;
-
-	init->textures.set(Constants::lambda_bitmap_load, Constants::lambda_bitmap_unload);
-	init->fonts.set(Constants::lambda_font_load, Constants::lambda_font_unload);
-	init->samples.set(Constants::lambda_sample_load, Constants::lambda_sample_unload);
-
-	init->sprites.set(Constants::lambda_default_load<Sprite>, Constants::lambda_default_unload<Sprite>);
-	init->texts.set(Constants::lambda_default_load<Text>, Constants::lambda_default_unload<Text>);
-	init->tracks.set(Constants::lambda_default_load<Track>, Constants::lambda_default_unload<Track>);
+	init = new prelaunch;
 
 	logg << L::SLF << fsr(__FUNCSIG__) << "[>~^~~~~~~~~~~^~ PRE-INIT ~^~~~~~~~~~~^~<]" << L::ELF;
 }
