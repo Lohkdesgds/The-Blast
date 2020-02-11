@@ -3,13 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29519.87
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TheBlast Updated V2", "TheBlast Updated V2\TheBlast Updated V2.vcxproj", "{610A0370-0B10-47C9-9094-EAFAC5274AB6}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TheBlast", "Projects\TheBlast\TheBlast.vcxproj", "{610A0370-0B10-47C9-9094-EAFAC5274AB6}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SingleMerge", "SingleMerge\SingleMerge.vcxproj", "{9DB3E7B1-20E6-4EC3-9F5B-C7421A22CAD3}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TheBlast Updated V2 - Server Side", "TheBlast Updated V2 - Server Side\TheBlast Updated V2 - Server Side.vcxproj", "{4FAA7ED8-6E80-404B-AD60-2EC773686001}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LSW Games Launcher", "LSW Games Launcher\LSW Games Launcher.vcxproj", "{0E6AC9E1-9CF5-4DD5-9A4E-7A037DC98903}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SingleMerge", "Projects\SingleMerge\SingleMerge.vcxproj", "{9DB3E7B1-20E6-4EC3-9F5B-C7421A22CAD3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,22 +31,14 @@ Global
 		{9DB3E7B1-20E6-4EC3-9F5B-C7421A22CAD3}.Release|x64.Build.0 = Release|x64
 		{9DB3E7B1-20E6-4EC3-9F5B-C7421A22CAD3}.Release|x86.ActiveCfg = Release|Win32
 		{9DB3E7B1-20E6-4EC3-9F5B-C7421A22CAD3}.Release|x86.Build.0 = Release|Win32
-		{4FAA7ED8-6E80-404B-AD60-2EC773686001}.Debug|x64.ActiveCfg = Debug|x64
-		{4FAA7ED8-6E80-404B-AD60-2EC773686001}.Debug|x64.Build.0 = Debug|x64
-		{4FAA7ED8-6E80-404B-AD60-2EC773686001}.Debug|x86.ActiveCfg = Debug|Win32
-		{4FAA7ED8-6E80-404B-AD60-2EC773686001}.Debug|x86.Build.0 = Debug|Win32
-		{4FAA7ED8-6E80-404B-AD60-2EC773686001}.Release|x64.ActiveCfg = Release|x64
-		{4FAA7ED8-6E80-404B-AD60-2EC773686001}.Release|x64.Build.0 = Release|x64
-		{4FAA7ED8-6E80-404B-AD60-2EC773686001}.Release|x86.ActiveCfg = Release|Win32
-		{4FAA7ED8-6E80-404B-AD60-2EC773686001}.Release|x86.Build.0 = Release|Win32
-		{0E6AC9E1-9CF5-4DD5-9A4E-7A037DC98903}.Debug|x64.ActiveCfg = Debug|x64
-		{0E6AC9E1-9CF5-4DD5-9A4E-7A037DC98903}.Debug|x64.Build.0 = Debug|x64
-		{0E6AC9E1-9CF5-4DD5-9A4E-7A037DC98903}.Debug|x86.ActiveCfg = Debug|Win32
-		{0E6AC9E1-9CF5-4DD5-9A4E-7A037DC98903}.Debug|x86.Build.0 = Debug|Win32
-		{0E6AC9E1-9CF5-4DD5-9A4E-7A037DC98903}.Release|x64.ActiveCfg = Release|x64
-		{0E6AC9E1-9CF5-4DD5-9A4E-7A037DC98903}.Release|x64.Build.0 = Release|x64
-		{0E6AC9E1-9CF5-4DD5-9A4E-7A037DC98903}.Release|x86.ActiveCfg = Release|Win32
-		{0E6AC9E1-9CF5-4DD5-9A4E-7A037DC98903}.Release|x86.Build.0 = Release|Win32
+		{4A1EF546-1535-43C5-A2D5-CC82CE46012B}.Debug|x64.ActiveCfg = Debug|x64
+		{4A1EF546-1535-43C5-A2D5-CC82CE46012B}.Debug|x64.Build.0 = Debug|x64
+		{4A1EF546-1535-43C5-A2D5-CC82CE46012B}.Debug|x86.ActiveCfg = Debug|Win32
+		{4A1EF546-1535-43C5-A2D5-CC82CE46012B}.Debug|x86.Build.0 = Debug|Win32
+		{4A1EF546-1535-43C5-A2D5-CC82CE46012B}.Release|x64.ActiveCfg = Release|x64
+		{4A1EF546-1535-43C5-A2D5-CC82CE46012B}.Release|x64.Build.0 = Release|x64
+		{4A1EF546-1535-43C5-A2D5-CC82CE46012B}.Release|x86.ActiveCfg = Release|Win32
+		{4A1EF546-1535-43C5-A2D5-CC82CE46012B}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\hash\sha256.cpp">
+      <Filter>Libraries\Internal\LSW\hash</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Libraries">
+      <UniqueIdentifier>{c3ddf643-067b-4cd3-8e99-7a6c97b6983b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal">
+      <UniqueIdentifier>{1e5e486a-ffc5-47ae-be82-bef716fb8daa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW">
+      <UniqueIdentifier>{e0cfa233-5ff3-4ff9-8c62-761146f7e826}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\hash">
+      <UniqueIdentifier>{8b6de7f2-9a8f-4de3-a7dc-5b3b1f1a6130}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\hash\sha256.h">
+      <Filter>Libraries\Internal\LSW\hash</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,199 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\custom_abort\abort.cpp">
+      <Filter>Libraries\Internal\LSW\abort</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\console\console.cpp">
+      <Filter>Libraries\Internal\LSW\console</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\download_manager\downloader.cpp">
+      <Filter>Libraries\Internal\LSW\download manager</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\drawing\drawing.cpp">
+      <Filter>Libraries\Internal\LSW\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\map_gen\map.cpp">
+      <Filter>Libraries\Internal\LSW\map generation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\menutton\menutton.cpp">
+      <Filter>Libraries\Internal\LSW\menutton</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\package_raw\package_raw.cpp">
+      <Filter>Libraries\Internal\LSW\package_raw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\hash\sha256.cpp">
+      <Filter>Libraries\Internal\LSW\hash</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\sound\sound.cpp">
+      <Filter>Libraries\Internal\LSW\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\system\system.cpp">
+      <Filter>Libraries\Internal\LSW\system</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\tools\tools.cpp">
+      <Filter>Libraries\Internal\LSW\tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW external optional dependencies\gaming_modes\gaming_storm.cpp">
+      <Filter>Libraries\Internal\LSW external addons\gaming storm</Filter>
+    </ClCompile>
+    <ClCompile Include="starter.cpp">
+      <Filter>Local</Filter>
+    </ClCompile>
+    <ClCompile Include="self_only.cpp">
+      <Filter>Local</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\custom_abort\abort.h">
+      <Filter>Libraries\Internal\LSW\abort</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\big_templates\big_templates.h">
+      <Filter>Libraries\Internal\LSW\templates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\console\console.h">
+      <Filter>Libraries\Internal\LSW\console</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\shared_constants\constants.h">
+      <Filter>Libraries\Internal\LSW\shared constants</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\defaults.h">
+      <Filter>Libraries\Internal\LSW</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\download_manager\downloader.h">
+      <Filter>Libraries\Internal\LSW\download manager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\drawing\drawing.h">
+      <Filter>Libraries\Internal\LSW\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\hidden\hidden.h">
+      <Filter>Libraries\Internal\hidden</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\logger\logger.h">
+      <Filter>Libraries\Internal\LSW\logger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\map_gen\map.h">
+      <Filter>Libraries\Internal\LSW\map generation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\menutton\menutton.h">
+      <Filter>Libraries\Internal\LSW\menutton</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\organizer\organizer.h">
+      <Filter>Libraries\Internal\LSW\organizer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\package_raw\package_raw.h">
+      <Filter>Libraries\Internal\LSW\package_raw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\hash\sha256.h">
+      <Filter>Libraries\Internal\LSW\hash</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\big_templates\small_templates.h">
+      <Filter>Libraries\Internal\LSW\templates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\sound\sound.h">
+      <Filter>Libraries\Internal\LSW\sound</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\system\system.h">
+      <Filter>Libraries\Internal\LSW\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\tools\tools.h">
+      <Filter>Libraries\Internal\LSW\tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW external optional dependencies\gaming_modes\gaming_storm.h">
+      <Filter>Libraries\Internal\LSW external addons\gaming storm</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="self_only.h">
+      <Filter>Local</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Libraries">
+      <UniqueIdentifier>{c840019e-1747-4310-80d4-46c124eba2ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\External">
+      <UniqueIdentifier>{a70439fb-d2d6-42bc-aba3-dc151971cf4b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal">
+      <UniqueIdentifier>{2330ef7a-3271-44b0-a0d2-8cc0dfc6e6a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\hidden">
+      <UniqueIdentifier>{c75290a5-bb14-4bc9-859b-396ee176032e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW">
+      <UniqueIdentifier>{30f86f98-8cde-42f3-8dde-d1f43064fb47}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW external addons">
+      <UniqueIdentifier>{10f059a7-44d8-4f85-9130-45d227821676}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\templates">
+      <UniqueIdentifier>{7ffb47e9-a213-427b-9433-760776226705}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\console">
+      <UniqueIdentifier>{1b22f46b-e042-4d32-b8de-6abbb8ade2e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\download manager">
+      <UniqueIdentifier>{47c525bd-bd90-4ae8-a3b4-e39e7a8a1e4d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\drawing">
+      <UniqueIdentifier>{d4321e5a-8039-443c-b7e6-f7f019e8798f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\hash">
+      <UniqueIdentifier>{c3bc0442-741e-4d10-8755-384afedbfe6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\logger">
+      <UniqueIdentifier>{e6ebcfc1-b9c9-4f31-bcd5-9d6eb13de284}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\map generation">
+      <UniqueIdentifier>{e9bc4d5f-046a-46a3-b23d-e7651388b324}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\menutton">
+      <UniqueIdentifier>{0ee65f0a-0472-4d7c-acaa-98f562b6d85d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\organizer">
+      <UniqueIdentifier>{9f6572e1-7068-496f-9c4c-0fd19a2c8c71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\package_raw">
+      <UniqueIdentifier>{3ee49fc5-4630-4488-8457-aefda1c6a84e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\shared constants">
+      <UniqueIdentifier>{db57069d-94c5-4df4-a57d-b991a4295f0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\sound">
+      <UniqueIdentifier>{361e6f91-133b-4796-8c2d-4fdb6f62ccc9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\system">
+      <UniqueIdentifier>{f8bdeede-4fed-4efb-96b4-ad7338800d25}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\tools">
+      <UniqueIdentifier>{44d10336-f098-47b3-96a6-b3004a6d258d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\abort">
+      <UniqueIdentifier>{5d6c7315-b0b3-48d6-a018-bec72b1b347c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW external addons\gaming storm">
+      <UniqueIdentifier>{a6c23a6a-eada-40c5-91de-29bd2236779b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{48b6ae4e-e00b-4f2d-a2ec-73b391c88f08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Local">
+      <UniqueIdentifier>{5bd40b8f-fd25-4887-bd09-ceb84fc8a431}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="icon1.ico">
+      <Filter>Resources</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="TheBlast.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+</Project>
