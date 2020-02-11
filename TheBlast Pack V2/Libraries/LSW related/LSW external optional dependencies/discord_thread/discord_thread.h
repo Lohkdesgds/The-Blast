@@ -10,7 +10,7 @@
 #include <mutex>
 #include <chrono>
 
-#include "..\..\imported\source\discord.h"
+#include "..\..\..\External\Discord\source\discord.h"
 #include "..\..\hidden\hidden.h"
 
 namespace LSW {

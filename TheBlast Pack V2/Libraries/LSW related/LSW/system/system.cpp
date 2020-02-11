@@ -524,6 +524,7 @@ namespace LSW {
 		{
 			__systematic sys;
 			sys.initAllegro();
+			sys.unsetInterface();
 
 			if (!data.c && temporary.length() > 0) {
 				Tools::interpretPath(temporary);
@@ -541,8 +542,6 @@ namespace LSW {
 					logg << L::SLF << fsr(__FUNCSIG__) << "Is this the first time you're opening this game? Registered first Database load." << L::ELF;
 
 					internalCheck();
-
-					sys.unsetInterface();
 
 					if (!al_save_config_file(temporary.c_str(), data.c)) {
 						throw Abort::abort(__FUNCSIG__, "Cannot save Database file!");

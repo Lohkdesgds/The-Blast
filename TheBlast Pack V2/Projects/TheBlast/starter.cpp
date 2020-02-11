@@ -22,6 +22,10 @@ int main(int argc, const char* argv[])
 	try {
 		// this has to be like the first one
 		gfile logg;
+
+		con_host discord_host;
+		discord_host.setMaxConnections(1);
+		discord_host.hookPrint([&logg](const std::string u) { logg << L::SLF << fsr(__FUNCSIG__) << "CONNECTION: " << u << L::ELF; });
 		/*DiscordConnection* connection = nullptr;
 
 		try {
@@ -50,11 +54,41 @@ int main(int argc, const char* argv[])
 		**************************************************************************************/
 
 
+		// OOPSIE DEBUG STUFF HAHA TESTING RIGHT HERE LMAO (work here hoh)
+		STARTUPINFO si;
+		PROCESS_INFORMATION pi;
+		ZeroMemory(&si, sizeof(si));
+		si.cb = sizeof(si);
+		ZeroMemory(&pi, sizeof(pi));
+		if (Tools::getFileSize("C:\\Visual Studio Projects\\LSW - The Blast\\TheBlast Pack V2\\x64\\Debug\\testing\\TheBlast Discord Addon.exe")) {
+			char lmaobuf[] = "\"C:\\Visual Studio Projects\\LSW - The Blast\\TheBlast Pack V2\\x64\\Debug\\testing\\TheBlast Discord Addon.exe\"";
+			if (!CreateProcessA(NULL,   // No module name (use command line)
+				lmaobuf,        // Command line
+				NULL,           // Process handle not inheritable
+				NULL,           // Thread handle not inheritable
+				FALSE,          // Set handle inheritance to FALSE
+				0,              // No creation flags
+				NULL,           // Use parent's environment block
+				NULL,           // Use parent's starting directory 
+				&si,            // Pointer to STARTUPINFO structure
+				&pi)           // Pointer to PROCESS_INFORMATION structure
+				)
+			{
+				logg << L::SLF << fsr(__FUNCSIG__) << "Sad times test didn't work (debug lmao)" << L::ELF;
+			}
+			else {
+				logg << L::SLF << fsr(__FUNCSIG__) << "Call to Discord API worked lmao beta woo hoo" << L::ELF;
+			}
+			//system("\"C:\\Visual Studio Projects\\LSW - The Blast\\TheBlast Pack V2\\x64\\Debug\\testing\\TheBlast Discord Addon.exe\"");
+		}
+
+
 		// used by lambdas
 		main_gamemodes modern = main_gamemodes::HASNT_STARTED_YET;
 		bool __assist[3] = { false, false, false }; // 1: LOADING_ANIMATION, 2: FULLSCREEN/WINDOW TOGGLE, 3: GAMEBOXMAIN Sprite down below on loop
 		main_gamemodes __assist_g = modern;
 		double __assist_t_button = 0;
+		double __assist_send_disc = 0;
 
 
 		// needed initialization
@@ -173,6 +207,7 @@ int main(int argc, const char* argv[])
 
 			**************************************************************************************/
 
+			sys.setInterface();
 
 			// REALLY IMPORTANT TO LOAD BEFORE EVERYTHING, REALLY!
 			auto ff = fonts.load("DEFAULT", "font.ttf");
@@ -565,13 +600,20 @@ int main(int argc, const char* argv[])
 					cp.set(Constants::io__camera_double::LIMIT_MAX_Y, 0.95);
 					cp.set(Constants::io__camera_boolean::READONLY_NOW, true);
 					gcam.set(cp, +main_gamemodes::HASNT_STARTED_YET); // same
-					gcam.set(cp, +main_gamemodes::LOADING);
-					/*gcam.set(cp, +main_gamemodes::LOADING, [&connection](camera_preset& mee)->void {
-						connection->lock();
-						connection->getActivity().SetDetails("on Menu");
-						connection->getActivity().GetTimestamps().SetStart(0);
-						connection->unlock();
-						});*/
+					//gcam.set(cp, +main_gamemodes::LOADING);
+					gcam.set(cp, +main_gamemodes::LOADING, [&discord_host,&__assist_send_disc](camera_preset& mee)->void {
+						if (al_get_time() - __assist_send_disc > 1.0) {
+							__assist_send_disc = al_get_time();
+							Constants::final_package pkg;
+							pkg.data_type = 2; // cmd
+							pkg.variable_data = "SetDetails:on Menu\nSetStart:0";
+							discord_host.lock();
+							for (auto& i : discord_host) {
+								i->send_nolock(pkg);
+							}
+							discord_host.unlock();
+						}
+						});
 				}
 				{
 					// menu
@@ -588,14 +630,21 @@ int main(int argc, const char* argv[])
 					cp.set(Constants::io__camera_double::LIMIT_MAX_X, 0.95);
 					cp.set(Constants::io__camera_double::LIMIT_MAX_Y, 0.95);
 					cp.set(Constants::io__camera_boolean::READONLY_NOW, true);
-					gcam.set(cp, +main_gamemodes::MENU, [&this_is_the_player/*,&connection*/](camera_preset& mee)->void {
+					gcam.set(cp, +main_gamemodes::MENU, [&this_is_the_player, &discord_host,&__assist_send_disc](camera_preset& mee)->void {
 						if (this_is_the_player) {
 							this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, false);
 						}
-						/*connection->lock();
-						connection->getActivity().SetDetails("on Menu");
-						connection->getActivity().GetTimestamps().SetStart(0);
-						connection->unlock();*/
+						if (al_get_time() - __assist_send_disc > 1.0) {
+							__assist_send_disc = al_get_time();
+							Constants::final_package pkg;
+							pkg.data_type = 2; // cmd
+							pkg.variable_data = "SetDetails:on Menu\nSetStart:0";
+							discord_host.lock();
+							for (auto& i : discord_host) {
+								i->send_nolock(pkg);
+							}
+							discord_host.unlock();
+						}
 						});
 				}
 				{
@@ -613,7 +662,7 @@ int main(int argc, const char* argv[])
 					cp.set(Constants::io__camera_double::LIMIT_MAX_X, 0.51);
 					cp.set(Constants::io__camera_double::LIMIT_MAX_Y, 0.542);
 					cp.set(Constants::io__camera_boolean::READONLY_NOW, true);
-					gcam.set(cp, +main_gamemodes::OPTIONS, [&conf,&this_is_the_player/*,&connection*/](camera_preset& mee)->void {
+					gcam.set(cp, +main_gamemodes::OPTIONS, [&conf,&this_is_the_player,&discord_host,&__assist_send_disc](camera_preset& mee)->void {
 						double dy = 0;
 						conf.get(Constants::ro__db_mouse_double::MOUSE_Y, dy);
 						camera_preset cpy = mee;
@@ -625,10 +674,17 @@ int main(int argc, const char* argv[])
 							this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, true);
 							this_is_the_player->set(Constants::io__sprite_double::SCALEG, 0.068);
 						}
-						/*connection->lock();
-						connection->getActivity().SetDetails("on Options");
-						connection->getActivity().GetTimestamps().SetStart(0);
-						connection->unlock();*/
+						if (al_get_time() - __assist_send_disc > 1.0) {
+							__assist_send_disc = al_get_time();
+							Constants::final_package pkg;
+							pkg.data_type = 2; // cmd
+							pkg.variable_data = "SetDetails:on Options\nSetStart:0";
+							discord_host.lock();
+							for (auto& i : discord_host) {
+								i->send_nolock(pkg);
+							}
+							discord_host.unlock();
+						}
 						});
 				}
 				{
@@ -646,13 +702,21 @@ int main(int argc, const char* argv[])
 					cp.set(Constants::io__camera_double::LIMIT_MAX_X, 0.95);
 					cp.set(Constants::io__camera_double::LIMIT_MAX_Y, 0.95);
 					cp.set(Constants::io__camera_boolean::READONLY_NOW, true);
-					gcam.set(cp, +main_gamemodes::PAUSE, [&this_is_the_player/*,&connection*/](camera_preset& mee)->void {
+					gcam.set(cp, +main_gamemodes::PAUSE, [&this_is_the_player,&discord_host,&__assist_send_disc](camera_preset& mee)->void {
 						if (this_is_the_player) {
 							this_is_the_player->set(Constants::io__sprite_boolean::FOLLOWKEYBOARD, false);
 						}
-						/*connection->lock();
-						connection->getActivity().SetDetails("Paused the game");
-						connection->unlock();*/
+						if (al_get_time() - __assist_send_disc > 1.0) {
+							__assist_send_disc = al_get_time();
+							Constants::final_package pkg;
+							pkg.data_type = 2; // cmd
+							pkg.variable_data = "SetDetails:on Pause";
+							discord_host.lock();
+							for (auto& i : discord_host) {
+								i->send_nolock(pkg);
+							}
+							discord_host.unlock();
+						}
 						});
 				}
 				{
@@ -1499,6 +1563,26 @@ int main(int argc, const char* argv[])
 			if (isGamingLocally(modern)) {
 				if (!game_0) {
 					game_0 = new GamingStorm(&consol, this_is_the_player, music_gaming, +my_custom_funcs::GAMING_PLAYER_EXIT_TASK);
+					game_0->tieToGamingTime([&discord_host](const std::chrono::milliseconds ms) { 
+						Constants::final_package pkg;
+						pkg.data_type = 2; // cmd
+						pkg.variable_data = "SetStart:" + std::to_string(ms.count());
+						discord_host.lock();
+						for (auto& i : discord_host) {
+							i->send_nolock(pkg);
+						}
+						discord_host.unlock();
+						});
+					game_0->tieToLevelName([&discord_host](const std::string lv) { 
+						Constants::final_package pkg;
+						pkg.data_type = 2; // cmd
+						pkg.variable_data = "SetDetails:" + lv + "";
+						discord_host.lock();
+						for (auto& i : discord_host) {
+							i->send_nolock(pkg);
+						}
+						discord_host.unlock();
+						});
 					//game_0->tieToGamingTime([&connection](const std::chrono::milliseconds ms) { connection->getActivity().GetTimestamps().SetStart(ms.count()); });
 					//game_0->tieToLevelName([&connection](const std::string lv) { connection->getActivity().SetDetails(lv.c_str()); });
 					game_0->startAutomatically();
@@ -1533,6 +1617,17 @@ int main(int argc, const char* argv[])
 		{
 			__systematic sys;
 			sys.deinitSystem();
+
+			Constants::final_package pkg;
+			pkg.data_type = 1; // end
+			discord_host.lock();
+			for (auto& i : discord_host) {
+				i->send_nolock(pkg);
+			}
+			for (auto& i : discord_host) {
+				i->kill_connection();
+			}
+			discord_host.unlock();
 		}
 		//if (connection) delete connection;
 	}

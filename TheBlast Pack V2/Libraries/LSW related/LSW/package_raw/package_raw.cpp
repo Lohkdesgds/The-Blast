@@ -126,6 +126,9 @@ namespace LSW {
                 die = true;
                 Connected = INVALID_SOCKET;
             }
+
+            if (locked_recv) received_hold.unlock();
+            if (locked_send) sending_hold.unlock();
         }
 
         bool connection_each::_send_raw(void* v, int s)
@@ -146,7 +149,10 @@ namespace LSW {
 
         bool connection_each::send_package(Constants::sockets_packages& pack)
         {
-            if (pack.data_len) printf_s("Sending package of size %d.\n", pack.data_len);
+            if (pack.data_len) {
+                //if (prunt) prunt("Sending package of size " + std::to_string(pack.data_len));
+                //printf_s("Sending package of size %d.\n", pack.data_len);
+            }
 
             void* end = &pack;
             int siz = sizeof(Constants::sockets_packages);
@@ -161,7 +167,10 @@ namespace LSW {
 
             bool a = _recv_raw(end, siz);
 
-            if (pack.data_len) printf_s("Received package of size %d.\n", pack.data_len);
+            if (pack.data_len) {
+                //if (prunt) prunt("Received package of size " + std::to_string(pack.data_len));
+                //printf_s("Received package of size %d.\n", pack.data_len);
+            }
 
             return a;
         }
@@ -187,6 +196,8 @@ namespace LSW {
         connection_each::~connection_each()
         {
             kill_connection();
+            received.clear();
+            sending.clear();
         }
 
         bool connection_each::connect(const char* a, const int b, const bool c)
@@ -215,6 +226,31 @@ namespace LSW {
         bool connection_each::hasPackage()
         {
             return received.size() > 0;
+        }
+
+        bool connection_each::send_nolock(Constants::final_package pack)
+        {
+            if (sending.size() >= Constants::max_buf) return false;
+
+            if (sending_hold.try_lock()) {
+                while (pack.variable_data.length() > 0)
+                {
+                    Constants::sockets_packages small_p;
+                    size_t max_siz = pack.variable_data.length();
+                    for (small_p.data_len = 0; small_p.data_len < max_siz && small_p.data_len < Constants::default_package_size; small_p.data_len++)
+                    {
+                        small_p.data[small_p.data_len] = pack.variable_data[0];
+                        pack.variable_data.erase(0, 1);
+                    }
+                    small_p.combine_with_n_more = (static_cast<int>(max_siz) - 1) / Constants::default_package_size; // if eq, 0
+                    small_p.data_type = pack.data_type;
+
+                    sending.push_back(small_p);
+                }
+                sending_hold.unlock();
+                return true;
+            }
+            return false;
         }
 
         void connection_each::send(Constants::final_package pack)
@@ -254,6 +290,11 @@ namespace LSW {
             return pack.variable_data.size() > 0;
         }
 
+        void connection_each::hookPrint(std::function<void(const std::string)> f)
+        {
+            prunt = f;
+        }
+
         void connection_host::auto_accept()
         {
             while (still_running) {
@@ -275,7 +316,8 @@ namespace LSW {
                 connections_m.lock();
                 connections.push_back(dis);
                 connections_m.unlock();
-                printf_s("\nSomeone has connected!");
+                if (prunt) prunt("Someone has connected!");
+                //printf_s("\nSomeone has connected!");
             }
         }
 
@@ -290,7 +332,8 @@ namespace LSW {
                     if (!i->still_on()) {
                         delete i;
                         connections.erase(connections.begin() + p--);
-                        printf_s("\nSomeone has disconnected!");
+                        if (prunt) prunt("Someone has disconnected.");
+                        //printf_s("\nSomeone has disconnected!");
                     }
                 }
                 connections_m.unlock();
@@ -357,6 +400,10 @@ namespace LSW {
         void connection_host::setMaxConnections(const size_t v)
         {
             max_connections_allowed = v;
+        }
+        void connection_host::hookPrint(std::function<void(const std::string)> f)
+        {
+            prunt = f;
         }
     }
 }

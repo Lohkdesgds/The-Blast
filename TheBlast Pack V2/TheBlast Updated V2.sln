@@ -5,7 +5,9 @@ VisualStudioVersion = 16.0.29519.87
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TheBlast", "Projects\TheBlast\TheBlast.vcxproj", "{610A0370-0B10-47C9-9094-EAFAC5274AB6}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SingleMerge", "Projects\SingleMerge\SingleMerge.vcxproj", "{9DB3E7B1-20E6-4EC3-9F5B-C7421A22CAD3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleMergeHash", "Projects\SingleMerge\SingleMerge.vcxproj", "{9DB3E7B1-20E6-4EC3-9F5B-C7421A22CAD3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "The Blast Discord Addon", "Projects\TheBlast Discord Addon\The Blast Discord Addon.vcxproj", "{45B5D995-9D6D-4C86-858C-2704EA1A2B9D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,14 +33,14 @@ Global
 		{9DB3E7B1-20E6-4EC3-9F5B-C7421A22CAD3}.Release|x64.Build.0 = Release|x64
 		{9DB3E7B1-20E6-4EC3-9F5B-C7421A22CAD3}.Release|x86.ActiveCfg = Release|Win32
 		{9DB3E7B1-20E6-4EC3-9F5B-C7421A22CAD3}.Release|x86.Build.0 = Release|Win32
-		{4A1EF546-1535-43C5-A2D5-CC82CE46012B}.Debug|x64.ActiveCfg = Debug|x64
-		{4A1EF546-1535-43C5-A2D5-CC82CE46012B}.Debug|x64.Build.0 = Debug|x64
-		{4A1EF546-1535-43C5-A2D5-CC82CE46012B}.Debug|x86.ActiveCfg = Debug|Win32
-		{4A1EF546-1535-43C5-A2D5-CC82CE46012B}.Debug|x86.Build.0 = Debug|Win32
-		{4A1EF546-1535-43C5-A2D5-CC82CE46012B}.Release|x64.ActiveCfg = Release|x64
-		{4A1EF546-1535-43C5-A2D5-CC82CE46012B}.Release|x64.Build.0 = Release|x64
-		{4A1EF546-1535-43C5-A2D5-CC82CE46012B}.Release|x86.ActiveCfg = Release|Win32
-		{4A1EF546-1535-43C5-A2D5-CC82CE46012B}.Release|x86.Build.0 = Release|Win32
+		{45B5D995-9D6D-4C86-858C-2704EA1A2B9D}.Debug|x64.ActiveCfg = Debug|x64
+		{45B5D995-9D6D-4C86-858C-2704EA1A2B9D}.Debug|x64.Build.0 = Debug|x64
+		{45B5D995-9D6D-4C86-858C-2704EA1A2B9D}.Debug|x86.ActiveCfg = Debug|Win32
+		{45B5D995-9D6D-4C86-858C-2704EA1A2B9D}.Debug|x86.Build.0 = Debug|Win32
+		{45B5D995-9D6D-4C86-858C-2704EA1A2B9D}.Release|x64.ActiveCfg = Release|x64
+		{45B5D995-9D6D-4C86-858C-2704EA1A2B9D}.Release|x64.Build.0 = Release|x64
+		{45B5D995-9D6D-4C86-858C-2704EA1A2B9D}.Release|x86.ActiveCfg = Release|Win32
+		{45B5D995-9D6D-4C86-858C-2704EA1A2B9D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

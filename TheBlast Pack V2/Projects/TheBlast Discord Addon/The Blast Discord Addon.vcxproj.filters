@@ -1,0 +1,279 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Libraries">
+      <UniqueIdentifier>{dac11a86-33aa-44a2-b4bc-f87dc17b35ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Local">
+      <UniqueIdentifier>{8cbc8b09-484c-4d5a-9a36-889ff3a21dc1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\External">
+      <UniqueIdentifier>{11bbcadb-e294-4b70-a654-cabcfc06d0cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal">
+      <UniqueIdentifier>{79d6a60a-4c3e-456d-9b2f-2e5297c58c46}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\hidden">
+      <UniqueIdentifier>{43dab7d6-97c6-45c3-88bd-880437221204}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW">
+      <UniqueIdentifier>{e81c33e3-8cbc-4151-a628-280dc92220be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\templates">
+      <UniqueIdentifier>{9c0f8074-2918-4783-9893-01f5ed606bc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\console">
+      <UniqueIdentifier>{ac7f0035-4f03-48a4-ba26-823909967495}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\download manager">
+      <UniqueIdentifier>{10a15d36-63ec-47a2-9e55-8b72fcb69dd8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\drawing">
+      <UniqueIdentifier>{41310df3-c2fe-4bb1-8b46-ba0b5d0e5d01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\hash">
+      <UniqueIdentifier>{ed6534c6-de37-4988-9078-413a0bcff249}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\logger">
+      <UniqueIdentifier>{ce83f2f0-4175-441b-b8b4-218c702f1506}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\map generation">
+      <UniqueIdentifier>{14f79e15-8907-43d7-a583-007c046851bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\menutton">
+      <UniqueIdentifier>{353d364d-6056-4471-87ec-0e4fd5821f38}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\organizer">
+      <UniqueIdentifier>{4ec209fa-f0d8-42cf-b7f5-01d758df71e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\package_raw">
+      <UniqueIdentifier>{472cd8b7-0dd0-4877-b0c5-eb714dfbf9a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\shared constants">
+      <UniqueIdentifier>{df95aa3c-54ac-4e4e-bf86-63276089be75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\sound">
+      <UniqueIdentifier>{f694df90-efc0-4104-a833-a91d95aa0c7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\system">
+      <UniqueIdentifier>{137c8b2e-520b-4950-8174-ffb55939ed6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\tools">
+      <UniqueIdentifier>{74a3f1bb-b948-4991-b1df-33678dc49f60}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\abort">
+      <UniqueIdentifier>{83a07cb7-38bd-4f14-9bdb-3d5860bf70d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW external addons">
+      <UniqueIdentifier>{90bda896-ff48-414c-9b30-b21ddad3f77e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW external addons\gaming storm">
+      <UniqueIdentifier>{8b23eb4d-10d0-4ef3-97af-a95fc1b28cb4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW external addons\discord_thread">
+      <UniqueIdentifier>{57f40aeb-c5e9-4826-a57b-3583ba52f4e6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Local</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\External\Discord\source\achievement_manager.cpp">
+      <Filter>Libraries\External</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\External\Discord\source\activity_manager.cpp">
+      <Filter>Libraries\External</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\External\Discord\source\application_manager.cpp">
+      <Filter>Libraries\External</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\External\Discord\source\core.cpp">
+      <Filter>Libraries\External</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\External\Discord\source\image_manager.cpp">
+      <Filter>Libraries\External</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\External\Discord\source\lobby_manager.cpp">
+      <Filter>Libraries\External</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\External\Discord\source\network_manager.cpp">
+      <Filter>Libraries\External</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\External\Discord\source\overlay_manager.cpp">
+      <Filter>Libraries\External</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\External\Discord\source\relationship_manager.cpp">
+      <Filter>Libraries\External</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\External\Discord\source\storage_manager.cpp">
+      <Filter>Libraries\External</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\External\Discord\source\store_manager.cpp">
+      <Filter>Libraries\External</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\External\Discord\source\types.cpp">
+      <Filter>Libraries\External</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\External\Discord\source\user_manager.cpp">
+      <Filter>Libraries\External</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\External\Discord\source\voice_manager.cpp">
+      <Filter>Libraries\External</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\console\console.cpp">
+      <Filter>Libraries\Internal\LSW\console</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\download_manager\downloader.cpp">
+      <Filter>Libraries\Internal\LSW\download manager</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\drawing\drawing.cpp">
+      <Filter>Libraries\Internal\LSW\drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\hash\sha256.cpp">
+      <Filter>Libraries\Internal\LSW\hash</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\map_gen\map.cpp">
+      <Filter>Libraries\Internal\LSW\map generation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\menutton\menutton.cpp">
+      <Filter>Libraries\Internal\LSW\menutton</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\package_raw\package_raw.cpp">
+      <Filter>Libraries\Internal\LSW\package_raw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\sound\sound.cpp">
+      <Filter>Libraries\Internal\LSW\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\system\system.cpp">
+      <Filter>Libraries\Internal\LSW\system</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\tools\tools.cpp">
+      <Filter>Libraries\Internal\LSW\tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\custom_abort\abort.cpp">
+      <Filter>Libraries\Internal\LSW\abort</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW external optional dependencies\gaming_modes\gaming_storm.cpp">
+      <Filter>Libraries\Internal\LSW external addons\gaming storm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW external optional dependencies\discord_thread\discord_thread.cpp">
+      <Filter>Libraries\Internal\LSW external addons\discord_thread</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Libraries\External\Discord\source\achievement_manager.h">
+      <Filter>Libraries\External</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\External\Discord\source\activity_manager.h">
+      <Filter>Libraries\External</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\External\Discord\source\application_manager.h">
+      <Filter>Libraries\External</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\External\Discord\source\core.h">
+      <Filter>Libraries\External</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\External\Discord\source\discord.h">
+      <Filter>Libraries\External</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\External\Discord\source\event.h">
+      <Filter>Libraries\External</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\External\Discord\source\ffi.h">
+      <Filter>Libraries\External</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\External\Discord\source\image_manager.h">
+      <Filter>Libraries\External</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\External\Discord\source\lobby_manager.h">
+      <Filter>Libraries\External</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\External\Discord\source\network_manager.h">
+      <Filter>Libraries\External</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\External\Discord\source\overlay_manager.h">
+      <Filter>Libraries\External</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\External\Discord\source\relationship_manager.h">
+      <Filter>Libraries\External</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\External\Discord\source\storage_manager.h">
+      <Filter>Libraries\External</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\External\Discord\source\store_manager.h">
+      <Filter>Libraries\External</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\External\Discord\source\types.h">
+      <Filter>Libraries\External</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\External\Discord\source\user_manager.h">
+      <Filter>Libraries\External</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\External\Discord\source\voice_manager.h">
+      <Filter>Libraries\External</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\hidden\hidden.h">
+      <Filter>Libraries\Internal\hidden</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\defaults.h">
+      <Filter>Libraries\Internal\LSW</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\big_templates\big_templates.h">
+      <Filter>Libraries\Internal\LSW\templates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\big_templates\small_templates.h">
+      <Filter>Libraries\Internal\LSW\templates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\console\console.h">
+      <Filter>Libraries\Internal\LSW\console</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\download_manager\downloader.h">
+      <Filter>Libraries\Internal\LSW\download manager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\drawing\drawing.h">
+      <Filter>Libraries\Internal\LSW\drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\hash\sha256.h">
+      <Filter>Libraries\Internal\LSW\hash</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\logger\logger.h">
+      <Filter>Libraries\Internal\LSW\logger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\map_gen\map.h">
+      <Filter>Libraries\Internal\LSW\map generation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\menutton\menutton.h">
+      <Filter>Libraries\Internal\LSW\menutton</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\organizer\organizer.h">
+      <Filter>Libraries\Internal\LSW\organizer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\package_raw\package_raw.h">
+      <Filter>Libraries\Internal\LSW\package_raw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\shared_constants\constants.h">
+      <Filter>Libraries\Internal\LSW\shared constants</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\sound\sound.h">
+      <Filter>Libraries\Internal\LSW\sound</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\system\system.h">
+      <Filter>Libraries\Internal\LSW\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\tools\tools.h">
+      <Filter>Libraries\Internal\LSW\tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\custom_abort\abort.h">
+      <Filter>Libraries\Internal\LSW\abort</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW external optional dependencies\gaming_modes\gaming_storm.h">
+      <Filter>Libraries\Internal\LSW external addons\gaming storm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW external optional dependencies\discord_thread\discord_thread.h">
+      <Filter>Libraries\Internal\LSW external addons\discord_thread</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+</Project>

@@ -13,6 +13,7 @@
 #include <thread>
 #include <string>
 #include <mutex>
+#include <functional>
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
 #pragma comment (lib, "Ws2_32.lib")
@@ -45,6 +46,8 @@ namespace LSW {
 				std::string variable_data;
 				int data_type = 0;
 			};
+
+			const size_t max_buf = 20;
 		}
 
 		class connection_core {
@@ -67,6 +70,8 @@ namespace LSW {
 
 			std::vector<Constants::sockets_packages> received, sending;
 			std::mutex received_hold, sending_hold;
+
+			std::function<void(const std::string)> prunt = std::function<void(const std::string)>();
 
 			void __keep_connection_alive();
 			// later: thread keeping alive, std::vector to buffer send/recv, bool to tell if still up
@@ -92,8 +97,11 @@ namespace LSW {
 			bool still_on();
 			bool hasPackage();
 
+			bool send_nolock(Constants::final_package);
 			void send(Constants::final_package);
 			bool recv(Constants::final_package&);
+
+			void hookPrint(std::function<void(const std::string)>);
 		};
 
 		class connection_host {
@@ -108,6 +116,8 @@ namespace LSW {
 			std::thread* listener = nullptr;
 			std::thread* autodisconnect = nullptr;
 			bool still_running = false;
+
+			std::function<void(const std::string)> prunt = std::function<void(const std::string)>();
 
 			void auto_accept();
 			void auto_cleanup();
@@ -125,6 +135,8 @@ namespace LSW {
 			size_t size();
 
 			void setMaxConnections(const size_t);
+
+			void hookPrint(std::function<void(const std::string)>);
 		};
 
 
