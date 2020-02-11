@@ -40,8 +40,8 @@
     <ClCompile Include="starter.cpp">
       <Filter>Local</Filter>
     </ClCompile>
-    <ClCompile Include="self_only.cpp">
-      <Filter>Local</Filter>
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\pipe\pipe.cpp">
+      <Filter>Libraries\Internal\LSW\pipe</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -105,8 +105,8 @@
     <ClInclude Include="resource.h">
       <Filter>Resources</Filter>
     </ClInclude>
-    <ClInclude Include="self_only.h">
-      <Filter>Local</Filter>
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\pipe\pipe.h">
+      <Filter>Libraries\Internal\LSW\pipe</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -181,6 +181,9 @@
     </Filter>
     <Filter Include="Local">
       <UniqueIdentifier>{5bd40b8f-fd25-4887-bd09-ceb84fc8a431}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Internal\LSW\pipe">
+      <UniqueIdentifier>{7325fe4a-6553-4114-9c87-ace951ce804d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -53,9 +53,15 @@ int main(int argc, const char* argv[])
 
 		**************************************************************************************/
 
+		///Pipe mypp;
+
+		// Tools::interpretPath(temporary);
+
+		///mypp.hookPrint([&logg](const std::string s) { logg << L::SLF << fsr(__FUNCSIG__) << "PIPE: " << s << L::ELF; });
+		///mypp.launch(std::string("\"C:\\Visual Studio Projects\\LSW - The Blast\\TheBlast Pack V2\\x64\\Debug\\testing\\TheBlast Discord Addon.exe\"").data());
 
 		// OOPSIE DEBUG STUFF HAHA TESTING RIGHT HERE LMAO (work here hoh)
-		STARTUPINFO si;
+		/*STARTUPINFO si;
 		PROCESS_INFORMATION pi;
 		ZeroMemory(&si, sizeof(si));
 		si.cb = sizeof(si);
@@ -81,7 +87,7 @@ int main(int argc, const char* argv[])
 			}
 			//system("\"C:\\Visual Studio Projects\\LSW - The Blast\\TheBlast Pack V2\\x64\\Debug\\testing\\TheBlast Discord Addon.exe\"");
 		}
-
+		*/
 
 		// used by lambdas
 		main_gamemodes modern = main_gamemodes::HASNT_STARTED_YET;
@@ -1606,29 +1612,35 @@ int main(int argc, const char* argv[])
 
 
 		logg << L::SLF << fsr(__FUNCSIG__) << "Closing game..." << L::ELF;
-
-		logg.killDebugScreen();
-		textures.clear();
-		sprites.clear();
-		fonts.clear();
-		texts.clear();
-		conf.flush();
-
+		
 		{
 			__systematic sys;
-			sys.deinitSystem();
 
 			Constants::final_package pkg;
 			pkg.data_type = 1; // end
 			discord_host.lock();
 			for (auto& i : discord_host) {
-				i->send_nolock(pkg);
+				i->send(pkg);
 			}
 			for (auto& i : discord_host) {
 				i->kill_connection();
 			}
 			discord_host.unlock();
+
+
+			sys.deinitSystem(); // AFTER KILLING CONNECTIONS
 		}
+
+
+		logg.killDebugScreen();
+		conf.unload();
+		textures.clear();
+		sprites.clear();
+		fonts.clear();
+		texts.clear();
+
+		///mypp.kill(); // after telling connected guys that this is the end
+
 		//if (connection) delete connection;
 	}
 	catch (Abort::abort a)

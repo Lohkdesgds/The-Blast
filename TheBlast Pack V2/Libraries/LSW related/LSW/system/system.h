@@ -29,6 +29,7 @@
 
 #include "..\download_manager\downloader.h"
 #include "..\hash\sha256.h"
+#include "..\pipe\pipe.h"
 
 namespace LSW {
 	namespace v4 {
@@ -95,6 +96,11 @@ namespace LSW {
 				bool has_once_launched = false;
 #endif
 				bool has_init_allegro_once = false;
+
+				std::vector<std::pair<std::string, std::string>> hashupdate_stuff;
+#ifdef USE_DISCORD_API_EXTERNAL
+				Pipe discord_pipe;
+#endif
 			};
 
 			static custom_systematic_data d;
@@ -103,6 +109,9 @@ namespace LSW {
 			void __nointernalzip_extract_package();
 			bool __loadPackage();
 			bool __nointernalzip_loadPackage();
+#ifdef USE_DISCORD_API_EXTERNAL
+			void __extract_discord_external_module_proj(); // exe and dll
+#endif
 		public:
 #ifdef AUTOMATIC_LAUNCH
 			__systematic();
@@ -166,14 +175,17 @@ namespace LSW {
 				std::function<void(void)>			func_kb_u[ALLEGRO_KEY_MAX];							// unhold
 
 				
-				std::thread* savethr = nullptr;
-				bool savethrdone = true;
+
+				std::thread* constantly_saving = nullptr;
+				bool still_running = false;
 
 				std::string config_raw_path;
 			};
 
 			static custom_data data;
 			gfile logg;
+
+			void keepSavingThr();
 
 			void internalCheck();
 			void __skipAndLoad(std::string); // lalala
@@ -183,8 +195,7 @@ namespace LSW {
 #endif
 
 			void load(std::string); // please set a path ONCE
-
-			void flush();
+			void unload();
 
 			void set(const std::string, const std::string);
 			void set(const Constants::io__conf_boolean, const bool);

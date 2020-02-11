@@ -1,8 +1,8 @@
 #pragma once
 
 
-// HAS TO BE FIRST
-#include "..\package_raw\package_raw.h"				// SOLO
+// SO SOLO, MUST BE FIRST LMAO
+#include "..\package_raw\package_raw.h"				// SOLO (HAS TO BE FIRST BECAUSE OF DEFINE WINDOWS LEAN AND MEAN
 
 // barebones (each)
 #include "..\shared_constants\constants.h"			// SOLO
@@ -10,6 +10,7 @@
 #include "..\custom_abort\abort.h"					// SOLO
 #include "..\big_templates\small_templates.h"       // SOLO
 #include "..\hash\sha256.h"						    // SOLO
+#include "..\pipe\pipe.h"							// DEP: TOOLS
 #include "..\logger\logger.h"						// DEP: CONST, TOOLS, SMALLTEMP
 #include "..\big_templates\big_templates.h"			// DEP: CONST, ABORT, SMALLTEMP
 #include "..\download_manager\downloader.h"			// DEP: CONST, TOOLS

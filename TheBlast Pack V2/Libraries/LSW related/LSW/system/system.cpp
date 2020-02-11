@@ -122,6 +122,8 @@ namespace LSW {
 						
 			addPathFile(d.extracted_zip_at.c_str());
 
+
+
 			return true;
 		}
 
@@ -139,6 +141,156 @@ namespace LSW {
 			return true;
 		}
 
+#ifdef USE_DISCORD_API_EXTERNAL
+		void __systematic::__extract_discord_external_module_proj()
+		{
+			gfile logg;
+
+			std::string url, hash, dllurl, dllhash;
+
+			std::string pathdisc, pathdll;
+			pathdisc = Constants::discord_api_extract;
+			pathdll = Constants::discord_api_extract_dll;
+
+			Tools::interpretPath(pathdisc);
+			Tools::interpretPath(pathdll);
+
+			Tools::createPath(pathdisc);
+			// DLL must be aside
+
+			for (auto& i : d.hashupdate_stuff) {
+				if (i.first == "DASH") { // Discord HASH
+					hash = i.second;
+				}
+				if (i.first == "DURL") { // Discord URL (download)
+					url = i.second;
+				}
+				if (i.first == "DDSH") { // Discord's DLL HASH
+					dllhash = i.second;
+				}
+				if (i.first == "DDUL") { // Discord's DLL URL (download)
+					dllurl = i.second;
+				}
+			}
+
+			if (hash.length() && url.length() && dllhash.length() && dllurl.length()) {
+				logg << L::SLF << fsr(__FUNCSIG__) << "Got instructions to download/check and setup Discord extension." << L::ELF;
+
+				bool has_to_redownload_discord_exe = true;
+				bool has_to_redownload_discord_dll = true;
+
+				{
+					auto disc_siz = Tools::getFileSize(pathdisc);
+
+					if (disc_siz) {  // FILE EXISTS, CHECK HASH
+						FILE* f = nullptr;
+						auto err = fopen_s(&f, pathdisc.c_str(), "rb");
+						if (err) {
+							logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Cannot open file to verify Discord's executable (hash). Trying to force download anyway." << L::ELF;
+							has_to_redownload_discord_exe = true;
+						}
+						else {
+							std::string myself;
+							for (char ubuf; fread_s(&ubuf, 1, sizeof(char), 1, f);) myself += ubuf;
+							std::string myhash = imported::sha256(myself);
+							if (myhash != hash) {
+								logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Discord extension is not updated. Downloading newest version soon." << L::ELF;
+								has_to_redownload_discord_exe = true;
+							}
+							else {
+								logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Discord extension is up to date." << L::ELF;
+								has_to_redownload_discord_exe = false;
+							}
+						}
+						if (f) fclose(f);
+					}
+				}
+				
+				{
+					auto dll_siz = Tools::getFileSize(pathdll);
+
+					if (dll_siz) {  // FILE EXISTS, CHECK HASH
+						FILE* f = nullptr;
+						auto err = fopen_s(&f, pathdll.c_str(), "rb");
+						if (err) {
+							logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Cannot open file to verify Discord's DLL (hash). Trying to force download anyway." << L::ELF;
+							has_to_redownload_discord_dll = true;
+						}
+						else {
+							std::string myself;
+							for (char ubuf; fread_s(&ubuf, 1, sizeof(char), 1, f);) myself += ubuf;
+							std::string myhash = imported::sha256(myself);
+							if (myhash != dllhash) {
+								logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Discord's DLL is not updated. Downloading newest version soon." << L::ELF;
+								has_to_redownload_discord_dll = true;
+							}
+							else {
+								logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Discord's DLL is up to date." << L::ELF;
+								has_to_redownload_discord_dll = false;
+							}
+						}
+						if (f) fclose(f);
+					}
+				}
+
+				if (has_to_redownload_discord_exe) {
+					Download dn;
+					dn.get(url.c_str());
+
+					if (dn.read().length() == 0) {
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Cannot install Discord extension. Discord extension deactivated." << L::ELF;
+						return;
+					}
+
+					FILE* out = nullptr;
+					auto err = fopen_s(&out, pathdisc.c_str(), "wb");
+					if (err) {
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Cannot install Discord extension. Discord extension deactivated." << L::ELF;
+						return;
+					}
+
+					for (auto& i : dn.read()) {
+						fwrite(&i, sizeof(char), 1, out);
+					}
+					fclose(out);
+
+					logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Successfully downloaded Discord extension." << L::ELF;
+				}
+				if (has_to_redownload_discord_dll) {
+					Download dn;
+					dn.get(dllurl.c_str());
+
+					if (dn.read().length() == 0) {
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Cannot install Discord extension. Discord extension deactivated." << L::ELF;
+						return;
+					}
+
+					FILE* out = nullptr;
+					auto err = fopen_s(&out, pathdll.c_str(), "wb");
+					if (err) {
+						logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Cannot install Discord DLL dependency. Discord extension deactivated." << L::ELF;
+						has_to_redownload_discord_dll = true;
+					}
+
+					for (auto& i : dn.read()) {
+						fwrite(&i, sizeof(char), 1, out);
+					}
+					fclose(out);
+
+					logg << L::SLF << fsr(__FUNCSIG__, E::WARN) << "Successfully downloaded Discord's DLL." << L::ELF;
+				}
+
+				// call Discord pipe
+				d.discord_pipe.hookPrint([](const std::string s) { gfile logg; logg << L::SLF << fsr(__FUNCSIG__) << "PIPE: " << s << L::ELF; });
+				d.discord_pipe.launch(std::string("\"" + pathdisc + "\"").data());
+			}
+			else {
+				logg << L::SLF << fsr(__FUNCSIG__, E::ERRR) << "Couldn't download / verify Discord extension." << L::ELF;
+				return;
+			}
+		}
+#endif
+
 #ifdef AUTOMATIC_LAUNCH
 		__systematic::__systematic()
 		{
@@ -148,18 +300,17 @@ namespace LSW {
 			{
 				logg << L::SLF << fsr(__FUNCSIG__) << "App version: " << Constants::version_app << L::ELF;
 				// updates are part of the system, right?
-#ifndef _DEBUG
 				{
-					Download d;
-					d.get(Automatic::default_hash_check_url.c_str());
+					Download dn;
+					dn.get(Constants::default_hash_check_url.c_str());
 
-					auto genlist = Tools::breakLines(d.read());
+					d.hashupdate_stuff = Tools::breakLines(dn.read());
 
 					/*char webhash_raw[96], url[96];
 					sscanf_s(d.read().c_str(), "HASH: %s\nURL_: %s", webhash_raw, (unsigned int)sizeof(webhash_raw), url, (unsigned int)sizeof(url));*/
 
 					std::string webhash_raw, url;
-					for (auto& i : genlist) {
+					for (auto& i : d.hashupdate_stuff) {
 						if (i.first == "HASH") {
 							webhash_raw = i.second;
 						}
@@ -185,6 +336,8 @@ namespace LSW {
 						logg << L::SLF << fsr(__FUNCSIG__) << "Updated Hash file: " << webhash_raw << L::ELF;
 
 						if (myhash != webhash_raw && webhash_raw.length() && url.length()) {
+
+#ifndef _DEBUG
 							int e = al_show_native_message_box(
 								nullptr,
 								"Update available!",
@@ -196,6 +349,9 @@ namespace LSW {
 								ShellExecute(NULL, "open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
 								exit(EXIT_SUCCESS);
 							}
+#else
+							logg << L::SLF << fsr(__FUNCSIG__) << "Debug version detected. Not prompting update available stuff." << L::ELF;
+#endif
 
 						}
 					}
@@ -204,15 +360,14 @@ namespace LSW {
 					}
 				}
 
-#else
-				logg << L::SLF << fsr(__FUNCSIG__) << "Debug version detected. Not checking updates." << L::ELF;
+//#else
 
-#endif // !_DEBUG
+//#endif // !_DEBUG
 
 				// now load of the zip and stuff
 
 				try {
-					setZipLocation(Automatic::start_zip_default_extract_path);
+					setZipLocation(Constants::start_zip_default_extract_path);
 					initSystem();
 				}
 				catch (Abort::abort a) {
@@ -291,6 +446,7 @@ namespace LSW {
 			al_shutdown_ttf_addon();
 			al_shutdown_native_dialog_addon();
 			PHYSFS_deinit();
+			d.discord_pipe.kill();
 
 			d.initialized = false;
 			exit(EXIT_SUCCESS);
@@ -380,12 +536,19 @@ namespace LSW {
 			else __nointernalzip_loadPackage(); // ignore zips
 
 			al_set_physfs_file_interface();
+#ifdef USE_DISCORD_API_EXTERNAL
+			__extract_discord_external_module_proj();
+#endif
 		}
 
 		void __systematic::posInit_forceWithNoZipAnyway()
 		{
 			__nointernalzip_loadPackage();
+
 			al_set_physfs_file_interface();
+#ifdef USE_DISCORD_API_EXTERNAL
+			__extract_discord_external_module_proj();
+#endif
 		}
 
 		void __systematic::setInterface()
@@ -493,6 +656,26 @@ namespace LSW {
 			return d.l->options;
 		}
 
+		void Database::keepSavingThr()
+		{
+			auto save = [&]() {if (data.c) {
+				__systematic sys;
+				data.m.lock();
+				std::string temporary = data.config_raw_path;
+				Tools::interpretPath(temporary);
+				Tools::createPath(temporary);
+				sys.unsetInterface();
+				al_save_config_file(temporary.c_str(), data.c);
+				data.m.unlock();
+			}};
+
+			while (data.still_running) {
+				save();
+				for (size_t t = 0; t < 10 && data.still_running; t++) Sleep(200); // 2 sec
+			}
+			save();
+		}
+
 		void Database::internalCheck()
 		{
 			if (!check(Constants::io__conf_boolean::WAS_OSD_ON))								set(Constants::io__conf_boolean::WAS_OSD_ON, false);
@@ -543,13 +726,13 @@ namespace LSW {
 
 					internalCheck();
 
+					sys.unsetInterface();
 					if (!al_save_config_file(temporary.c_str(), data.c)) {
 						throw Abort::abort(__FUNCSIG__, "Cannot save Database file!");
 					}
 				}
 				else {
 					internalCheck();
-					flush();
 
 					long long ll;
 					get(Constants::io__conf_longlong::_TIMES_LIT, ll);
@@ -576,7 +759,7 @@ namespace LSW {
 
 		Database::Database()
 		{
-			load(Automatic::config_default_file);
+			load(Constants::config_default_file);
 		}
 
 		void Database::load(std::string temporary)
@@ -597,32 +780,25 @@ namespace LSW {
 				forceExit("Something went wrong!", "Please report the following:", ext_exp.c_str());
 			}
 			data.m.unlock();
-		}
 
-		void Database::flush()
-		{
-			if (data.savethr) {
-				if (!data.savethrdone) return;
-
-				data.savethr->join();
-				delete data.savethr;
-				data.savethr = nullptr;
+			if (!data.still_running) {
+				data.still_running = true;
+				data.constantly_saving = new std::thread([&]() {keepSavingThr(); });
 			}
-
-			data.savethrdone = false;
-			data.savethr = new std::thread([&] {
-				if (data.c) {
-					data.m.lock();
-					std::string temporary = data.config_raw_path;
-					Tools::interpretPath(temporary);
-					Tools::createPath(temporary);
-					al_save_config_file(temporary.c_str(), data.c);
-					data.m.unlock();
-				}
-				data.savethrdone = true;
-			});
-			
 		}
+
+		void Database::unload()
+		{
+			if (data.still_running) {
+				data.still_running = false;
+				if (data.constantly_saving) {
+					data.constantly_saving->join();
+					delete data.constantly_saving;
+					data.constantly_saving = nullptr;
+				}
+			}
+		}
+
 		
 
 		void Database::set(const std::string e, const std::string v)
@@ -1272,7 +1448,6 @@ namespace LSW {
 
 			_init(md.x, md.y, -1, md.hz);
 
-			if (d) config.flush();
 
 			should_check_acknowledge_and_prop_buf = al_get_time() + 0.5;
 		}

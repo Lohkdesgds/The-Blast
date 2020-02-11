@@ -210,10 +210,10 @@
     <ClCompile Include="..\..\Libraries\LSW related\LSW\map_gen\map.cpp" />
     <ClCompile Include="..\..\Libraries\LSW related\LSW\menutton\menutton.cpp" />
     <ClCompile Include="..\..\Libraries\LSW related\LSW\package_raw\package_raw.cpp" />
+    <ClCompile Include="..\..\Libraries\LSW related\LSW\pipe\pipe.cpp" />
     <ClCompile Include="..\..\Libraries\LSW related\LSW\sound\sound.cpp" />
     <ClCompile Include="..\..\Libraries\LSW related\LSW\system\system.cpp" />
     <ClCompile Include="..\..\Libraries\LSW related\LSW\tools\tools.cpp" />
-    <ClCompile Include="self_only.cpp" />
     <ClCompile Include="starter.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -232,12 +232,12 @@
     <ClInclude Include="..\..\Libraries\LSW related\LSW\menutton\menutton.h" />
     <ClInclude Include="..\..\Libraries\LSW related\LSW\organizer\organizer.h" />
     <ClInclude Include="..\..\Libraries\LSW related\LSW\package_raw\package_raw.h" />
+    <ClInclude Include="..\..\Libraries\LSW related\LSW\pipe\pipe.h" />
     <ClInclude Include="..\..\Libraries\LSW related\LSW\shared_constants\constants.h" />
     <ClInclude Include="..\..\Libraries\LSW related\LSW\sound\sound.h" />
     <ClInclude Include="..\..\Libraries\LSW related\LSW\system\system.h" />
     <ClInclude Include="..\..\Libraries\LSW related\LSW\tools\tools.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="self_only.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TheBlast.rc" />

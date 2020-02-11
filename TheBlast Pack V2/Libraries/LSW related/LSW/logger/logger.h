@@ -280,7 +280,7 @@ namespace LSW {
 				g.started_evsrc = true;
 			}
 			if (g.file_path.length() == 0) {
-				g.file_path = Automatic::default_file_global_path;
+				g.file_path = Constants::default_file_global_path;
 			}
 		}
 #else

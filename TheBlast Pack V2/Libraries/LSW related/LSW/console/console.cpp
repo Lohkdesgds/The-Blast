@@ -196,7 +196,6 @@ namespace LSW {
 										conf.set(Constants::io__conf_integer::SCREEN_X, al_get_display_width(md->getDisplay()));
 										conf.set(Constants::io__conf_integer::SCREEN_Y, al_get_display_height(md->getDisplay()));
 										conf.set(Constants::io__conf_integer::SCREEN_FLAGS, al_get_display_flags(md->getDisplay()));
-										conf.flush();
 
 										for (auto& i : sprites) {
 											i->self->set(Constants::io__sprite_double::RO_HAPPENED_RESIZE_DISPLAY, al_get_time() + 1.5);
