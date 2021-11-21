@@ -1,0 +1,11 @@
+indev: Game still unplayable, but it's runnable (for testing purposes)
+alpha: early stages of a playable version, not fully animated, not polished
+beta: has most of the features, but missing features
+release: it works as expected (or close to that)
+
+FORMAT:
+v0.0.X-indev = INDEV
+v0.1.X-alpha = ALPHA
+v0.X.X-beta  = BETA
+vX.X.X       = RELEASE
+vX.X.X-beta  = untested version after release (may contain bugs)

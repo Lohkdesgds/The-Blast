@@ -18,7 +18,7 @@
       <Filter>modules\Host</Filter>
     </ClCompile>
     <ClCompile Include="Modules\gamedraw.cpp">
-      <Filter>modules\GameDraw</Filter>
+      <Filter>modules\GameCore\GameDraw</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -32,7 +32,7 @@
       <Filter>modules\World</Filter>
     </ClInclude>
     <ClInclude Include="Modules\worlduser.h">
-      <Filter>modules\WorldUser</Filter>
+      <Filter>modules\World\WorldUser</Filter>
     </ClInclude>
     <ClInclude Include="Modules\worldserver.h">
       <Filter>modules\WorldServer</Filter>
@@ -50,10 +50,13 @@
       <Filter>modules\WorldClient</Filter>
     </ClInclude>
     <ClInclude Include="Modules\gamedraw.h">
-      <Filter>modules\GameDraw</Filter>
+      <Filter>modules\GameCore\GameDraw</Filter>
     </ClInclude>
     <ClInclude Include="Modules\defaults.h">
       <Filter>modules\DEFAULTS</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\gamecore.h">
+      <Filter>modules\GameCore</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -77,9 +80,6 @@
     <Filter Include="modules\WorldServer">
       <UniqueIdentifier>{1f6e3e04-4f6d-493e-b740-a442fde37db2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="modules\WorldUser">
-      <UniqueIdentifier>{93ce4e4e-b639-4dd3-bdcc-4dbeb786cd5c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="modules\PACK">
       <UniqueIdentifier>{b86241d5-fac9-4d89-b4a5-aa48fd6c1f95}</UniqueIdentifier>
     </Filter>
@@ -92,11 +92,20 @@
     <Filter Include="modules\WorldClient">
       <UniqueIdentifier>{7c1532e5-6807-4457-bb52-891d07094960}</UniqueIdentifier>
     </Filter>
-    <Filter Include="modules\GameDraw">
-      <UniqueIdentifier>{f3237c93-fc82-4c26-bd5a-e166930f2b10}</UniqueIdentifier>
-    </Filter>
     <Filter Include="modules\DEFAULTS">
       <UniqueIdentifier>{aaa6db6d-1485-4af8-afc6-f701081d012d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="modules\GameCore">
+      <UniqueIdentifier>{9499df04-f606-4d92-9888-ef77a35659f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="modules\GameCore\SceneCollection">
+      <UniqueIdentifier>{a08cb926-912d-4ab8-8160-83e5c4f6cf60}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="modules\World\WorldUser">
+      <UniqueIdentifier>{93ce4e4e-b639-4dd3-bdcc-4dbeb786cd5c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="modules\GameCore\GameDraw">
+      <UniqueIdentifier>{f3237c93-fc82-4c26-bd5a-e166930f2b10}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

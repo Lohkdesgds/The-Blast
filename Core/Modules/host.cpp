@@ -53,10 +53,10 @@ void Host::loop_listen()
 		for (uint32_t p = 0; p < this->worldmap.get_user_amount(); p++) {
 			auto& eache = worldmap.get_user_map()[p];
 			if (eache.user_id == 0) {
-				eache.user_id = cli.user_id;
 				memcpy_s(&eache.name, sizeof(eache.name), &cli.name, sizeof(cli.name));
-				eache.posx = 1 + random() % 10;
-				eache.posy = 1 + random() % 10;
+				eache.posx = 1 + random() % (world_map_width - 2);
+				eache.posy = 1 + random() % (world_map_height - 2);
+				eache.user_id = cli.user_id;
 				found_one_good = true;
 				return;
 			}
@@ -86,41 +86,6 @@ void Host::loop_listen()
 void Host::loop_update_users_and_map_gen()
 {
 	clients.safe([this](std::vector<EachClient>& vec) {
-
-		// generate new info
-		package pkg = this->worldmap.generate_pack().make_package(); // most up to date EVER
-
-		// update users
-		for(size_t p = 0; p < vec.size(); p++) 
-		{
-			auto& it = vec[p];
-
-			if (!it.client.send(pkg)) {
-				if (!it.client.has_socket()) {
-					cout << "Client \"" << it.name << "\" aka ID '" << it.user_id << "' disconnected.";
-
-					for (uint32_t p = 0; p < this->worldmap.get_user_amount(); p++) {
-						auto& eache = worldmap.get_user_map()[p];
-						if (eache.user_id == it.user_id) {
-							eache.user_id = 0;
-							break;
-						}
-					}
-
-					it.client.close_socket(); // disconnect
-					vec.erase(vec.begin() + p);
-					p--;
-					continue;
-				}
-				else {
-					cout << "Client \"" << it.name << "\" aka ID '" << it.user_id << "' is having buffering issues.";
-				}
-			}
-			else {
-				//cout << console::color::DARK_AQUA << "- update map #" << it.user_id << " ->";
-			}
-		}
-
 
 		// update user stuff they sent
 		for (size_t p = 0; p < vec.size(); p++)
@@ -155,6 +120,40 @@ void Host::loop_update_users_and_map_gen()
 					break;
 
 				}
+			}
+		}
+
+		// generate new info
+		package pkg = this->worldmap.generate_pack().make_package(); // most up to date EVER
+
+		// update users
+		for(size_t p = 0; p < vec.size(); p++) 
+		{
+			auto& it = vec[p];
+
+			if (!it.client.send(pkg)) {
+				if (!it.client.has_socket()) {
+					cout << "Client \"" << it.name << "\" aka ID '" << it.user_id << "' disconnected.";
+
+					for (uint32_t p = 0; p < this->worldmap.get_user_amount(); p++) {
+						auto& eache = worldmap.get_user_map()[p];
+						if (eache.user_id == it.user_id) {
+							eache.user_id = 0;
+							break;
+						}
+					}
+
+					it.client.close_socket(); // disconnect
+					vec.erase(vec.begin() + p);
+					p--;
+					continue;
+				}
+				else {
+					cout << "Client \"" << it.name << "\" aka ID '" << it.user_id << "' is having buffering issues.";
+				}
+			}
+			else {
+				//cout << console::color::DARK_AQUA << "- update map #" << it.user_id << " ->";
 			}
 		}
 	});

@@ -229,6 +229,7 @@
   <ItemGroup>
     <ClInclude Include="Modules\defaults.h" />
     <ClInclude Include="Modules\eachclient.h" />
+    <ClInclude Include="Modules\gamecore.h" />
     <ClInclude Include="Modules\gamedraw.h" />
     <ClInclude Include="Modules\host.h" />
     <ClInclude Include="Modules\pack.h" />

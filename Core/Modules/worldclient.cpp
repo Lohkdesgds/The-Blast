@@ -86,6 +86,8 @@ void WorldClient::make_move_player(int32_t x, int32_t y)
 	for (uint32_t p = 0; p < this->get_user_amount(); p++) {
 		WorldUser& each = user_map[p];
 		if (each.user_id == usrupd.id) {
+			usrupd.posx = each.posx + x;
+			usrupd.posy = each.posy + y;
 
 			if (each.posx == 0 && x < 0) return; // not allowed
 			if (x > 0 && each.posx + x >= get_width()) return; // not allowed
@@ -95,6 +97,9 @@ void WorldClient::make_move_player(int32_t x, int32_t y)
 
 			usrupd.posx = each.posx + x;
 			usrupd.posy = each.posy + y;
+
+			each.posx = usrupd.posx;
+			each.posy = usrupd.posy;
 
 			PACK pkg;
 			pkg.make_this_user_update(usrupd);
