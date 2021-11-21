@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Modules\pack.cpp">
+      <Filter>modules\PACK</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\world.cpp">
+      <Filter>modules\World</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\worldclient.cpp">
+      <Filter>modules\WorldClient</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\worldserver.cpp">
+      <Filter>modules\WorldServer</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\host.cpp">
+      <Filter>modules\Host</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\gamedraw.cpp">
+      <Filter>modules\GameDraw</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource.h">
+      <Filter>resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\world.h">
+      <Filter>modules\World</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\worlduser.h">
+      <Filter>modules\WorldUser</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\worldserver.h">
+      <Filter>modules\WorldServer</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\pack.h">
+      <Filter>modules\PACK</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\host.h">
+      <Filter>modules\Host</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\eachclient.h">
+      <Filter>modules\EachClient</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\worldclient.h">
+      <Filter>modules\WorldClient</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\gamedraw.h">
+      <Filter>modules\GameDraw</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\defaults.h">
+      <Filter>modules\DEFAULTS</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Resources\atlas0.png">
+      <Filter>resources</Filter>
+    </Image>
+    <Image Include="..\Icon\Icon_V2.ico">
+      <Filter>resources</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="modules">
+      <UniqueIdentifier>{5b793d95-a58e-48c3-b097-7d062b5b036c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resources">
+      <UniqueIdentifier>{5db2e57d-484a-4147-9ba7-a795e2426f8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="modules\World">
+      <UniqueIdentifier>{817d2332-45c7-4260-a3df-1c292d73629f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="modules\WorldServer">
+      <UniqueIdentifier>{1f6e3e04-4f6d-493e-b740-a442fde37db2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="modules\WorldUser">
+      <UniqueIdentifier>{93ce4e4e-b639-4dd3-bdcc-4dbeb786cd5c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="modules\PACK">
+      <UniqueIdentifier>{b86241d5-fac9-4d89-b4a5-aa48fd6c1f95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="modules\Host">
+      <UniqueIdentifier>{e5990b45-225d-4883-ba4a-5d3cc6a5364e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="modules\EachClient">
+      <UniqueIdentifier>{259e1b12-42f3-405f-9f46-5677610fbc76}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="modules\WorldClient">
+      <UniqueIdentifier>{7c1532e5-6807-4457-bb52-891d07094960}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="modules\GameDraw">
+      <UniqueIdentifier>{f3237c93-fc82-4c26-bd5a-e166930f2b10}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="modules\DEFAULTS">
+      <UniqueIdentifier>{aaa6db6d-1485-4af8-afc6-f701081d012d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="TheBlast.rc">
+      <Filter>resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="..\Resources\font.ttf">
+      <Filter>resources</Filter>
+    </Font>
+  </ItemGroup>
+</Project>
